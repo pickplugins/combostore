@@ -18,7 +18,8 @@ import Grocery from './Grocery';
 import KitchenAccessories from './KitchenAccessories';
 import IslamicLifestyle from './IslamicLifestyle';
 import GhorerBazar from './GhorerBazar';
+import BikeParts from './BikeParts';
 
-var templates = [...Organic, ...HomeKitchen, ...BeautyCosmetics, ...Grocery, ...KitchenAccessories, ...IslamicLifestyle, ...GhorerBazar];
+var templates = [...Organic, ...HomeKitchen, ...BeautyCosmetics, ...Grocery, ...KitchenAccessories, ...IslamicLifestyle, ...GhorerBazar, ...BikeParts];
 
 export default templates;

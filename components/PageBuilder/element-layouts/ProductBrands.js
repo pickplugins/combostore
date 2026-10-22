@@ -36,7 +36,7 @@
  *    ProductCategories.jsx:81-83, the <Link> here has no onClick at all; the
  *    root div's handler calls `e.preventDefault()` on the bubbled event (:48),
  *    which cancels the navigation just the same -- and also selects the brands
- *    block. So the href (`${NEXT_PUBLIC_APP_URL}brands/<slug>`) never resolves
+ *    block. So the href (`${NEXT_PUBLIC_STORE_URL}brands/<slug>`) never resolves
  *    from a click, on the front end as much as in the canvas.
  *
  * 5. Brands fall back to two mock entries when there is no product context

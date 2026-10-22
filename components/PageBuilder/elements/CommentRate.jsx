@@ -1,15 +1,19 @@
 import PropTypes from "prop-types";
 import React from "react";
-import { useLoop } from "../context/LoopContext";
-import { useFeatuerbox } from "../context/FeatuerboxContext";
+import { useComment } from "../context/CommentContext";
+import { IconStar, IconStarFilled } from "@tabler/icons-react";
 
-const Text = (props) => {
+/*
+	This block was pasted from a featurebox title block: it read useLoop()?.title
+	and the featurebox's `title` selector, neither of which exists inside a
+	comments loop, so it rendered an empty tag on the canvas. It now draws the
+	comment's `rate` field as stars, matching CommentRateView.
 
-	const loop = useLoop();
-	const featuerboxAttr = useFeatuerbox();
-	var FeatuerboxCssSelectors = featuerboxAttr?.cssSelectors ?? {}
-
-	var loopText = loop?.title;
+	On the canvas a comment with no rating still shows five outlines, so the
+	block stays visible and selectable while a page is being built. The
+	storefront twin renders nothing in that case.
+*/
+const CommentRate = (props) => {
 
 	var draggingBlock = props?.draggingBlock
 	var setDraggingBlock = props?.setDraggingBlock
@@ -20,25 +24,29 @@ const Text = (props) => {
 	var setSelectedId = props?.setSelectedId
 	var selectedId = props?.selectedId
 	var index = props?.index
-	var cssSelectors = props?.cssSelectors;
+	var cssSelectors = props?.cssSelectors ?? {};
 
 
 	var id = props?.id;
 	var type = props?.type;
 
-	var options = props?.options;
-	var tag = options?.tag ?? 'h1';
+
+	const comment = useComment();
+
+	var rate = Number(comment?.rate ?? 0);
 
 
-
-
-	const Tag = tag;
-
-
+	var stars = [
+		{ label: "Very Poor", value: 1 },
+		{ label: "Poor", value: 2 },
+		{ label: "Normal", value: 3 },
+		{ label: "Good", value: 4 },
+		{ label: "Supper", value: 5 },
+	]
 
 
 	return (
-		<Tag draggable id={id} type={type} className={`${FeatuerboxCssSelectors['title']?.classes}  hover:outline-orange-200 hover:outline-solid hover:outline-1 ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200 ' : ''} ${selectedId == id ? 'outline-1 outline-solid outline-orange-400 relative' : ''} `}
+		<div draggable id={id} type={type} className={`${cssSelectors['*']?.classes ?? ''} hover:outline-orange-200 hover:outline-solid hover:outline-1 ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200 ' : ''} ${selectedId == id ? 'outline-1 outline-solid outline-orange-400 relative' : ''} `}
 			onClick={e => {
 				e.stopPropagation();
 
@@ -54,12 +62,28 @@ const Text = (props) => {
 			onDragLeave={() => setDragOverIndex(null)}
 		>
 
-			{loopText}
+			{stars.map((item, indexZ) => {
 
-		</Tag>
+				return (
+
+					<div className={`${cssSelectors['star']?.classes}`} key={indexZ} title={item?.label}>
+
+						{rate <= indexZ && (
+							<><IconStar /></>
+						)}
+						{rate > indexZ && (
+							<><IconStarFilled /></>
+						)}
+
+					</div>
+				)
+
+			})}
+
+		</div>
 	);
 };
 
 
 
-export default Text;
+export default CommentRate;

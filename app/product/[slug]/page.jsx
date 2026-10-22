@@ -11,7 +11,7 @@ import { after } from 'next/server';
 import { headers, cookies } from 'next/headers';
 
 
-const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+const appUrl = process.env.NEXT_PUBLIC_STORE_URL;
 import { getSettings } from "@/lib/getSettings";
 
 

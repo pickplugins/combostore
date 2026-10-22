@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 
 import * as TablerIcons from '@tabler/icons-react';
 import Link from "next/link";
-const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+const appUrl = process.env.NEXT_PUBLIC_STORE_URL;
 import { IconChevronDown, IconChevronUp } from "@tabler/icons-react";
 
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;

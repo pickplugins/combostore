@@ -1,6 +1,6 @@
 
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
-const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+const appUrl = process.env.NEXT_PUBLIC_STORE_URL;
 
 
 export async function GET() {

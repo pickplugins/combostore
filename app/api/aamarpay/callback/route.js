@@ -22,7 +22,7 @@ import {
 const RESULTS = ["success", "failed", "cancelled"];
 
 function storefrontUrl(path, request) {
-  const base = String(process.env.NEXT_PUBLIC_APP_URL || "").replace(/\/+$/, "");
+  const base = String(process.env.NEXT_PUBLIC_STORE_URL || "").replace(/\/+$/, "");
 
   return new URL(
     String(path).replace(/^\/+/, ""),

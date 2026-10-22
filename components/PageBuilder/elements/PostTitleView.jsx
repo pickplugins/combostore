@@ -2,12 +2,12 @@ import PropTypes from "prop-types";
 import React from "react";
 import { usePost } from "../context/PostContext";
 import Link from "next/link";
-const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+const appUrl = process.env.NEXT_PUBLIC_STORE_URL;
 
 
 const PostTitleView = (props) => {
 
-	const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+	const appUrl = process.env.NEXT_PUBLIC_STORE_URL;
 
 
 

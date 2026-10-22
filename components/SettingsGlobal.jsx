@@ -23,7 +23,7 @@ import GalleryPicker from "../components/shop-elements/GalleryPicker";
 import ShippingZones from "../components/pages/ShippingZones";
 
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
-const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+const appUrl = process.env.NEXT_PUBLIC_STORE_URL;
 
 
 /* Card shell for every settings section. `settings-card` carries the scoped

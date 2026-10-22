@@ -789,7 +789,7 @@ var template = [
                       {
                         "id": "il-hm-all-c-save",
                         "type": "productDiscount",
-                        "options": { "label": "% off", "separator": ", " },
+                        "options": { "label": "off", "separator": ", " },
                         "cssSelectors": {
                           "*": { "classes": "absolute left-2 top-2 z-10 flex items-baseline gap-0.5 rounded-md bg-[#dc2626] px-[7px] py-[3px] text-white" },
                           "discount": { "classes": "text-[11px] font-bold" },
@@ -961,7 +961,7 @@ var template = [
                           {
                             "id": "il-sh-body-c-badge",
                             "type": "productDiscount",
-                            "options": { "label": "% off", "separator": ", " },
+                            "options": { "label": "off", "separator": ", " },
                             "cssSelectors": {
                               "*": { "classes": "absolute left-2 top-2 z-10 flex items-baseline gap-0.5 rounded-md bg-[#dc2626] px-[7px] py-[3px] text-white" },
                               "discount": { "classes": "text-[11px] font-bold" },
@@ -1229,7 +1229,7 @@ var template = [
                           {
                             "id": "il-pd-disc-1",
                             "type": "productDiscount",
-                            "options": { "label": "% off today", "separator": ", " },
+                            "options": { "label": "off today", "separator": ", " },
                             "cssSelectors": {
                               "*": { "classes": "w-fit flex items-baseline gap-1 rounded-full bg-[#feecec] px-3 py-1 text-[#dc2626]" },
                               "discount": { "classes": "text-sm font-bold" },
@@ -1883,7 +1883,7 @@ var template = [
                           {
                             "id": "il-cs-body-c-badge",
                             "type": "productDiscount",
-                            "options": { "label": "% off", "separator": ", " },
+                            "options": { "label": "off", "separator": ", " },
                             "cssSelectors": {
                               "*": { "classes": "absolute left-2 top-2 z-10 flex items-baseline gap-0.5 rounded-md bg-[#dc2626] px-[7px] py-[3px] text-white" },
                               "discount": { "classes": "text-[11px] font-bold" },

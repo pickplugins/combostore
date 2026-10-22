@@ -36,7 +36,7 @@
  *    block stays visible and selectable.
  *
  * 4. Clicks are swallowed: :82 calls `ev.preventDefault()` on every link with
- *    nothing gating it, so the href (`${NEXT_PUBLIC_APP_URL}categories/<slug>`)
+ *    nothing gating it, so the href (`${NEXT_PUBLIC_STORE_URL}categories/<slug>`)
  *    never navigates, on the front end as much as in the canvas. Same pattern as
  *    ProductTags.jsx:82 and LinkList.jsx:73.
  *

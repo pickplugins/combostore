@@ -32,7 +32,7 @@
  *    visible and selectable -- unlike productDiscount, which renders nothing.
  *
  * 4. Clicks are swallowed: :82 calls `ev.preventDefault()` on every tag link
- *    with nothing gating it, so the href (`${NEXT_PUBLIC_APP_URL}tags/<slug>`)
+ *    with nothing gating it, so the href (`${NEXT_PUBLIC_STORE_URL}tags/<slug>`)
  *    never navigates, on the front end as much as in the canvas. Same pattern as
  *    LinkList.jsx:73. The env var is set, so the hrefs themselves are
  *    well-formed.

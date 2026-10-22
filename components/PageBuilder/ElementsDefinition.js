@@ -3914,9 +3914,29 @@ const elements = [
 			],
 			parentRequired: "commentsGrid"
 		},
-		options: {},
+		options: {
+			showRate: true,
+			rateLabel: 'Your rating',
+			commentLabel: 'Write a comment',
+			placeholder: '',
+			submitLabel: 'Submit',
+			loadingLabel: 'Please wait.',
+			loginRequiredText: 'Please log in to leave a comment.',
+			successText: 'Thank you, your comment has been received.',
+		},
 		cssSelectors: {
-			'*': { classes: '' }
+			'*': { classes: '' },
+			'form': { classes: 'flex flex-col gap-4' },
+			'field': { classes: 'flex flex-col gap-2' },
+			'label': { classes: 'text-sm' },
+			'rate-wrap': { classes: '' },
+			'stars': { classes: 'flex gap-1 items-center' },
+			'star': { classes: 'cursor-pointer' },
+			'textarea': { classes: 'w-full h-32 px-3 py-2 rounded-sm border border-gray-400 shadow-none!' },
+			'submit': { classes: 'px-4 py-2 rounded-sm text-center text-white bg-blue-600 cursor-pointer' },
+			'notice': { classes: 'text-sm' },
+			'errors': { classes: 'flex flex-col gap-1 text-sm text-red-500' },
+			'error': { classes: 'flex items-center gap-2' },
 		},
 		group: ['content'],
 		parent: ['commentsGrid'],
@@ -4046,7 +4066,8 @@ const elements = [
 		},
 		options: {},
 		cssSelectors: {
-			'*': { classes: '' }
+			'*': { classes: 'flex gap-0.5 items-center text-amber-500' },
+			'star': { classes: '' }
 		},
 		group: ['content'],
 		parent: ['commentsGrid'],

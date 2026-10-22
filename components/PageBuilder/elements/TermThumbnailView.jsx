@@ -7,7 +7,7 @@ import Link from "next/link";
 
 const TermTitle = (props) => {
 
-	const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+	const appUrl = process.env.NEXT_PUBLIC_STORE_URL;
 
 
 	var index = props?.index

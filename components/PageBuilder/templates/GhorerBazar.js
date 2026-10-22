@@ -1168,7 +1168,7 @@ var template = [
                           {
                             "id": "gb-hm-honey-c-save",
                             "type": "productDiscount",
-                            "options": { "label": "% off", "separator": ", " },
+                            "options": { "label": "off", "separator": ", " },
                             "cssSelectors": {
                               "*": { "classes": "absolute left-5 top-5 z-10 flex items-baseline gap-0.5 rounded bg-[#ff1818] px-2 py-0.5 text-white" },
                               "discount": { "classes": "text-[11px] font-bold" },
@@ -1372,7 +1372,7 @@ var template = [
                           {
                             "id": "gb-hm-dates-c-save",
                             "type": "productDiscount",
-                            "options": { "label": "% off", "separator": ", " },
+                            "options": { "label": "off", "separator": ", " },
                             "cssSelectors": {
                               "*": { "classes": "absolute left-5 top-5 z-10 flex items-baseline gap-0.5 rounded bg-[#ff1818] px-2 py-0.5 text-white" },
                               "discount": { "classes": "text-[11px] font-bold" },
@@ -1563,7 +1563,7 @@ var template = [
                           {
                             "id": "gb-hm-cook-c-save",
                             "type": "productDiscount",
-                            "options": { "label": "% off", "separator": ", " },
+                            "options": { "label": "off", "separator": ", " },
                             "cssSelectors": {
                               "*": { "classes": "absolute left-5 top-5 z-10 flex items-baseline gap-0.5 rounded bg-[#ff1818] px-2 py-0.5 text-white" },
                               "discount": { "classes": "text-[11px] font-bold" },
@@ -1918,7 +1918,7 @@ var template = [
                           {
                             "id": "gb-hm-just-c-save",
                             "type": "productDiscount",
-                            "options": { "label": "% off", "separator": ", " },
+                            "options": { "label": "off", "separator": ", " },
                             "cssSelectors": {
                               "*": { "classes": "absolute left-5 top-5 z-10 flex items-baseline gap-0.5 rounded bg-[#ff1818] px-2 py-0.5 text-white" },
                               "discount": { "classes": "text-[11px] font-bold" },
@@ -2194,7 +2194,7 @@ var template = [
                           {
                             "id": "gb-sh-body-c-badge",
                             "type": "productDiscount",
-                            "options": { "label": "% off", "separator": ", " },
+                            "options": { "label": "off", "separator": ", " },
                             "cssSelectors": {
                               "*": { "classes": "absolute left-5 top-5 z-10 flex items-baseline gap-0.5 rounded-full bg-[#ff1818] px-2.5 py-1 text-white" },
                               "discount": { "classes": "text-xs font-bold" },
@@ -3119,7 +3119,7 @@ var template = [
                           {
                             "id": "gb-cs-body-c-badge",
                             "type": "productDiscount",
-                            "options": { "label": "% off", "separator": ", " },
+                            "options": { "label": "off", "separator": ", " },
                             "cssSelectors": {
                               "*": { "classes": "absolute left-5 top-5 z-10 flex items-baseline gap-0.5 rounded-full bg-[#ff1818] px-2.5 py-1 text-white" },
                               "discount": { "classes": "text-xs font-bold" },

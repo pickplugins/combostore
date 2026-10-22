@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
-const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+const appUrl = process.env.NEXT_PUBLIC_STORE_URL;
 
 function escapeXml(value) {
   return String(value ?? "")

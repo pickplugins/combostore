@@ -12,7 +12,7 @@ import Image from "next/image";
 import { useProductStore } from "../../../store/productStore";
 
 
-const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+const appUrl = process.env.NEXT_PUBLIC_STORE_URL;
 
 
 const ProductGalleryView = (props) => {

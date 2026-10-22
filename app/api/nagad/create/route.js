@@ -22,7 +22,7 @@ export async function POST(request) {
     //   },
     // });
 
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
+    const baseUrl = process.env.NEXT_PUBLIC_STORE_URL;
 
     const callbackUrl = `${baseUrl}/payment/nagad/callback`;
     const cancelUrl = `${baseUrl}/payment/nagad/cancel`;
