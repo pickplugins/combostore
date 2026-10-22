@@ -1,0 +1,133 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600" role="img" aria-label="Islamic Life Style template preview">
+  <title>Islamic Life Style template preview</title>
+
+  <!--
+    Picker thumbnail for templates/IslamicLifestyle.js. An original wireframe of
+    this template's own layout, drawn from plain shapes, using only the
+    template's tokens: brand #115e59, brand-deep #0c433f, brand-soft #e7eeed,
+    action #dc2626, cream #faf6ee, sand #f3ede0, line #eae3d3, ink #1c2419,
+    faint #a29c8a.
+  -->
+
+  <rect width="800" height="600" fill="#ffffff"/>
+
+  <!-- teal utility strip -->
+  <rect width="800" height="20" fill="#115e59"/>
+  <rect x="40" y="7" width="168" height="6" rx="3" fill="#ffffff" opacity="0.9"/>
+  <rect x="664" y="7" width="96" height="6" rx="3" fill="#ffffff" opacity="0.65"/>
+
+  <!-- header: round logo, sand search with teal button, soft-teal cart pill -->
+  <rect y="20" width="800" height="62" fill="#ffffff"/>
+  <circle cx="62" cy="51" r="20" fill="#f3ede0" stroke="#eae3d3" stroke-width="2"/>
+  <rect x="94" y="44" width="116" height="13" rx="4" fill="#1c2419"/>
+  <rect x="240" y="33" width="356" height="36" rx="11" fill="#f3ede0"/>
+  <circle cx="264" cy="51" r="6" fill="none" stroke="#6b6656" stroke-width="2.5"/>
+  <line x1="268" y1="55" x2="273" y2="60" stroke="#6b6656" stroke-width="2.5" stroke-linecap="round"/>
+  <rect x="284" y="48" width="150" height="7" rx="3.5" fill="#a29c8a"/>
+  <rect x="520" y="39" width="70" height="24" rx="7" fill="#115e59"/>
+  <rect x="538" y="48" width="34" height="6" rx="3" fill="#ffffff"/>
+  <rect x="648" y="35" width="112" height="32" rx="11" fill="#e7eeed"/>
+  <path d="M674 45h14l3 14h-20z" fill="none" stroke="#115e59" stroke-width="2.5" stroke-linejoin="round"/>
+  <rect x="702" y="48" width="44" height="7" rx="3.5" fill="#115e59"/>
+
+  <!-- nav row -->
+  <line x1="0" y1="82" x2="800" y2="82" stroke="#eae3d3" stroke-width="2"/>
+  <rect x="40" y="96" width="38" height="7" rx="3.5" fill="#1c2419"/>
+  <rect x="100" y="96" width="62" height="7" rx="3.5" fill="#1c2419"/>
+  <rect x="184" y="96" width="92" height="7" rx="3.5" fill="#1c2419"/>
+  <rect x="298" y="96" width="34" height="7" rx="3.5" fill="#1c2419"/>
+  <rect x="354" y="96" width="58" height="7" rx="3.5" fill="#1c2419"/>
+  <line x1="0" y1="118" x2="800" y2="118" stroke="#eae3d3" stroke-width="2"/>
+
+  <!-- banner: teal frame, gradient overlay, pill, headline, red CTA -->
+  <defs>
+    <linearGradient id="scrim" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#000000" stop-opacity="0.65"/>
+      <stop offset="0.55" stop-color="#000000" stop-opacity="0.3"/>
+      <stop offset="1" stop-color="#000000" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect x="40" y="136" width="720" height="168" rx="18" fill="#115e59"/>
+  <circle cx="600" cy="220" r="62" fill="#ffffff" opacity="0.08"/>
+  <circle cx="686" cy="266" r="40" fill="#ffffff" opacity="0.06"/>
+  <rect x="40" y="136" width="720" height="168" rx="18" fill="url(#scrim)"/>
+  <rect x="86" y="178" width="92" height="20" rx="10" fill="#ffffff" opacity="0.22"/>
+  <rect x="100" y="185" width="64" height="6" rx="3" fill="#ffffff"/>
+  <rect x="86" y="210" width="236" height="17" rx="8" fill="#ffffff"/>
+  <rect x="86" y="234" width="152" height="17" rx="8" fill="#ffffff" opacity="0.9"/>
+  <rect x="86" y="266" width="124" height="30" rx="9" fill="#dc2626"/>
+  <rect x="106" y="278" width="62" height="7" rx="3.5" fill="#ffffff"/>
+  <rect x="176" y="278" width="8" height="7" rx="3.5" fill="#ffffff" opacity="0.8"/>
+
+  <!-- section head: red label over a heavy heading -->
+  <rect x="40" y="332" width="60" height="7" rx="3.5" fill="#dc2626"/>
+  <rect x="40" y="348" width="168" height="12" rx="6" fill="#1c2419"/>
+
+  <!-- circular category row -->
+  <g>
+    <circle cx="86" cy="408" r="30" fill="#f3ede0" stroke="#eae3d3" stroke-width="3"/>
+    <rect x="56" y="448" width="60" height="6" rx="3" fill="#1c2419"/>
+    <circle cx="226" cy="408" r="30" fill="#f3ede0" stroke="#eae3d3" stroke-width="3"/>
+    <rect x="196" y="448" width="60" height="6" rx="3" fill="#1c2419"/>
+    <circle cx="366" cy="408" r="30" fill="#f3ede0" stroke="#115e59" stroke-width="3"/>
+    <rect x="336" y="448" width="60" height="6" rx="3" fill="#1c2419"/>
+    <circle cx="506" cy="408" r="30" fill="#f3ede0" stroke="#eae3d3" stroke-width="3"/>
+    <rect x="476" y="448" width="60" height="6" rx="3" fill="#1c2419"/>
+    <circle cx="646" cy="408" r="30" fill="#f3ede0" stroke="#eae3d3" stroke-width="3"/>
+    <rect x="616" y="448" width="60" height="6" rx="3" fill="#1c2419"/>
+  </g>
+
+  <!-- products: teal active chip, outlined chips, then the card row -->
+  <rect x="40" y="478" width="52" height="20" rx="10" fill="#115e59"/>
+  <rect x="56" y="485" width="20" height="6" rx="3" fill="#ffffff"/>
+  <rect x="100" y="478" width="104" height="20" rx="10" fill="#ffffff" stroke="#eae3d3" stroke-width="2"/>
+  <rect x="118" y="485" width="68" height="6" rx="3" fill="#1c2419"/>
+  <rect x="212" y="478" width="82" height="20" rx="10" fill="#ffffff" stroke="#eae3d3" stroke-width="2"/>
+  <rect x="230" y="485" width="46" height="6" rx="3" fill="#1c2419"/>
+
+  <g>
+    <!-- card 1: flush sand image, save badge, title, price, red buy bar -->
+    <rect x="40" y="512" width="134" height="76" rx="9" fill="#ffffff" stroke="#eae3d3" stroke-width="2"/>
+    <path d="M42 521a7 7 0 0 1 7-7h116a7 7 0 0 1 7 7v21H42z" fill="#f3ede0"/>
+    <rect x="48" y="520" width="38" height="13" rx="4" fill="#dc2626"/>
+    <rect x="54" y="525" width="26" height="4" rx="2" fill="#ffffff"/>
+    <rect x="48" y="548" width="90" height="6" rx="3" fill="#1c2419"/>
+    <rect x="48" y="560" width="34" height="8" rx="4" fill="#1c2419"/>
+    <rect x="88" y="562" width="24" height="5" rx="2.5" fill="#a29c8a"/>
+    <rect x="48" y="574" width="118" height="10" rx="5" fill="#dc2626"/>
+
+    <!-- card 2 -->
+    <rect x="186" y="512" width="134" height="76" rx="9" fill="#ffffff" stroke="#eae3d3" stroke-width="2"/>
+    <path d="M188 521a7 7 0 0 1 7-7h116a7 7 0 0 1 7 7v21H188z" fill="#f3ede0"/>
+    <rect x="194" y="548" width="102" height="6" rx="3" fill="#1c2419"/>
+    <rect x="194" y="560" width="30" height="8" rx="4" fill="#1c2419"/>
+    <rect x="194" y="574" width="118" height="10" rx="5" fill="#dc2626"/>
+
+    <!-- card 3 -->
+    <rect x="332" y="512" width="134" height="76" rx="9" fill="#ffffff" stroke="#eae3d3" stroke-width="2"/>
+    <path d="M334 521a7 7 0 0 1 7-7h116a7 7 0 0 1 7 7v21H334z" fill="#f3ede0"/>
+    <rect x="340" y="520" width="38" height="13" rx="4" fill="#dc2626"/>
+    <rect x="346" y="525" width="26" height="4" rx="2" fill="#ffffff"/>
+    <rect x="340" y="548" width="86" height="6" rx="3" fill="#1c2419"/>
+    <rect x="340" y="560" width="36" height="8" rx="4" fill="#1c2419"/>
+    <rect x="382" y="562" width="22" height="5" rx="2.5" fill="#a29c8a"/>
+    <rect x="340" y="574" width="118" height="10" rx="5" fill="#dc2626"/>
+
+    <!-- card 4 -->
+    <rect x="478" y="512" width="134" height="76" rx="9" fill="#ffffff" stroke="#eae3d3" stroke-width="2"/>
+    <path d="M480 521a7 7 0 0 1 7-7h116a7 7 0 0 1 7 7v21H480z" fill="#f3ede0"/>
+    <rect x="486" y="548" width="96" height="6" rx="3" fill="#1c2419"/>
+    <rect x="486" y="560" width="32" height="8" rx="4" fill="#1c2419"/>
+    <rect x="486" y="574" width="118" height="10" rx="5" fill="#dc2626"/>
+
+    <!-- card 5 -->
+    <rect x="624" y="512" width="134" height="76" rx="9" fill="#ffffff" stroke="#eae3d3" stroke-width="2"/>
+    <path d="M626 521a7 7 0 0 1 7-7h116a7 7 0 0 1 7 7v21H626z" fill="#f3ede0"/>
+    <rect x="632" y="548" width="88" height="6" rx="3" fill="#1c2419"/>
+    <rect x="632" y="560" width="34" height="8" rx="4" fill="#1c2419"/>
+    <rect x="632" y="574" width="118" height="10" rx="5" fill="#dc2626"/>
+  </g>
+
+  <!-- dark teal footer edge -->
+  <rect y="592" width="800" height="8" fill="#0c433f"/>
+</svg>

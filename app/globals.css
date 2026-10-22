@@ -1,0 +1,438 @@
+@import 'tailwindcss';
+
+/*
+  Page Builder block classes live in page data as strings, not in source files,
+  so Tailwind cannot scan them. Safelist the ones that appear only there.
+
+  These two used to be hand-written as literal rules further down this file,
+  but without their media query and outside any @layer. Unlayered rules beat
+  @layer utilities, so that copy won everywhere and `2xl:grid-cols-2` applied
+  at every width instead of from 96rem up.
+*/
+@source inline("2xl:grid-cols-{2,3}");
+
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  /*
+    The brand purple was hardcoded as `#634FE5` in a few dozen places. It is a
+    token now, so new markup can say `bg-brand` and shade it (`bg-brand/20`,
+    `text-brand-600`) the way it would any other palette entry.
+  */
+  --color-brand: #634fe5;
+  --color-brand-50: #f1efff;
+  --color-brand-100: #e4e0ff;
+  --color-brand-200: #cac2ff;
+  --color-brand-300: #a596ff;
+  --color-brand-400: #8671f4;
+  --color-brand-500: #634fe5;
+  --color-brand-600: #5540d4;
+  --color-brand-700: #4733ab;
+  --color-brand-800: #392c85;
+  --color-brand-900: #241c56;
+}
+
+/*
+  The default border color has changed to `currentColor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentColor);
+  }
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+
+  /* Reserving the scrollbar gutter stops the shell shifting sideways by a few
+     pixels whenever a screen grows tall enough to need a scrollbar. */
+  scrollbar-gutter: stable;
+}
+
+/*
+  There used to be a `prefers-color-scheme: dark` block here flipping
+  `--background` to near-black. Nothing else in the dashboard has a dark
+  variant - cards, tables and text are all light-only - so on a phone set to
+  dark mode the page background went black behind white cards, and anything
+  inheriting `--foreground` turned near-white on white. The app is light-only
+  by design, so the override is gone rather than half-applied.
+*/
+
+html {
+  /* Safari inflates text in a narrow viewport unless told not to, which is
+     what made the dashboard reflow when a phone turned landscape. */
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  /* `--font-geist-sans` is loaded by the layouts and was being ignored: this
+     declaration used to hardcode Arial, so the webfont never applied. */
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  /* The shell is sized against the viewport, so a single wide child used to
+     scroll the entire page sideways on a phone rather than scrolling inside
+     its own container. */
+  overflow-x: hidden;
+}
+
+/* Long ids, emails and URLs in table cells and detail panes would otherwise
+   push a card wider than the screen. */
+body,
+input,
+textarea,
+select,
+button {
+  overflow-wrap: break-word;
+}
+
+/*
+  Base form controls. These are unlayered on purpose - several screens rely on
+  them beating Tailwind utilities - so anything that needs to differ marks its
+  own utilities important. The sizing below is a little taller and softer than
+  before, which gives every untouched screen a usable tap target for free.
+
+  `search`, `tel`, `url`, `date` and `time` are new to the list; they were
+  rendering as unstyled browser defaults next to fields that matched.
+*/
+input[type="text"],
+input[type="number"],
+input[type="email"],
+input[type="password"],
+input[type="search"],
+input[type="tel"],
+input[type="url"],
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"],
+input[type="file"],
+textarea {
+  @apply border border-gray-300 bg-white shadow-sm text-gray-700 cursor-pointer rounded-lg px-3 py-[7px] transition-colors;
+  min-height: 2.25rem;
+}
+
+input[type="text"]:hover,
+input[type="number"]:hover,
+input[type="email"]:hover,
+input[type="password"]:hover,
+input[type="search"]:hover,
+input[type="tel"]:hover,
+input[type="url"]:hover,
+textarea:hover {
+  @apply border-gray-400;
+}
+
+input[type="submit"],
+button {
+  @apply border border-gray-300 shadow-sm text-gray-600 cursor-pointer rounded-lg px-3 py-[6px] transition-colors;
+}
+
+button:disabled,
+input:disabled,
+select:disabled,
+textarea:disabled {
+  @apply cursor-not-allowed opacity-60;
+}
+
+select {
+  @apply border border-gray-300 bg-white shadow-sm text-gray-700 cursor-pointer rounded-lg px-3 py-[7px] transition-colors;
+  min-height: 2.25rem;
+}
+
+select:hover {
+  @apply border-gray-400;
+}
+
+/* A visible focus ring on every control. Component-level `outline-none`
+   overrides had removed the keyboard affordance from most of the app. */
+:where(input, select, textarea, button, a, [role="button"], [tabindex]):focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+}
+
+/*
+  iOS Safari zooms the viewport whenever a focused field's text is under 16px,
+  and does not zoom back out - which is how a phone ends up parked half a
+  screen to the right of the layout. Fields go to 16px below `sm`, and tap
+  targets to the 44px minimum.
+*/
+@media screen and (max-width: 639px) {
+
+  input[type="text"],
+  input[type="number"],
+  input[type="email"],
+  input[type="password"],
+  input[type="search"],
+  input[type="tel"],
+  input[type="url"],
+  input[type="date"],
+  input[type="time"],
+  input[type="datetime-local"],
+  textarea,
+  select {
+    font-size: 16px;
+    min-height: 2.75rem;
+  }
+}
+
+/*
+  Form controls inside a settings card. The rules above are unlayered, so they
+  beat Tailwind utilities on the elements themselves; these are scoped by class
+  and therefore more specific, which is what lets the settings screens restyle
+  their fields without every input carrying a pile of `!` utilities.
+
+  Checkboxes are sized here rather than in markup because several of them in
+  SettingsGlobal share a class string with the text inputs (`w-full` included),
+  so they cannot be told apart by class alone.
+
+  `.settings-card` is the settings screens, `.form-card` the editor screens
+  (product edit and friends); both opt into the same field styling.
+*/
+:is(.settings-card, .form-card) input[type="text"],
+:is(.settings-card, .form-card) input[type="number"],
+:is(.settings-card, .form-card) input[type="email"],
+:is(.settings-card, .form-card) input[type="password"],
+:is(.settings-card, .form-card) input[type="datetime-local"],
+:is(.settings-card, .form-card) textarea,
+:is(.settings-card, .form-card) select {
+  @apply w-full rounded-lg px-3 py-2 text-sm text-gray-700;
+}
+
+:is(.settings-card, .form-card) textarea {
+  @apply min-h-24 py-2;
+}
+
+/* Radios land here for the same reason as checkboxes: a few of them were
+   wearing the full-width text-input class string, which stretched them. */
+:is(.settings-card, .form-card) input[type="checkbox"],
+:is(.settings-card, .form-card) input[type="radio"] {
+  @apply h-4 w-4 shrink-0 cursor-pointer accent-[#634FE5];
+}
+
+:is(.settings-card, .form-card) input[type="checkbox"] {
+  @apply rounded;
+}
+
+table {
+  border: 1px solid #ccc;
+  border-collapse: collapse;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  table-layout: fixed;
+}
+
+/*
+  Below `md`, data tables stop being tables and become one card per row, each
+  cell on its own line labelled by its column header. A twenty-column orders
+  table cannot be read any other way on a phone - side-scrolling it hides the
+  row you are reading.
+
+  The label comes from `data-label` on the cell. Cells rendered by a column
+  `callback` supply their own `<td>`, so a callback that wants a label has to
+  set `data-label` itself; without one the value just fills the row.
+*/
+@media screen and (max-width: 767px) {
+
+  table {
+    border: 0;
+    display: block;
+    table-layout: auto;
+  }
+
+  table caption {
+    font-size: 1.15rem;
+    text-align: left;
+  }
+
+  /* Visually hidden rather than `display: none`, so the header text stays
+     available to screen readers. EntriesTable renders the head row a second
+     time below the body; this hides that copy too. */
+  table thead {
+    border: none;
+    clip-path: inset(50%);
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    padding: 0;
+    position: absolute;
+    white-space: nowrap;
+    width: 1px;
+  }
+
+  table tbody,
+  table tfoot {
+    display: block;
+  }
+
+  table tr {
+    display: block;
+    margin-bottom: 0.625rem;
+    overflow: hidden;
+    border: 1px solid var(--color-gray-200);
+    border-radius: 0.75rem;
+    background: #fff;
+    box-shadow: 0 1px 2px rgb(16 24 40 / 0.05);
+  }
+
+  table tr:last-child {
+    margin-bottom: 0;
+  }
+
+  table td {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    min-height: 2.75rem;
+    /* Matches the `!px-5` that most cell renderers carry, so cells with and
+       without that utility line up down the card. */
+    padding: 0.5rem 1.25rem;
+    border: 0;
+    border-bottom: 1px solid var(--color-gray-100);
+    font-size: 0.8125rem;
+    text-align: right;
+  }
+
+  table td::before {
+    content: attr(data-label);
+    flex: 0 0 auto;
+    max-width: 45%;
+    overflow: hidden;
+    color: var(--color-gray-500);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-align: left;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  /* A cell with no label gets the full width instead of an empty gutter. */
+  table td:not([data-label])::before {
+    display: none;
+  }
+
+  table td:last-child {
+    border-bottom: 0;
+  }
+
+  /* The row checkbox reads as an affordance for the whole card, not a field,
+     so it gets its own tinted strip at the top rather than a right-hand value
+     slot. Tagged by `data-cell` rather than `:first-child`, which would also
+     catch the full-width empty-state cell. */
+  table td[data-cell="check"] {
+    justify-content: flex-start;
+    background: var(--color-gray-50);
+  }
+
+  /* `colSpan` means nothing once the row is a block, so the empty state just
+     centres itself across the card. */
+  table td[data-cell="empty"] {
+    justify-content: center;
+    text-align: center;
+  }
+}
+
+/*
+  Scrollbars. Thin and neutral on the panes that scroll (the nav list, table
+  wrappers, filter rails) instead of the OS default, which on Windows is wide
+  enough to cover a table column.
+*/
+@media (pointer: fine) {
+
+  .scroll-thin {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-gray-300) transparent;
+  }
+
+  .scroll-thin::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .scroll-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scroll-thin::-webkit-scrollbar-thumb {
+    background: var(--color-gray-300);
+    border-radius: 9999px;
+  }
+
+  .scroll-thin::-webkit-scrollbar-thumb:hover {
+    background: var(--color-gray-400);
+  }
+}
+
+/* For rails that are meant to be swiped, where a visible bar is just noise. */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/*
+  Shared page frame. Screens were each repeating `min-h-screen bg-gray-50 flex
+  flex-col gap-4 xl:p-5 p-3`; this keeps the gutters in one place and adds the
+  iOS safe-area insets so content clears the home indicator and the rounded
+  display corners in landscape.
+*/
+.page-shell {
+  @apply flex min-h-full flex-col gap-4 p-3 sm:p-4 xl:p-5;
+  padding-left: max(0.75rem, env(safe-area-inset-left));
+  padding-right: max(0.75rem, env(safe-area-inset-right));
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+@media (min-width: 1280px) {
+  .page-shell {
+    padding-left: max(1.25rem, env(safe-area-inset-left));
+    padding-right: max(1.25rem, env(safe-area-inset-right));
+    padding-bottom: max(1.25rem, env(safe-area-inset-bottom));
+  }
+}
+
+/* Holds the page still behind the mobile nav drawer. Released again at `lg`,
+   where the sidebar is part of the layout and never covers anything. */
+body.nav-locked {
+  overflow: hidden;
+  touch-action: none;
+}
+
+@media (min-width: 1024px) {
+  body.nav-locked {
+    overflow: hidden visible;
+    touch-action: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
