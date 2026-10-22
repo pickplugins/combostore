@@ -203,10 +203,14 @@ const OrderCourier = ({ order_id, deliveryData }) => {
 
                   return (
                     <>
-                      {couriers[index]?.enabled && (
-                        <option value={item.id}>{item.label}</option>
-
+                      {couriers && (
+                        <>
+                          {couriers[index]?.enabled && (
+                            <option value={item.id}>{item.label}</option>
+                          )}
+                        </>
                       )}
+
                     </>
                   )
 
