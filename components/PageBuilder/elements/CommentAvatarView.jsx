@@ -38,11 +38,11 @@ const CommentAvatarView = (props) => {
 
 	return (
 
-		<div id={id} index={index} type={type} className={`${cssSelectors['*']?.classes}  `}
+		<div id={id} index={index} type={type} className={`${cssSelectors['*']?.classes ?? ''}  `}
 		>
 
 			<Image
-				className={`${cssSelectors['image']?.classes}  `}
+				className={`${cssSelectors['image']?.classes ?? ''}  `}
 				src={avatar}
 				alt={author}
 				width={80}

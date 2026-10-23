@@ -60,7 +60,7 @@ const CommentsGridView = (props) => {
 		<div
 			id={id}
 			type={type}
-			className={`  ${cssSelectors['*']?.classes}  `}
+			className={`  ${cssSelectors['*']?.classes ?? ''}  `}
 
 		>
 

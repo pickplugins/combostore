@@ -38,7 +38,7 @@ const CommentAuthorView = (props) => {
 
 	return (
 
-		<Tag id={id} index={index} type={type} className={`${cssSelectors['*']?.classes}  `}
+		<Tag id={id} index={index} type={type} className={`${cssSelectors['*']?.classes ?? ''}  `}
 			dangerouslySetInnerHTML={{ __html: comment_author }}
 		>
 		</Tag>

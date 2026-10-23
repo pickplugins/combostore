@@ -37,7 +37,7 @@ const CommentContentView = (props) => {
 
 	return (
 
-		<Tag id={id} index={index} type={type} className={`${cssSelectors['*']?.classes}  `}
+		<Tag id={id} index={index} type={type} className={`${cssSelectors['*']?.classes ?? ''}  `}
 			dangerouslySetInnerHTML={{ __html: comment_content }}
 		>
 		</Tag>

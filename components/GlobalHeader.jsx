@@ -12,6 +12,7 @@ import {
 	IconShieldLock,
 	IconChevronRight,
 	IconHome,
+	IconHomeShare,
 	IconWand,
 	IconUser,
 	IconMenu2,
@@ -21,10 +22,10 @@ import {
 
 
 /* Global CSS styles `button` with unlayered rules, so it beats Tailwind
-   utilities and the overrides below need `!` to land.
+	 utilities and the overrides below need `!` to land.
 
-   `h-10 w-10` below `sm` keeps the header controls at a thumb-sized target;
-   they drop back to 36px once there is a pointer. */
+	 `h-10 w-10` below `sm` keeps the header controls at a thumb-sized target;
+	 they drop back to 36px once there is a pointer. */
 const ICON_BUTTON =
 	"inline-flex h-10 w-10 shrink-0 items-center justify-center !rounded-lg !border !border-transparent !bg-transparent !px-0 !py-0 !text-gray-500 !shadow-none transition-colors hover:!bg-gray-100 hover:!text-gray-900 sm:h-9 sm:w-9";
 
@@ -181,12 +182,12 @@ const GlobalHeader = () => {
 					aria-expanded={navToggle}
 					onClick={() => setnavToggle(!navToggle)}
 					/* `max-lg:hidden`, not `hidden lg:inline-flex`: ICON_BUTTON already
-					   carries `inline-flex`, and between two unprefixed display
-					   utilities the winner is whichever Tailwind emits last, not
-					   whichever is written last in the attribute - so plain `hidden`
-					   lost and both triggers showed up side by side on a phone. A
-					   media-query variant is ordered after the base utilities, so it
-					   wins cleanly. */
+						 carries `inline-flex`, and between two unprefixed display
+						 utilities the winner is whichever Tailwind emits last, not
+						 whichever is written last in the attribute - so plain `hidden`
+						 lost and both triggers showed up side by side on a phone. A
+						 media-query variant is ordered after the base utilities, so it
+						 wins cleanly. */
 					className={`${ICON_BUTTON} max-lg:hidden`}>
 					{navToggle
 						? <IconLayoutSidebarLeftCollapse size={20} />
@@ -233,13 +234,16 @@ const GlobalHeader = () => {
 						);
 					})}
 				</nav>
+
+
+
 			</div>
 
 			<div className="flex shrink-0 items-center justify-end gap-1.5 sm:gap-2" >
 
 				{userDataX?.roles?.includes("administrator") && (
 					/* Was `hidden sm:inline-flex`, which put the builder out of reach
-					   from a phone entirely. It collapses to its icon instead. */
+						 from a phone entirely. It collapses to its icon instead. */
 					<Link
 						href="/builder"
 						title={("Builder")}
@@ -248,6 +252,14 @@ const GlobalHeader = () => {
 						<span className="hidden sm:inline">{("Builder")}</span>
 					</Link>
 				)}
+
+				<Link
+					href="/" target="_blank"
+					title={("Store")}
+					className="inline-flex h-10 w-10 items-center justify-center gap-1.5 rounded-lg border border-gray-300 bg-white text-sm font-medium text-gray-700 shadow-sm transition-colors hover:border-gray-400 hover:bg-gray-50 sm:h-9 sm:w-auto sm:px-3 sm:py-1.5">
+					<IconHomeShare size={16} />
+					<span className="hidden sm:inline">{("Store")}</span>
+				</Link>
 
 				<button
 					type="button"
@@ -263,8 +275,8 @@ const GlobalHeader = () => {
 
 				{userDataX?.id && (
 					/* Hidden below `sm`: the header has a hamburger, the builder, the
-					   privacy toggle and notifications to fit on a 360px screen, and
-					   the drawer footer already identifies who is signed in. */
+						 privacy toggle and notifications to fit on a 360px screen, and
+						 the drawer footer already identifies who is signed in. */
 					<div className="hidden items-center gap-2 border-l border-gray-200 pl-2 sm:flex sm:pl-3">
 						<span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full border border-gray-200 bg-gray-100 text-gray-400">
 							{userDataX?.avatar && (

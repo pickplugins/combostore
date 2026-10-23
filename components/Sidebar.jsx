@@ -52,9 +52,9 @@ import VersionUpdateBanner from "./VersionUpdateBanner";
 
 
 /*
-  Hoisted out of the component body: the array was rebuilt - and every icon
-  element in it re-created - on each render of a component that re-renders on
-  any store change.
+	Hoisted out of the component body: the array was rebuilt - and every icon
+	element in it re-created - on each render of a component that re-renders on
+	any store change.
 */
 const NAVS = [
 	{ label: ("Dashboard"), value: "dashboard", icon: <IconDashboard />, roles: ['administrator'] },
@@ -97,7 +97,7 @@ const NAVS = [
 	// { label: ("Builder"), value: "builder", icon: <IconDeviceIpadCog />, parent: "appearance", roles: ['administrator'] },
 
 	/* The group key must differ from the "All Users" child's key, or the
-	   tree map collapses the two and the group nests inside itself. */
+		 tree map collapses the two and the group nests inside itself. */
 	{ label: ("Users"), value: "users-group", icon: <IconUserDollar />, roles: ['administrator'] },
 	{ label: ("All Users"), value: "users", icon: <IconUserDollar />, parent: "users-group", roles: ['administrator'] },
 	{ label: ("Customers"), value: "customers", icon: <IconUserDollar />, parent: "users-group", roles: ['administrator'] },
@@ -125,7 +125,7 @@ const NAVS = [
 	// { label: ("Pending"), value: "pending-tickets", icon: <IconInfoHexagon />, parent: "support", roles: ['administrator'] },
 	{ label: ("Settings"), value: "settings", icon: <IconAdjustmentsAlt />, roles: ['administrator'] },
 	/* Top-level, so its link is `/${slug}` rather than `/dashboard/${slug}` -
-	   hence the explicit slug pointing at app/dashboard/extensions. */
+		 hence the explicit slug pointing at app/dashboard/extensions. */
 	{ label: ("Extensions"), value: "extensions", slug: "dashboard/extensions", icon: <IconPuzzle />, roles: ['administrator'] },
 	// { label: ("Media"), value: "media", icon: <IconLibraryPhoto />, roles: ['administrator'] },
 	// { label: ("Onboard"), value: "onboard", icon: <IconAdjustmentsAlt />, roles: ['administrator'] },
@@ -137,8 +137,8 @@ const NAVS = [
 	{ label: ("Posts"), value: "posts", icon: <IconList />, parent: "blogs", roles: ['administrator'] },
 	{ label: ("Comments"), value: "comments", icon: <IconMessage />, parent: "blogs", roles: ['administrator'] },
 	/* Distinct keys from the Store entries above, with `slug` keeping the
-	   route they already pointed at. Both routes are hardcoded to the
-	   product taxonomies, so these still open the product screens. */
+		 route they already pointed at. Both routes are hardcoded to the
+		 product taxonomies, so these still open the product screens. */
 	{ label: ("Categories"), value: "post-categories", slug: "categories", icon: <IconSubtask />, parent: "blogs", roles: ['administrator'] },
 	{ label: ("Tags"), value: "posts-tags", slug: "tags", icon: <IconTags />, parent: "blogs", roles: ['administrator'] },
 	{ label: ("Bulk Submit Blog"), value: "bulk-submit-blog", icon: <IconPropeller />, parent: "blogs", roles: ['administrator'] },
@@ -159,19 +159,19 @@ const CLOSE_BUTTON =
 const CORE_NAV_VALUES = new Set(NAVS.map(n => n.value));
 
 /*
-  Core nav plus whatever the active extensions contribute.
+	Core nav plus whatever the active extensions contribute.
 
-  Two kinds of entry are refused rather than passed on, because ToggleNavs fails
-  quietly on both:
+	Two kinds of entry are refused rather than passed on, because ToggleNavs fails
+	quietly on both:
 
-    - one whose `value` a core entry already uses. The tree is keyed on `value`,
-      so the second writer wins and an extension would replace a core screen's
-      link with its own.
-    - one naming a `parent` that does not exist. A child is only attached when
-      its parent is in the map, so the entry would simply never render.
+		- one whose `value` a core entry already uses. The tree is keyed on `value`,
+			so the second writer wins and an extension would replace a core screen's
+			link with its own.
+		- one naming a `parent` that does not exist. A child is only attached when
+			its parent is in the map, so the entry would simply never render.
 
-  Parents are resolved against core and every extension entry at once, so a
-  manifest can list a child before the group it belongs to.
+	Parents are resolved against core and every extension entry at once, so a
+	manifest can list a child before the group it belongs to.
 */
 function mergeExtensionNavs(extensionNavs) {
 	if (!extensionNavs?.length) return NAVS;
@@ -192,9 +192,9 @@ function mergeExtensionNavs(extensionNavs) {
 		}
 
 		/*
-		  A child is linked as `/dashboard/<slug>`, which is where the extension
-		  route lives. A top-level entry is linked as `/<slug>` instead, so its
-		  slug carries the `dashboard/` prefix to land in the same place.
+			A child is linked as `/dashboard/<slug>`, which is where the extension
+			route lives. A top-level entry is linked as `/<slug>` instead, so its
+			slug carries the `dashboard/` prefix to land in the same place.
 		*/
 		extras.push(
 			item.parent
@@ -208,21 +208,21 @@ function mergeExtensionNavs(extensionNavs) {
 
 
 /*
-  The nav column's contents, rendered twice: once in the mobile drawer and once
-  in the desktop column. Keeping it in one place is what lets the two presentations
-  stay in step - the alternative is a single element that has to be both a
-  floating overlay and an in-flow column, which is where the old sidebar went
-  wrong.
+	The nav column's contents, rendered twice: once in the mobile drawer and once
+	in the desktop column. Keeping it in one place is what lets the two presentations
+	stay in step - the alternative is a single element that has to be both a
+	floating overlay and an in-flow column, which is where the old sidebar went
+	wrong.
 
-  `onNavigate` is only passed by the drawer: tapping a link there has to close
-  it. Route changes close it too, but a tap on the link for the page you are
-  already on does not change the route.
+	`onNavigate` is only passed by the drawer: tapping a link there has to close
+	it. Route changes close it too, but a tap on the link for the page you are
+	already on does not change the route.
 */
 const SidebarContent = ({ token, onNavigate, navs }) => (
 	<>
 		<div className="flex shrink-0 items-center justify-between gap-3 border-b border-gray-800 px-4 py-4">
 
-			<Link href={`/`} className="min-w-0" onClick={onNavigate}>
+			<Link href={`/dashboard`} className="min-w-0" onClick={onNavigate}>
 				<Image
 					src="/logo-h.png"
 					className="h-8 w-auto object-contain" width={200} height={`50`} alt="ComboStore"
@@ -293,7 +293,7 @@ const Sidebar = () => {
 	const closeMobileNav = () => setmobileNav(false);
 
 	/* The drawer covers the page it links to, so it has to get out of the way
-	   once the route actually changes. */
+		 once the route actually changes. */
 	useEffect(() => {
 		setmobileNav(false);
 	}, [pathname, setmobileNav]);
@@ -312,9 +312,9 @@ const Sidebar = () => {
 	}, [mobileNav, setmobileNav]);
 
 	/* Without this the page scrolls under the drawer: a touch drag that starts
-	   on the backdrop, or anywhere past the end of the nav list, moves the
-	   dashboard behind it. The class is lifted again at `lg` in globals.css,
-	   where the drawer is never on screen. */
+		 on the backdrop, or anywhere past the end of the nav list, moves the
+		 dashboard behind it. The class is lifted again at `lg` in globals.css,
+		 where the drawer is never on screen. */
 	useEffect(() => {
 		document.body.classList.toggle('nav-locked', mobileNav);
 		return () => document.body.classList.remove('nav-locked');

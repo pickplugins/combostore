@@ -624,6 +624,7 @@ const EditorActions = (props) => {
 						<IconHome size={18} />
 					</Link>
 
+
 					<span className="mx-1 h-6 w-px shrink-0 bg-white/10" />
 
 					{/* Edit history. Undo and redo cover the common case; the

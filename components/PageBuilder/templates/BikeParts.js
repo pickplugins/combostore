@@ -78,16 +78,18 @@
  *   - The wishlist count has no store behind it, so its "0" bubble is drawn
  *     with an ::after, matching the cart's real `button-quantity` badge.
  *
- * WHAT THE STOREFRONT CANNOT RENDER
+ * BLOCKS AND THEIR RENDERERS
  *
  * BlockRender.jsx is the storefront switch and its default arm prints
  * "[blockType]" as literal text, so a block with no case there ships as
- * visible debug text. The five comment blocks -- commentsGrid, commentsLoop,
- * commentAvatar, commentAuthor, commentRate, commentContent and commentsForm --
- * are declared in ElementsDefinition.js and appear in the editor's
- * BlockPreview.jsx map, but none of them has a *View component or a case in
- * BlockRender. So the Product page here has no Reviews tab and Blog Single has
- * no comments section. messengerButton is in the same state, and is not used.
+ * visible debug text. Every block used below has one.
+ *
+ * The comment blocks need a post id, which they take from PostContext --
+ * app/product/[slug] and app/blog/[slug] both provide it. commentsGrid owns
+ * the query and hands commentsLoop the params and commentsForm a callback, so
+ * a review posted on the Product page appears in the list beside it without a
+ * reload. Dropping a commentsGrid anywhere that has no post in context shows
+ * an empty list, which is why it only appears on those two pages.
  *
  * The two badges on a product card come from different places:
  *
@@ -4838,6 +4840,10 @@ var template = [
                         {
                           "label": "Delivery",
                           "icon": "IconTruckDelivery"
+                        },
+                        {
+                          "label": "Reviews",
+                          "icon": "IconStar"
                         }
                       ]
                     },
@@ -5000,6 +5006,102 @@ var template = [
                                 "classes": "text-sm text-[#0f171c] leading-relaxed"
                               }
                             }
+                          }
+                        ]
+                      },
+                      {
+                        "id": "bp-pd-tab-rev",
+                        "type": "tabsItem",
+                        "options": {},
+                        "cssSelectors": {
+                          "*": {
+                            "classes": "w-full"
+                          }
+                        },
+                        "children": [
+                          {
+                            "id": "bp-pd-rev",
+                            "type": "commentsGrid",
+                            "options": {
+                              "classes": ""
+                            },
+                            "cssSelectors": {
+                              "*": {
+                                "classes": "w-full"
+                              },
+                              "loop-items": {
+                                "classes": "flex flex-col gap-4 max-w-3xl"
+                              },
+                              "loop-item": {
+                                "classes": "flex flex-col gap-2 p-5 rounded-xl border border-[#e8eaef] bg-[#f7f8fb]"
+                              }
+                            },
+                            "children": [
+                              {
+                                "id": "bp-pd-rev-loop",
+                                "type": "commentsLoop",
+                                "options": {},
+                                "cssSelectors": {
+                                  "*": {
+                                    "classes": ""
+                                  },
+                                  "loop-items": {
+                                    "classes": "flex flex-col gap-4 max-w-3xl"
+                                  },
+                                  "loop-item": {
+                                    "classes": "flex flex-col gap-2 p-5 rounded-xl border border-[#e8eaef] bg-[#f7f8fb]"
+                                  }
+                                },
+                                "children": [
+                                  {
+                                    "id": "bp-pd-rev-avatar",
+                                    "type": "commentAvatar",
+                                    "options": {},
+                                    "cssSelectors": {
+                                      "*": {
+                                        "classes": "w-fit"
+                                      },
+                                      "link": {
+                                        "classes": "block"
+                                      },
+                                      "image": {
+                                        "classes": "w-10 h-10 rounded-full object-cover bg-[#f1f3f7]"
+                                      }
+                                    }
+                                  },
+                                  {
+                                    "id": "bp-pd-rev-author",
+                                    "type": "commentAuthor",
+                                    "options": {},
+                                    "cssSelectors": {
+                                      "*": {
+                                        "classes": "text-sm font-bold text-[#0f171c]"
+                                      }
+                                    }
+                                  },
+                                  {
+                                    "id": "bp-pd-rev-rate",
+                                    "type": "commentRate",
+                                    "options": {},
+                                    "cssSelectors": {
+                                      "*": {
+                                        "classes": "flex items-center gap-0.5 text-amber-500 [&_svg]:size-4"
+                                      }
+                                    }
+                                  },
+                                  {
+                                    "id": "bp-pd-rev-body",
+                                    "type": "commentContent",
+                                    "options": {},
+                                    "cssSelectors": {
+                                      "*": {
+                                        "classes": "text-sm text-[#5b6670] leading-relaxed"
+                                      }
+                                    }
+                                  }
+                                ]
+                              }
+                            ]
                           }
                         ]
                       }
@@ -6916,6 +7018,164 @@ var template = [
                         "classes": "text-base text-[#0f171c] leading-relaxed [&_p]:mb-4 [&_h2]:text-xl [&_h2]:font-bold [&_h2]:text-[#0f171c] [&_h2]:mt-8 [&_h2]:mb-3 [&_ul]:list-disc [&_ul]:ml-5 [&_ul]:mb-4 [&_a]:text-[#ed1c2f] [&_a]:underline [&_img]:rounded-xl [&_img]:my-6"
                       }
                     }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "bp-bp-comments",
+            "type": "section",
+            "options": {},
+            "cssSelectors": {
+              "*": {
+                "classes": "w-full bg-[#f7f8fb] border-y border-[#e8eaef]"
+              }
+            },
+            "children": [
+              {
+                "id": "bp-bp-comments-in",
+                "type": "container",
+                "options": {},
+                "cssSelectors": {
+                  "*": {
+                    "classes": "w-full max-w-3xl mx-auto px-4 py-8 lg:py-14 flex flex-col gap-6"
+                  }
+                },
+                "children": [
+                  {
+                    "id": "bp-bp-comments-h",
+                    "type": "heading",
+                    "options": {
+                      "text": "Comments",
+                      "tag": "h2"
+                    },
+                    "cssSelectors": {
+                      "*": {
+                        "classes": "text-xl font-extrabold tracking-tight text-[#0f171c]"
+                      }
+                    }
+                  },
+                  {
+                    "id": "bp-bp-rev",
+                    "type": "commentsGrid",
+                    "options": {
+                      "classes": ""
+                    },
+                    "cssSelectors": {
+                      "*": {
+                        "classes": "w-full"
+                      },
+                      "loop-items": {
+                        "classes": "flex flex-col gap-4 max-w-3xl"
+                      },
+                      "loop-item": {
+                        "classes": "flex flex-col gap-2 p-5 rounded-xl border border-[#e8eaef] bg-white"
+                      }
+                    },
+                    "children": [
+                      {
+                        "id": "bp-bp-rev-loop",
+                        "type": "commentsLoop",
+                        "options": {},
+                        "cssSelectors": {
+                          "*": {
+                            "classes": ""
+                          },
+                          "loop-items": {
+                            "classes": "flex flex-col gap-4 max-w-3xl"
+                          },
+                          "loop-item": {
+                            "classes": "flex flex-col gap-2 p-5 rounded-xl border border-[#e8eaef] bg-white"
+                          }
+                        },
+                        "children": [
+                          {
+                            "id": "bp-bp-rev-avatar",
+                            "type": "commentAvatar",
+                            "options": {},
+                            "cssSelectors": {
+                              "*": {
+                                "classes": "w-fit"
+                              },
+                              "link": {
+                                "classes": "block"
+                              },
+                              "image": {
+                                "classes": "w-10 h-10 rounded-full object-cover bg-[#f1f3f7]"
+                              }
+                            }
+                          },
+                          {
+                            "id": "bp-bp-rev-author",
+                            "type": "commentAuthor",
+                            "options": {},
+                            "cssSelectors": {
+                              "*": {
+                                "classes": "text-sm font-bold text-[#0f171c]"
+                              }
+                            }
+                          },
+                          {
+                            "id": "bp-bp-rev-body",
+                            "type": "commentContent",
+                            "options": {},
+                            "cssSelectors": {
+                              "*": {
+                                "classes": "text-sm text-[#5b6670] leading-relaxed"
+                              }
+                            }
+                          }
+                        ]
+                      },
+                      {
+                        "id": "bp-bp-form",
+                        "type": "commentsForm",
+                        "options": {
+                          "showRate": false,
+                          "commentLabel": "Leave a comment",
+                          "submitLabel": "Post comment"
+                        },
+                        "cssSelectors": {
+                          "*": {
+                            "classes": "mt-6 p-5 rounded-xl border border-[#e8eaef] bg-white"
+                          },
+                          "form": {
+                            "classes": "flex flex-col gap-4"
+                          },
+                          "field": {
+                            "classes": "flex flex-col gap-2"
+                          },
+                          "label": {
+                            "classes": "text-[13px] font-semibold text-[#0f171c]"
+                          },
+                          "rate-wrap": {
+                            "classes": ""
+                          },
+                          "stars": {
+                            "classes": "flex items-center gap-1 text-amber-500 [&_svg]:size-5"
+                          },
+                          "star": {
+                            "classes": "cursor-pointer"
+                          },
+                          "textarea": {
+                            "classes": "w-full h-28 rounded-lg! border! border-[#e8eaef]! bg-white px-3! py-2.5! text-sm text-[#0f171c]! shadow-none! outline-none placeholder:text-[#9aa3ad] focus:border-[#ed1c2f]!"
+                          },
+                          "submit": {
+                            "classes": "w-fit cursor-pointer rounded px-5 py-2.5 text-[13px] font-bold text-white bg-[#ed1c2f] hover:bg-[#c21424] transition-colors"
+                          },
+                          "notice": {
+                            "classes": "text-[13px] text-[#5b6670]"
+                          },
+                          "errors": {
+                            "classes": "flex flex-col gap-1"
+                          },
+                          "error": {
+                            "classes": "flex items-center gap-2 text-[13px] text-[#ed1c2f]"
+                          }
+                        }
+                      }
+                    ]
                   }
                 ]
               }

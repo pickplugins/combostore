@@ -53,7 +53,10 @@ const AIPrompts = (props) => {
 		panel POSTing to it, which takes both the key and
 		`dangerouslyAllowBrowser` out of the browser.
 	*/
-	const apiKey = settings?.apiKeys?.anthropic?.key ?? process.env.NEXT_PUBLIC_ANTHROPIC_API_KEY ?? '';
+
+	console.log(settings);
+
+	const apiKey = settings?.apiKeys?.anthropic?.key;
 
 	const client = useMemo(
 		() => (apiKey ? new Anthropic({ apiKey, dangerouslyAllowBrowser: true }) : null),
@@ -160,6 +163,13 @@ const AIPrompts = (props) => {
 	};
 
 	const submitAIPrompt = async () => {
+
+		console.log('submitAIPrompt');
+		const apiKey = settings?.apiKeys?.anthropic?.key;
+
+		console.log(apiKey);
+
+
 		if (loading) return;
 		if (!client) {
 			say("No Anthropic API key is configured - add one in settings to generate layouts.");

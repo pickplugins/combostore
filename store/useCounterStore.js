@@ -696,7 +696,7 @@ export const useCounterStore = create((set) => ({
   cartTotalPay: 0,
   setcartTotalPay: (amount) => set({ cartTotalPay: amount }),
 
-  navToggle: false,
+  navToggle: true,
   setnavToggle: () =>
     set((state) => ({
       navToggle: !state.navToggle,

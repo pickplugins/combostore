@@ -51,14 +51,14 @@ const CommentRateView = (props) => {
 
 	return (
 
-		<div id={id} index={index} type={type} className={`${cssSelectors['*']?.classes}  `}
+		<div id={id} index={index} type={type} className={`${cssSelectors['*']?.classes ?? ''}  `}
 		>
 
 			{stars.map((item, indexZ) => {
 
 				return (
 
-					<div className={`${cssSelectors['star']?.classes}`} key={indexZ} title={item?.label}>
+					<div className={`${cssSelectors['star']?.classes ?? ''}`} key={indexZ} title={item?.label}>
 
 						{rate <= indexZ && (
 							<><IconStar /></>

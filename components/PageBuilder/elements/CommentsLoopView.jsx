@@ -111,14 +111,14 @@ const CommentsLoopView = (props) => {
 		<div
 			id={id}
 			type={type}
-			className={` ${cssSelectors['loop-items']?.classes}  `}
+			className={` ${cssSelectors['loop-items']?.classes ?? ''}  `}
 		>
 
 
 			{comments?.map((item, indexZ) => {
 
 
-				return (<div className={`${cssSelectors['loop-item']?.classes} `} key={indexZ}>
+				return (<div className={`${cssSelectors['loop-item']?.classes ?? ''} `} key={indexZ}>
 
 					<CommentProvider value={item}>
 

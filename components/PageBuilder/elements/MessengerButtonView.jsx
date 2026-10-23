@@ -89,18 +89,18 @@ const MessengerButtonView = (props) => {
 	return (
 
 
-		<div id={id} index={index} type={type} className={`${cssSelectors['*']?.classes}  `}
+		<div id={id} index={index} type={type} className={`${cssSelectors['*']?.classes ?? ''}  `}
 		>
 
-			<Link className={`${cssSelectors['link']?.classes}`} href={url} target="_blank" rel="noreferrer">
+			<Link className={`${cssSelectors['link']?.classes ?? ''}`} href={url} target="_blank" rel="noreferrer">
 
 				{IconX && (
-					<div className={`${cssSelectors['icon']?.classes}`}>
+					<div className={`${cssSelectors['icon']?.classes ?? ''}`}>
 						{IconX ? <IconX size={iconSize} /> : null}
 					</div>
 				)}
 
-				<div className={`${cssSelectors['label']?.classes}`}>{label}</div>
+				<div className={`${cssSelectors['label']?.classes ?? ''}`}>{label}</div>
 
 			</Link>
 

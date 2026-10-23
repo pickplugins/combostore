@@ -41,6 +41,35 @@ const CommentsFormView = (props) => {
 	var type = props?.type;
 	var cssSelectors = props?.cssSelectors ?? {};
 
+
+	/*
+		Templates written before this block had a renderer style only `*` --
+		everything else comes back undefined, which would both strip the layout
+		and print the string "undefined" into the class list. So a missing key
+		falls back to the default in ElementsDefinition rather than to nothing.
+		A key the template HAS set wins, even when set to an empty string.
+	*/
+	var defaults = {
+		'form': 'flex flex-col gap-4',
+		'field': 'flex flex-col gap-2',
+		'label': 'text-sm',
+		'rate-wrap': '',
+		'stars': 'flex gap-1 items-center',
+		'star': 'cursor-pointer',
+		'textarea': 'w-full h-32 px-3 py-2 rounded-sm border border-gray-400 shadow-none!',
+		'submit': 'px-4 py-2 rounded-sm text-center text-white bg-blue-600 cursor-pointer',
+		'notice': 'text-sm',
+		'errors': 'flex flex-col gap-1 text-sm text-red-500',
+		'error': 'flex items-center gap-2',
+	};
+
+	function cls(key) {
+		if (cssSelectors[key] && cssSelectors[key].classes != null) {
+			return cssSelectors[key].classes;
+		}
+		return defaults[key] ?? '';
+	}
+
 	var options = props?.options;
 	var showRate = options?.showRate ?? true;
 	var rateLabel = options?.rateLabel ?? 'Your rating';
@@ -173,18 +202,18 @@ const CommentsFormView = (props) => {
 
 	return (
 
-		<div id={id} index={index} type={type} className={`${cssSelectors['*']?.classes}  `}
+		<div id={id} index={index} type={type} className={`${cssSelectors['*']?.classes ?? ''}  `}
 		>
 
-			<div className={`${cssSelectors['form']?.classes}`}>
+			<div className={`${cls('form')}`}>
 
 
 				{showRate && (
-					<div className={`${cssSelectors['field']?.classes} ${cssSelectors['rate-wrap']?.classes}`}>
+					<div className={`${cls('field')} ${cls('rate-wrap')}`}>
 
-						<label className={`${cssSelectors['label']?.classes}`}>{rateLabel}</label>
+						<label className={`${cls('label')}`}>{rateLabel}</label>
 
-						<div className={`${cssSelectors['stars']?.classes}`}>
+						<div className={`${cls('stars')}`}>
 
 							{stars.map((item, indexZ) => {
 
@@ -192,7 +221,7 @@ const CommentsFormView = (props) => {
 									<div
 										key={indexZ}
 										title={item?.label}
-										className={`${cssSelectors['star']?.classes}`}
+										className={`${cls('star')}`}
 										onClick={ev => {
 											setcomment({ ...comment, rate: item.value });
 										}}
@@ -215,13 +244,13 @@ const CommentsFormView = (props) => {
 				)}
 
 
-				<div className={`${cssSelectors['field']?.classes}`}>
+				<div className={`${cls('field')}`}>
 
-					<label htmlFor={`${id}-content`} className={`${cssSelectors['label']?.classes}`}>{commentLabel}</label>
+					<label htmlFor={`${id}-content`} className={`${cls('label')}`}>{commentLabel}</label>
 
 					<textarea
 						id={`${id}-content`}
-						className={`${cssSelectors['textarea']?.classes}`}
+						className={`${cls('textarea')}`}
 						placeholder={placeholder}
 						value={comment?.content}
 						onChange={(ev) => {
@@ -234,7 +263,7 @@ const CommentsFormView = (props) => {
 
 
 				<div
-					className={`${cssSelectors['submit']?.classes}`}
+					className={`${cls('submit')}`}
 					onClick={ev => {
 						submit_comment()
 					}}
@@ -251,17 +280,17 @@ const CommentsFormView = (props) => {
 
 
 				{success && (
-					<div className={`${cssSelectors['notice']?.classes}`}>{successText}</div>
+					<div className={`${cls('notice')}`}>{successText}</div>
 				)}
 
 
 				{errors?.length > 0 && (
-					<div className={`${cssSelectors['errors']?.classes}`}>
+					<div className={`${cls('errors')}`}>
 
 						{errors?.map((item, indexZ) => {
 
 							return (
-								<div key={indexZ} className={`${cssSelectors['error']?.classes}`}>
+								<div key={indexZ} className={`${cls('error')}`}>
 									<IconExclamationCircle size={16} /> {item}
 								</div>
 							)

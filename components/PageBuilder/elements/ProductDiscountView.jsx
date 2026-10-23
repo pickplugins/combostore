@@ -51,13 +51,13 @@ const ProductDiscountView = (props) => {
 	return (
 
 
-		<div id={id} index={index} type={type} className={`${cssSelectors['*']?.classes}  `}
+		<div id={id} index={index} type={type} className={`${cssSelectors['*']?.classes ?? ''}  `}
 		>
 
-			<div className={`${cssSelectors['discount']?.classes}`}>{calculateDiscountPercentage(regular_price, sale_price)}%</div>
+			<div className={`${cssSelectors['discount']?.classes ?? ''}`}>{calculateDiscountPercentage(regular_price, sale_price)}%</div>
 
 			{label && (
-				<span className={`${cssSelectors['label']?.classes}`}>{label}</span>
+				<span className={`${cssSelectors['label']?.classes ?? ''}`}>{label}</span>
 			)}
 
 
