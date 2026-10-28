@@ -18,7 +18,7 @@ const RelatedProductsOptions = (props) => {
 
 	var options = props?.options;
 	var queryPrams = options?.queryPrams ?? [];
-	var cssSelectors = props?.cssSelectors;
+	var cssSelectors = props?.cssSelectors ?? {};
 
 
 	const [loading, setloading] = useState(false);

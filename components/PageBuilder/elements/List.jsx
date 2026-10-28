@@ -20,7 +20,7 @@ const List = (props) => {
 	var id = props?.id;
 
 	var options = props?.options;
-	var cssSelectors = props?.cssSelectors;
+	var cssSelectors = props?.cssSelectors ?? {};
 	var items = options?.items ?? [];
 	var tag = options?.tag ?? 'ul';
 	var icon = options?.icon;

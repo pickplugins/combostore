@@ -28,7 +28,7 @@ const CommentsForm = (props) => {
 
 	const children = props?.children || [];
 
-	var cssSelectors = props?.cssSelectors;
+	var cssSelectors = props?.cssSelectors ?? {};
 
 	const onDrop = (e) => {
 		e.preventDefault();

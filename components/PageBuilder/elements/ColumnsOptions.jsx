@@ -6,7 +6,7 @@ const ColumnsOptions = (props) => {
 	const { updateBlock } = props;
 
 	var id = props?.id;
-	var cssSelectors = props?.cssSelectors;
+	var cssSelectors = props?.cssSelectors ?? {};
 	var handleMoveBlock = props?.handleMoveBlock;
 
 

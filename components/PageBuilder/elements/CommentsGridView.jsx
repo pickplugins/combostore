@@ -13,14 +13,14 @@ import { usePost } from "../context/PostContext";
 	Two things it does that the editor version does not, both because the
 	editor only has to look right on a canvas:
 
-	  - The post id comes from PostContext, which app/product/[slug] and
-	    app/blog/[slug] both provide. CommentsLoop.jsx hard-codes
-	    `queryPrams.post_id = 10018` so the canvas has something to draw; on a
-	    live page that would show one fixed post's comments everywhere.
-	  - It hands the loop a `refresh` counter and the form an
-	    `onCommentSubmitted` callback, so a comment posted through
-	    commentsForm reloads the list beside it. The two blocks are siblings
-	    under this one and have no other way to reach each other.
+		- The post id comes from PostContext, which app/product/[slug] and
+			app/blog/[slug] both provide. CommentsLoop.jsx hard-codes
+			`queryPrams.post_id = 10018` so the canvas has something to draw; on a
+			live page that would show one fixed post's comments everywhere.
+		- It hands the loop a `refresh` counter and the form an
+			`onCommentSubmitted` callback, so a comment posted through
+			commentsForm reloads the list beside it. The two blocks are siblings
+			under this one and have no other way to reach each other.
 
 	The query params carry the shape the rest of the app uses for this endpoint
 	(see components/PageBuilder/elements/Comments.jsx), and anything set on the
@@ -34,7 +34,7 @@ const CommentsGridView = (props) => {
 	var id = props?.id;
 
 	var index = props?.index
-	var cssSelectors = props?.cssSelectors;
+	var cssSelectors = props?.cssSelectors ?? {};
 
 
 	const post = usePost();

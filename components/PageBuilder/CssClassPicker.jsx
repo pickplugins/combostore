@@ -27,12 +27,16 @@ const CssClassPicker = (props) => {
 
       <div className="flex flex-col gap-2">
 
-        <div className="flex justify-between items-center">
-          <label htmlFor="" className="text-xs font-medium text-gray-600">Classes</label>
+        {label && (
+          <div className="flex justify-between items-center">
+            <label htmlFor="" className="text-xs font-medium text-gray-600">Classes</label>
 
 
 
-        </div>
+          </div>
+        )}
+
+
 
 
         <div>

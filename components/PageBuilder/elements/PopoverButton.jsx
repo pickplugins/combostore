@@ -10,7 +10,7 @@ import * as TablerIcons from '@tabler/icons-react';
 
 const PopoverButton = (props) => {
 
-	var cssSelectors = props?.cssSelectors;
+	var cssSelectors = props?.cssSelectors ?? {};
 
 	var children = props.children ?? [];
 	var prams = props.prams;
@@ -28,7 +28,7 @@ const PopoverButton = (props) => {
 	var setSelectedId = props?.setSelectedId
 	var selectedId = props?.selectedId
 	var index = props?.index
-	var cssSelectors = props?.cssSelectors;
+	var cssSelectors = props?.cssSelectors ?? {};
 
 
 	var id = props?.id;

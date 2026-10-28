@@ -1,16 +1,18 @@
 import PropTypes from "prop-types";
 import React from "react";
 import { useState, useEffect } from "react";
-import { IconCircleCheck, IconFileDollar, IconSettings, IconCopy, IconTrash, IconBrowserPlus, IconStack, IconEyeShare, IconServerCog } from "@tabler/icons-react";
+import { IconCircleCheck, IconFileDollar, IconSettings, IconCopy, IconTrash, IconBrowserPlus, IconStack, IconSparkles, } from "@tabler/icons-react";
 import { useCounterStore } from '../../store/useCounterStore';
 import { useDraggable } from '@dnd-kit/react';
 import PopoverButton from '../../components/PopoverButton';
 import Spinner from '../../components/Spinner';
 import Link from 'next/link';
 import TemplatesLibrary from './TemplatesLibrary';
+import AIThemeBuilder from './AIThemeBuilder';
 import TemplateSettings from './TemplateSettings';
 import Tabs from '../../components/Tabs';
 import Tab from '../../components/Tab';
+import ToggleContent from '../../components/ToggleContent';
 
 const Templates = (props) => {
 
@@ -38,7 +40,6 @@ const Templates = (props) => {
 	var [newPage, setnewPage] = useState({ name: '', type: type });
 	var [activeTemplate, setactiveTemplate] = useState(null);
 	var [newTemplatePart, setnewTemplatePart] = useState({ type: type, title: "", template_id: activeTemplate?.id, });
-	var [includeHeaderFooter, setincludeHeaderFooter] = useState(false);
 
 	let _n = 0;
 
@@ -248,8 +249,10 @@ const Templates = (props) => {
 
 		var postData = {
 			id: id,
-			includeHeaderFooter: includeHeaderFooter,
+			scope: 'builder',
 		};
+
+		console.log(postData);
 
 
 		postData = JSON.stringify(postData);
@@ -272,25 +275,18 @@ const Templates = (props) => {
 
 
 						var content = res?.content;
+						var meta = res?.meta;
+						var includeFooter = meta?.includeFooter;
+						var includeHeader = meta?.includeHeader;
 
+						console.log(res);
 
+						// return;
 
 						if (content?.length == 0) {
 
 
-
-							setpageData(res)
-
-							let _n = 0;
-							const uid = () => `b${++_n}${Date.now().toString(36)}`;
-
-							setBlocks([
-								{ id: uid(), type: "heading", options: { text: "Build Pages Visually.", tag: "h1", }, cssSelectors: { '*': {} }, },
-
-							])
-
 							addNotification({ type: 'error', title: 'Content not valid JSON', content: `Dummy content added, Existing content will replace.` })
-
 
 							setloading(false);
 
@@ -301,27 +297,11 @@ const Templates = (props) => {
 
 
 
-							if (isJsonString(content)) {
+							if ((content)) {
 								setpageData(res)
 
-
-								var content = JSON.parse(content)
-
-
-								if (includeHeaderFooter) {
-
-									var header = JSON.parse(res?.header?.content)
-									var footer = JSON.parse(res?.footer?.content)
-
-									setBlocks([...header, ...content, ...footer])
-
-								} else {
-
-									setBlocks(content)
-								}
-
-
-
+								// var content = JSON.parse(content)
+								setBlocks(content)
 
 
 
@@ -510,6 +490,7 @@ const Templates = (props) => {
 						var total = parseInt(res?.total);
 						var max_pages = parseInt(res?.max_pages);
 
+						console.log(orders);
 
 
 
@@ -602,9 +583,13 @@ const Templates = (props) => {
 
 
 
+	console.log('Hello 1');
 
 
 	useEffect(() => {
+
+		console.log('Hello 1');
+
 
 		get_templates();
 		get_active_template()
@@ -614,6 +599,13 @@ const Templates = (props) => {
 
 		get_templates();
 	}, [queryPrams]);
+
+
+	const HEADER_CLASSES =
+		"flex w-full cursor-pointer items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-2 py-1.5 transition-colors hover:bg-gray-100 select-none";
+
+	const CONTENT_CLASSES =
+		"mt-1.5 rounded-lg border border-gray-200 bg-white p-3";
 
 
 	return (
@@ -632,6 +624,7 @@ const Templates = (props) => {
 				tabs={[
 					{ label: "Installed", id: 'installed', icon: <IconFileDollar size={18} /> },
 					{ label: "Library", id: 'library', icon: <IconStack size={18} /> },
+					{ label: "AI Theme", id: 'ai-theme', icon: <IconSparkles size={18} /> },
 
 
 				]}>
@@ -705,20 +698,7 @@ const Templates = (props) => {
 
 					</div>
 
-					<div className="mb-2">
 
-						<label htmlFor="includeHeaderFooter" className="flex items-center gap-2 cursor-pointer text-xs text-gray-700 rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-2 transition-colors hover:bg-gray-100">
-							<input type="checkbox" name="" id="includeHeaderFooter" onChange={ev => {
-
-								var { checked, name } = ev.target;
-
-								setincludeHeaderFooter(checked)
-
-							}} />
-							<span>Include Header & Footer</span>
-						</label>
-
-					</div>
 
 
 
@@ -743,30 +723,30 @@ const Templates = (props) => {
 										: 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'}`}
 
 								>
-
+									<div className="text-sm font-bold">
+										{template?.name.length == 0 && (
+											<>No name</>
+										)}
+										{template?.name.length > 0 && (
+											<>{template?.name}({template?.id})</>
+										)}
+									</div>
 									<div className="flex justify-between items-center">
-										<div className="text-sm font-bold">
-											{template?.name.length == 0 && (
-												<>No name</>
-											)}
-											{template?.name.length > 0 && (
-												<>{template?.name}({template?.id})</>
-											)}
-										</div>
+
 
 										<div className="flex gap-2 items-center">
 
 
 											{/* Was blue-on-grey, the only blue in the editor and the
 											    same shape as the destructive button next to it. */}
-											<div title={`${activeTemplate?.id == template?.id ? 'Current template' : 'Make this the active template'} `} className={`inline-flex h-7 w-7 items-center justify-center rounded-md cursor-pointer transition-colors ${activeTemplate?.id == template?.id ? 'bg-brand text-white' : 'text-gray-400 hover:bg-gray-200 hover:text-gray-900'}`} onClick={ev => {
+											<div title={`${activeTemplate?.id == template?.id ? 'Current template' : 'Make this the active template'} `} className={`inline-flex items-center justify-center gap-1.5 rounded-lg border border-gray-200  p-1.5 text-xs font-medium  cursor-pointer transition-colors hover:border-gray-300 hover:bg-gray-100 hover:text-gray-900 ${activeTemplate?.id == template?.id ? 'bg-brand text-white' : 'text-gray-400 bg-white hover:bg-gray-200 hover:text-gray-900'}`} onClick={ev => {
 												if (confirm('Please confirm?')) {
 													active_template(template?.id)
 												}
 											}}>
 												<IconCircleCheck size={16} />
 											</div>
-											<div title="Delete" className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-gray-400 cursor-pointer transition-colors hover:bg-red-50 hover:text-red-600" onClick={ev => {
+											<div title="Delete" className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-gray-200 bg-white p-1.5 text-xs font-medium text-gray-500 cursor-pointer transition-colors hover:border-gray-300 hover:bg-gray-100 hover:text-gray-900" onClick={ev => {
 												if (confirm('Please confirm?')) {
 													delete_template([template?.id])
 												}
@@ -781,7 +761,7 @@ const Templates = (props) => {
 												<IconCopy size={16} />
 											</div>
 
-											<PopoverButton wrapperClass={` flex justify-end`} buttonLabel={null} buttonIcon={<IconSettings size={16} />} title={"Template Settings"} position={null} buttonClass={`inline-flex h-7 w-7 items-center justify-center rounded-md text-gray-500 cursor-pointer transition-colors hover:bg-gray-200 hover:text-gray-900`}>
+											<PopoverButton wrapperClass={` flex justify-end`} buttonLabel={null} buttonIcon={<IconSettings size={16} />} title={"Template Settings"} position={null} buttonClass={`inline-flex items-center justify-center gap-1.5 rounded-lg border border-gray-200 bg-white p-1.5 text-xs font-medium text-gray-500 cursor-pointer transition-colors hover:border-gray-300 hover:bg-gray-100 hover:text-gray-900`}>
 
 												<TemplateSettings templateData={template} />
 
@@ -803,30 +783,57 @@ const Templates = (props) => {
 										</div>
 									</div>
 
-									<div className="flex flex-col gap-2">
 
-										{template?.pages.map(page => {
+									<ToggleContent iconPosition='left' title={`Pages`} headerClass={HEADER_CLASSES} headerTitleClass={`flex justify-between w-full items-center gap-2`} contentClass={CONTENT_CLASSES}>
+										<div className="flex flex-col gap-2">
 
-											return (
+											{template?.pages.map(page => {
 
-												/* Open page and hover state were both `bg-gray-400`, so
-														the chip you were on looked identical to the one under
-													 the cursor. */
-												<div className={`rounded-md border px-2 py-1 text-[11px] cursor-pointer transition-colors ${pageData?.id == page?.id ? 'border-brand/30 bg-brand/10 font-medium text-brand-700' : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-100'}`} onClick={ev => {
+												var includeHeader = pageData?.meta?.includeHeader
+												var includeFooter = pageData?.meta?.includeFooter
 
-													get_template_part(page?.id)
 
-												}}>
+												return (
 
-													{page.title}
+													/* Open page and hover state were both `bg-gray-400`, so
+															the chip you were on looked identical to the one under
+														 the cursor. */
+													<div className={`rounded-md border px-2 py-1 text-[11px] cursor-pointer transition-colors flex justify-between items-center ${pageData?.id == page?.id ? 'border-brand/30 bg-brand/10 font-medium text-brand-700' : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-100'}`} >
 
-												</div>
+														<div className="w-full flex flex-col gap-2" onClick={ev => {
 
-											)
+															get_template_part(page?.id)
 
-										})}
+														}}>
 
-									</div>
+															{page.title} {`#${page?.id}`}
+
+
+
+														</div>
+
+
+
+
+
+
+
+
+
+
+													</div>
+
+												)
+
+											})}
+
+										</div>
+									</ToggleContent>
+
+
+
+
+
 
 
 
@@ -842,6 +849,13 @@ const Templates = (props) => {
 				</Tab>
 				<Tab index={1} id='library'>
 					<TemplatesLibrary setBlocks={setBlocks} blocks={blocks} handlePasteBlock={handlePasteBlock} />
+
+				</Tab>
+
+				{/* `elements` is the palette the generator writes against and the
+					  sanitiser validates against, so the panel is only useful with it. */}
+				<Tab index={2} id='ai-theme'>
+					<AIThemeBuilder elements={elements} setBlocks={setBlocks} />
 
 				</Tab>
 

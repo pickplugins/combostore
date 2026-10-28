@@ -8,7 +8,7 @@ const SiteHeader = (props) => {
 
 
 
-	var cssSelectors = props?.cssSelectors;
+	var cssSelectors = props?.cssSelectors ?? {};
 
 
 	var type = props?.type

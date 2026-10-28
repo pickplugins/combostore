@@ -57,7 +57,13 @@ export default async function page({ params }) {
 
 
   const pageTemplateData = await getPageTemplate({ type: 'blog_single' })
-  const pageTemplatecontent = pageTemplateData?.content ? JSON.parse(pageTemplateData?.content) : [];
+  var pageTemplatecontent = pageTemplateData?.content ? JSON.parse(pageTemplateData?.content) : [];
+
+  var pageTemplateHeader = pageTemplateData?.header ? JSON.parse(pageTemplateData?.header?.content) : [];
+  var pageTemplateFooter = pageTemplateData?.footer ? JSON.parse(pageTemplateData?.footer?.content) : [];
+
+  var pageTemplate = [...pageTemplateHeader, ...pageTemplatecontent, ...pageTemplateFooter]
+
 
 
 
@@ -107,6 +113,8 @@ export default async function page({ params }) {
 
       <style>
         {pageTemplateData?.style}
+        {pageTemplateData?.header?.style}
+        {pageTemplateData?.footer?.style}
       </style>
 
     </>

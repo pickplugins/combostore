@@ -26,7 +26,7 @@ const manifest = {
 
 	/* `false` would ship it installed but switched off. The Extensions screen
 		 can toggle it either way at runtime. */
-	enabled: true,
+	enabled: false,
 
 	/*
 		Sidebar entries.

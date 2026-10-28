@@ -15,7 +15,7 @@ const CartView = (props) => {
 
 
 	var index = props?.index
-	var cssSelectors = props?.cssSelectors;
+	var cssSelectors = props?.cssSelectors ?? {};
 
 
 	var id = props?.id;
@@ -27,7 +27,7 @@ const CartView = (props) => {
 
 	const trackPageVisit = useUtilsStore((state) => state.trackPageVisit);
 
-	const { cartToggle, setcartToggle, notifications, addNotification, cartStep, setcartStep, cartItems, addCartItems, removeCartItems, resetCartItems, updateCartItems, userDataX, setUserDataX, navToggle, setnavToggle, lang, coupons, setCoupons, cartTotalPay, setcartTotalPay, cartTotal, setcartTotal, shippingMethod, setshippingMethod, shippingCost, setshippingCost } = useCounterStore()
+	const { cartToggle, setcartToggle, notifications, addNotification, cartStep, setcartStep, cartItems, addCartItems, removeCartItems, resetCartItems, updateCartItems, userDataX, setUserDataX, navToggle, setnavToggle, lang, coupons, setCoupons, cartTotalPay, setcartTotalPay, cartTotal, setcartTotal, shippingMethod, setshippingMethod, shippingCost, setshippingCost, cartDiscount } = useCounterStore()
 
 
 	const { wrapCurrency } = useUtilsStore()
@@ -60,16 +60,28 @@ const CartView = (props) => {
 		setcartTotal(total)
 		setcartTotalQuantity(totalQuantity)
 
-		var totalPay = total + shippingCost;
+		/*
+			Automatic discounts an extension worked out for this cart. Core does
+			not know which extension, or how - it reads the slot in the store
+			and prices it in. Nothing installed leaves it at zero, which is the
+			same arithmetic as before.
+		*/
+		var autoDiscount = cartDiscount?.amount ?? 0;
+		var payableShipping = cartDiscount?.freeShipping ? 0 : shippingCost;
+
+		var totalPay = total + payableShipping;
 		if (coupons.applied) {
 			totalPay = totalPay - coupons.discountAmount
 		}
+		totalPay = totalPay - autoDiscount;
 
-		setcartTotalPay(totalPay)
+		/* A discount bigger than the cart must not turn into money owed to the
+			 shopper, which a stack of generous rules plus a coupon can reach. */
+		setcartTotalPay(Math.max(0, totalPay))
 
 
 
-	}, [cartItems, shippingCost, coupons]);
+	}, [cartItems, shippingCost, coupons, cartDiscount]);
 
 	useEffect(() => {
 		setAnimate(!animate)

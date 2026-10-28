@@ -28,7 +28,7 @@ const CustomerOrders = (props) => {
 
 	var dragOverIndex = props?.dragOverIndex
 	var setDragOverIndex = props?.setDragOverIndex
-	var cssSelectors = props?.cssSelectors;
+	var cssSelectors = props?.cssSelectors ?? {};
 	var setSelectedId = props?.setSelectedId
 	var selectedId = props?.selectedId
 	var handleMoveBlock = props?.handleMoveBlock

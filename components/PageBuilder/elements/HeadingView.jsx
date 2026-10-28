@@ -13,7 +13,7 @@ const HeadingView = (props) => {
 
 	var options = props?.options;
 	var tag = options?.tag ?? 'h1';
-	var cssSelectors = props?.cssSelectors;
+	var cssSelectors = props?.cssSelectors ?? {};
 
 
 

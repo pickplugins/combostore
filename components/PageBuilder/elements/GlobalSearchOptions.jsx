@@ -6,7 +6,7 @@ import { IconLibraryPhoto, IconCheckbox, IconSquare, IconFidgetSpinner, IconTras
 const ColumnsOptions = (props) => {
 	const { updateBlock } = props;
 
-	var cssSelectors = props?.cssSelectors;
+	var cssSelectors = props?.cssSelectors ?? {};
 	var options = props?.options;
 	var editMode = options?.editMode ?? false;
 

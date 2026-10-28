@@ -18,7 +18,7 @@ const TermTitle = (props) => {
 	var selectedId = props?.selectedId
 	var index = props?.index
 	var name = props?.name
-	var cssSelectors = props?.cssSelectors;
+	var cssSelectors = props?.cssSelectors ?? {};
 
 
 	var id = props?.id;

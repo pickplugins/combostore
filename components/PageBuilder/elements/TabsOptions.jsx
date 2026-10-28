@@ -15,7 +15,7 @@ const GridOptions = (props) => {
 	var handleMoveBlock = props?.handleMoveBlock;
 
 	var options = props?.options;
-	var cssSelectors = props?.cssSelectors;
+	var cssSelectors = props?.cssSelectors ?? {};
 	var selectedId = props?.selectedId
 	var id = props?.id;
 	var children = props?.children;

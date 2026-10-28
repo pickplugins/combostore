@@ -39,8 +39,28 @@ const fileToBase64 = (file) =>
 
 const AIPrompts = (props) => {
 	const { token, settings, paymentGateways, appData, notifications, addNotification, userDataX, setUserDataX } = useCounterStore()
+	const fetchSettings = useCounterStore((state) => state.fetchSettings);
+	const settingsLoading = useCounterStore((state) => state.settingsLoading);
 
 	const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
+
+	/*
+		The builder lives at /builder, outside app/dashboard/layout.jsx - and
+		AppProviders, the only thing that kicks off `fetchSettings`, is mounted in
+		that dashboard layout. So on this route nothing ever loaded settings and
+		the store kept its initial `null`, which is why the key read below came
+		back undefined and the panel always claimed none was configured. This is
+		the same self-load the other out-of-dashboard consumers do - see
+		CheckoutView.
+	*/
+	useEffect(() => {
+
+		if (!settings) {
+			fetchSettings();
+		}
+
+	}, [settings, fetchSettings]);
+
 
 	/*
 		This used to be a literal key in this file, which meant it shipped inside
@@ -53,8 +73,6 @@ const AIPrompts = (props) => {
 		panel POSTing to it, which takes both the key and
 		`dangerouslyAllowBrowser` out of the browser.
 	*/
-
-	console.log(settings);
 
 	const apiKey = settings?.apiKeys?.anthropic?.key;
 
@@ -164,15 +182,14 @@ const AIPrompts = (props) => {
 
 	const submitAIPrompt = async () => {
 
-		console.log('submitAIPrompt');
-		const apiKey = settings?.apiKeys?.anthropic?.key;
-
-		console.log(apiKey);
-
-
 		if (loading) return;
 		if (!client) {
-			say("No Anthropic API key is configured - add one in settings to generate layouts.");
+			/* Settings load asynchronously, so "no key" and "not loaded yet" are
+				 different answers and saying the first for the second sends people
+				 off to re-enter a key that is already there. */
+			say(settingsLoading || !settings
+				? "Still loading settings - try again in a moment."
+				: "No Anthropic API key is configured - add one in settings to generate layouts.");
 			return;
 		}
 		if (mode === 'image' && !imageFile) {

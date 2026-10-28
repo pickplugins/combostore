@@ -21,7 +21,7 @@ const TermsSlider = (props) => {
 
 	var setSelectedId = props?.setSelectedId
 	var selectedId = props?.selectedId
-	var cssSelectors = props?.cssSelectors;
+	var cssSelectors = props?.cssSelectors ?? {};
 
 
 

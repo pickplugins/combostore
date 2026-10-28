@@ -13,7 +13,7 @@ const SectionView = (props) => {
 	const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 	const { token, appData, notifications, addNotification, cartItems, addCartItems, removeCartItems, resetCartItems, updateCartItems, userDataX, setUserDataX, settings } = useCounterStore()
 
-	var cssSelectors = props?.cssSelectors;
+	var cssSelectors = props?.cssSelectors ?? {};
 
 	var type = props?.type
 	var options = props?.options;

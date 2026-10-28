@@ -12,7 +12,7 @@ const GridOptions = (props) => {
 	var updateBlock = props?.updateBlock;
 
 	var options = props?.options;
-	var cssSelectors = props?.cssSelectors;
+	var cssSelectors = props?.cssSelectors ?? {};
 
 
 	const [loading, setloading] = useState(false);

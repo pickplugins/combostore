@@ -1,6 +1,21 @@
 import React from "react";
 
+import registry from '../../extensions';
 
+/*
+	Block renderers contributed by the extensions, for the live page.
+
+	BlockPreview does the same for the canvas, but reads the activation store;
+	this file is rendered from a server component (app/[...slug]/page.jsx), so
+	there is no store to read and the manifests' own `enabled` is the answer.
+	That is the right one anyway: the on/off switch on Dashboard → Extensions
+	is kept in the editing browser's localStorage and was never going to reach
+	a shopper.
+
+	Built once at module scope rather than per render - the manifest list is
+	static, so there is nothing to recompute.
+*/
+const extensionRenderers = registry.elementRenderers(registry.defaultActiveIds);
 
 import HeadingView from './elements/HeadingView';
 import AccordionMenuView from './elements/AccordionMenuView';
@@ -203,7 +218,18 @@ const BlockRender = (props) => {
 			case "icon": return <IconView {...block} index={index} />;
 			case "address": return <AddressView {...block} index={index} />;
 			case "popoverButton": return <PopoverButtonView {...block} index={index} />;
-			default: return <div style={{ color: "#444", fontSize: 11, fontFamily: "'DM Mono',monospace" }}>[{block.type}]</div>;
+			/*
+				Not a core type. An active extension may claim it - core is
+				checked first, by being a `case` above, so an extension can
+				never shadow a core block the way it could if both lived in one
+				lookup. A stale block whose extension has been removed falls
+				through to the placeholder, as before.
+			*/
+			default: {
+				const Extension = extensionRenderers[type];
+				if (Extension) return <Extension {...block} index={index} />;
+				return <div style={{ color: "#444", fontSize: 11, fontFamily: "'DM Mono',monospace" }}>[{block.type}]</div>;
+			}
 		}
 
 

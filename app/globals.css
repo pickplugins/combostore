@@ -109,7 +109,7 @@ button {
   `search`, `tel`, `url`, `date` and `time` are new to the list; they were
   rendering as unstyled browser defaults next to fields that matched.
 */
-input[type="text"],
+/* input[type="text"],
 input[type="number"],
 input[type="email"],
 input[type="password"],
@@ -123,9 +123,9 @@ input[type="file"],
 textarea {
   @apply border border-gray-300 bg-white shadow-sm text-gray-700 cursor-pointer rounded-lg px-3 py-[7px] transition-colors;
   min-height: 2.25rem;
-}
+} */
 
-input[type="text"]:hover,
+/* input[type="text"]:hover,
 input[type="number"]:hover,
 input[type="email"]:hover,
 input[type="password"]:hover,
@@ -134,12 +134,12 @@ input[type="tel"]:hover,
 input[type="url"]:hover,
 textarea:hover {
   @apply border-gray-400;
-}
+} */
 
-input[type="submit"],
+/* input[type="submit"],
 button {
   @apply border border-gray-300 shadow-sm text-gray-600 cursor-pointer rounded-lg px-3 py-[6px] transition-colors;
-}
+} */
 
 button:disabled,
 input:disabled,

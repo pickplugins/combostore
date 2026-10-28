@@ -3,13 +3,14 @@
 import PropTypes from "prop-types";
 import React from "react";
 import { useState, useEffect, useMemo } from "react";
-import { IconHome, IconDeviceFloppy, IconPaintFilled, IconCopy, IconClipboard, IconEdit, IconAi, IconListDetails, IconDeviceDesktop, IconDeviceTablet, IconDeviceMobile, IconFileText, IconArrowBackUp, IconArrowForwardUp, IconHistory, IconCheck } from "@tabler/icons-react";
+import { IconHome, IconDeviceFloppy, IconPaintFilled, IconCopy, IconClipboard, IconSettings, IconAi, IconListDetails, IconDeviceDesktop, IconDeviceTablet, IconDeviceMobile, IconFileText, IconArrowBackUp, IconArrowForwardUp, IconHistory, IconCheck, IconLayoutBottombarInactive, IconLayoutNavbarInactive, IconLayoutNavbar, IconLayoutBottombar } from "@tabler/icons-react";
 import { useDraggable } from '@dnd-kit/react';
 import { useCounterStore } from '../../store/useCounterStore';
 import Spinner from '../../components/Spinner';
 import Link from "next/link";
 import AIPrompts from './AIPrompts';
 import { GENERATED_STYLE_ID } from './canvasRuntime';
+import PopoverButton from '../../components/PopoverButton';
 
 // lib/generateTailwindCSS is deliberately not imported here. It pulls in
 // @tailwindcss/node, which needs `module`, `url` and lightningcss's native
@@ -719,6 +720,76 @@ const EditorActions = (props) => {
 
 					<span className="mx-1 h-6 w-px shrink-0 bg-white/10" />
 
+
+					{(pageData?.type != 'header' && pageData?.type != 'footer') && (
+
+						<PopoverButton wrapperClass={` flex justify-end`} buttonLabel={null} buttonIcon={<IconSettings size={16} />} title={`Template Part Settings - #${pageData?.title} `} position={null} buttonClass={`${TOOL_BUTTON} !px-2.5 cursor-pointer `}>
+
+							{/* <TemplateSettings templateData={template} /> */}
+
+
+
+							<div className="flex items-center gap-2 cursor-pointer text-xs text-gray-700 rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-2 transition-colors hover:bg-gray-100">
+								<div className="flex gap-3" onClick={ev => {
+
+									var { checked, name } = ev.target;
+
+									console.log(pageData?.includeHeader);
+
+
+									var metaX = (pageData?.meta);
+									var meta = { ...metaX, includeHeader: !pageData?.meta?.includeHeader }
+									setpageData({ ...pageData, meta: meta })
+
+								}} >
+									{pageData?.meta?.includeHeader && (<IconLayoutNavbar size={18} />)}
+									{!pageData?.meta?.includeHeader && (<IconLayoutNavbarInactive size={18} />)}
+
+
+									<span>Include Header</span>
+								</div>
+
+							</div>
+							<div className="flex items-center gap-2 cursor-pointer text-xs text-gray-700 rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-2 transition-colors hover:bg-gray-100">
+								<div className="flex gap-3" onClick={ev => {
+
+
+
+
+									var metaX = (pageData?.meta);
+									var meta = { ...metaX, includeFooter: !pageData?.meta?.includeFooter }
+									setpageData({ ...pageData, meta: meta })
+
+
+
+
+
+								}} >
+
+
+									{pageData?.meta?.includeFooter && (<IconLayoutBottombar size={18} />)}
+									{!pageData?.meta?.includeFooter && (<IconLayoutBottombarInactive size={18} />)}
+									<span>Include Footer</span>
+								</div>
+
+							</div>
+
+							{JSON.stringify(pageData?.meta)}
+
+
+
+
+
+
+
+						</PopoverButton>
+
+					)}
+
+
+
+
+
 					{/* The page being edited was previously a line of grey text
 					    under the buttons, and absent entirely until one was
 					    loaded. */}
@@ -726,6 +797,8 @@ const EditorActions = (props) => {
 						<IconFileText size={16} className="shrink-0 text-gray-500" />
 						<span className="truncate text-sm font-medium text-gray-100">
 							{pageData?.title || ("Untitled draft")}
+
+
 						</span>
 						{!pageData && (
 							<span className="hidden shrink-0 rounded-full bg-amber-400/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-300 sm:inline">
@@ -774,6 +847,15 @@ const EditorActions = (props) => {
 							<span>{("Styles")}</span>
 						</span>
 					)}
+
+
+
+
+
+
+
+
+
 
 					<button
 						type="button"

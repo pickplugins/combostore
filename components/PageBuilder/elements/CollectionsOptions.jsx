@@ -13,7 +13,7 @@ const CollectionsOptions = (props) => {
 
 	var updateBlock = props?.updateBlock;
 
-	var cssSelectors = props?.cssSelectors;
+	var cssSelectors = props?.cssSelectors ?? {};
 	var id = props?.id;
 	var options = props?.options;
 	var items = options?.items ?? [];

@@ -15,7 +15,7 @@ const ButtonOptions = (props) => {
 	var options = props?.options;
 	var readMoreIcon = options?.readMoreIcon;
 	var readMoreIconSize = options?.iconSize;
-	var cssSelectors = props?.cssSelectors;
+	var cssSelectors = props?.cssSelectors ?? {};
 
 
 	return (

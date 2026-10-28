@@ -438,20 +438,27 @@ const OrderUpdate = (props) => {
 
   function onPickCustomer(args) {
 
+    console.log(args);
+    setcustomerData(args)
+
+
+    setorderData({
+      ...orderData,
+      userid: args?.id,
+      billing_address: args?.billing_address,
+      billing_name: args?.name,
+      billing_phone: args?.phone,
+      billing_email: args?.email,
+      billing_city: args?.billing_city,
+      billing_country: args?.billing_country,
+
+    })
+
+
     get_customer_data(args?.id).then((user) => {
-      setcustomerData(user)
 
-      setorderData({
-        ...orderData,
-        userid: user?.id,
-        billing_address: user?.billing_address1 + user?.billing_address2,
-        billing_name: user?.name,
-        billing_phone: user?.phone,
-        billing_email: user?.email,
-        billing_city: user?.billing_city,
-        billing_country: user?.billing_country,
+      console.log(user);
 
-      })
 
     });
   }
@@ -1384,14 +1391,13 @@ const OrderUpdate = (props) => {
                     </div>
                   </div>
                 )}
-                {customerData?.billing_address1 && (
+                {customerData?.billing_address && (
                   <div className="flex gap-2 flex-wrap text-sm ">
-                    <div className={`flex items-center gap-2 ${privacyMode ? 'blur-[3px]' : ''}`}><IconMapPin className="text-gray-400" size={16} /> {customerData?.billing_address1}</div>
-                    <div className={`flex items-center gap-2 ${privacyMode ? 'blur-[3px]' : ''}`}> {customerData?.billing_address2}</div>
-                    <div className={`flex items-center gap-2 ${privacyMode ? 'blur-[3px]' : ''}`}> {customerData?.city}</div>
-                    <div className={`flex items-center gap-2 ${privacyMode ? 'blur-[3px]' : ''}`}> {customerData?.country}</div>
+                    <div className={`flex items-center gap-2 ${privacyMode ? 'blur-[3px]' : ''}`}><IconMapPin className="text-gray-400" size={16} /> {customerData?.billing_address}</div>
+                    <div className={`flex items-center gap-2 ${privacyMode ? 'blur-[3px]' : ''}`}> {customerData?.billing_city}</div>
+                    <div className={`flex items-center gap-2 ${privacyMode ? 'blur-[3px]' : ''}`}> {customerData?.billing_country}</div>
                     <div className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-700 transition-colors hover:border-gray-300 hover:bg-gray-50 hover:text-gray-900 cursor-pointer" onClick={() => {
-                      navigator.clipboard.writeText(customerData?.billing_address1 + " " + customerData?.billing_address2 + " " + customerData?.city + " " + customerData?.country)
+                      navigator.clipboard.writeText(customerData?.billing_address + " " + + " " + customerData?.billing_city + " " + customerData?.billing_country)
                       addNotification({ type: 'success', title: 'Address Copied', content: "Address Copied" })
                     }}>
                       <IconCopy size={16} /> Copy

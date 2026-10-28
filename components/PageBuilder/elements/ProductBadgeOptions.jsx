@@ -14,7 +14,7 @@ const HeadingOptions = (props) => {
 
 	var updateBlock = props?.updateBlock;
 	var options = props?.options;
-	var cssSelectors = props?.cssSelectors;
+	var cssSelectors = props?.cssSelectors ?? {};
 
 	var label = options?.label;
 	var icon = options?.icon;

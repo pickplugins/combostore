@@ -11,7 +11,7 @@ const PostSliderView = (props) => {
 
 	const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
-	var cssSelectors = props?.cssSelectors;
+	var cssSelectors = props?.cssSelectors ?? {};
 
 
 

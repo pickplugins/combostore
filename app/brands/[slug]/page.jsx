@@ -84,7 +84,13 @@ export default async function page({ params }) {
 
 
   const pageTemplateData = await getPageTemplate({ type: 'brands_single' })
-  const pageTemplatecontent = pageTemplateData?.content ? JSON.parse(pageTemplateData?.content) : [];
+  var pageTemplatecontent = pageTemplateData?.content ? JSON.parse(pageTemplateData?.content) : [];
+
+  var pageTemplateHeader = pageTemplateData?.header ? JSON.parse(pageTemplateData?.header?.content) : [];
+  var pageTemplateFooter = pageTemplateData?.footer ? JSON.parse(pageTemplateData?.footer?.content) : [];
+
+  var pageTemplate = [...pageTemplateHeader, ...pageTemplatecontent, ...pageTemplateFooter]
+
 
 
 
@@ -103,11 +109,17 @@ export default async function page({ params }) {
 
   return (
 
-    <PageProvider value={{ page: 'brands', taxonomy: 'product_brand', slug: [slug] }}>
-      <PageBuilderContent blocks={pageTemplatecontent} />
-    </PageProvider>
+    <>
+      <PageProvider value={{ page: 'brands', taxonomy: 'product_brand', slug: [slug] }}>
+        {pageTemplate?.length > 0 && <PageBuilderContent blocks={pageTemplate} />}
+      </PageProvider>
 
-
+      <style>
+        {pageTemplateData?.style}
+        {pageTemplateData?.header?.style}
+        {pageTemplateData?.footer?.style}
+      </style>
+    </>
 
   );
 };

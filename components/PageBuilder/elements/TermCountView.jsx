@@ -12,6 +12,8 @@ const TermCountView = (props) => {
 	var id = props?.id;
 	var type = props?.type;
 
+	var cssSelectors = props?.cssSelectors ?? {};
+
 	var options = props?.options;
 	var tag = options?.tag ?? 'h1';
 

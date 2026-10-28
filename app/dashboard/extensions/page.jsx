@@ -33,7 +33,7 @@ const ExtensionsPage = () => {
 					<IconPuzzle size={20} />
 				</span>
 				<div>
-					<h1 className="text-lg font-semibold text-gray-900">Extensions</h1>
+					<h1 className="text-lg font-semibold text-gray-900">Extensions - <span className="bg-amber-500 rounded-sm px-2 text-white text-sm py-1">Coming Soon</span></h1>
 					<p className="text-sm text-gray-500">
 						{manifests.length} installed. Switching one off hides its screens, nav entries
 						and page-builder blocks.
@@ -70,7 +70,7 @@ const ExtensionsPage = () => {
 				</div>
 			)}
 
-			<div className="space-y-3">
+			<div className="space-y-3 grid grid-cols-4 gap-5">
 				{manifests.map((m) => {
 					const on = active.has(m.id);
 

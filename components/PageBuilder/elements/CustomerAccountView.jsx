@@ -23,7 +23,7 @@ const CustomerAccountView = (props) => {
 
 	const children = props?.children || [];
 
-	var cssSelectors = props?.cssSelectors;
+	var cssSelectors = props?.cssSelectors ?? {};
 
 	const { appData, token, notifications, addNotification, cartItems, addCartItems, removeCartItems, resetCartItems, updateCartItems, userDataX, setUserDataX, navToggle, setnavToggle } = useCounterStore()
 

@@ -16,7 +16,7 @@ const ImageOptions = (props) => {
 	var options = props?.options;
 	var logoType = options?.logoType ?? 'text';
 	var logoText = options?.logoText ?? '';
-	var cssSelectors = props?.cssSelectors;
+	var cssSelectors = props?.cssSelectors ?? {};
 
 
 	const [loading, setloading] = useState(false);

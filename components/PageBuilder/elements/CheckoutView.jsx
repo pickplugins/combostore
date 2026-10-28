@@ -48,7 +48,7 @@ const CheckoutView = (props) => {
 
 
 	var index = props?.index
-	var cssSelectors = props?.cssSelectors;
+	var cssSelectors = props?.cssSelectors ?? {};
 
 
 	var id = props?.id;
@@ -75,7 +75,7 @@ const CheckoutView = (props) => {
 
 	// var cartItems = props?.cartItems
 	const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
-	const { appData, cartToggle, setcartToggle, currencySymbole, notifications, addNotification, cartItems, addCartItems, removeCartItems, resetCartItems, updateCartItems, userDataX, setUserDataX, currency, coupons, setCoupons, cartTotalPay, setcartTotalPay, cartTotal, setcartTotal, shippingCost, setshippingCost, paymentGatewaysArgs } = useCounterStore()
+	const { appData, cartToggle, setcartToggle, currencySymbole, notifications, addNotification, cartItems, addCartItems, removeCartItems, resetCartItems, updateCartItems, userDataX, setUserDataX, currency, coupons, setCoupons, cartTotalPay, setcartTotalPay, cartTotal, setcartTotal, shippingCost, setshippingCost, paymentGatewaysArgs, cartDiscount } = useCounterStore()
 
 
 
@@ -220,6 +220,28 @@ const CheckoutView = (props) => {
 
 
 	}, [checkoutData?.shipping_method]);
+
+
+	/*
+		The order's discount line.
+
+		`discount_amount` was seeded once from the coupon when this component
+		mounted, so a coupon applied afterwards - and any automatic discount an
+		extension prices in - was taken off what the shopper paid but never
+		recorded against the order. It is kept in step here instead.
+	*/
+	useEffect(() => {
+
+		var discountTotal = (coupons?.applied ? parseFloat(coupons?.discountAmount) || 0 : 0)
+			+ (parseFloat(cartDiscount?.amount) || 0);
+
+		setcheckoutData((previous) => (
+			previous?.discount_amount === discountTotal
+				? previous
+				: { ...previous, discount_amount: discountTotal }
+		));
+
+	}, [coupons?.applied, coupons?.discountAmount, cartDiscount?.amount]);
 
 
 

@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { IconRefresh, IconEraser } from "@tabler/icons-react";
+import { IconRefresh, IconEraser, IconMapPin } from "@tabler/icons-react";
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 import { useCounterStore } from '../../store/useCounterStore'
 
@@ -22,7 +22,7 @@ const UsersPicker = (props) => {
 
 	var [queryPrams, setqueryPrams] = useState({ search: "", role: props?.role, page: 1, order: "DESC", orderby: "id", number: 10, });
 	var [loading, setloading] = useState(false);
-	var [products, setproducts] = useState(null);
+	var [users, setusers] = useState(null);
 
 
 	function get_users() {
@@ -70,14 +70,14 @@ const UsersPicker = (props) => {
 
 
 
-						var posts = res?.posts;
+						var users = res?.posts;
 						var total = res?.total;
 						var max_pages = res?.max_pages;
 
-						console.log(posts);
+						console.log(users);
 
 
-						setproducts({ posts: posts, total: total, maxPages: max_pages })
+						setusers({ posts: users, total: total, maxPages: max_pages })
 						//setqueryPrams({ ...queryPrams, loading: false })
 						setloading(false);
 
@@ -105,7 +105,7 @@ const UsersPicker = (props) => {
 			get_users();
 		}
 		if (queryPrams.search?.length == 0) {
-			setproducts([]);
+			setusers([]);
 		}
 	}, [queryPrams.search]);
 
@@ -125,15 +125,54 @@ const UsersPicker = (props) => {
 				}}
 			/>
 
-			{products?.posts?.length > 0 && (
+			{users?.posts?.length > 0 && (
 				<div className="absolute z-50 top-full left-0 xl:w-[300px] w-full rounded-sm bg-white p-2 shadow-sm">
-					{products?.posts.map((item, index) => {
+					{users?.posts.map((user, index) => {
 						return (
 							<div key={index} className="border-b border-solid border-gray-400  px-2 py-1 cursor-pointer"
-								onClick={ev => {
-									onPick(item)
-								}}
-							>{item.display_name}</div>
+
+							>
+								<div onClick={ev => {
+									onPick(user)
+								}}>
+									{user.display_name}
+
+								</div>
+
+
+								{Object.entries(user?.addresses).length > 0 && (
+
+									<div className="text-xs mt-3 flex flex-col gap-1">
+										{Object.entries(user?.addresses)?.map(addressData => {
+
+											var args = addressData[1]
+
+											return (
+
+												<div className="hover:bg-gray-300 p-2 rounded-sm flex flex-wrap gap-2" onClick={ev => {
+													onPick({ ...user, billing_address: args?.address, billing_city: args?.city, billing_country: args?.country })
+												}}>
+													<IconMapPin size={16} />
+
+													<div>{args?.address}</div>
+													<div>{args?.city}</div>
+													<div>{args?.country}</div>
+
+												</div>
+
+											)
+
+										})}
+									</div>
+								)}
+
+
+
+
+
+
+							</div>
+
 						)
 					})}
 				</div>

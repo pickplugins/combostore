@@ -19,7 +19,9 @@ import KitchenAccessories from './KitchenAccessories';
 import IslamicLifestyle from './IslamicLifestyle';
 import GhorerBazar from './GhorerBazar';
 import BikeParts from './BikeParts';
+import OrganicFruits from './OrganicFruits';
+import ComboStore from './ComboStore';
 
-var templates = [...Organic, ...HomeKitchen, ...BeautyCosmetics, ...Grocery, ...KitchenAccessories, ...IslamicLifestyle, ...GhorerBazar, ...BikeParts];
+var templates = [...Organic, ...HomeKitchen, ...BeautyCosmetics, ...Grocery, ...KitchenAccessories, ...IslamicLifestyle, ...GhorerBazar, ...BikeParts, ...OrganicFruits, ...ComboStore];
 
 export default templates;

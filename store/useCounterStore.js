@@ -37,6 +37,53 @@ export const useCounterStore = create((set) => ({
     loading: false,
   },
 
+  /*
+    Automatic discounts an extension has worked out for this cart.
+
+    Separate from `coupons`, which is a code the shopper typed and can remove.
+    This is whatever the cart qualified for on its own, and the cart totals
+    subtract both. Core never writes it - it is the slot an extension such as
+    extensions/discount-rules publishes into, so the cart can price in a
+    discount without core knowing which extension produced it or how.
+
+    `lines` is the per-rule breakdown, for anything that wants to show the
+    shopper what they got rather than only the sum.
+  */
+  cartDiscount: { amount: 0, freeShipping: false, lines: [] },
+  setcartDiscount: (value) =>
+    set({
+      cartDiscount: {
+        amount: Number(value?.amount) || 0,
+        freeShipping: value?.freeShipping === true,
+        lines: Array.isArray(value?.lines) ? value.lines : [],
+      },
+    }),
+
+  /*
+    Whether a given product may be bought here and now.
+
+    A function rather than data: the answer depends on the product, and there
+    is no list of every product to key on. Core calls it with the product it
+    is about to render buy controls or a price for, and honours what comes
+    back:
+
+      null | { hideAddToCart, hidePrice, priceText, reason }
+
+    The default gates nothing, so with no extension installed the product page
+    behaves exactly as it did. extensions/request-quote fills it in to turn
+    quote-only products into a "Request a Quote" button; anything with the
+    same shape - pre-orders, trade-only pricing, out-of-region items - would
+    use it the same way.
+
+    It is installed from an effect after mount, so the first paint is always
+    the ungated one and a hidden price shows for a frame before it goes. The
+    alternative is core knowing the rules, which is the coupling this slot
+    exists to avoid.
+  */
+  purchaseGate: null,
+  setPurchaseGate: (fn) => set({ purchaseGate: typeof fn === "function" ? fn : null }),
+
+
 
 
 
@@ -61,9 +108,7 @@ export const useCounterStore = create((set) => ({
 
 
   notifications: [],
-  settings: null,
-  settingsLoading: false,
-  settingsError: null,
+
   orderStatusArgs: {
     confirmed: { label: "Confirmed", value: "confirmed" },
     completed: { label: "Completed", value: "completed" },

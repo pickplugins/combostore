@@ -4,6 +4,7 @@ import React from "react";
 import { usePost } from "../context/PostContext";
 import Link from "next/link";
 import { useUtilsStore } from '../../../store/useUtilsStore';
+import { useCounterStore } from '../../../store/useCounterStore';
 import ProductVariablePricesView from './ProductVariablePricesView';
 import { useProductStore } from "../../../store/productStore";
 
@@ -136,6 +137,31 @@ const ProductPrice = (props) => {
 	const { min, max } = getVariationPriceRange(variations);
 
 
+
+	/*
+		An extension may say this product's price is not to be shown - see
+		`purchaseGate` in store/useCounterStore.js. extensions/request-quote
+		uses it for products sold only by quote. The wording comes back with
+		the gate, because core has no opinion about what replaces a price it
+		is not allowed to print.
+
+		Returned early rather than blanked branch by branch: everything below
+		prints some combination of regular, sale, variation and
+		pay-what-you-want prices, and guarding them one at a time would leave
+		the next one added unguarded.
+	*/
+	const purchaseGate = useCounterStore((state) => state.purchaseGate);
+	const priceGate = purchaseGate ? purchaseGate(productData) : null;
+
+	if (priceGate?.hidePrice) {
+		return (
+			<div id={id} index={index} type={type} className={`${cssSelectors['*']?.classes}  `}>
+				<span className={`${cssSelectors['simple-price-sale']?.classes}`}>
+					{priceGate.priceText || "Price on request"}
+				</span>
+			</div>
+		);
+	}
 
 	return (
 		<div id={id} index={index} type={type} className={`${cssSelectors['*']?.classes}  `}

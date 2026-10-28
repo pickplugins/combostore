@@ -5,7 +5,7 @@ import CssSelectors from "../CssSelectors";
 const ColumnsOptions = (props) => {
 	const { updateBlock } = props;
 
-	var cssSelectors = props?.cssSelectors;
+	var cssSelectors = props?.cssSelectors ?? {};
 
 
 

@@ -382,7 +382,7 @@ const ShippingZones = (props) => {
       <td data-label="ID" className="text-left px-4 "
         key={columnIndex}>
         <div className="py-3 text-sm sm:pr-5">
-          <Link className=" text-gray-600 font-bold" href={`/settings/shipping-zones/${entry.id}`}>
+          <Link className=" text-gray-600 font-bold" href={`/dashboard/shipping-zones/${entry.id}`}>
             {"#" + entry.id}
           </Link>
           <div className="flex flex-col text-xs"><div>Created:</div> <div>{formatDate(entry.created_at)}</div></div>

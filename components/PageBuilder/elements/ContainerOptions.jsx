@@ -5,7 +5,7 @@ import CssSelectors from "../CssSelectors";
 const ContainerOptions = (props) => {
 	const { updateBlock } = props;
 
-	var cssSelectors = props?.cssSelectors;
+	var cssSelectors = props?.cssSelectors ?? {};
 
 	const handleChange = (key, value) => {
 		const newOptions = { ...options, [key]: value };

@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, Component } from "react";
-import { IconChevronDown, IconChevronUp, IconPlug, IconTriangleSquareCircle, IconCreditCardPay, IconUserPentagon, IconMailSpark, IconBuildingStore, IconShip, IconStar, IconCashRegister, IconTrash, IconKey, IconAlien, IconTruckDelivery, IconSquareRoundedCheck, IconSquareRounded, IconDeviceFloppy, IconRestore, IconAlertTriangle } from "@tabler/icons-react";
+import { IconChevronDown, IconChevronUp, IconPlug, IconTriangleSquareCircle, IconCreditCardPay, IconUserPentagon, IconMailSpark, IconBuildingStore, IconShip, IconStar, IconCashRegister, IconTrash, IconKey, IconTruckDelivery, IconSquareRoundedCheck, IconSquareRounded, IconDeviceFloppy, IconRestore, IconAlertTriangle } from "@tabler/icons-react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -20,7 +20,6 @@ import Tabs from '../components/Tabs';
 import Tab from '../components/Tab';
 import ToggleContent from '../components/ToggleContent';
 import GalleryPicker from "../components/shop-elements/GalleryPicker";
-import ShippingZones from "../components/pages/ShippingZones";
 
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 const appUrl = process.env.NEXT_PUBLIC_STORE_URL;
@@ -59,7 +58,7 @@ const SettingsGlobal = (props) => {
   // Reset clears every field, so it asks first instead of firing on one click.
   var [confirmReset, setconfirmReset] = useState(false);
 
-  var [settingsData, setsettingsData] = useState({ couriers: {}, fraudCheck: {}, apiKeys: {}, socialLinks: {}, emailTemplates: {}, smsTemplates: {}, productAttributes: [], shippingClasses: [], shippingZones: [], paymentGateways: { enable: false, accounts: [] } });
+  var [settingsData, setsettingsData] = useState({ couriers: {}, apiKeys: {}, socialLinks: {}, emailTemplates: {}, smsTemplates: {}, productAttributes: [], shippingClasses: [], paymentGateways: { enable: false, accounts: [] } });
 
 
 
@@ -184,6 +183,8 @@ const SettingsGlobal = (props) => {
     "gemini": {
       "id": 'gemini',
       "enable": false,
+      "comingSoon": true,
+
       "label": "Gemini",
       args: {
         "key": "",
@@ -193,6 +194,8 @@ const SettingsGlobal = (props) => {
     "pollinations": {
       "id": 'pollinations',
       "enable": false,
+      "comingSoon": true,
+
       "label": "Pollinations",
       args: {
         "key": "",
@@ -202,6 +205,8 @@ const SettingsGlobal = (props) => {
     "bdcourier": {
       "id": 'bdcourier',
       "enable": false,
+      "comingSoon": true,
+
       "label": "BD Courier(bdcourier.com)",
       args: {
         "key": "",
@@ -220,7 +225,7 @@ const SettingsGlobal = (props) => {
       "id": 'bulksmsbd',
       "enable": false,
       "label": "bulksmsbd.net",
-      // "comingSoon": true,
+      "comingSoon": true,
       args: {
         "key": "",
         "senderid": "",
@@ -372,108 +377,6 @@ const SettingsGlobal = (props) => {
   ]
 
 
-  var fraudCheckPrams = {
-
-    "loginRequired": {
-      "label": "Login Required",
-      "comingSoon": true,
-      "id": 'loginRequired',
-      "enable": false,
-      args: {
-        "key": "",
-      }
-    },
-    "maxOrder": {
-      "label": "Max orders per hour",
-      "comingSoon": true,
-      "id": 'maxOrder',
-      "enable": false,
-      args: {
-        "key": "",
-      }
-    },
-    "duplicateOrder": {
-      "label": "Duplicate Order",
-      "comingSoon": true,
-      "id": 'duplicateOrder',
-      "enable": false,
-      args: {
-        "key": "",
-      }
-    },
-    // "tempEmail": {
-    //   "label": "Temporary Email",
-    //   args: {
-    //     "key": "",
-    //   }
-    // },
-    "reCAPTCHA": {
-      "label": "reCAPTCHA",
-      "comingSoon": true,
-      "id": 'reCAPTCHA',
-      "enable": false,
-      args: {
-        "key": "",
-      }
-    },
-
-
-    // "smsOtp": {
-    //   "label": "SMS OTP Verification",
-    //   args: {
-    //     "key": "",
-    //   }
-    // },
-    // "phoneCall": {
-    //   "label": "Phone Call Verification",
-    //   args: {
-    //     "key": "",
-    //   }
-    // },
-    "emailOtp": {
-      "label": "Email OTP Verification",
-      "comingSoon": true,
-      "id": 'emailOtp',
-      "enable": false,
-      args: {
-        "key": "",
-      }
-    },
-
-
-    "limitip": {
-      "label": "Limit IP Address",
-      "comingSoon": true,
-      "id": 'limitip',
-      "enable": false,
-      args: {
-        "key": "",
-      }
-    },
-    "limitPhone": {
-      "label": "Limit Phone Number",
-      "comingSoon": true,
-      "id": 'limitPhone',
-      "enable": false,
-      args: {
-        "key": "",
-      }
-    },
-
-
-
-
-
-    "mobilefraudcheck": {
-      "label": "Mobile Fraud Checker",
-      "comingSoon": true,
-      "id": 'mobilefraudcheck',
-      "enable": false,
-      args: {
-        "key": "",
-      }
-    },
-  }
 
 
 
@@ -861,8 +764,23 @@ const SettingsGlobal = (props) => {
     setloading(true)
 
 
+    /*
+      `fraudCheck` belongs to the Fraud Checker extension now, and this screen
+      must not post it.
 
-    var postData = JSON.stringify(settingsData);
+      It would otherwise still go out on every save: get_settings merges the
+      server blob in with `{ ...settingsData, ...res }`, so the key is in this
+      state whether or not anything here renders it, and this posts the state
+      whole. update_settings merges what it is given, so a stale copy held by a
+      tab opened before the extension was edited would silently overwrite what
+      the extension wrote - no error, no conflict, the settings just revert.
+
+      Whoever owns a key is the only thing that posts it. Another extension
+      that stores settings this way needs the same line.
+    */
+    var { fraudCheck, ...settingsOwnedHere } = settingsData;
+
+    var postData = JSON.stringify(settingsOwnedHere);
 
     fetch(serverUrl + "wp-json/combo-store/v2/update_settings", {
       method: "POST",
@@ -1070,67 +988,6 @@ const SettingsGlobal = (props) => {
                 [item.id]: {
                   ...prev.paymentGateways[item.id],
                   ['enable']: !enable
-                }
-              }
-            }));
-
-          }}>
-            <IconSquareRounded size={20} />
-          </div>
-        )}
-
-
-      </div>
-
-    );
-  }
-  function FraudCheckItemTitle({ item, enable, index }) {
-    return (
-
-      <div className="flex items-center gap-3 w-full justify-between">
-        <div className="flex items-center gap-2">
-          <div>{item?.label}</div>
-          {item?.comingSoon && (
-            <div className="text-sm bg-yellow-400  px-2 rounded-sm text-gray-500 text-xs py-1">
-              {item?.comingSoon ? "Coming Soon" : ""}
-            </div>
-          )}
-        </div>
-        {enable && (
-          <div className="" onClick={ev => {
-
-            ev.preventDefault()
-            ev.stopPropagation()
-
-            setsettingsData(prev => ({
-              ...prev,
-              fraudCheck: {
-                ...prev.fraudCheck,
-                [item.id]: {
-                  ...prev.fraudCheck[item.id],
-                  ['enabled']: !enable
-                }
-              }
-            }));
-
-          }}>
-            <IconSquareRoundedCheck size={20} />
-          </div>
-        )}
-        {!enable && (
-          <div className="" onClick={ev => {
-
-
-            ev.preventDefault()
-            ev.stopPropagation()
-
-            setsettingsData(prev => ({
-              ...prev,
-              fraudCheck: {
-                ...prev.fraudCheck,
-                [item.id]: {
-                  ...prev.fraudCheck[item.id],
-                  ['enabled']: !enable
                 }
               }
             }));
@@ -1402,34 +1259,6 @@ const SettingsGlobal = (props) => {
 
 
 
-  function ShippingZonesItemTitle({ item, index }) {
-    return (
-
-      <div className="flex items-center justify-between w-full">
-        <div>{item?.label}</div>
-        <div onClick={ev => {
-          ev.stopPropagation();
-          ev.preventDefault();
-
-          setsettingsData(prev => {
-            const remainingShippingZones = prev.shippingZones.filter((_, i) => i !== index);
-            return {
-              ...prev,
-              shippingZones: remainingShippingZones
-            }
-          })
-
-
-        }}>
-          <div className="bg-red-400 hover:bg-red-500 text-white rounded-sm cursor-pointer p-2">
-            <IconTrash size={18} />
-          </div>
-
-        </div>
-      </div>
-
-    );
-  }
   function ProductAttributesItemTitle({ item, index }) {
     return (
 
@@ -1483,7 +1312,7 @@ const SettingsGlobal = (props) => {
         <div className='min-w-0'>
           <h1 className='text-lg font-semibold text-gray-900'>{("Settings")}</h1>
           <p className='mt-0.5 text-xs text-gray-500'>
-            {("Store details, payments, shipping and integrations")}
+            {("Store details, payments and integrations")}
           </p>
         </div>
 
@@ -1520,7 +1349,7 @@ const SettingsGlobal = (props) => {
                 className={DANGER_BUTTON}
 
                 onClick={ev => {
-                  setsettingsData({ apiKeys: {}, socialLinks: {}, emailTemplates: {}, productAttributes: [], shippingClasses: [], shippingZones: [], paymentGateways: {} })
+                  setsettingsData({ apiKeys: {}, socialLinks: {}, emailTemplates: {}, productAttributes: [], shippingClasses: [], paymentGateways: {} })
                   setconfirmReset(false)
                 }}
               >{("Yes, clear")}</button>
@@ -1569,16 +1398,14 @@ const SettingsGlobal = (props) => {
           { label: "Store", id: 'store', icon: <IconBuildingStore size={18} /> },
           { label: "Reviews", id: 'reviews', icon: <IconStar size={18} /> },
           // { label: "Checkout", id: 'checkout', icon: <IconCashRegister size={18} /> },
-          { label: "Emails", id: 'emails', icon: <IconMailSpark size={18} /> },
-          { label: "SMS", id: 'sms', icon: <IconMailSpark size={18} /> },
+          // { label: "Emails", id: 'emails', icon: <IconMailSpark size={18} /> },
+          // { label: "SMS", id: 'sms', icon: <IconMailSpark size={18} /> },
           // { label: "Roles", id: 'roles', icon: <IconUserPentagon size={18} /> },
           { label: "Payment Gateways", id: 'payment-gateways', icon: <IconCreditCardPay size={18} /> },
           { label: "Product Attributes", id: 'product-attributes', icon: <IconTriangleSquareCircle size={18} /> },
-          { label: "Shipping ", id: 'shipping', icon: <IconShip size={18} /> },
           { label: "API Keys", id: 'api-keys', icon: <IconPlug size={18} /> },
           // { label: "Trackings", icon: <IconRouteSquare size={18} /> },
           // { label: "Discount", id: 'discount', icon: <IconDiscount size={18} /> },
-          { label: "Fraud Check", id: 'fraud-check', icon: <IconAlien size={18} /> },
           { label: "Couriers", id: 'couriers', icon: <IconTruckDelivery size={18} /> },
           { label: "License", id: 'license', icon: <IconKey size={18} /> },
 
@@ -3985,31 +3812,7 @@ const SettingsGlobal = (props) => {
 
         </Tab>
 
-        <Tab id="shipping">
-          <div className="flex flex-col gap-5">
 
-            <WidgetWrapper className={CARD_CLASSES} title="Shipping Zones ">
-
-
-
-              <ShippingZones />
-
-
-
-
-
-
-            </WidgetWrapper>
-
-
-
-
-          </div>
-
-
-
-
-        </Tab>
         <Tab index={4} id="api-keys">
 
 
@@ -4967,847 +4770,6 @@ const SettingsGlobal = (props) => {
                   )}
                 </div>
               </div>
-
-
-
-
-
-            </WidgetWrapper>
-
-          </div>
-
-
-
-        </Tab>
-        <Tab index={6} id="fraud-check">
-
-          {/* {JSON.stringify(settingsData)} */}
-
-          <div className="flex flex-col gap-5">
-
-
-            <WidgetWrapper className={CARD_CLASSES} title="Fraud Check">
-
-
-
-
-
-
-              <div className="flex flex-col gap-2">
-
-
-                <div className="flex gap-2 flex-col">
-                  {Object.entries(fraudCheckPrams)?.map((args, index) => {
-
-                    var providerKey = args[0];
-                    var item = args[1];
-
-
-
-
-                    return (
-                      <div className="">
-
-                        <ToggleContent key={index} title={<FraudCheckItemTitle item={item} enable={settingsData?.fraudCheck?.[providerKey]?.['enabled']} index={index} />}
-                          contentClass="bg-gray-200 !text-gray-800 p-4"
-                          headerTitleClass="flex items-center gap-3 w-full justify-between"
-                          headerLabelClass="flex items-center gap-3 w-full justify-between"
-                          wrapperClass="w-full"
-                        >
-
-                          <div className="flex flex-col gap-5">
-
-                            {providerKey == 'loginRequired' && (
-
-                              <>
-
-                                <div className=" lg:flex flex-wrap gap-3 py-3 ">
-                                  <div className="flex flex-col gap-2 py-2 lg:w-60">
-                                    <div className="   ">{("Enable")}</div>
-                                    <div className="  text-sm ">{("Enable login to submit orders")}</div>
-                                  </div>
-
-                                  <label className="cursor-pointer flex gap-3 items-center">
-                                    <input
-                                      type="checkbox"
-                                      name={'enabled'}
-                                      checked={settingsData?.fraudCheck?.[providerKey]?.['enabled']}
-                                      onChange={(ev) => {
-                                        const { name, checked } = ev.target;
-                                        setsettingsData(prev => ({
-                                          ...prev,
-                                          fraudCheck: {
-                                            ...prev.fraudCheck,
-                                            [providerKey]: {
-                                              ...prev.fraudCheck[providerKey],
-                                              [name]: checked
-                                            }
-                                          }
-                                        }));
-                                      }}
-                                    />
-                                    {settingsData?.fraudCheck?.[providerKey]?.['enabled'] ? 'Enabled' : 'Disabled'}
-
-                                  </label>
-
-
-
-
-
-
-                                </div>
-
-                              </>
-
-                            )}
-                            {providerKey == 'maxOrder' && (
-
-                              <>
-
-                                <div className=" lg:flex flex-wrap gap-3 py-3 ">
-                                  <div className="flex flex-col gap-2 py-2 lg:w-60">
-                                    <div className="   ">{("Enable")}</div>
-                                    <div className="  text-sm ">{("Enable login to submit orders")}</div>
-                                  </div>
-
-                                  <label className="cursor-pointer flex gap-3 items-center">
-                                    <input
-                                      type="checkbox"
-                                      name={'enabled'}
-                                      checked={settingsData?.fraudCheck?.[providerKey]?.['enabled']}
-                                      onChange={(ev) => {
-                                        const { name, checked } = ev.target;
-                                        setsettingsData(prev => ({
-                                          ...prev,
-                                          fraudCheck: {
-                                            ...prev.fraudCheck,
-                                            [providerKey]: {
-                                              ...prev.fraudCheck[providerKey],
-                                              [name]: checked
-                                            }
-                                          }
-                                        }));
-                                      }}
-                                    />
-                                    {settingsData?.fraudCheck?.[providerKey]?.['enabled'] ? 'Enabled' : 'Disabled'}
-
-                                  </label>
-
-
-
-
-
-
-                                </div>
-
-
-                                <div className=" lg:flex flex-wrap gap-3 py-3 ">
-                                  <div className="flex flex-col gap-2 py-2 lg:w-60">
-                                    <div className="   ">{("Order per hour")}</div>
-                                    <div className="  text-sm ">{("Maximum number of orders allowed")}</div>
-                                  </div>
-
-                                  <label className="cursor-pointer flex gap-3 items-center">
-                                    <input
-                                      type="number"
-                                      name={'order_count'}
-                                      value={settingsData?.fraudCheck?.[providerKey]?.['order_count']}
-                                      onChange={(ev) => {
-                                        const { name, value } = ev.target;
-                                        setsettingsData(prev => ({
-                                          ...prev,
-                                          fraudCheck: {
-                                            ...prev.fraudCheck,
-                                            [providerKey]: {
-                                              ...prev.fraudCheck[providerKey],
-                                              [name]: value
-                                            }
-                                          }
-                                        }));
-                                      }}
-                                    />
-
-                                  </label>
-
-
-
-
-
-
-                                </div>
-
-                              </>
-
-                            )}
-
-                            {providerKey == 'duplicateOrder' && (
-
-                              <>
-
-                                <div className=" lg:flex flex-wrap gap-3 py-3 ">
-                                  <div className="flex flex-col gap-2 py-2 lg:w-60">
-                                    <div className="   ">{("Enable")}</div>
-                                    <div className="  text-sm ">{("Enable duplicate order detection")}</div>
-                                  </div>
-
-                                  <label className="cursor-pointer flex gap-3 items-center">
-                                    <input
-                                      type="checkbox"
-                                      name={'enabled'}
-                                      checked={settingsData?.fraudCheck?.[providerKey]?.['enabled']}
-                                      onChange={(ev) => {
-                                        const { name, checked } = ev.target;
-                                        setsettingsData(prev => ({
-                                          ...prev,
-                                          fraudCheck: {
-                                            ...prev.fraudCheck,
-                                            [providerKey]: {
-                                              ...prev.fraudCheck[providerKey],
-                                              [name]: checked
-                                            }
-                                          }
-                                        }));
-                                      }}
-                                    />
-                                    {settingsData?.fraudCheck?.[providerKey]?.['enabled'] ? 'Enabled' : 'Disabled'}
-
-                                  </label>
-
-
-
-
-
-
-                                </div>
-
-                              </>
-
-                            )}
-                            {providerKey == 'tempEmail' && (
-
-                              <>
-
-                                <div className=" lg:flex flex-wrap gap-3 py-3 ">
-                                  <div className="flex flex-col gap-2 py-2 lg:w-60">
-                                    <div className="   ">{("Enable")}</div>
-                                    <div className="  text-sm ">{("Enable temporary email detection")}</div>
-                                  </div>
-
-                                  <label className="cursor-pointer flex gap-3 items-center">
-                                    <input
-                                      type="checkbox"
-                                      name={'enabled'}
-                                      checked={settingsData?.fraudCheck?.[providerKey]?.['enabled']}
-                                      onChange={(ev) => {
-                                        const { name, checked } = ev.target;
-                                        setsettingsData(prev => ({
-                                          ...prev,
-                                          fraudCheck: {
-                                            ...prev.fraudCheck,
-                                            [providerKey]: {
-                                              ...prev.fraudCheck[providerKey],
-                                              [name]: checked
-                                            }
-                                          }
-                                        }));
-                                      }}
-                                    />
-                                    {settingsData?.fraudCheck?.[providerKey]?.['enabled'] ? 'Enabled' : 'Disabled'}
-
-                                  </label>
-
-
-
-
-
-
-                                </div>
-
-                              </>
-
-                            )}
-                            {providerKey == 'reCAPTCHA' && (
-
-                              <>
-
-                                <div className=" lg:flex flex-wrap gap-3 py-3 ">
-                                  <div className="flex flex-col gap-2 py-2 lg:w-60">
-                                    <div className="   ">{("Enable")}</div>
-                                    <div className="  text-sm ">{("Enable reCAPTCHA on order submission")}</div>
-                                  </div>
-
-                                  <label className="cursor-pointer flex gap-3 items-center">
-                                    <input
-                                      type="checkbox"
-                                      name={'enabled'}
-                                      checked={settingsData?.fraudCheck?.[providerKey]?.['enabled']}
-                                      onChange={(ev) => {
-                                        const { name, checked } = ev.target;
-                                        setsettingsData(prev => ({
-                                          ...prev,
-                                          fraudCheck: {
-                                            ...prev.fraudCheck,
-                                            [providerKey]: {
-                                              ...prev.fraudCheck[providerKey],
-                                              [name]: checked
-                                            }
-                                          }
-                                        }));
-                                      }}
-                                    />
-                                    {settingsData?.fraudCheck?.[providerKey]?.['enabled'] ? 'Enabled' : 'Disabled'}
-
-                                  </label>
-
-
-
-
-
-
-                                </div>
-
-                              </>
-
-                            )}
-                            {providerKey == 'smsOtp' && (
-
-                              <>
-
-                                <div className=" lg:flex flex-wrap gap-3 py-3 ">
-                                  <div className="flex flex-col gap-2 py-2 lg:w-60">
-                                    <div className="   ">{("Enable")}</div>
-                                    <div className="  text-sm ">{("Enable reCAPTCHA on order submission")}</div>
-                                  </div>
-
-                                  <label className="cursor-pointer flex gap-3 items-center">
-                                    <input
-                                      type="checkbox"
-                                      name={'enabled'}
-                                      checked={settingsData?.fraudCheck?.[providerKey]?.['enabled']}
-                                      onChange={(ev) => {
-                                        const { name, checked } = ev.target;
-                                        setsettingsData(prev => ({
-                                          ...prev,
-                                          fraudCheck: {
-                                            ...prev.fraudCheck,
-                                            [providerKey]: {
-                                              ...prev.fraudCheck[providerKey],
-                                              [name]: checked
-                                            }
-                                          }
-                                        }));
-                                      }}
-                                    />
-                                    {settingsData?.fraudCheck?.[providerKey]?.['enabled'] ? 'Enabled' : 'Disabled'}
-
-                                  </label>
-
-
-
-
-
-
-                                </div>
-
-                              </>
-
-                            )}
-
-
-
-                            {providerKey == 'limitip' && (
-
-                              <>
-
-                                <div className=" lg:flex flex-wrap gap-3 py-3 ">
-                                  <div className="flex flex-col gap-2 py-2 lg:w-60">
-                                    <div className="   ">{("Enable")}</div>
-                                    <div className="  text-sm ">{("Enable IP limit")}</div>
-                                  </div>
-
-                                  <label className="cursor-pointer flex gap-3 items-center">
-                                    <input
-                                      type="checkbox"
-                                      name={'enabled'}
-                                      checked={settingsData?.fraudCheck?.[providerKey]?.['enabled']}
-                                      onChange={(ev) => {
-                                        const { name, checked } = ev.target;
-                                        setsettingsData(prev => ({
-                                          ...prev,
-                                          fraudCheck: {
-                                            ...prev.fraudCheck,
-                                            [providerKey]: {
-                                              ...prev.fraudCheck[providerKey],
-                                              [name]: checked
-                                            }
-                                          }
-                                        }));
-                                      }}
-                                    />
-                                    {settingsData?.fraudCheck?.[providerKey]?.['enabled'] ? 'Enabled' : 'Disabled'}
-
-                                  </label>
-
-
-
-
-
-
-                                </div>
-
-
-
-                                <div className=" lg:flex flex-wrap gap-3 py-3 ">
-                                  <div className="flex flex-col gap-2 py-2 lg:w-60">
-                                    <div className="   ">{("Order per hour")}</div>
-                                    <div className="  text-sm ">{("Maximum number of orders allowed")}</div>
-                                  </div>
-
-                                  <label className="cursor-pointer flex gap-3 items-center">
-                                    <input
-                                      type="number"
-                                      name={'order_count'}
-                                      value={settingsData?.fraudCheck?.[providerKey]?.['order_count']}
-                                      onChange={(ev) => {
-                                        const { name, value } = ev.target;
-                                        setsettingsData(prev => ({
-                                          ...prev,
-                                          fraudCheck: {
-                                            ...prev.fraudCheck,
-                                            [providerKey]: {
-                                              ...prev.fraudCheck[providerKey],
-                                              [name]: value
-                                            }
-                                          }
-                                        }));
-                                      }}
-                                    />
-
-                                  </label>
-
-
-
-
-
-
-                                </div>
-
-
-
-
-
-
-
-                              </>
-
-                            )}
-                            {providerKey == 'phoneCall' && (
-
-                              <>
-
-                                <div className=" lg:flex flex-wrap gap-3 py-3 ">
-                                  <div className="flex flex-col gap-2 py-2 lg:w-60">
-                                    <div className="   ">{("Enable")}</div>
-                                    <div className="  text-sm ">{("Enable IP limit")}</div>
-                                  </div>
-
-                                  <label className="cursor-pointer flex gap-3 items-center">
-                                    <input
-                                      type="checkbox"
-                                      name={'enabled'}
-                                      checked={settingsData?.fraudCheck?.[providerKey]?.['enabled']}
-                                      onChange={(ev) => {
-                                        const { name, checked } = ev.target;
-                                        setsettingsData(prev => ({
-                                          ...prev,
-                                          fraudCheck: {
-                                            ...prev.fraudCheck,
-                                            [providerKey]: {
-                                              ...prev.fraudCheck[providerKey],
-                                              [name]: checked
-                                            }
-                                          }
-                                        }));
-                                      }}
-                                    />
-                                    {settingsData?.fraudCheck?.[providerKey]?.['enabled'] ? 'Enabled' : 'Disabled'}
-
-                                  </label>
-
-
-
-
-
-
-                                </div>
-
-
-
-                                <div className=" lg:flex flex-wrap gap-3 py-3 ">
-                                  <div className="flex flex-col gap-2 py-2 lg:w-60">
-                                    <div className="   ">{("Order per hour")}</div>
-                                    <div className="  text-sm ">{("Maximum number of orders allowed")}</div>
-                                  </div>
-
-                                  <label className="cursor-pointer flex gap-3 items-center">
-                                    <input
-                                      type="number"
-                                      name={'order_count'}
-                                      value={settingsData?.fraudCheck?.[providerKey]?.['order_count']}
-                                      onChange={(ev) => {
-                                        const { name, value } = ev.target;
-                                        setsettingsData(prev => ({
-                                          ...prev,
-                                          fraudCheck: {
-                                            ...prev.fraudCheck,
-                                            [providerKey]: {
-                                              ...prev.fraudCheck[providerKey],
-                                              [name]: value
-                                            }
-                                          }
-                                        }));
-                                      }}
-                                    />
-
-                                  </label>
-
-
-
-
-
-
-                                </div>
-
-
-
-
-
-
-
-                              </>
-
-                            )}
-                            {providerKey == 'emailOtp' && (
-
-                              <>
-
-                                <div className=" lg:flex flex-wrap gap-3 py-3 ">
-                                  <div className="flex flex-col gap-2 py-2 lg:w-60">
-                                    <div className="   ">{("Enable")}</div>
-                                    <div className="  text-sm ">{("Enable IP limit")}</div>
-                                  </div>
-
-                                  <label className="cursor-pointer flex gap-3 items-center">
-                                    <input
-                                      type="checkbox"
-                                      name={'enabled'}
-                                      checked={settingsData?.fraudCheck?.[providerKey]?.['enabled']}
-                                      onChange={(ev) => {
-                                        const { name, checked } = ev.target;
-                                        setsettingsData(prev => ({
-                                          ...prev,
-                                          fraudCheck: {
-                                            ...prev.fraudCheck,
-                                            [providerKey]: {
-                                              ...prev.fraudCheck[providerKey],
-                                              [name]: checked
-                                            }
-                                          }
-                                        }));
-                                      }}
-                                    />
-                                    {settingsData?.fraudCheck?.[providerKey]?.['enabled'] ? 'Enabled' : 'Disabled'}
-
-                                  </label>
-
-
-
-
-
-
-                                </div>
-
-
-
-                                <div className=" lg:flex flex-wrap gap-3 py-3 ">
-                                  <div className="flex flex-col gap-2 py-2 lg:w-60">
-                                    <div className="   ">{("Order per hour")}</div>
-                                    <div className="  text-sm ">{("Maximum number of orders allowed")}</div>
-                                  </div>
-
-                                  <label className="cursor-pointer flex gap-3 items-center">
-                                    <input
-                                      type="number"
-                                      name={'order_count'}
-                                      value={settingsData?.fraudCheck?.[providerKey]?.['order_count']}
-                                      onChange={(ev) => {
-                                        const { name, value } = ev.target;
-                                        setsettingsData(prev => ({
-                                          ...prev,
-                                          fraudCheck: {
-                                            ...prev.fraudCheck,
-                                            [providerKey]: {
-                                              ...prev.fraudCheck[providerKey],
-                                              [name]: value
-                                            }
-                                          }
-                                        }));
-                                      }}
-                                    />
-
-                                  </label>
-
-
-
-
-
-
-                                </div>
-
-
-
-
-
-
-
-                              </>
-
-                            )}
-
-
-
-                            {providerKey == 'limitPhone' && (
-
-                              <>
-
-                                <div className=" lg:flex flex-wrap gap-3 py-3 ">
-                                  <div className="flex flex-col gap-2 py-2 lg:w-60">
-                                    <div className="   ">{("Enable")}</div>
-                                    <div className="  text-sm ">{("Enable IP limit")}</div>
-                                  </div>
-
-                                  <label className="cursor-pointer flex gap-3 items-center">
-                                    <input
-                                      type="checkbox"
-                                      name={'enabled'}
-                                      checked={settingsData?.fraudCheck?.[providerKey]?.['enabled']}
-                                      onChange={(ev) => {
-                                        const { name, checked } = ev.target;
-                                        setsettingsData(prev => ({
-                                          ...prev,
-                                          fraudCheck: {
-                                            ...prev.fraudCheck,
-                                            [providerKey]: {
-                                              ...prev.fraudCheck[providerKey],
-                                              [name]: checked
-                                            }
-                                          }
-                                        }));
-                                      }}
-                                    />
-                                    {settingsData?.fraudCheck?.[providerKey]?.['enabled'] ? 'Enabled' : 'Disabled'}
-
-                                  </label>
-
-
-
-
-
-
-                                </div>
-
-
-
-                                <div className=" lg:flex flex-wrap gap-3 py-3 ">
-                                  <div className="flex flex-col gap-2 py-2 lg:w-60">
-                                    <div className="   ">{("Order per hour")}</div>
-                                    <div className="  text-sm ">{("Maximum number of orders allowed")}</div>
-                                  </div>
-
-                                  <label className="cursor-pointer flex gap-3 items-center">
-                                    <input
-                                      type="number"
-                                      name={'order_count'}
-                                      value={settingsData?.fraudCheck?.[providerKey]?.['order_count']}
-                                      onChange={(ev) => {
-                                        const { name, value } = ev.target;
-                                        setsettingsData(prev => ({
-                                          ...prev,
-                                          fraudCheck: {
-                                            ...prev.fraudCheck,
-                                            [providerKey]: {
-                                              ...prev.fraudCheck[providerKey],
-                                              [name]: value
-                                            }
-                                          }
-                                        }));
-                                      }}
-                                    />
-
-                                  </label>
-
-
-
-
-
-
-                                </div>
-
-
-
-
-
-
-
-                              </>
-
-                            )}
-                            {providerKey == 'mobilefraudcheck' && (
-
-                              <>
-
-                                <div className=" lg:flex flex-wrap gap-3 py-3 ">
-                                  <div className="flex flex-col gap-2 py-2 lg:w-60">
-                                    <div className="   ">{("Enable")}</div>
-                                    <div className="  text-sm ">{("Enable mobile fraud check")}</div>
-                                  </div>
-
-                                  <label className="cursor-pointer flex gap-3 items-center">
-                                    <input
-                                      type="checkbox"
-                                      name={'enabled'}
-                                      checked={settingsData?.fraudCheck?.[providerKey]?.['enabled']}
-                                      onChange={(ev) => {
-                                        const { name, checked } = ev.target;
-                                        setsettingsData(prev => ({
-                                          ...prev,
-                                          fraudCheck: {
-                                            ...prev.fraudCheck,
-                                            [providerKey]: {
-                                              ...prev.fraudCheck[providerKey],
-                                              [name]: checked
-                                            }
-                                          }
-                                        }));
-                                      }}
-                                    />
-                                    {settingsData?.fraudCheck?.[providerKey]?.['enabled'] ? 'Enabled' : 'Disabled'}
-
-                                  </label>
-
-
-
-
-
-
-                                </div>
-
-
-
-                                <div className=" lg:flex flex-wrap gap-3 py-3 ">
-                                  <div className="flex flex-col gap-2 py-2 lg:w-60">
-                                    <div className="   ">{("service")}</div>
-                                    <div className="  text-sm ">{("Choose service to check mobile fraud score")}</div>
-                                  </div>
-
-                                  <label className="cursor-pointer flex gap-3 items-center">
-                                    <select
-                                      type="number"
-                                      name={'score'}
-                                      value={settingsData?.fraudCheck?.[providerKey]?.['service']}
-                                      onChange={(ev) => {
-                                        const { name, value } = ev.target;
-                                        setsettingsData(prev => ({
-                                          ...prev,
-                                          fraudCheck: {
-                                            ...prev.fraudCheck,
-                                            [providerKey]: {
-                                              ...prev.fraudCheck[providerKey],
-                                              [name]: value
-                                            }
-                                          }
-                                        }));
-                                      }}
-                                    >
-                                      <option value="bdcourier">BD Courier(bdcourier.com)</option>
-                                      <option value="fraudchecker">Fraud Checker(fraudchecker.link)</option>
-                                    </select>
-
-                                  </label>
-
-
-
-
-
-
-                                </div>
-                                <div className=" lg:flex flex-wrap gap-3 py-3 ">
-                                  <div className="flex flex-col gap-2 py-2 lg:w-60">
-                                    <div className="   ">{("Order per hour")}</div>
-                                    <div className="  text-sm ">{("Average score to allow")}</div>
-                                  </div>
-
-                                  <label className="cursor-pointer flex gap-3 items-center">
-                                    <input
-                                      type="number"
-                                      name={'score'}
-                                      value={settingsData?.fraudCheck?.[providerKey]?.['score']}
-                                      onChange={(ev) => {
-                                        const { name, value } = ev.target;
-                                        setsettingsData(prev => ({
-                                          ...prev,
-                                          fraudCheck: {
-                                            ...prev.fraudCheck,
-                                            [providerKey]: {
-                                              ...prev.fraudCheck[providerKey],
-                                              [name]: value
-                                            }
-                                          }
-                                        }));
-                                      }}
-                                    />
-
-                                  </label>
-
-
-
-
-
-
-                                </div>
-
-
-
-
-
-
-
-                              </>
-
-                            )}
-
-
-
-
-
-
-                          </div>
-
-                        </ToggleContent>
-
-                      </div>
-                    )
-                  }
-                  )}
-                </div>
-              </div>
-
-
-
-
-
-
-
 
 
 

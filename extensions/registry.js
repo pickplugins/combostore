@@ -3,14 +3,16 @@
  *
  * An extension is a folder under `extensions/` with a manifest that says what
  * it contributes. Core reads the registry; nothing in core is edited to add
- * one. The six places that consume it are:
+ * one. The places that consume it are:
  *
  *   components/Sidebar.jsx                    nav entries
  *   app/dashboard/[...slug]/page.jsx          dashboard screens
  *   components/PageBuilder/ElementsDefinition.js   builder block definitions
  *   components/PageBuilder/BlockPreview.jsx        builder block renderers
+ *   components/PageBuilder/BlockRender.jsx         block renderers, live page
  *   components/PageBuilder/ElementOptions.jsx      builder options panels
  *   components/PageBuilder/ElementLayouts.jsx      builder layout presets
+ *   components/ExtensionsRuntime.jsx          headless runtime components
  *
  * This module validates the *shape* of a manifest and nothing else. Collisions
  * with core are settled where the merge happens, because that is the only place
@@ -27,7 +29,7 @@
    rejected, so an extension can keep its own bookkeeping alongside. */
 const KNOWN_KEYS = [
 	"id", "name", "version", "description", "enabled",
-	"nav", "routes", "elements", "settings",
+	"nav", "routes", "elements", "settings", "runtime",
 ];
 
 function isPlainObject(v) {
@@ -125,6 +127,16 @@ export function validateManifest(raw) {
 		return { error: `"${id}": \`settings\` is not a component` };
 	}
 
+	/*
+		A runtime component is mounted once, on every page, by
+		components/ExtensionsRuntime.jsx. It is how an extension does work that
+		is not tied to a screen or a block - pricing the cart, watching the
+		store - without core knowing it exists. It renders nothing.
+	*/
+	if (raw.runtime !== undefined && !isComponent(raw.runtime)) {
+		return { error: `"${id}": \`runtime\` is not a component` };
+	}
+
 	return {
 		manifest: {
 			id,
@@ -138,6 +150,7 @@ export function validateManifest(raw) {
 			routes: raw.routes ?? {},
 			elements: raw.elements ?? [],
 			settings: raw.settings ?? null,
+			runtime: raw.runtime ?? null,
 			unknownKeys: Object.keys(raw).filter((k) => !KNOWN_KEYS.includes(k)),
 		},
 	};
@@ -255,6 +268,15 @@ export function createRegistry(rawManifests) {
 				for (const e of m.elements) if (e.options) out[e.definition.type] = e.options;
 			}
 			return out;
+		},
+
+		/* `{ id, Component }` so the mount point can key on the id - a bare
+		   list of components would be keyed by index, and switching one
+		   extension off would remount every runtime after it. */
+		runtimeComponents(activeIds) {
+			return activeOnly(activeIds)
+				.filter((m) => m.runtime)
+				.map((m) => ({ id: m.id, Component: m.runtime }));
 		},
 
 		elementLayouts(activeIds) {

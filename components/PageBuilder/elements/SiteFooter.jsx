@@ -20,7 +20,7 @@ const SiteHeader = (props) => {
 
 	var dragOverIndex = props?.dragOverIndex
 	var setDragOverIndex = props?.setDragOverIndex
-	var cssSelectors = props?.cssSelectors;
+	var cssSelectors = props?.cssSelectors ?? {};
 	var handleMoveBlock = props?.handleMoveBlock;
 
 

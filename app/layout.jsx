@@ -3,6 +3,7 @@ import "./globals.css";
 import TikTokPixel from '@/components/analytics/TikTokPixel';
 import FacebookPixel from '@/components/analytics/FacebookPixel';
 import { AuthProvider } from "../components/auth-context";
+import ExtensionsRuntime from "../components/ExtensionsRuntime";
 import NextTopLoader from 'nextjs-toploader';
 import Script from "next/script";
 import { getSettings } from "@/lib/getSettings";
@@ -104,6 +105,12 @@ export default function RootLayout({ children }) {
 					/>
 
 
+
+					{/* Renders nothing. It is where the extensions' runtime
+					    components live, so an extension can do work that is not
+					    tied to a screen or a block - see
+					    components/ExtensionsRuntime.jsx. */}
+					<ExtensionsRuntime />
 
 					<div>{children}</div>
 

@@ -192,7 +192,10 @@ const PanelsLeft = (props) => {
 							</Tab>
 							<Tab index={1} id='templates'>
 
-								<Templates onLoadPage={onLoadPage} type={'sidebar'} blocks={blocks} setBlocks={setBlocks} pageData={pageData} setpageData={setpageData} handlePasteBlock={handlePasteBlock} />
+								{/* `elements` reaches the AI Theme tab through here: it is the
+									  palette the generator writes against and the sanitiser checks
+									  every generated block against. */}
+								<Templates onLoadPage={onLoadPage} type={'sidebar'} elements={elements} blocks={blocks} setBlocks={setBlocks} pageData={pageData} setpageData={setpageData} handlePasteBlock={handlePasteBlock} />
 
 							</Tab>
 							<Tab index={2} id='headers'>

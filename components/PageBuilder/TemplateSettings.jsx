@@ -10,6 +10,7 @@ import Link from 'next/link';
 import Tabs from '../../components/Tabs';
 import Tab from '../../components/Tab';
 import DropDown from "../../components/DropDown";
+import CssClassPicker from "./CssClassPicker";
 
 import LandingPages from './ready-layouts/LandingPages'
 import ProductPage from './ready-layouts/ProductPage'
@@ -31,6 +32,7 @@ const TemplateSettings = (props) => {
 
 
 	var [templateData, settemplateData] = useState(props?.templateData);
+	var [loading, setloading] = useState(false);
 
 
 
@@ -41,7 +43,65 @@ const TemplateSettings = (props) => {
 
 
 
+	function update_template() {
 
+
+		var postData = {
+			id: templateData?.id,
+			name: templateData?.name,
+			description: templateData?.description,
+			thumbnail: templateData?.thumbnail,
+			style: templateData?.style,
+			meta: templateData?.meta,
+
+		};
+		postData = JSON.stringify(postData);
+
+
+
+		setloading(true);
+		fetch(serverUrl + "wp-json/combo-store/v2/update_template", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json; charset=utf-8",
+				Authorization: `Bearer ${token}`,
+			},
+			body: postData,
+		})
+			.then((response) => {
+				if (!response.ok) {
+					throw new Error("Token validation failed");
+				}
+
+				if (response.ok && response.status < 400) {
+					response.json().then((res) => {
+						var errors = res?.errors;
+						var success = res?.success;
+
+						//onLoadPage(res?.post)
+
+						setloading(false);
+
+						//setselectedRows([]);
+
+						if (success) {
+							addNotification({ type: 'success', title: 'Page update', content: `` })
+						} else {
+							addNotification({ type: 'error', title: 'Page updated failed', content: `` })
+
+						}
+
+
+
+
+					});
+				}
+			})
+			.catch((_error) => {
+				//this.saveAsStatus = 'error';
+				// handle the error
+			});
+	}
 
 
 
@@ -74,16 +134,33 @@ const TemplateSettings = (props) => {
 					<div className="flex flex-col gap-5">
 
 						<div className="flex gap-5 items-center">
-							<div className="w-48">Primary</div>
+							<div className="w-48">Button Class</div>
 							<div>
-								<input className="" type="text" placeholder="Name" value={''} onChange={ev => {
 
-									var value = ev.target.value;
 
-									//setnewPage({ ...newPage, name: value })
+								<CssClassPicker type="text" className="w-full !rounded-lg !border !border-gray-300 !bg-white !px-2.5 !py-1.5 !text-xs !text-gray-700 !shadow-none !outline-none transition-colors focus:!border-brand focus:!ring-4 focus:!ring-brand/10" value={templateData?.meta?.colors?.btnBgColor} onChange={(value) => {
+
+
+									var meta = templateData?.meta ?? {}
+									var colors = meta?.colors ?? {}
+									colors.btnBgColor = value
+
+									meta.colors = colors;
+
+									settemplateData({ ...templateData, meta })
+
 								}} />
+
+
+
 							</div>
 						</div>
+
+
+
+
+
+
 						<div className="flex gap-5 items-center">
 							<div className="w-48">Secondary</div>
 							<div>
@@ -144,9 +221,6 @@ const TemplateSettings = (props) => {
 
 							metaX.fonts = fontsX;
 
-							console.log(templateData);
-
-
 							settemplateData({ ...templateData, meta: metaX })
 
 
@@ -174,9 +248,24 @@ const TemplateSettings = (props) => {
 
 
 									<div className="flex gap-5 items-center">
+										<div className="w-48">Src</div>
+										<div>
+											<input className="w-30 !rounded-lg !border !border-gray-300 !bg-white !px-2.5 !py-1.5 !text-xs !text-gray-700 !shadow-none !outline-none transition-colors focus:!border-brand focus:!ring-4 focus:!ring-brand/10" type="text" placeholder="src" value={font?.src} onChange={ev => {
+
+												var value = ev.target.value;
+												var metaX = { ...templateData.meta }
+
+												metaX.fonts[fontIndx].src = value
+
+
+												settemplateData({ ...templateData, meta: metaX })
+											}} />
+										</div>
+									</div>
+									<div className="flex gap-5 items-center">
 										<div className="w-48">Family</div>
 										<div>
-											<input className="" type="text" placeholder="family" value={font?.family} onChange={ev => {
+											<input className=" w-30 !rounded-lg !border !border-gray-300 !bg-white !px-2.5 !py-1.5 !text-xs !text-gray-700 !shadow-none !outline-none transition-colors focus:!border-brand focus:!ring-4 focus:!ring-brand/10" type="text" placeholder="family" value={font?.family} onChange={ev => {
 
 												var value = ev.target.value;
 												var metaX = { ...templateData.meta }
@@ -191,7 +280,7 @@ const TemplateSettings = (props) => {
 									<div className="flex gap-5 items-center">
 										<div className="w-48">Weight</div>
 										<div>
-											<input className="" type="text" placeholder="weight" value={font?.weight} onChange={ev => {
+											<input className=" w-30 !rounded-lg !border !border-gray-300 !bg-white !px-2.5 !py-1.5 !text-xs !text-gray-700 !shadow-none !outline-none transition-colors focus:!border-brand focus:!ring-4 focus:!ring-brand/10" type="text" placeholder="weight" value={font?.weight} onChange={ev => {
 
 												var value = ev.target.value;
 
@@ -202,7 +291,7 @@ const TemplateSettings = (props) => {
 									<div className="flex gap-5 items-center">
 										<div className="w-48">Style</div>
 										<div>
-											<input className="" type="text" placeholder="style" value={font?.style} onChange={ev => {
+											<input className=" w-30 !rounded-lg !border !border-gray-300 !bg-white !px-2.5 !py-1.5 !text-xs !text-gray-700 !shadow-none !outline-none transition-colors focus:!border-brand focus:!ring-4 focus:!ring-brand/10" type="text" placeholder="style" value={font?.style} onChange={ev => {
 
 												var value = ev.target.value;
 
@@ -213,7 +302,7 @@ const TemplateSettings = (props) => {
 									<div className="flex gap-5 items-center">
 										<div className="w-48">Display</div>
 										<div>
-											<input className="" type="text" placeholder="display" value={font?.display} onChange={ev => {
+											<input className=" w-30 !rounded-lg !border !border-gray-300 !bg-white !px-2.5 !py-1.5 !text-xs !text-gray-700 !shadow-none !outline-none transition-colors focus:!border-brand focus:!ring-4 focus:!ring-brand/10" type="text" placeholder="display" value={font?.display} onChange={ev => {
 
 												var value = ev.target.value;
 
@@ -235,7 +324,6 @@ const TemplateSettings = (props) => {
 
 					</div>
 
-					{JSON.stringify(templateData.meta)}
 
 
 				</Tab>
@@ -247,9 +335,15 @@ const TemplateSettings = (props) => {
 
 			</Tabs>
 
+
+
 			<div className="flex justify-end">
 
-				<div className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-gray-200 bg-white p-1.5 text-xs font-medium text-gray-500 cursor-pointer transition-colors hover:border-gray-300 hover:bg-gray-100 hover:text-gray-900 cursor-pointer flex px-5 py-2 w-fit">Update Settings</div>
+				<div className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-gray-200 bg-white p-1.5 text-xs font-medium text-gray-500 cursor-pointer transition-colors hover:border-gray-300 hover:bg-gray-100 hover:text-gray-900 cursor-pointer flex px-5 py-2 w-fit" onClick={ev=>{
+
+update_template()
+
+}}>Update Settings</div>
 
 			</div>
 

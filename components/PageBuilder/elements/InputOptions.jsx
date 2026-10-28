@@ -15,7 +15,7 @@ const ButtonOptions = (props) => {
 	var options = props?.options;
 	var icon = options?.icon;
 	var iconSize = options?.iconSize;
-	var cssSelectors = props?.cssSelectors;
+	var cssSelectors = props?.cssSelectors ?? {};
 
 
 	return (

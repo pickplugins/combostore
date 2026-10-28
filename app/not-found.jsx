@@ -1,6 +1,9 @@
 
-import React from "react";
 
+import React from "react";
+import PageBuilderContent from "../components/PageBuilder/PageBuilderContent";
+
+import { getPageTemplate } from "../lib/getPageTemplate";
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 const appUrl = process.env.NEXT_PUBLIC_STORE_URL;
 
@@ -11,10 +14,33 @@ const appUrl = process.env.NEXT_PUBLIC_STORE_URL;
 
 
 
-export default function NotFound() {
+export default async function NotFound() {
+
+
+
+  const pageTemplateData = await getPageTemplate({ type: '404' })
+
+  var pageTemplatecontent = pageTemplateData?.content ? JSON.parse(pageTemplateData?.content) : [];
+
+  var pageTemplateHeader = pageTemplateData?.header ? JSON.parse(pageTemplateData?.header?.content) : [];
+  var pageTemplateFooter = pageTemplateData?.footer ? JSON.parse(pageTemplateData?.footer?.content) : [];
+
+  var pageTemplate = [...pageTemplateHeader, ...pageTemplatecontent, ...pageTemplateFooter]
+
+
+
   return (
-    <div className="py-10 text-center">
-      <h1>404 - Page Not Found #1</h1>
-    </div>
+    <>
+
+      {pageTemplate?.length > 0 && <PageBuilderContent blocks={pageTemplate} />}
+
+
+      <style>
+        {pageTemplateData?.style}
+        {pageTemplateData?.header?.style}
+        {pageTemplateData?.footer?.style}
+      </style>
+
+    </>
   );
 }

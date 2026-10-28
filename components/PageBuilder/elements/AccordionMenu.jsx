@@ -26,7 +26,7 @@ const AccordionMenu = (props) => {
 	var id = props?.id;
 
 	var options = props?.options;
-	var cssSelectors = props?.cssSelectors;
+	var cssSelectors = props?.cssSelectors ?? {};
 	var icon = options?.icon;
 	var iconSize = options?.iconSize;
 	var hierarchical = options?.hierarchical;

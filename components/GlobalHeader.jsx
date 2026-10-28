@@ -64,6 +64,7 @@ const GlobalHeader = () => {
 		'create-tickets': { label: ("Create Tickets"), value: "create-tickets" },
 		'media-library': { label: ("Media Library"), value: "media-library" },
 		'stocks-history': { label: ("Stocks History"), value: "stocks-history" },
+		'shipping-zones': { label: ("Shipping Zones"), value: "shipping-zones" },
 
 		'bulk-submit-blog': { label: ("Bulk Submit Blog"), value: "bulk-submit-blog" },
 		'top': { label: ("Top"), value: "top" },

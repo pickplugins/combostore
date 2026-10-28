@@ -80,14 +80,22 @@ export default async function page({ params }) {
 
   var productTemplateId = product_template?.id ?? null
 
+  var pageTemplate = [];
 
   if (productTemplateId) {
     var pageTemplateData = await getPageTemplate({ id: productTemplateId })
-    var pageTemplatecontent = pageTemplateData?.content ? JSON.parse(pageTemplateData?.content) : [];
+    var pageTemplate = pageTemplateData?.content ? JSON.parse(pageTemplateData?.content) : [];
+
 
   } else {
     var pageTemplateData = await getPageTemplate({ type: 'product' })
     var pageTemplatecontent = pageTemplateData?.content ? JSON.parse(pageTemplateData?.content) : [];
+
+    var pageTemplateHeader = pageTemplateData?.header ? JSON.parse(pageTemplateData?.header?.content) : [];
+    var pageTemplateFooter = pageTemplateData?.footer ? JSON.parse(pageTemplateData?.footer?.content) : [];
+
+    pageTemplate = [...pageTemplateHeader, ...pageTemplatecontent, ...pageTemplateFooter]
+
 
   }
 
@@ -239,7 +247,7 @@ export default async function page({ params }) {
     <>
 
       <PostProvider value={productData}>
-        {pageTemplatecontent?.length > 0 && <PageBuilderContent blocks={pageTemplatecontent} />}
+        {pageTemplate?.length > 0 && <PageBuilderContent blocks={pageTemplate} />}
 
       </PostProvider>
 
@@ -253,6 +261,8 @@ export default async function page({ params }) {
       />
       <style>
         {pageTemplateData?.style}
+        {pageTemplateData?.header?.style}
+        {pageTemplateData?.footer?.style}
       </style>
 
     </>

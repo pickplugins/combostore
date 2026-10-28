@@ -10,7 +10,7 @@ const SectionView = (props) => {
 
 
 
-	var cssSelectors = props?.cssSelectors;
+	var cssSelectors = props?.cssSelectors ?? {};
 
 	var type = props?.type
 	var options = props?.options;

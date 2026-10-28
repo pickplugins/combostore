@@ -17,7 +17,7 @@ const Image = (props) => {
 	var selectedId = props?.selectedId
 	var index = props?.index
 
-	var cssSelectors = props?.cssSelectors;
+	var cssSelectors = props?.cssSelectors ?? {};
 
 	var id = props?.id;
 

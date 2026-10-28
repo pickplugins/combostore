@@ -116,6 +116,10 @@ const CustomerProfile = ({ userid }) => {
 			.then((response) => {
 				if (response.ok && response.status < 400) {
 					response.json().then((res) => {
+
+						console.log(res.customer);
+
+
 						seteditUserData((prev) => ({ ...prev, ...res.customer }));
 						setTimeout(() => setloading(false), 500);
 					});

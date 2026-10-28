@@ -19,7 +19,7 @@ const ColumnsView = (props) => {
 
 	const children = props?.children || [];
 
-	var cssSelectors = props?.cssSelectors;
+	var cssSelectors = props?.cssSelectors ?? {};
 
 
 

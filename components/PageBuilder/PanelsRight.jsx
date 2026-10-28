@@ -15,12 +15,12 @@ import ReadyLayouts from './ReadyLayouts';
 
 
 /* Global CSS styles `button` unlayered, so it beats Tailwind utilities and
-   these overrides have to be important to land. */
+	 these overrides have to be important to land. */
 const ACTION_BUTTON =
 	"inline-flex h-8 w-8 items-center justify-center !rounded-lg !border !border-gray-200 !bg-white !px-0 !py-0 !text-gray-500 !shadow-none transition-colors hover:!border-gray-300 hover:!bg-gray-100 hover:!text-gray-900";
 
 /* Passed into the shared Tabs component, which styles its rail entirely from
-   these two props. */
+	 these two props. */
 const PANEL_TAB =
 	"flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900";
 
@@ -93,6 +93,8 @@ const PanelsRight = (props) => {
 	*/
 	return (
 		<div className="flex min-h-full flex-col pb-10">
+
+			{/* {JSON.stringify(pageData)} */}
 
 
 			{/* {pageData && (

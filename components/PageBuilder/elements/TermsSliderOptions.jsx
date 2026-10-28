@@ -20,7 +20,7 @@ const TermsSliderOptions = (props) => {
 	var items = options?.items ?? [];
 	var queryPrams = options?.queryPrams ?? [];
 
-	var cssSelectors = props?.cssSelectors;
+	var cssSelectors = props?.cssSelectors ?? {};
 
 
 	const [loading, setloading] = useState(false);

@@ -31,7 +31,7 @@ const TermsGrid = (props) => {
 	var id = props?.id;
 
 	var index = props?.index
-	var cssSelectors = props?.cssSelectors;
+	var cssSelectors = props?.cssSelectors ?? {};
 
 
 

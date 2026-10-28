@@ -11,7 +11,7 @@ const FooterLinksView = (props) => {
 
 	var id = props?.id;
 
-	var cssSelectors = props?.cssSelectors;
+	var cssSelectors = props?.cssSelectors ?? {};
 	var options = props?.options;
 	var items = options?.items ?? [];
 	var tag = options?.tag ?? 'li';

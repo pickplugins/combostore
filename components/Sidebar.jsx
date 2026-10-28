@@ -87,6 +87,7 @@ const NAVS = [
 
 	{ label: ("Delivery"), value: "delivery", icon: <IconTruckDelivery />, roles: ['administrator', 'store_manager'] },
 	{ label: ("Deliveries"), value: "deliveries", icon: <IconTruckDelivery />, roles: ['administrator', 'store_manager'], parent: "delivery", },
+	{ label: ("Shipping Zones"), value: "shipping-zones", icon: <IconTruckDelivery />, roles: ['administrator', 'store_manager'], parent: "delivery", },
 
 
 
@@ -126,7 +127,7 @@ const NAVS = [
 	{ label: ("Settings"), value: "settings", icon: <IconAdjustmentsAlt />, roles: ['administrator'] },
 	/* Top-level, so its link is `/${slug}` rather than `/dashboard/${slug}` -
 		 hence the explicit slug pointing at app/dashboard/extensions. */
-	{ label: ("Extensions"), value: "extensions", slug: "dashboard/extensions", icon: <IconPuzzle />, roles: ['administrator'] },
+	// { label: ("Extensions"), value: "extensions", slug: "dashboard/extensions", icon: <IconPuzzle />, roles: ['administrator'] },
 	// { label: ("Media"), value: "media", icon: <IconLibraryPhoto />, roles: ['administrator'] },
 	// { label: ("Onboard"), value: "onboard", icon: <IconAdjustmentsAlt />, roles: ['administrator'] },
 
@@ -206,6 +207,8 @@ function mergeExtensionNavs(extensionNavs) {
 	return extras.length ? [...NAVS, ...extras] : NAVS;
 }
 
+const appVersion = process.env.NEXT_PUBLIC_APP_VERSION;
+const appBeta = process.env.NEXT_PUBLIC_APP_BETA;
 
 /*
 	The nav column's contents, rendered twice: once in the mobile drawer and once
@@ -222,13 +225,26 @@ const SidebarContent = ({ token, onNavigate, navs }) => (
 	<>
 		<div className="flex shrink-0 items-center justify-between gap-3 border-b border-gray-800 px-4 py-4">
 
-			<Link href={`/dashboard`} className="min-w-0" onClick={onNavigate}>
-				<Image
-					src="/logo-h.png"
-					className="h-8 w-auto object-contain" width={200} height={`50`} alt="ComboStore"
-					priority
-				/>
-			</Link>
+			<div className="flex flex-col gap-2">
+				<Link href={`/dashboard`} className="min-w-0" onClick={onNavigate}>
+					<Image
+						src="/logo-h.png"
+						className="h-8 w-auto object-contain" width={200} height={`50`} alt="ComboStore"
+						priority
+					/>
+				</Link>
+
+				<div className="text-white text-xs flex gap-2">
+
+					<div>Version: {appVersion}</div>
+
+					{appBeta && (
+						<div className="text-white text-xs">Beta</div>
+
+					)}
+
+				</div>
+			</div>
 
 			{onNavigate && (
 				<button

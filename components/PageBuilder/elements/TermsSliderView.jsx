@@ -21,7 +21,7 @@ const TermsSliderView = (props) => {
 
 
 
-	var cssSelectors = props?.cssSelectors;
+	var cssSelectors = props?.cssSelectors ?? {};
 
 	var sliderOptions = options?.sliderOptions
 	var queryPrams = options?.queryPrams ?? [];

@@ -20,7 +20,7 @@ const CustomerAccountLoggedView = (props) => {
 
 	const children = props?.children || [];
 
-	var cssSelectors = props?.cssSelectors;
+	var cssSelectors = props?.cssSelectors ?? {};
 
 	// const { token, appData, notifications, addNotification, cartItems, addCartItems, removeCartItems, resetCartItems, updateCartItems, userDataX, setUserDataX, settings } = useCounterStore()
 

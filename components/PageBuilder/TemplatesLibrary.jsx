@@ -10,6 +10,7 @@ import Link from 'next/link';
 import Tabs from '../../components/Tabs';
 import Tab from '../../components/Tab';
 import DropDown from "../../components/DropDown";
+import ToggleContent from '../../components/ToggleContent';
 
 
 
@@ -130,6 +131,11 @@ const TemplatesLibrary = (props) => {
 			});
 	}
 
+	const HEADER_CLASSES =
+		"flex w-full text-sm cursor-pointer items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-2 py-1.5 transition-colors hover:bg-gray-100 select-none";
+
+	const CONTENT_CLASSES =
+		"mt-1.5 rounded-lg border border-gray-200 bg-white p-3";
 
 
 
@@ -208,48 +214,50 @@ const TemplatesLibrary = (props) => {
 								</div>
 
 							</div>
+							<ToggleContent iconPosition='left' title={`Pages`} headerClass={HEADER_CLASSES} headerTitleClass={`flex justify-between w-full items-center gap-2`} contentClass={CONTENT_CLASSES}>
+								<div className="flex flex-col gap-2">
 
-							<div className="flex flex-col gap-2">
-
-								{template?.pages.map(page => {
+									{template?.pages.map(page => {
 
 
-									return (
+										return (
 
-										<div className={`rounded-md border border-gray-200 bg-white px-2 py-1 text-[11px] text-gray-600 cursor-pointer transition-colors hover:border-brand/40 hover:bg-brand/5 hover:text-brand-700`} onClick={ev => {
+											<div className={`rounded-md border border-gray-200 bg-white px-2 py-1 text-[11px] text-gray-600 cursor-pointer transition-colors hover:border-brand/40 hover:bg-brand/5 hover:text-brand-700`} onClick={ev => {
 
-											// console.log(template?.pages);
+												// console.log(template?.pages);
 
-											const headerPage = template?.pages.find(item => item.type === 'header');
-											const footerPage = template?.pages.find(item => item.type === 'footer');
+												const headerPage = template?.pages.find(item => item.type === 'header');
+												const footerPage = template?.pages.find(item => item.type === 'footer');
 
-											var content = page.content
-											var header = headerPage.content
-											var footer = footerPage.content
+												var content = page.content
+												var header = headerPage.content
+												var footer = footerPage.content
 
-											// console.log([...header, ...content, ...footer]);
+												// console.log([...header, ...content, ...footer]);
 
-											if (includeHeaderFooter) {
-												setBlocks([...header, ...content, ...footer])
+												if (includeHeaderFooter) {
+													setBlocks([...header, ...content, ...footer])
 
-											} else {
-												setBlocks(content)
-											}
+												} else {
+													setBlocks(content)
+												}
 
-											// setBlocks(content)
-											//addNotification({ type: 'success', title: 'Content Loaded', content: `Page laoded success` })
+												// setBlocks(content)
+												//addNotification({ type: 'success', title: 'Content Loaded', content: `Page laoded success` })
 
-										}}>
+											}}>
 
-											{page.title}
+												{page.title}
 
-										</div>
+											</div>
 
-									)
+										)
 
-								})}
+									})}
 
-							</div>
+								</div>
+							</ToggleContent>
+
 
 
 						</div>

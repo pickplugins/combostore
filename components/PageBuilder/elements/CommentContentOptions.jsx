@@ -15,7 +15,7 @@ const ImageOptions = (props) => {
 
 	var options = props?.options;
 	var items = options?.items ?? [];
-	var cssSelectors = props?.cssSelectors;
+	var cssSelectors = props?.cssSelectors ?? {};
 
 
 	const [loading, setloading] = useState(false);

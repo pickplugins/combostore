@@ -18,7 +18,7 @@ const ButtonOptions = (props) => {
 	var email = options?.email;
 	var location = options?.location;
 	var iconSize = options?.iconSize;
-	var cssSelectors = props?.cssSelectors;
+	var cssSelectors = props?.cssSelectors ?? {};
 
 
 	return (

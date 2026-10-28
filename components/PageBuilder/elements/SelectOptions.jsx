@@ -20,7 +20,7 @@ const ButtonOptions = (props) => {
 	var pramsSource = options?.pramsSource;
 	var pramsQuery = options?.pramsQuery ?? {};
 
-	var cssSelectors = props?.cssSelectors;
+	var cssSelectors = props?.cssSelectors ?? {};
 
 	var [prams, setprams] = useState(options?.prams ?? []);
 	var [loading, setloading] = useState(false);

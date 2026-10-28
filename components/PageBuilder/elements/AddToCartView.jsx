@@ -32,7 +32,7 @@ const AddToCart = (props) => {
 
 
 	var index = props?.index
-	var cssSelectors = props?.cssSelectors;
+	var cssSelectors = props?.cssSelectors ?? {};
 
 
 	var id = props?.id;
@@ -81,6 +81,20 @@ const AddToCart = (props) => {
 	var [quantity, setquantity] = useState(0);
 	var [cartItem, setcartItem] = useState(null);
 	var [canAddToCart, setcanAddToCart] = useState(!addons?.includes('variations') ? true : false);
+
+	/*
+		An extension may say this product is not sold here and now - see
+		`purchaseGate` in store/useCounterStore.js. extensions/request-quote
+		uses it to replace buying with a quote request on the products a rule
+		marks quote-only.
+
+		Read through a selector of its own rather than added to the
+		destructure above, so it is obvious this is a slot core only reads.
+		With nothing installed it is null and the controls render exactly as
+		they did.
+	*/
+	const purchaseGate = useCounterStore((state) => state.purchaseGate);
+	const purchaseBlocked = purchaseGate ? purchaseGate(productData)?.hideAddToCart === true : false;
 	var [addons, setaddons] = useState(productData?.addons);
 
 	var hideButtonText = props?.hideButtonText
@@ -349,7 +363,7 @@ const AddToCart = (props) => {
 		<>
 
 
-			{canAddToCart && (
+			{canAddToCart && !purchaseBlocked && (
 
 				<div id={id} type={type} className={`${cssSelectors['*']?.classes}  `}
 				>

@@ -8,7 +8,7 @@ const Image = (props) => {
 
 
 
-	var cssSelectors = props?.cssSelectors;
+	var cssSelectors = props?.cssSelectors ?? {};
 
 	var id = props?.id;
 

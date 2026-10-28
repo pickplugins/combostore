@@ -23,7 +23,7 @@ const ColumnsView = (props) => {
 
 	const children = props?.children || [];
 
-	var cssSelectors = props?.cssSelectors;
+	var cssSelectors = props?.cssSelectors ?? {};
 
 	const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
