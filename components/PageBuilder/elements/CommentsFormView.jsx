@@ -86,11 +86,12 @@ const CommentsFormView = (props) => {
 	const CommentsGridAttr = useCommentsGrid();
 
 
-	var postId = post?.id ?? null;
+	var postId = post?.product_id ?? null;
+	var post_type = post?.post_type ?? null;
 	var parentId = parentComment?.comment_ID ?? null;
 
 
-	const [comment, setcomment] = useState({ content: "", postId: postId, parentId: parentId, rate: null });
+	const [comment, setcomment] = useState({ content: "", postId: postId, postType: post_type, parentId: parentId, rate: null });
 	var [errors, seterrors] = useState([]);
 	var [loading, setloading] = useState(false);
 	var [success, setsuccess] = useState(false);

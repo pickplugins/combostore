@@ -54,23 +54,27 @@ const CommentRateView = (props) => {
 		<div id={id} index={index} type={type} className={`${cssSelectors['*']?.classes ?? ''}  `}
 		>
 
-			{stars.map((item, indexZ) => {
+			<div className={`${cssSelectors['star-loop']?.classes}`}>
 
-				return (
+				{stars.map((item, indexZ) => {
 
-					<div className={`${cssSelectors['star']?.classes ?? ''}`} key={indexZ} title={item?.label}>
+					return (
+						<div className={`${cssSelectors['star']?.classes ?? ''}`} key={indexZ} title={item?.label}>
 
-						{rate <= indexZ && (
-							<><IconStar /></>
-						)}
-						{rate > indexZ && (
-							<><IconStarFilled /></>
-						)}
+							{rate <= indexZ && (
+								<><IconStar /></>
+							)}
+							{rate > indexZ && (
+								<><IconStarFilled /></>
+							)}
+						</div>
+					)
 
-					</div>
-				)
+				})}
+			</div>
 
-			})}
+			<div className={`${cssSelectors['avg-rating']?.classes}`}>{rate}/5</div>
+
 
 		</div>
 

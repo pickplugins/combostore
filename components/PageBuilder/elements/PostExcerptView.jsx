@@ -49,13 +49,13 @@ const PostTitleView = (props) => {
 
 			{activeVariation && (
 
-				<p className={cssSelectors['excerpt']?.classes}>{activeVariation?.description}</p>
+				<div className={cssSelectors['excerpt']?.classes} dangerouslySetInnerHTML={{ __html: activeVariation?.description }}></div>
 
 			)}
 			{!activeVariation && (
 
 				<>
-					<p className={cssSelectors['excerpt']?.classes}>{excerpt}</p>
+					<div className={cssSelectors['excerpt']?.classes} dangerouslySetInnerHTML={{ __html: excerpt }}></div>
 
 					{readMoreText && (
 						<Link href={`#`} className={cssSelectors['read-more']?.classes}>

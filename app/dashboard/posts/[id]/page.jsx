@@ -16,6 +16,7 @@ import GalleryPicker from "../../../../components/shop-elements/GalleryPicker";
 import TermsPicker from "../../../../components/shop-elements/TermsPicker";
 import TagsPicker from "../../../../components/shop-elements/TagsPicker";
 import Spinner from "../../../../components/Spinner";
+import HtmlEditor from "../../../../components/HtmlEditor";
 
 import { IconSettings, IconCheckbox, IconSquare, IconFidgetSpinner, IconTrash, IconStarFilled, IconStar, IconX, IconExternalLink } from "@tabler/icons-react";
 
@@ -704,13 +705,10 @@ const page = ({ params }) => {
                   <label htmlFor="" className="block text-sm font-medium text-gray-700">
                     {("Content")}
                   </label>
-                  <textarea
-                    type="text"
-                    className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 w-full rounded-lg bg-white px-3 py-2 text-sm"
-                    value={currentObject?.post_content}
-                    onChange={(ev) => {
-                      var value = ev.target.value;
-                      setcurrentObject({ ...currentObject, post_content: value });
+                  <HtmlEditor
+                    value={currentObject?.post_content || ""}
+                    onChange={(html) => {
+                      setcurrentObject({ ...currentObject, post_content: html });
                     }}
                   />
                 </div>

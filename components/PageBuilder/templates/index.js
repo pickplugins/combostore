@@ -21,7 +21,8 @@ import GhorerBazar from './GhorerBazar';
 import BikeParts from './BikeParts';
 import OrganicFruits from './OrganicFruits';
 import ComboStore from './ComboStore';
+import EhansMart from './EhansMart';
 
-var templates = [...Organic, ...HomeKitchen, ...BeautyCosmetics, ...Grocery, ...KitchenAccessories, ...IslamicLifestyle, ...GhorerBazar, ...BikeParts, ...OrganicFruits, ...ComboStore];
+var templates = [...Organic, ...HomeKitchen, ...BeautyCosmetics, ...Grocery, ...KitchenAccessories, ...IslamicLifestyle, ...GhorerBazar, ...BikeParts, ...OrganicFruits, ...ComboStore, ...EhansMart];
 
 export default templates;

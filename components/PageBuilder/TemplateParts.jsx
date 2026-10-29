@@ -229,7 +229,7 @@ const TemplateParts = (props) => {
 				// handle the error
 			});
 	}
-	function get_template_part(id) {
+	function get_template_partX(id) {
 
 
 
@@ -340,6 +340,118 @@ const TemplateParts = (props) => {
 				// handle the error
 			});
 	}
+
+	function get_template_part(id) {
+
+
+
+
+		if (!id) {
+
+			return;
+
+		}
+
+		var postData = {
+			id: id,
+			scope: 'builder',
+		};
+
+		console.log(postData);
+
+
+		postData = JSON.stringify(postData);
+		setloading(true);
+		fetch(serverUrl + "wp-json/combo-store/v2/get_template_part", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+				Authorization: `Bearer ${token}`,
+			},
+			body: postData,
+		})
+			.then((response) => {
+				if (!response.ok) {
+					throw new Error("Token validation failed");
+				}
+
+				if (response.ok && response.status < 400) {
+					response.json().then((res) => {
+
+
+						var content = res?.content;
+						var meta = res?.meta;
+						var includeFooter = meta?.includeFooter;
+						var includeHeader = meta?.includeHeader;
+
+						console.log(res);
+
+						// return;
+
+						if (content?.length == 0) {
+
+
+							addNotification({ type: 'error', title: 'Content not valid JSON', content: `Dummy content added, Existing content will replace.` })
+
+							setloading(false);
+
+							return;
+						} else {
+							//setBlocks(res?.post)
+
+
+
+
+							if ((content)) {
+								setpageData(res)
+
+								// var content = JSON.parse(content)
+								setBlocks(content)
+
+
+
+
+
+								addNotification({ type: 'success', title: 'Content Loaded', content: `Page laoded success` })
+
+							} else {
+								setpageData(res)
+
+								let _n = 0;
+								const uid = () => `b${++_n}${Date.now().toString(36)}`;
+
+								setBlocks([
+									{ id: uid(), type: "heading", prams: { options: { text: "Build Pages Visually.", level: "h1", classes: '', }, selectors: { '*': {} }, } },
+									{ id: uid(), type: "text", prams: { options: { text: "No code page builder.", tag: "h1", classes: '', }, selectors: { '*': {} }, } },
+									{ id: uid(), type: "button", prams: { options: { label: "Simple button.", tag: "h1", href: '', classes: '', }, selectors: { '*': {} } } },
+
+								])
+
+								addNotification({ type: 'error', title: 'Content not valid JSON', content: `Default blocks loaded, Existing content will replace.` })
+
+							}
+
+
+						}
+
+
+						setloading(false);
+
+
+						//setselectedRows([]);
+
+
+
+					});
+				}
+			})
+			.catch((_error) => {
+				//this.saveAsStatus = 'error';
+				// handle the error
+			});
+	}
+
+
 
 	function update_template_part() {
 
@@ -612,7 +724,7 @@ const TemplateParts = (props) => {
 								<div key={page?.id}
 
 									/* Same as the page list: the open item and the hover state
-									   were both `bg-gray-400`, so they were indistinguishable. */
+										 were both `bg-gray-400`, so they were indistinguishable. */
 									className={`flex flex-col gap-2 rounded-lg border p-2.5 text-xs cursor-pointer transition-colors ${pageData?.id == page?.id
 										? 'border-brand/30 bg-brand/5 shadow-[inset_2px_0_0_var(--color-brand)]'
 										: 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'}`}

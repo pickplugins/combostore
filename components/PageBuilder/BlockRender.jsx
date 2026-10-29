@@ -78,6 +78,7 @@ import WhatsappButtonView from './elements/WhatsappButtonView';
 import MessengerButtonView from './elements/MessengerButtonView';
 import CommentsGridView from './elements/CommentsGridView';
 import CommentsLoopView from './elements/CommentsLoopView';
+import CommentsGridPaginationView from './elements/CommentsGridPaginationView';
 import CommentsFormView from './elements/CommentsFormView';
 import CommentAvatarView from './elements/CommentAvatarView';
 import CommentAuthorView from './elements/CommentAuthorView';
@@ -180,6 +181,7 @@ const BlockRender = (props) => {
 			case "messengerButton": return <MessengerButtonView {...block} index={index} />;
 			case "commentsGrid": return <CommentsGridView {...block} index={index} />;
 			case "commentsLoop": return <CommentsLoopView {...block} index={index} />;
+			case "commentsGridPagination": return <CommentsGridPaginationView {...block} index={index} />;
 			case "commentsForm": return <CommentsFormView {...block} index={index} />;
 			case "commentAvatar": return <CommentAvatarView {...block} index={index} />;
 			case "commentAuthor": return <CommentAuthorView {...block} index={index} />;

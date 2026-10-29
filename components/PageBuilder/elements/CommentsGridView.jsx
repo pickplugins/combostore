@@ -48,7 +48,7 @@ const CommentsGridView = (props) => {
 
 
 	var queryPrams = {
-		post_id: post?.id ?? null,
+		post_id: post?.post_id ?? null,
 		paged: 1,
 		order: "ASC",
 		per_page: 20,

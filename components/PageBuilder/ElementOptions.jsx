@@ -13,6 +13,7 @@ import AccordionMenuOptions from './elements/AccordionMenuOptions';
 import VideoOptions from './elements/VideoOptions';
 import ContentSliderOptions from './elements/ContentSliderOptions';
 import PostGridOptions from './elements/PostGridOptions';
+import CommentsLoopOptions from './elements/CommentsLoopOptions';
 import CommentRateOptions from './elements/CommentRateOptions';
 import CommentContentOptions from './elements/CommentContentOptions';
 import CommentAuthorOptions from './elements/CommentAuthorOptions';
@@ -107,8 +108,8 @@ const ElementOptions = (props) => {
 	var handleMoveBlock = props?.handleMoveBlock;
 
 	/* The options panel for the selected block, when an active extension owns
-	   its type. Undefined for every core type, which is what keeps the core
-	   chain above authoritative. */
+		 its type. Undefined for every core type, which is what keeps the core
+		 chain above authoritative. */
 	const activeExtensionIds = useExtensionsStore((s) => s.activeIds);
 	const ExtensionOptions = React.useMemo(() => {
 		if (!selectedBlock?.type) return null;
@@ -301,9 +302,14 @@ const ElementOptions = (props) => {
 				<ContainerOptions {...selectedBlock} updateBlock={updateBlock} />
 			)}
 
-			{selectedBlock?.type == 'CommentRate' && (
+			{selectedBlock?.type == 'commentRate' && (
 				<CommentRateOptions {...selectedBlock} updateBlock={updateBlock} />
 			)}
+			{selectedBlock?.type == 'commentsLoop' && (
+				<CommentsLoopOptions {...selectedBlock} updateBlock={updateBlock} />
+			)}
+
+
 			{selectedBlock?.type == 'commentContent' && (
 				<CommentContentOptions {...selectedBlock} updateBlock={updateBlock} />
 			)}

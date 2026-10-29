@@ -11,6 +11,7 @@ const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
 import { IconChevronDown, IconChevronUp, IconSquare, IconFidgetSpinner, IconTrash, IconStarFilled, IconStar, IconClockPause, IconExclamationCircle, IconRosetteDiscountCheck, IconX } from "@tabler/icons-react";
 import ToggleContent from "../../../components/ToggleContent";
+import HtmlEditor from "../../../components/HtmlEditor";
 import TermsPicker from "../../../components/shop-elements/TermsPicker";
 import TagsPicker from "../../../components/shop-elements/TagsPicker";
 
@@ -259,48 +260,7 @@ const page = () => {
 
 	}
 
-	var faqs = [
-		{
-			"title": "What is KidoBazar?",
-			"content": "KidoBazar is an online marketplace in Bangladesh dedicated to kids' products including toys, clothing, baby care items, educational materials, and more. We aim to provide parents with a one-stop shopping experience."
-		},
-		{
-			"title": "Do you deliver all over Bangladesh?",
-			"content": "Yes, KidoBazar delivers products across Bangladesh. Delivery times may vary depending on your location."
-		},
-		{
-			"title": "How long does delivery take?",
-			"content": "Delivery usually takes 2–5 business days within Dhaka and 3–7 business days outside Dhaka. We will notify you with tracking details once your order is shipped."
-		},
-		{
-			"title": "What payment methods are accepted?",
-			"content": "We accept Cash on Delivery (COD), mobile banking (bKash, Nagad, Rocket), and major debit/credit cards."
-		},
-		{
-			"title": "Is Cash on Delivery available?",
-			"content": "Yes, Cash on Delivery is available for most locations in Bangladesh."
-		},
-		{
-			"title": "What is your return and refund policy?",
-			"content": "You can return or exchange products within 7 days of delivery if they are unused, undamaged, and in original packaging. Refunds will be processed within 5–7 business days after inspection."
-		},
-		{
-			"title": "How can I track my order?",
-			"content": "After your order is confirmed, you will receive a tracking ID via SMS or email, which you can use to track your package."
-		},
-		{
-			"title": "Do you sell original branded products?",
-			"content": "Yes, KidoBazar ensures that all products are 100% authentic and sourced from trusted suppliers."
-		},
-		{
-			"title": "Do you offer discounts or promotions?",
-			"content": "Yes, we frequently run special offers, discounts, and seasonal sales. Keep an eye on our website and social media pages for the latest deals."
-		},
-		{
-			"title": "How do I contact customer support?",
-			"content": "You can reach our customer support team through the Contact Us page on our website, via email at support@kidobazar.com, or by calling our hotline number during working hours."
-		}
-	]
+
 
 
 
@@ -429,13 +389,11 @@ const page = () => {
 								<label htmlFor="" className="block ">
 									{("Ticket Details")}
 								</label>
-								<textarea
-									type="text"
-									className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 h-40 w-full rounded-lg px-3 py-2 text-sm"
-									value={currentObject?.post_content}
-									onChange={(ev) => {
-										var value = ev.target.value;
-										setcurrentObject({ ...currentObject, post_content: value });
+								<HtmlEditor
+									value={currentObject?.post_content || ""}
+									minHeight={160}
+									onChange={(html) => {
+										setcurrentObject({ ...currentObject, post_content: html });
 									}}
 								/>
 							</div>
@@ -466,49 +424,7 @@ const page = () => {
 						</div>
 					</div>
 
-					<div className="form-card rounded-xl border border-gray-200 bg-white shadow-sm p-5">
-						<div className="flex gap-3">
 
-							<div className="text-2xl text-white">{("Frequently Asked Questions")}</div>
-
-
-
-						</div>
-						<div className="my-4 flex flex-col gap-5 ">
-
-
-							{faqs && (
-
-								<div className="my-4">
-									{faqs.map((item, index) => {
-
-										return (
-											<ToggleContent key={index} title={<FAQTitle text={item.title} index={index} />}
-												contentClass="bg-gray-200 !text-gray-800 p-4"
-												headerClass=""
-												headerTitleClass=""
-												wrapperClass=""
-											>
-
-												<div className="">
-
-
-													{item?.content}
-
-
-												</div>
-
-											</ToggleContent>
-										)
-
-									})}
-								</div>
-							)}
-
-
-						</div>
-
-					</div>
 
 
 

@@ -7,6 +7,7 @@ import { useState, useEffect, useContext } from "react";
 
 
 import { useCounterStore } from '../../../../store/useCounterStore'
+import HtmlEditor from "../../../../components/HtmlEditor";
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
 import { IconSettings, IconCheckbox, IconSquare, IconFidgetSpinner, IconTrash, IconStarFilled, IconStar, IconExternalLink } from "@tabler/icons-react";
@@ -526,13 +527,10 @@ const page = ({ params }) => {
                   <label htmlFor="" className="block text-sm font-medium text-gray-700">
                     {("Content")}
                   </label>
-                  <textarea
-                    type="text"
-                    className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 w-full rounded-lg bg-white px-3 py-2 text-sm"
-                    value={currentObject?.post_content}
-                    onChange={(ev) => {
-                      var value = ev.target.value;
-                      setcurrentObject({ ...currentObject, post_content: value });
+                  <HtmlEditor
+                    value={currentObject?.post_content || ""}
+                    onChange={(html) => {
+                      setcurrentObject({ ...currentObject, post_content: html });
                     }}
                   />
                 </div> */}

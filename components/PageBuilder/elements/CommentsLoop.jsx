@@ -164,7 +164,7 @@ const CommentsLoop = (props) => {
 				<div
 					id={id}
 					type={type}
-					className={` ${cssSelectors['loop-items']?.classes}  ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200 bg-orange-200' : ''} ${selectedId == id ? 'outline-1 outline-solid outline-orange-400 relative ' : ''} `}
+					className={` ${cssSelectors['*']?.classes}  ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200 bg-orange-200' : ''} ${selectedId == id ? 'outline-1 outline-solid outline-orange-400 relative ' : ''} `}
 
 					onClick={(e) => {
 						e.preventDefault();

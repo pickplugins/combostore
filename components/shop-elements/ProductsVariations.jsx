@@ -6,6 +6,7 @@ import PopoverButton from '../../components/PopoverButton';
 import Image from "next/image";
 import { useUtilsStore } from '../../store/useUtilsStore';
 import Spinner from '../Spinner';
+import HtmlEditor from '../HtmlEditor';
 import { useCounterStore } from '../../store/useCounterStore'
 import ToggleContent from "../../components/ToggleContent";
 import DropDown from '../../components/DropDown';
@@ -340,16 +341,33 @@ const ProductsVariations = (props) => {
 
 				// Display only — NOT used as identifier
 				title: variationTitle,
+				description: source?.description ?? '',
 
-				attributes,
+				attributes: attributes,
+				downloadable: source?.downloadable ?? true,
+				enable: source?.enable ?? true,
 
 				price: source?.price ?? 0,
 				sale_price: source?.sale_price ?? 0,
 				regular_price: source?.regular_price ?? 0,
+				trade_price: source?.trade_price ?? 0,
 
 				thumbnail: source?.thumbnail ?? null,
+
+
 				stock_status: source?.stock_status ?? "instock",
 				stock_count: source?.stock_count ?? 0,
+				backorders: source?.backorders ?? 0,
+
+				sku: source?.sku ?? '',
+				shipping_class: source?.shipping_class ?? null,
+				weight: source?.weight ?? null,
+				width: source?.width ?? null,
+				height: source?.height ?? null,
+				length: source?.length ?? null,
+
+
+
 			};
 		});
 	};
@@ -832,18 +850,14 @@ const ProductsVariations = (props) => {
 									<label htmlFor="" className="block text-gray-500">
 										{("Description")}
 									</label>
-									<textarea
-										type="text"
-										className="!shadow-none !border-2 border-gray-400 border-solid px-2 py-1 rounded-sm w-full bg-white"
-										value={bulkUpdatePrams.description}
-
-										onChange={(ev) => {
-											var value = ev.target.value;
-
+									<HtmlEditor
+										value={bulkUpdatePrams.description || ""}
+										minHeight={160}
+										placeholder="Description to apply to the selected variations…"
+										onChange={(html) => {
 											var bulkUpdatePramsX = { ...bulkUpdatePrams }
 
-
-											bulkUpdatePramsX.description = value
+											bulkUpdatePramsX.description = html
 											setbulkUpdatePrams(bulkUpdatePramsX);
 										}}
 									/>
@@ -1177,16 +1191,13 @@ const ProductsVariations = (props) => {
 										<label htmlFor="" className="block text-gray-500">
 											{("Description")}
 										</label>
-										<textarea
-											type="text"
-											className="!shadow-none !border-2 border-gray-400 border-solid px-2 py-1 rounded-sm w-full bg-white"
-											value={item?.description}
-											onChange={(ev) => {
-												var value = ev.target.value;
-
+										<HtmlEditor
+											value={item?.description || ""}
+											minHeight={160}
+											onChange={(html) => {
 												var variationsX = [...variations]
 
-												variationsX[index].description = value
+												variationsX[index].description = html
 												setvariations(variationsX);
 											}}
 										/>
@@ -1231,20 +1242,6 @@ const ProductsVariations = (props) => {
 
 
 								</div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 							</div>

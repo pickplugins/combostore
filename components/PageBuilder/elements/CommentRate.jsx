@@ -33,7 +33,7 @@ const CommentRate = (props) => {
 
 	const comment = useComment();
 
-	var rate = Number(comment?.rate ?? 0);
+	var rate = Number(comment?.rate ?? 4);
 
 
 	var stars = [
@@ -61,6 +61,8 @@ const CommentRate = (props) => {
 			onDragOver={e => { e.preventDefault(); setDragOverIndex(index); }}
 			onDragLeave={() => setDragOverIndex(null)}
 		>
+
+			Hello
 
 			{stars.map((item, indexZ) => {
 

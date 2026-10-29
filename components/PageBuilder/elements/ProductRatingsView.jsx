@@ -28,11 +28,13 @@ const TermTitle = (props) => {
 	var type = props?.type;
 
 	var options = props?.options;
-	var rate = props?.rate ?? 4;
+
 
 
 	const post = usePost();
 
+	var avg_rating = post?.avg_rating ?? 0;
+	var total_rate = post?.total_rate ?? 0;
 
 
 	var postTitle = post?.content ?? 'Post content';
@@ -48,12 +50,11 @@ const TermTitle = (props) => {
 	]
 
 
-	const [starIndex, setstarIndex] = useState(rate);
+	const [starIndex, setstarIndex] = useState(avg_rating);
 
 
 
-	var avgRating = 4.5
-	var totalReviews = 120
+
 
 
 	return (
@@ -97,8 +98,14 @@ const TermTitle = (props) => {
 			</div>
 
 
-			<div className={`${cssSelectors['avg-rating']?.classes}`}>{avgRating}/5</div>
-			<div className={`${cssSelectors['total-reviews']?.classes}`}>{`(${totalReviews} reviews)`}</div>
+			<div className={`${cssSelectors['avg-rating']?.classes}`}>{avg_rating}/5</div>
+
+			{total_rate && (
+				<div className={`${cssSelectors['total-reviews']?.classes}`}>{`(${total_rate} reviews)`}</div>
+
+			)}
+
+
 
 		</div>
 

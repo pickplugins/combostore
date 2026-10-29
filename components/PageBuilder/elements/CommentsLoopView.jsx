@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import BlockRender from '../BlockRender';
 import { CommentProvider } from "../context/CommentContext";
 import { useCommentsGrid } from "../context/CommentsGridContext";
+import { usePost } from "../context/PostContext";
 
 
 /*
@@ -35,6 +36,8 @@ const CommentsLoopView = (props) => {
 
 	var index = props?.index
 
+	const post = usePost();
+	var postId = post?.product_id ?? null;
 
 	var [comments, setcomments] = useState([]);
 
@@ -42,7 +45,8 @@ const CommentsLoopView = (props) => {
 	function fetchComments() {
 
 
-		if (!queryPrams?.post_id) {
+
+		if (!postId) {
 			return;
 		}
 
@@ -72,6 +76,8 @@ const CommentsLoopView = (props) => {
 						var total = res?.total;
 						var max_pages = res?.max_pages;
 
+						console.log(comments);
+
 
 						setcomments(comments ?? [])
 
@@ -98,7 +104,7 @@ const CommentsLoopView = (props) => {
 
 		fetchComments();
 
-	}, [JSON.stringify(queryPrams), refresh]);
+	}, [queryPrams, refresh]);
 
 
 	if (CommentsGridAttr == null) {

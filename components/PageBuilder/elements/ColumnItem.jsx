@@ -4,12 +4,17 @@ import PropTypes from "prop-types";
 import React from "react";
 import { useState } from "react";
 import { IconColumns, IconPlus } from "@tabler/icons-react";
-import BlockRender from '../BlockRender';
+import BlockPreview from '../BlockPreview';
 
 const ColumnItem = (props) => {
 	const {
 		block,
-
+		draggingBlock,
+		setDraggingBlock,
+		dragOverIndex,
+		setDragOverIndex,
+		setSelectedId,
+		selectedId,
 		index,
 		id,
 		type,
@@ -17,32 +22,77 @@ const ColumnItem = (props) => {
 		handleMoveBlock // New prop for recursive drops
 	} = props;
 
+	const cssSelectors = props?.cssSelectors || {};
 	const children = props?.children || [];
 
-	const parentCssSelectors = props?.parentCssSelectors || {};
-	const cssSelectors = props?.cssSelectors;
+
+
+	const onDrop = (e) => {
 
 
 
 
+
+		e.preventDefault();
+		e.stopPropagation();
+
+		const paletteType = e.dataTransfer.getData("paletteType");
+		const canvasBlockId = e.dataTransfer.getData("canvasBlock");
+
+
+
+
+
+
+		if (handleMoveBlock) {
+			handleMoveBlock({ paletteType, canvasBlockId }, id, 'inside');
+		}
+	};
+
+	const onDragOver = (e) => {
+		e.preventDefault();
+		e.stopPropagation();
+	};
 
 	return (
 		<div
-
+			draggable
 			id={id}
-			className={` ${cssSelectors['*']?.classes} 
+			className={` ${cssSelectors['*']?.classes ?? ''} hover:outline-orange-200 hover:outline-solid hover:outline-1 relative   ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200 bg-orange-200' : ''}
+				${selectedId === id ? 'outline-1 outline-solid outline-orange-400 relative' : ''}
 			`}
-
+			onClick={(e) => {
+				e.preventDefault();
+				e.stopPropagation();
+				setSelectedId(selectedId !== id ? id : null);
+			}}
+			onDragStart={(e) => {
+				e.stopPropagation();
+				e.dataTransfer.setData("canvasBlock", id);
+				setDraggingBlock(id);
+			}}
+			onDragEnd={() => {
+				setDraggingBlock(null);
+				setDragOverIndex(null);
+			}}
+			onDragOver={onDragOver}
+			onDrop={onDrop}
 		>
 
 
 			{children.length > 0 ? (
 				children.map((child, idx) => (
-					<BlockRender
+					<BlockPreview
 						key={child.id}
 						index={`${index}-${idx}`}
 						block={child}
-
+						draggingBlock={draggingBlock}
+						dragOverIndex={dragOverIndex}
+						setDragOverIndex={setDragOverIndex}
+						setDraggingBlock={setDraggingBlock}
+						setSelectedId={setSelectedId}
+						selectedId={selectedId}
+						handleMoveBlock={handleMoveBlock}
 					/>
 				))
 			) : (
@@ -55,6 +105,18 @@ const ColumnItem = (props) => {
 	);
 };
 
-
+ColumnItem.propTypes = {
+	block: PropTypes.object,
+	draggingBlock: PropTypes.string,
+	setDraggingBlock: PropTypes.func,
+	dragOverIndex: PropTypes.string,
+	setDragOverIndex: PropTypes.func,
+	setSelectedId: PropTypes.func,
+	selectedId: PropTypes.string,
+	index: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+	id: PropTypes.string,
+	type: PropTypes.string,
+	handleDropInto: PropTypes.func,
+};
 
 export default ColumnItem;

@@ -19,6 +19,7 @@ import GalleryPicker from "../../../../components/shop-elements/GalleryPicker";
 import TermsPicker from "../../../../components/shop-elements/TermsPicker";
 import TagsPicker from "../../../../components/shop-elements/TagsPicker";
 import Spinner from "../../../../components/Spinner";
+import HtmlEditor from "../../../../components/HtmlEditor";
 
 import { IconLockOpen, IconLock, IconCheckbox, IconSquare, IconFidgetSpinner, IconTrash, IconStarFilled, IconStar, IconX, IconExternalLink } from "@tabler/icons-react";
 
@@ -50,7 +51,6 @@ const page = ({ params }) => {
       id: id,
     };
 
-    console.log(postData);
 
 
     postData = JSON.stringify(postData);
@@ -76,7 +76,7 @@ const page = ({ params }) => {
             var success = res?.success;
             var product = res?.product;
 
-            console.log(res);
+            console.log(product);
 
 
 
@@ -809,6 +809,11 @@ const page = ({ params }) => {
                 )}
 
               </div>
+
+
+              {JSON.stringify(storeUrl)}
+
+
               <Link target='_blank' className="inline-flex shrink-0 items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900" href={`${storeUrl}product/${currentObject?.slug}`}>
                 <IconExternalLink size={16} /> View
               </Link>
@@ -849,13 +854,10 @@ const page = ({ params }) => {
                   <label htmlFor="" className="block text-sm font-medium text-gray-700">
                     {("Content")}
                   </label>
-                  <textarea
-                    type="text"
-                    className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 w-full rounded-lg bg-white px-3 py-2 text-sm"
-                    value={currentObject?.post_content}
-                    onChange={(ev) => {
-                      var value = ev.target.value;
-                      setcurrentObject({ ...currentObject, post_content: value });
+                  <HtmlEditor
+                    value={currentObject?.post_content || ""}
+                    onChange={(html) => {
+                      setcurrentObject({ ...currentObject, post_content: html });
                     }}
                   />
                 </div>
@@ -1225,6 +1227,7 @@ const page = ({ params }) => {
 
               </>
             )}
+
 
 
 

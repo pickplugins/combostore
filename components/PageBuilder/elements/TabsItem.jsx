@@ -46,6 +46,40 @@ const List = (props) => {
 
 
 
+	const onDrop = (e) => {
+
+
+
+
+
+		e.preventDefault();
+		e.stopPropagation();
+
+		const paletteType = e.dataTransfer.getData("paletteType");
+		const canvasBlockId = e.dataTransfer.getData("canvasBlock");
+
+
+
+
+
+
+		if (handleMoveBlock) {
+			handleMoveBlock({ paletteType, canvasBlockId }, id, 'inside');
+		}
+	};
+
+
+
+	const onDragOver = (e) => {
+		e.preventDefault();
+		e.stopPropagation();
+	};
+
+
+
+
+
+
 	return (
 		<div draggable id={id} className={` ${cssSelectors['*']?.classes ?? ''} relative cursor-pointer ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200' : ''} ${selectedId == id ? 'outline-1 outline-solid outline-orange-400' : ''} `}
 			onClick={e => {
@@ -59,9 +93,9 @@ const List = (props) => {
 			}}
 			onDragEnd={() => { setDraggingBlock(null); setDragOverIndex(null); }}
 
-			onDragOver={e => { e.preventDefault(); setDragOverIndex(index); }}
 			onDragLeave={() => setDragOverIndex(null)}
-
+			onDragOver={onDragOver}
+			onDrop={onDrop}
 		>
 
 

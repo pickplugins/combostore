@@ -242,6 +242,7 @@ export default async function page({ params }) {
   //   },
   // });
 
+  console.log(productData);
 
   return (
     <>
@@ -253,6 +254,7 @@ export default async function page({ params }) {
 
       <FacebookViewContent eventId={eventId} data={eventData} />
 
+      {JSON.stringify(productData)}
 
 
       <script

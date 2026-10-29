@@ -3755,7 +3755,10 @@ const elements = [
 								"cssSelectors": {
 									"*": {
 										"classes": ""
-									}
+									},
+									"loop-item": {
+										"classes": ""
+									},
 								},
 								"children": [
 									{
@@ -3767,7 +3770,7 @@ const elements = [
 												"classes": "col-start-2 row-start-1 self-end text-base font-semibold text-gray-900 dark:text-white"
 											}
 										},
-										"children": []
+
 									},
 									{
 										"id": "b8muut0xlu",
@@ -3778,7 +3781,7 @@ const elements = [
 												"classes": "col-start-2 row-start-2 mt-1 text-sm leading-relaxed text-gray-600 dark:text-gray-300 break-words"
 											}
 										},
-										"children": []
+
 									},
 									{
 										"id": "b9muut0xlu",
@@ -3795,7 +3798,7 @@ const elements = [
 												"classes": "w-12 h-12 rounded-full object-cover ring-2 ring-blue-100 dark:ring-gray-700"
 											}
 										},
-										"children": []
+
 									}
 								]
 							},
@@ -3870,31 +3873,6 @@ const elements = [
 			}
 		],
 	},
-	// {
-	// 	type: "comments",
-	// 	label: "Comments",
-	// 	icon: null,
-	// 	description: "",
-	// 	ai: {
-	// 		purpose: "",
-	// 		useFor: [
-
-	// 		],
-	// 		keywords: [
-
-	// 		],
-	// 		rules: [
-
-	// 		],
-	// 	},
-	// 	options: {},
-	// 	cssSelectors: {
-	// 		'*': { classes: '' }
-	// 	},
-	// 	group: ['content'],
-
-	// 	children: [],
-	// },
 
 	{
 		type: "commentsForm",
@@ -3962,7 +3940,8 @@ const elements = [
 		},
 		options: {},
 		cssSelectors: {
-			'*': { classes: '' }
+			'*': { classes: '' },
+			'loop-item': { classes: '' }
 		},
 		group: ['content'],
 		parent: ['commentsGrid'],
@@ -4066,8 +4045,10 @@ const elements = [
 		},
 		options: {},
 		cssSelectors: {
-			'*': { classes: 'flex gap-0.5 items-center text-amber-500' },
-			'star': { classes: '' }
+			'*': { classes: 'flex gap-0.5 items-center' },
+			'star-loop': { classes: 'flex gap-0.5 items-center text-amber-500' },
+			'star': { classes: '' },
+			'avg-rating': { classes: '' },
 		},
 		group: ['content'],
 		parent: ['commentsGrid'],

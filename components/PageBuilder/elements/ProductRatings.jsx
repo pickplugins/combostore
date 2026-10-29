@@ -51,6 +51,7 @@ const TermTitle = (props) => {
 	const [starIndex, setstarIndex] = useState(rate);
 
 
+	console.log(post);
 
 
 
@@ -82,6 +83,7 @@ const TermTitle = (props) => {
 			onDragOver={e => { e.preventDefault(); setDragOverIndex(index); }}
 			onDragLeave={() => setDragOverIndex(null)}
 		>
+
 
 
 			<div className={`${cssSelectors['star-rate']?.classes}`} >

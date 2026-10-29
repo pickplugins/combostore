@@ -66,7 +66,8 @@ const TermTitle = (props) => {
 			onDragOver={e => { e.preventDefault(); setDragOverIndex(index); }}
 			onDragLeave={() => setDragOverIndex(null)} >
 
-			<p className={cssSelectors['excerpt']?.classes}>{excerpt}</p>
+			<p className={cssSelectors['excerpt']?.classes} dangerouslySetInnerHTML={{ __html: excerpt }}></p>
+
 
 			{readMoreText && (
 				<Link href={`#`} className={cssSelectors['read-more']?.classes}>
