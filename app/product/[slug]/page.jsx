@@ -254,9 +254,6 @@ export default async function page({ params }) {
 
       <FacebookViewContent eventId={eventId} data={eventData} />
 
-      {JSON.stringify(productData)}
-
-
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}

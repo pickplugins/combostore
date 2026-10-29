@@ -45,16 +45,19 @@ const PostTitleView = (props) => {
 		>
 
 
-			{/* {JSON.stringify(activeVariation)} */}
 
 			{activeVariation && (
 
-				<div className={cssSelectors['excerpt']?.classes} dangerouslySetInnerHTML={{ __html: activeVariation?.description }}></div>
+				<>Hello 1
+					<div className={cssSelectors['excerpt']?.classes} dangerouslySetInnerHTML={{ __html: activeVariation?.description }}></div>
+
+				</>
 
 			)}
-			{!activeVariation && (
+			{activeVariation != null && (
 
-				<>
+				<>Hello 2
+
 					<div className={cssSelectors['excerpt']?.classes} dangerouslySetInnerHTML={{ __html: excerpt }}></div>
 
 					{readMoreText && (
