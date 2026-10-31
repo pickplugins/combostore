@@ -229,7 +229,7 @@ const SidebarContent = ({ token, onNavigate, navs }) => (
 				<Link href={`/dashboard`} className="min-w-0" onClick={onNavigate}>
 					<Image
 						src="/logo-h.png"
-						className="h-8 w-auto object-contain" width={200} height={`50`} alt="ComboStore"
+						className="h-8 w-auto object-contain" width={250} height={`80`} alt="ComboStore"
 						priority
 					/>
 				</Link>

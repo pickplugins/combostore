@@ -1,42 +1,57 @@
 "use client";
-import { useState, useEffect, Component } from "react";
-import { IconChevronDown, IconChevronUp, IconSquare, IconMapPin, IconTrash, IconTrolley, IconBasketPlus, IconFilter2Edit, IconRosetteDiscountCheck, IconX, IconFilter2Check, IconPhoneCall, IconStarFilled, IconStar, IconCopy, IconMailForward, IconArrowNarrowRightDashed, IconArrowNarrowLeftDashed, IconMail, IconPhone, IconAddressBook, IconBrandWhatsapp } from "@tabler/icons-react";
-import Image from "next/image";
-import Link from "next/link";
+import { useState, useEffect } from "react";
+import { IconX, IconPlus } from "@tabler/icons-react";
 
-import { APIProvider, Map, useMapsLibrary, useMap } from '@vis.gl/react-google-maps';
-import { format } from "date-fns";
-import DatePicker from "react-datepicker";
 import DropDown from '../components/DropDown';
 
-
 import { useCounterStore } from '../store/useCounterStore'
-import { useUtilsStore } from '../store/useUtilsStore';
-import LocationPicker from '../components/LocationPicker';
-import GoogleMapDirections from '../components/GoogleMapDirections';
-import PopoverButton from '../components/PopoverButton';
 import Spinner from '../components/Spinner';
 import WidgetWrapper from '../components/WidgetWrapper';
 import countries from '../lib/Countries';
-import UsersPicker from '../components/shop-elements/UsersPicker';
-import ProductsPicker from '../components/shop-elements/ProductsPicker';
 
 
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
+/*
+  Field styling. The base control rules in globals.css are commented out, so
+  an input with no classes renders as a browser default - which is why these
+  fields carried one-off `!border-2 !shadow-none focus:border-0` strings, the
+  last of which also removed the keyboard focus ring.
+*/
+const FIELD =
+  "w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 shadow-sm transition-colors hover:border-gray-400";
 
+const PRIMARY_BUTTON =
+  "inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-gray-800 cursor-pointer w-max";
 
+const CHIP =
+  "inline-flex items-center gap-1 rounded-full border border-gray-200 bg-gray-50 py-1 pl-2.5 pr-1 text-xs text-gray-700";
 
+const CHIP_CLEAR =
+  "inline-flex h-5 w-5 cursor-pointer items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-red-100 hover:text-red-600";
+
+/* One label + control row, in place of five copies of the same wrapper. */
+const Row = ({ label, hint, children }) => (
+  <div className="flex flex-col gap-2 border-b border-gray-200 py-3 last:border-0 lg:flex-row lg:items-center lg:gap-4">
+
+    <div className="text-sm font-semibold text-gray-700 lg:w-56 lg:shrink-0">{label}</div>
+
+    <div className="min-w-0 lg:flex-1">
+      {children}
+      {hint && (
+        <p className="mt-1 text-xs text-gray-400">{hint}</p>
+      )}
+    </div>
+
+  </div>
+);
 
 const ShippingCreate = (props) => {
 
   var onOrderCreated = props?.onOrderCreated
-  const { formatDate, wrapCurrency } = useUtilsStore()
 
+  const { token, addNotification } = useCounterStore()
 
-  const { token, cartToggle, setcartToggle, notifications, addNotification, userDataX, setUserDataX, navToggle, setnavToggle, lang, setlang, paymentGateways, orderStatusArgs, paymentStatusArgs } = useCounterStore()
-
-  // var orderId = props?.order_id
   var [loading, setloading] = useState(false);
 
   var [orderData, setorderData] = useState({ countries: [], settings: {}, status: '' });
@@ -75,7 +90,9 @@ const ShippingCreate = (props) => {
             var message = res?.message;
 
             if (status == 'success') {
-              onOrderCreated(res);
+              if (onOrderCreated) {
+                onOrderCreated(res);
+              }
               addNotification({ type: 'success', title: 'Zone created', content: message })
             }
             if (status == 'failed') {
@@ -94,18 +111,11 @@ const ShippingCreate = (props) => {
       .catch((_error) => {
         //this.saveAsStatus = 'error';
         // handle the error
+        setloading(false)
       });
 
   }
 
-
-
-
-
-
-
-  const requiredRoles = ["administrator", "rider", ""];
-  const hasAccess = requiredRoles.some(role => userDataX?.roles?.includes(role));
 
   var statusArgs = { "1": { "label": "Active", "value": "1" }, "0": { "label": "Inactive", "value": "0" } }
   var regionArgs = { "all": { "label": "Whole World", "value": "all" }, "include": { "label": "Include", "value": "include" }, "exclude": { "label": "Exclude", "value": "exclude" } }
@@ -124,153 +134,116 @@ const ShippingCreate = (props) => {
 
   }, [countries]);
 
+
+  const chosenCountries = orderData?.countries || [];
+
+
   return (
-    <div className="flex flex-col gap-5">
-
-
-
-      <div className='flex flex-wrap gap-3 justify-between items-center'>
-
-
-
-        <div className='flex gap-2 items-center'>
-          {loading && (
-
-            <Spinner />
-
-          )}
-
-
-          <div className='p-2  rounded-sm cursor-pointer px-4 bg-[#1b0e9f] text-white'
-
-            onClick={ev => {
-              create_shipping_zone()
-            }}
-          >Create Zone</div>
-
-
-
-
-
-
-        </div>
-      </div>
-
-
-      {JSON.stringify(orderData)}
-
-
-
+    <div className="flex w-full flex-col gap-4 lg:w-[760px]">
 
       <WidgetWrapper title="Zone Details">
 
+        <div className="flex flex-col">
 
-        <div className="border-0 border-b border-solid  border-gray-200 lg:flex flex-wrap gap-3 py-3 items-center">
-          <div className="  py-2 lg:w-60 font-bold">{("Zone Name")}</div>
-
-
-          <div className="">
-            <input type="text" className="lg:w-auto w-full !border-2 border-solid border-gray-400 !shadow-none !outline-none focus:border-0" value={orderData?.name} onChange={ev => {
+          <Row label={("Zone Name")}>
+            <input type="text" className={FIELD} value={orderData?.name || ""} onChange={ev => {
               var value = ev.target.value;
               setorderData({ ...orderData, name: value })
             }} />
+          </Row>
 
-          </div>
-
-        </div>
-        <div className="border-0 border-b border-solid  border-gray-200 lg:flex flex-wrap gap-3 py-3 items-center">
-          <div className="  py-2 lg:w-60 font-bold">{("Description")}</div>
-
-
-          <div className="">
-            <textarea type="text" className="lg:w-auto w-full !border-2 border-solid border-gray-400 !shadow-none !outline-none focus:border-0" value={orderData?.description} onChange={ev => {
+          <Row label={("Description")}>
+            <textarea className={`${FIELD} min-h-24`} value={orderData?.description || ""} onChange={ev => {
               var value = ev.target.value;
               setorderData({ ...orderData, description: value })
             }} />
+          </Row>
 
-          </div>
-
-        </div>
-        <div className="border-0 border-b border-solid  border-gray-200 lg:flex flex-wrap gap-3 py-3 items-center">
-          <div className="  py-2 lg:w-60 font-bold">{("Region")}</div>
-
-
-          <div className="">
+          <Row label={("Region")} hint={("Whole world, or only the countries you include or exclude below.")}>
             <DropDown multiple={false} value={orderData?.region} options={regionArgs} label={`Region`} onOptionsChoose={(args) => {
               setorderData({ ...orderData, region: args?.value })
             }} />
+          </Row>
 
-          </div>
-
-        </div>
-        <div className="border-0 border-b border-solid  border-gray-200 lg:flex flex-wrap gap-3 py-3 items-center">
-          <div className="  py-2 lg:w-60 font-bold">{("Status")}</div>
-
-
-          <div className="">
+          <Row label={("Status")}>
             <DropDown multiple={false} value={orderData?.status} options={statusArgs} label={`Status`} onOptionsChoose={(args) => {
               setorderData({ ...orderData, status: args?.value })
             }} />
+          </Row>
 
-          </div>
+          <Row label={("Countries")}>
 
-        </div>
-        <div className="border-0 border-b border-solid  border-gray-200 lg:flex flex-wrap gap-3 py-3 items-center">
-          <div className="  py-2 lg:w-60 font-bold">{("Countries")}</div>
-
-
-          <div className="">
             <DropDown multiple={false} value={null} options={countriesList} label={`Choose countries`} onOptionsChoose={(args) => {
 
-              console.log(args?.value);
+              /* Copied rather than pushed into, so the state array is not
+                 mutated in place, and the same country cannot be added twice. */
+              var countriesX = [...(orderData?.countries || [])];
 
-              var countriesX = orderData?.countries;
-              countriesX.push(args.value)
-
+              if (args?.value && !countriesX.includes(args.value)) {
+                countriesX.push(args.value)
+              }
 
               setorderData({ ...orderData, countries: countriesX })
             }} />
 
+            {chosenCountries.length > 0 && (
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+
+                {chosenCountries.map((item, index) => {
+                  return (
+                    <span key={`${item}-${index}`} className={CHIP}>
+
+                      {/* Read as `countriesList[item].label` before, which threw
+                          on any render before the lookup had been built. */}
+                      <span className="whitespace-nowrap">{countriesList?.[item]?.label || item}</span>
+
+                      <span className={CHIP_CLEAR} onClick={ev => {
+
+                        var countriesX = [...chosenCountries];
+
+                        countriesX.splice(index, 1);
+
+                        setorderData({ ...orderData, countries: countriesX })
 
 
-          </div>
+                      }}><IconX size={13} /></span>
 
-          <div className="flex items-center gap-1 my-5 text-sm italic">
+                    </span>
+                  )
+                })}
 
+              </div>
+            )}
 
-            {orderData?.countries?.map((item, index) => {
-              return (
-                <div key={index} className="border-2 border-gray-400 pl-2 rounded-sm flex gap-2 items-center">
-                  <div>{countriesList[item].label}</div>
-                  <div className="bg-red-400  hover:bg-red-500 p-2 cursor-pointer text-white" onClick={ev => {
+            {chosenCountries.length === 0 && (
+              <p className="mt-3 text-xs text-gray-400">{("No countries chosen yet.")}</p>
+            )}
 
-                    var countriesX = orderData?.countries;
-
-                    countriesX.splice(index, 1);
-
-                    setorderData({ ...orderData, countries: countriesX })
-
-
-                  }}><IconTrash size={16} /></div>
-                </div>
-              )
-            })}
-
-          </div>
+          </Row>
 
         </div>
-
-
-
-
-
-
-
 
       </WidgetWrapper>
 
 
+      {/* The action sits under the form it submits, and the raw
+          `JSON.stringify(orderData)` dump that used to print above it is gone. */}
+      <div className="flex flex-wrap items-center gap-3">
 
+        <div className={PRIMARY_BUTTON}
+
+          onClick={ev => {
+            create_shipping_zone()
+          }}
+        ><IconPlus size={16} /> {("Create Zone")}</div>
+
+        {loading && (
+          <span className="inline-flex items-center gap-2 text-xs text-amber-600">
+            <Spinner size={14} /> {("Please wait...")}
+          </span>
+        )}
+
+      </div>
 
 
     </div>

@@ -1,43 +1,62 @@
 "use client";
-import { useState, useEffect, Component } from "react";
-import { IconSettings, IconCheckbox, IconSquare, IconFidgetSpinner, IconTrash, IconStarFilled, IconStar, IconX, IconExternalLink } from "@tabler/icons-react";
-import Image from "next/image";
-import Link from "next/link";
+import { useState, useEffect } from "react";
+import { IconX } from "@tabler/icons-react";
 
-import { APIProvider, Map, useMapsLibrary, useMap } from '@vis.gl/react-google-maps';
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
-import { format } from "date-fns";
 import countries from '../lib/Countries';
 
 import { useCounterStore } from '../store/useCounterStore'
-import { useUtilsStore } from '../store/useUtilsStore';
-import LocationPicker from '../components/LocationPicker';
-import GoogleMapDirections from '../components/GoogleMapDirections';
-import PopoverButton from '../components/PopoverButton';
 import Spinner from '../components/Spinner';
 import WidgetWrapper from '../components/WidgetWrapper';
 import DropDown from '../components/DropDown';
 import ShippingMethods from '../components/ShippingMethods';
-import UsersPicker from '../components/shop-elements/UsersPicker';
-import ProductsPicker from '../components/shop-elements/ProductsPicker';
 
 
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
+/*
+  Field styling. The base control rules in globals.css are commented out, so
+  an input with no classes renders as a browser default - which is why the
+  fields here carried one-off `!shadow-none !border-2` strings.
+*/
+const FIELD =
+  "w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 shadow-sm transition-colors hover:border-gray-400";
 
+const PRIMARY_BUTTON =
+  "inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-gray-800 cursor-pointer w-max";
 
+const BADGE_BASE =
+  "inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1 ring-inset";
 
+const STATUS_BADGES = {
+  "1": { label: "Active", classes: "bg-green-50 text-green-700 ring-green-200" },
+  "0": { label: "Inactive", classes: "bg-gray-100 text-gray-600 ring-gray-200" },
+};
+
+/*
+  One label + control row. The five of these used to repeat the same
+  border/flex/width string by hand, and stacked badly under `lg` because the
+  label kept its fixed width while the control wrapped beneath it.
+*/
+const Row = ({ label, hint, children }) => (
+  <div className="flex flex-col gap-2 border-b border-gray-200 py-3 last:border-0 lg:flex-row lg:items-center lg:gap-4">
+
+    <div className="text-sm font-semibold text-gray-700 lg:w-56 lg:shrink-0">{label}</div>
+
+    <div className="min-w-0 lg:flex-1">
+      {children}
+      {hint && (
+        <p className="mt-1 text-xs text-gray-400">{hint}</p>
+      )}
+    </div>
+
+  </div>
+);
 
 const ShippingZoneEdit = (props) => {
-  const { formatDate, wrapCurrency } = useUtilsStore()
 
-
-  const { token, paymentGateways, notifications, addNotification, cartItems, addCartItems, resetCartItems, userDataX, setUserDataX, navToggle, setnavToggle, lang, setlang, orderStatusArgs, paymentStatusArgs, privacyMode } = useCounterStore()
+  const { token } = useCounterStore()
 
   var zoneId = props?.id
-  var [loading, setloading] = useState(false);
-
 
   var [currentObject, setcurrentObject] = useState({ countries: [], settings: {}, status: '' });
 
@@ -47,7 +66,6 @@ const ShippingZoneEdit = (props) => {
 
 
   function get_shipping_zone() {
-
 
 
 
@@ -81,7 +99,6 @@ const ShippingZoneEdit = (props) => {
             var zone = res?.zone;
 
 
-            console.log(res);
 
 
             // var settingsX = zone?.settings.length > 0 ? JSON.parse(zone?.settings) : []
@@ -102,6 +119,7 @@ const ShippingZoneEdit = (props) => {
       .catch((_error) => {
         //this.saveAsStatus = 'error';
         // handle the error
+        setloading(false);
       });
   }
 
@@ -158,6 +176,7 @@ const ShippingZoneEdit = (props) => {
       .catch((_error) => {
         //this.saveAsStatus = 'error';
         // handle the error
+        setloading(false);
       });
   }
 
@@ -187,201 +206,168 @@ const ShippingZoneEdit = (props) => {
   }, [countries]);
 
 
+  const statusBadge = STATUS_BADGES[currentObject?.status];
+  const chosenCountries = currentObject?.countries || [];
+
+
   return (
-    <div>
+    <div className="mx-auto flex w-full max-w-[860px] flex-col gap-4 px-4 py-6 sm:px-6">
 
-      <div className="flex-1 my-10">
+      {/*
+        Header. The zone's name was buried in an "Edit:" label beside the
+        Update button, and the whole panel sat in a fixed 800px column that
+        overflowed anything narrower - a drawer or a phone.
+      */}
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-sm bg-white px-5 py-4 shadow-sm">
 
-        <div className="flex gap-5 justify-center">
+        <div className="min-w-0">
 
-          <div className="flex flex-col gap-4 w-[800px]">
+          <div className="flex flex-wrap items-center gap-2">
 
+            <h2 className="truncate text-lg font-semibold text-gray-900">
+              {currentObject?.name || ("Shipping zone")}
+            </h2>
 
-            <div className="bg-white  rounded-sm px-5 py-3 flex justify-between items-center">
+            <span className="font-mono text-xs text-gray-400">#{zoneId}</span>
 
-              {loading && (
-                <div className="flex gap-2 text-amber-600">
-                  <div className="animate-spin"><IconFidgetSpinner /> </div>
-                  <div>Please wait...</div>
-
-                </div>
-              )}
-              {!loading && (
-                <div className="flex gap-2 justify-between items-center">
-
-                  <div className="text-bold">Edit:</div> <div>{currentObject?.name}</div>
-
-                </div>
-              )}
-
-
-
-
-
-              <div className="p-2 hover:bg-gray-400 rounded-sm cursor-pointer px-4 bg-gray-600 text-white"
-                onClick={ev => {
-                  update_shipping_zone()
-                }}
-              >Update</div>
-
-            </div>
-
-
-            {/* {JSON.stringify(currentObject?.addons)} */}
-
-            <div className="bg-white  rounded-sm ">
-
-              <div className="px-5 py-3 text-xl border-b border-solid border-gray-300">General Info</div>
-
-              <div className="p-4 flex flex-col  gap-4">
-
-
-
-
-
-
-
-
-
-                <div className="border-0 border-b border-solid  border-gray-200 lg:flex flex-wrap gap-3 py-3 items-center">
-                  <div className="  py-2 lg:w-60 font-bold">{("Name")}</div>
-
-
-                  <div className="">
-                    <input
-                      type="text"
-                      className="!shadow-none !border-2 border-gray-400 border-solid px-2 py-1 rounded-sm w-full bg-white"
-                      value={currentObject?.name}
-                      onChange={(ev) => {
-                        var value = ev.target.value;
-
-                        setcurrentObject({ ...currentObject, name: value, });
-                      }}
-                    />
-
-                  </div>
-
-                </div>
-                <div className="border-0 border-b border-solid  border-gray-200 lg:flex flex-wrap gap-3 py-3 items-center">
-                  <div className="  py-2 lg:w-60 font-bold">{("Description")}</div>
-
-
-                  <div className="">
-                    <textarea
-                      type="text"
-                      className="!shadow-none !border-2 border-gray-400 border-solid px-2 py-1 rounded-sm w-full bg-white"
-                      value={currentObject?.description}
-                      onChange={(ev) => {
-                        var value = ev.target.value;
-                        setcurrentObject({ ...currentObject, description: value });
-                      }}
-                    />
-
-                  </div>
-
-                </div>
-                <div className="border-0 border-b border-solid  border-gray-200 lg:flex flex-wrap gap-3 py-3 items-center">
-                  <div className="  py-2 lg:w-60 font-bold">{("Region")}</div>
-
-
-                  <div className="">
-                    <DropDown multiple={false} value={currentObject?.region} options={regionArgs} label={`Region`} onOptionsChoose={(args) => {
-                      setcurrentObject({ ...currentObject, region: args?.value })
-                    }} />
-
-                  </div>
-
-                </div>
-                <div className="border-0 border-b border-solid  border-gray-200 lg:flex flex-wrap gap-3 py-3 items-center">
-                  <div className="  py-2 lg:w-60 font-bold">{("Status")}</div>
-
-
-                  <div className="">
-                    <DropDown multiple={false} value={currentObject?.status} options={statusArgs} label={`Status`} onOptionsChoose={(args) => {
-                      setcurrentObject({ ...currentObject, status: args?.value })
-                    }} />
-
-                  </div>
-
-                </div>
-                <div className="border-0 border-b border-solid  border-gray-200 lg:flex flex-wrap gap-3 py-3 items-center">
-                  <div className="  py-2 lg:w-60 font-bold">{("Countries")}</div>
-
-
-                  <div className="flex flex-col gap-3">
-                    <DropDown multiple={false} value={null} options={countriesList} label={`Choose countries`} onOptionsChoose={(args) => {
-
-                      console.log(args?.value);
-
-                      var settingsX = currentObject?.settings;
-                      var countriesX = settingsX?.countries;
-                      countriesX.push(args.value)
-
-                      setcurrentObject({ ...currentObject, countries: countriesX })
-                    }} />
-
-
-
-                  </div>
-
-
-
-                </div>
-
-                <div className="flex items-center gap-2 my-5 text-sm italic">
-
-
-                  {currentObject?.countries?.map((item, index) => {
-                    return (
-                      <div key={index} className="border-2 border-gray-400 pl-2 rounded-sm flex gap-2 items-center" >
-                        <div>{countriesList[item].label}</div>
-                        <div className="bg-red-400  hover:bg-red-500 p-2 cursor-pointer text-white" onClick={ev => {
-
-                          var countriesX = currentObject?.countries;
-
-                          countriesX.splice(index, 1);
-
-                          setcurrentObject({ ...currentObject, countries: countriesX })
-
-
-                        }}><IconTrash size={16} /></div>
-
-
-
-                      </div>
-                    )
-                  })}
-
-                </div>
-
-
-
-
-
-              </div>
-            </div>
-
-
-            <WidgetWrapper title="Shipping Methods
-">
-
-
-              <ShippingMethods zoneId={zoneId} zoneCountries={currentObject?.countries} />
-            </WidgetWrapper>
-
-
-
-
-
+            {statusBadge && (
+              <span className={`${BADGE_BASE} ${statusBadge.classes}`}>{statusBadge.label}</span>
+            )}
 
           </div>
 
-
+          {currentObject?.description && (
+            <p className="mt-0.5 truncate text-xs text-gray-500">{currentObject.description}</p>
+          )}
 
         </div>
 
+        <div className="flex items-center gap-3">
+
+          {loading && (
+            <span className="inline-flex items-center gap-2 text-xs text-amber-600">
+              <Spinner size={14} /> {("Please wait...")}
+            </span>
+          )}
+
+          <div className={PRIMARY_BUTTON}
+            onClick={ev => {
+              update_shipping_zone()
+            }}
+          >{("Update")}</div>
+
+        </div>
 
       </div>
+
+
+      {/* {JSON.stringify(currentObject?.addons)} */}
+
+      <WidgetWrapper title="General Info">
+
+        <div className="flex flex-col">
+
+          <Row label={("Name")}>
+            <input
+              type="text"
+              className={FIELD}
+              value={currentObject?.name || ""}
+              onChange={(ev) => {
+                var value = ev.target.value;
+
+                setcurrentObject({ ...currentObject, name: value, });
+              }}
+            />
+          </Row>
+
+          <Row label={("Description")}>
+            <textarea
+              className={`${FIELD} min-h-24`}
+              value={currentObject?.description || ""}
+              onChange={(ev) => {
+                var value = ev.target.value;
+                setcurrentObject({ ...currentObject, description: value });
+              }}
+            />
+          </Row>
+
+          <Row label={("Region")} hint={("Whole world, or only the countries you include or exclude below.")}>
+            <DropDown multiple={false} value={currentObject?.region} options={regionArgs} label={`Region`} onOptionsChoose={(args) => {
+              setcurrentObject({ ...currentObject, region: args?.value })
+            }} />
+          </Row>
+
+          <Row label={("Status")}>
+            <DropDown multiple={false} value={currentObject?.status} options={statusArgs} label={`Status`} onOptionsChoose={(args) => {
+              setcurrentObject({ ...currentObject, status: args?.value })
+            }} />
+          </Row>
+
+          <Row label={("Countries")}>
+
+            <DropDown multiple={false} value={null} options={countriesList} label={`Choose countries`} onOptionsChoose={(args) => {
+
+              /*
+                This read the list off `currentObject.settings.countries`,
+                which the initial state leaves undefined, so the first pick
+                threw on `push` instead of adding a country. It also pushed
+                into the state array in place.
+              */
+              var countriesX = [...(currentObject?.countries || [])];
+
+              if (args?.value && !countriesX.includes(args.value)) {
+                countriesX.push(args.value)
+              }
+
+              setcurrentObject({ ...currentObject, countries: countriesX })
+            }} />
+
+            {chosenCountries.length > 0 && (
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+
+                {chosenCountries.map((item, index) => {
+                  return (
+                    <span key={`${item}-${index}`} className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-gray-50 py-1 pl-2.5 pr-1 text-xs text-gray-700">
+
+                      {/* The label was read as `countriesList[item].label`, which
+                          threw on the render before the list had been built. */}
+                      <span className="whitespace-nowrap">{countriesList?.[item]?.label || item}</span>
+
+                      <span className="inline-flex h-5 w-5 cursor-pointer items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-red-100 hover:text-red-600" onClick={ev => {
+
+                        var countriesX = [...chosenCountries];
+
+                        countriesX.splice(index, 1);
+
+                        setcurrentObject({ ...currentObject, countries: countriesX })
+
+
+                      }}><IconX size={13} /></span>
+
+                    </span>
+                  )
+                })}
+
+              </div>
+            )}
+
+            {chosenCountries.length === 0 && (
+              <p className="mt-3 text-xs text-gray-400">{("No countries chosen yet.")}</p>
+            )}
+
+          </Row>
+
+        </div>
+
+      </WidgetWrapper>
+
+
+      <WidgetWrapper title="Shipping Methods">
+
+
+        <ShippingMethods zoneId={zoneId} zoneCountries={currentObject?.countries} />
+      </WidgetWrapper>
+
 
 
 

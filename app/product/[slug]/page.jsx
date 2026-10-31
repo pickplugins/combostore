@@ -91,6 +91,9 @@ export default async function page({ params }) {
     var pageTemplateData = await getPageTemplate({ type: 'product' })
     var pageTemplatecontent = pageTemplateData?.content ? JSON.parse(pageTemplateData?.content) : [];
 
+    console.log(pageTemplateData);
+
+
     var pageTemplateHeader = pageTemplateData?.header ? JSON.parse(pageTemplateData?.header?.content) : [];
     var pageTemplateFooter = pageTemplateData?.footer ? JSON.parse(pageTemplateData?.footer?.content) : [];
 

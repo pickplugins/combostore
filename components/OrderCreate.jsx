@@ -20,6 +20,11 @@ import WidgetWrapper from '../components/WidgetWrapper';
 import UsersPicker from '../components/shop-elements/UsersPicker';
 import ProductsPicker from '../components/shop-elements/ProductsPicker';
 
+/* Toolbar buttons here were dark gray slabs that lightened on hover. */
+const SECONDARY_BUTTON =
+  "inline-flex h-9 items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 text-sm font-medium text-gray-700 transition-colors hover:border-gray-400 hover:bg-gray-50 cursor-pointer";
+
+
 
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
@@ -426,7 +431,7 @@ const OrderCreate = (props) => {
           <div><ProductsPicker placeholder="Search product..." onPick={onAddProducts} /></div>
 
           <div className="flex gap-2 items-center flex-wrap">
-            <div className='p-2 flex gap-2 items-center rounded-sm text-sm cursor-pointer  bg-gray-600 hover:bg-gray-400 text-white'
+            <div className={SECONDARY_BUTTON}
               onClick={ev => {
                 var cartItemsX = [...cartItems]
                 cartItemsX.push({ "order_id": orderData?.id, "product_id": '', "product_name": "Custom Product Title", "sku": "", "quantity": 1, "price": 0, trade_price: 0, "subtotal": 0, "tax": 0, "total": 0, "meta": null, })
@@ -440,7 +445,7 @@ const OrderCreate = (props) => {
             </div>
 
             {cartItems?.length > 0 && (
-              <div className='p-2 rounded-sm text-sm cursor-pointer  bg-gray-600 hover:bg-gray-400 text-white'
+              <div className={SECONDARY_BUTTON}
                 onClick={ev => {
                   seteditLineItems(!editLineItems)
                 }}

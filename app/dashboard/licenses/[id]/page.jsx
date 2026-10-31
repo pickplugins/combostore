@@ -1,23 +1,14 @@
-'use client'
-import React, { use } from 'react'
+"use client";
 
-const page = ({params}) => {
-  const {id} = use(params)
-  return (
-    <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-4 px-4 py-6 sm:px-6">
+import React, { use } from "react";
+import LicenseEdit from "../../../../components/pages/LicenseEdit";
 
-      {/* Page heading: this screen showed a bare line of text. */}
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <h1 className="text-xl font-semibold text-gray-900">
-          {("License")} <span className="font-normal text-gray-400">#{id}</span>
-        </h1>
-      </div>
+const page = ({ params }) => {
+	const { id } = use(params);
 
-      <div className="form-card rounded-xl border border-gray-200 bg-white p-5 text-sm text-gray-500 shadow-sm">
-        {("No license details are wired up for this route yet.")}
-      </div>
-    </div>
-  )
-}
+	return (
+		<LicenseEdit id={id} />
+	);
+};
 
-export default page
+export default page;

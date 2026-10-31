@@ -13,7 +13,19 @@ import DropDown from '../../components/DropDown';
 import GalleryPicker from "../../components/shop-elements/GalleryPicker";
 import TaxTermsQuery from '../../components/TaxTermsQuery';
 
+/* Icon buttons, in place of gray boxes around a bare icon. */
+const ICON_BUTTON =
+  "inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-500 transition-colors hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 cursor-pointer";
+
+
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
+
+/* Buttons on this screen were dark gray slabs that lightened on hover. */
+const PRIMARY_BUTTON =
+  "inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-gray-800 cursor-pointer";
+
+const SECONDARY_BUTTON =
+  "inline-flex h-9 items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 text-sm font-medium text-gray-700 transition-colors hover:border-gray-400 hover:bg-gray-50 cursor-pointer";
 
 const ProductsVariations = (props) => {
 
@@ -660,7 +672,7 @@ const ProductsVariations = (props) => {
 
 							<div className="p-3 flex flex-col gap-5 bg-gray-300">
 
-								<div className=" hover:bg-gray-400 rounded-sm cursor-pointer px-4 py-2 bg-gray-600 text-white w-fit" onClick={ev => {
+								<div className={`${PRIMARY_BUTTON} w-fit`} onClick={ev => {
 
 
 
@@ -783,7 +795,7 @@ const ProductsVariations = (props) => {
 												setbulkUpdatePrams(bulkUpdatePramsX);
 											}}
 										/>
-										<div className=" hover:bg-gray-400 rounded-sm cursor-pointer px-4 py-2 bg-gray-600 text-white" onClick={ev => {
+										<div className={SECONDARY_BUTTON} onClick={ev => {
 
 											var skuX = generateSKU()
 
@@ -928,7 +940,7 @@ const ProductsVariations = (props) => {
 
 						</PopoverButton>
 
-						<div className="bg-gray-200 text-gray-600 hover:bg-gray-400 rounded-sm p-1 hover:text-gray-600 cursor-pointer justify-end" onClick={ev => {
+						<div className={ICON_BUTTON} onClick={ev => {
 
 
 
@@ -948,7 +960,7 @@ const ProductsVariations = (props) => {
 
 				{selectedRows.length == 0 && (
 
-					<div className="bg-gray-200 text-gray-600 hover:bg-gray-400 rounded-sm p-1 hover:text-gray-600 cursor-pointer justify-end" onClick={ev => {
+					<div className={ICON_BUTTON} onClick={ev => {
 
 
 						var rows = [];
@@ -1165,7 +1177,7 @@ const ProductsVariations = (props) => {
 													setvariations(variationsX);
 												}}
 											/>
-											<div className=" hover:bg-gray-400 rounded-sm cursor-pointer px-4 py-2 bg-gray-600 text-white" onClick={ev => {
+											<div className={SECONDARY_BUTTON} onClick={ev => {
 
 												var skuX = generateSKU()
 

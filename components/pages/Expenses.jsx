@@ -12,6 +12,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { format } from "date-fns";
 
 import PopoverButton from '../../components/PopoverButton';
+import ExpenseEdit from '../../components/pages/ExpenseEdit';
 import ToggleContent from '../../components/ToggleContent';
 import OrderItemsList from '../../components/OrderItemsList';
 import UsersPicker from '../../components/shop-elements/UsersPicker';
@@ -337,6 +338,17 @@ const Expenses = (props) => {
         <Link className=" text-gray-600 font-bold" href={`/dashboard/expenses/${entry.id}`}>
           {"#" + entry.id}
         </Link>
+
+        <div className="flex justify-center gap-3 text-xs text-gray-500">
+
+          <PopoverButton buttonLabel={"Edit"} buttonIcon={null} title={"Edit Expense"} drawer={"right"} buttonClass={`cursor-pointer hover:text-gray-700`}>
+
+            <div className="p-5 bg-gray-50 text-left">
+              <ExpenseEdit id={entry.id} />
+            </div>
+
+          </PopoverButton>
+        </div>
       </td>
 
     );

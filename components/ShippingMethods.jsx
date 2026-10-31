@@ -1,27 +1,14 @@
 "use client";
-import Link from "next/link";
-import React from "react";
 import { useRouter } from "next/navigation";
 
 import EntriesTable from "../components/EntriesTable";
 import { useState, useEffect, useContext, useRef } from "react";
-import Spinner from "../components/Spinner";
-import { IconFileDollar, IconEyeShare, IconTrash, IconCopy, IconDotsVertical, IconPackages, IconX, IconEdit, IconPrinter, IconListNumbers, IconMapDollar, IconSquareCheck, IconSquareCheckFilled } from "@tabler/icons-react";
+import { IconPlus, IconTrash, IconEdit } from "@tabler/icons-react";
 
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
-import { format } from "date-fns";
 
 import PopoverButton from '../components/PopoverButton';
 import ShippingMethodEdit from '../components/ShippingMethodEdit';
-import FraudCheck from '../components/FraudCheck';
 import ShippingMethodCreate from '../components/ShippingMethodCreate';
-import OrderBulkUpdate from '../components/OrderBulkUpdate';
-import ToggleContent from '../components/ToggleContent';
-import DropDown from '../components/DropDown';
-import ProductsPicker from '../components/shop-elements/ProductsPicker';
-import OrdersReceipt from '../components/pages/OrdersReceipt';
-import OrdersOverview from '../components/pages/OrdersOverview';
 import countries from '../lib/Countries';
 
 import { useCounterStore } from '../store/useCounterStore'
@@ -29,6 +16,28 @@ const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
 import { useUtilsStore } from '../store/useUtilsStore';
 
+
+/* Status pills, in place of solid `bg-green-400` blocks with white text. */
+const BADGE_BASE =
+  "inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1 ring-inset";
+
+const STATUS_BADGES = {
+  "1": { label: "Active", classes: "bg-green-50 text-green-700 ring-green-200" },
+  "0": { label: "Inactive", classes: "bg-gray-100 text-gray-600 ring-gray-200" },
+};
+
+const TOOLBAR_BUTTON =
+  "inline-flex h-9 items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 text-sm font-medium text-gray-700 transition-colors hover:border-gray-400 hover:bg-gray-50 cursor-pointer";
+
+const DANGER_BUTTON =
+  "inline-flex h-9 items-center gap-2 rounded-lg bg-red-600 px-3 text-sm font-medium text-white shadow-sm transition-colors hover:bg-red-700 cursor-pointer";
+
+const ICON_BUTTON =
+  "inline-flex h-8 w-8 items-center justify-center rounded-lg border border-transparent bg-transparent text-gray-400 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:text-gray-900 cursor-pointer";
+
+/* The panel the create and edit forms open in. */
+const PANEL =
+  "mx-auto fixed inset-x-0 top-10 max-h-[85vh] w-max max-w-[95vw] overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-xl z-[999]";
 
 
 const ShippingMethods = (props) => {
@@ -342,6 +351,22 @@ const ShippingMethods = (props) => {
 
   }, [queryPrams]);
 
+  /*
+    The country lookup was declared and read but never populated, so every
+    region cell with a country in it threw on `countriesList[item].label`.
+  */
+  useEffect(() => {
+
+    var items = {};
+
+    countries.map(country => {
+      items[country.code2] = { label: country.name, value: country.code2, states: country.states }
+    })
+
+    setcountriesList(items)
+
+  }, [countries]);
+
   useEffect(() => {
     if (hasFetched.current) return;
 
@@ -376,15 +401,29 @@ const ShippingMethods = (props) => {
 
   function callbackTitle(entry, columnIndex) {
 
+    /*
+      `#id` used to link to /settings/shipping-zones/<id> using the method's
+      own id, which opens an unrelated zone. There is no page for a single
+      method - it is edited in the panel on this row - so it is plain text.
+    */
     return (
       <td data-label="ID" className="text-left px-4 "
         key={columnIndex}>
         <div className="py-3 text-sm sm:pr-5">
-          <Link className=" text-gray-600 font-bold" href={`/settings/shipping-zones/${entry.id}`}>
-            {"#" + entry.id}
-          </Link>
-          <div className="flex flex-col text-xs"><div>Created:</div> <div>{formatDate(entry.created_at)}</div></div>
-          <div className="flex flex-col text-xs"><div>Updated:</div> <div>{formatDate(entry.updated_at)}</div></div>
+
+          <div className="font-mono font-semibold text-gray-600">{"#" + entry.id}</div>
+
+          <div className="mt-1 text-xs text-gray-500">
+            <div className="flex flex-col">
+              <span className="text-gray-400">Created</span>
+              <span className="tabular-nums">{entry.created_at ? formatDate(entry.created_at) : "-"}</span>
+            </div>
+            <div className="mt-1 flex flex-col">
+              <span className="text-gray-400">Updated</span>
+              <span className="tabular-nums">{entry.updated_at ? formatDate(entry.updated_at) : "-"}</span>
+            </div>
+          </div>
+
         </div>
       </td>
 
@@ -411,31 +450,40 @@ const ShippingMethods = (props) => {
   }
   function callbackRegion(entry, columnIndex) {
 
-    var settings = entry?.settings?.length != 0 ? JSON.parse(entry?.settings) : []
+    /*
+      `entry.settings` is a JSON string. This read
+      `entry?.settings?.length != 0 ? JSON.parse(entry?.settings) : []`,
+      which on a missing value compares `undefined != 0` - true - and then
+      parsed `undefined`, throwing from render.
+    */
+    var settings = {};
 
+    try {
+      settings = entry?.settings ? JSON.parse(entry.settings) : {};
+    } catch (_error) {
+      settings = {};
+    }
 
-    var countriesX = settings?.countries
+    var countriesX = settings?.countries || [];
 
     return (
-      <td data-label="Customer" className=""
+      <td data-label="Region" className=""
         key={columnIndex}>
-        <div className={`flex flex-col gap-2 py-2 sm:pr-5 text-right lg:text-left text-sm `}
+        <div className="flex flex-col gap-1 py-2 text-right text-sm sm:pr-5 lg:text-left">
 
+          <div className="capitalize text-gray-700">{entry.region}</div>
 
-        >
-          {/* {JSON.stringify(settings?.countries)} */}
-
-          <div>{entry.region}</div>
-          <div className="text-xs">
-            {countriesX?.map((item, index) => {
-              return (
-                <div key={index}>
-                  {countriesList[item].label},
-                </div>
-              )
-            })}
-
-          </div>
+          {countriesX.length > 0 && (
+            <div className="flex flex-wrap justify-end gap-1 lg:justify-start">
+              {countriesX.map((item, index) => {
+                return (
+                  <span key={`${item}-${index}`} className="rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-[11px] text-gray-600">
+                    {countriesList?.[item]?.label || item}
+                  </span>
+                )
+              })}
+            </div>
+          )}
 
         </div>
 
@@ -449,27 +497,15 @@ const ShippingMethods = (props) => {
 
   function callbackStatus(entry, columnIndex) {
 
-
+    const badge = STATUS_BADGES[String(entry.status)];
 
     return (
       <td data-label="Status" className="text-left text-sm "
         key={columnIndex}>
 
-        <div className={` text-xs `}>
-          {(entry.status == 1) && (
-            <span className="bg-green-400 px-2 py-1 rounded-sm text-white">Active</span>
-          )}
-          {(entry.status == 0) && (
-            <span className="bg-gray-400 px-2 py-1 rounded-sm text-white">Inactive</span>
-          )}
-
-
-
-        </div>
-
-
-
-
+        {badge && (
+          <span className={`${BADGE_BASE} ${badge.classes}`}>{badge.label}</span>
+        )}
 
       </td>
 
@@ -478,30 +514,22 @@ const ShippingMethods = (props) => {
 
   function callbackAction(entry, columnIndex) {
 
-
-
     return (
-      <td data-label="Status" className=" pr-5 text-sm "
+      <td data-label="Action" className=" pr-5 text-sm "
         key={columnIndex}>
 
         <div className="flex justify-end">
 
-          <PopoverButton buttonLabel={(" ")} buttonClass="p-2 flex gap-2 items-center rounded-sm text-sm cursor-pointer  bg-gray-600 hover:bg-gray-400 text-white" buttonIcon={<IconEdit size={16} />} title={"Edit"} position={""}>
+          <PopoverButton buttonLabel={""} buttonClass={ICON_BUTTON} buttonIcon={<IconEdit size={16} />} title={"Edit Shipping Method"} position={""} popoverClass={PANEL}>
 
-            <div className="p-5 bg-gray-400">
-              <ShippingMethodEdit id={entry.id} zoneId={zoneId} zoneCountries={zoneCountries} />
+            <div className="bg-gray-50 p-5">
+              <ShippingMethodEdit id={entry.id} zoneId={zoneId} zoneCountries={zoneCountries} onOrderCreated={onOrderCreated} />
             </div>
 
           </PopoverButton>
 
 
         </div>
-
-
-
-
-
-
 
       </td>
 
@@ -554,18 +582,20 @@ const ShippingMethods = (props) => {
 
 
   return (
-    <div className="bg-gray-300 flex flex-col gap-5 xl:p-5 p-2">
+    <div className="flex flex-col gap-4">
 
-      <div className="flex gap-3 w-full justify-between items-center ">
+      {/* The section used to sit on a `bg-gray-300` slab, with its two
+          panels on `bg-gray-300` and `bg-gray-400` behind the forms. */}
+      <div className="flex w-full flex-wrap items-center justify-between gap-3">
 
 
 
         <div className="flex flex-wrap gap-3 items-center">
 
 
-          <PopoverButton wrapperClass={`bg-gray-200 `} buttonLabel={("Add Shipping Method")} buttonIcon={<IconFileDollar />} title={"Add Shipping Method"} position={""}>
+          <PopoverButton wrapperClass={``} buttonClass={TOOLBAR_BUTTON} buttonLabel={("Add Shipping Method")} buttonIcon={<IconPlus size={16} />} title={"Add Shipping Method"} position={""} popoverClass={PANEL}>
 
-            <div className="p-5 bg-gray-300">
+            <div className="bg-gray-50 p-5">
 
               <ShippingMethodCreate zoneId={zoneId} zoneCountries={zoneCountries} onOrderCreated={onOrderCreated} />
             </div>
@@ -590,14 +620,15 @@ const ShippingMethods = (props) => {
 
 
                 <div
-                  className="px-3 py-2 items-center rounded-sm bg-red-600 hover:bg-red-500 text-white cursor-pointer"
+                  className={DANGER_BUTTON}
                   onClick={() => {
                     if (confirm("Please confirm?")) {
                       delete_shipping_zones()
                     }
                   }}>
 
-                  <IconTrash size={18} />
+                  <IconTrash size={16} />
+                  {("Delete")} ({selectedRows.length})
 
                 </div>
               </>

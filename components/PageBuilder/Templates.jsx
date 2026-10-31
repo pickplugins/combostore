@@ -276,10 +276,7 @@ const Templates = (props) => {
 
 						var content = res?.content;
 						var meta = res?.meta;
-						var includeFooter = meta?.includeFooter;
-						var includeHeader = meta?.includeHeader;
 
-						console.log(res);
 
 						// return;
 
@@ -788,9 +785,6 @@ const Templates = (props) => {
 										<div className="flex flex-col gap-2">
 
 											{template?.pages.map(page => {
-
-												var includeHeader = pageData?.meta?.includeHeader
-												var includeFooter = pageData?.meta?.includeFooter
 
 
 												return (

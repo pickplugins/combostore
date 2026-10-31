@@ -149,7 +149,7 @@ const GlobalHeader = () => {
 
 	return (
 		<header
-			className="sticky top-0 z-30 flex h-16 items-center justify-between gap-2 border-b border-gray-200 bg-white/90 px-2 backdrop-blur supports-[backdrop-filter]:bg-white/75 sm:gap-3 sm:px-5 lg:h-[70px]"
+			className="sticky top-0 z-20 flex h-16 items-center justify-between gap-2 border-b border-gray-200 bg-white/90 px-2 backdrop-blur supports-[backdrop-filter]:bg-white/75 sm:gap-3 sm:px-5 lg:h-[70px]"
 			style={{
 				paddingLeft: 'max(0.5rem, env(safe-area-inset-left))',
 				paddingRight: 'max(0.5rem, env(safe-area-inset-right))',

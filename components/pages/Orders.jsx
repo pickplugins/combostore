@@ -27,6 +27,7 @@ import ProductsPicker from '../../components/shop-elements/ProductsPicker';
 import OrdersReceipt from '../../components/pages/OrdersReceipt';
 import OrdersProductList from '../../components/pages/OrdersProductList';
 import OrdersOverview from '../../components/pages/OrdersOverview';
+import OrderEdit from '../../components/pages/OrderEdit';
 
 import { useCounterStore } from '../../store/useCounterStore'
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
@@ -396,7 +397,7 @@ const Orders = (props) => {
             }
 
             if (redirect) {
-              router.push(`/orders/${res?.order_id}`);
+              router.push(`/dashboard/orders/${res?.order_id}`);
 
             }
 
@@ -541,9 +542,21 @@ const Orders = (props) => {
       <td data-label="ID" className="text-left  !px-5  "
         key={columnIndex}>
         <div className="py-3 text-sm sm:pr-5 flex flex-col gap-1.5">
-          <Link className="font-mono text-sm font-semibold text-blue-600 transition-colors hover:text-blue-700 hover:underline" href={`/dashboard/orders/${entry.id}`}>
-            {"#" + entry.id}
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link className="font-mono text-sm font-semibold text-blue-600 transition-colors hover:text-blue-700 hover:underline" href={`/dashboard/orders/${entry.id}`}>
+              {"#" + entry.id}
+            </Link>
+
+
+
+            <PopoverButton buttonLabel={""} buttonIcon={<IconEdit size={16} />} title={"Edit Order"} drawer={"right"} buttonClass={ICON_BUTTON}>
+
+              <div className="p-5 bg-gray-50 text-left">
+                <OrderEdit id={entry.id} />
+              </div>
+
+            </PopoverButton>
+          </div>
 
           <div className="flex flex-col gap-0.5 text-[11px] text-gray-500 sm:pr-5">
             <div className="flex gap-1"><span className="text-gray-400">Created</span> <span className="tabular-nums">{formatDate(entry.created_at)}</span></div>

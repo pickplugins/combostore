@@ -381,8 +381,7 @@ const TemplateParts = (props) => {
 
 						var content = res?.content;
 						var meta = res?.meta;
-						var includeFooter = meta?.includeFooter;
-						var includeHeader = meta?.includeHeader;
+
 
 						console.log(res);
 

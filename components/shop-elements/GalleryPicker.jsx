@@ -6,6 +6,14 @@ import UploadMedia from "./UploadMedia";
 
 import Image from "next/image";
 
+/* Icon buttons, in place of small dark slabs around a bare icon. */
+const ICON_BUTTON =
+  "inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-500 transition-colors hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 cursor-pointer";
+
+const ICON_BUTTON_SM =
+  "inline-flex h-7 w-7 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-500 transition-colors hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 cursor-pointer";
+
+
 const GalleryPicker = (props) => {
 
 
@@ -111,7 +119,7 @@ const GalleryPicker = (props) => {
 
 				<div onClick={ev => {
 					setmediaLibrary({ ...mediaLibrary, enable: !mediaLibrary.enable })
-				}} className=" hover:bg-gray-400 rounded-sm cursor-pointer px-4 py-2 bg-gray-600 text-white">Media Library</div>
+				}} className="inline-flex h-9 items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 text-sm font-medium text-gray-700 transition-colors hover:border-gray-400 hover:bg-gray-50 cursor-pointer">Media Library</div>
 
 				{mediaLibrary.enable && (
 
@@ -142,7 +150,7 @@ const GalleryPicker = (props) => {
 
 										)}
 										{!loading && (
-											<div className=" hover:bg-gray-400 rounded-sm cursor-pointer px-2 py-2 bg-gray-600 text-white" onClick={ev => {
+											<div className={ICON_BUTTON} onClick={ev => {
 												setqueryPrams({ ...queryPrams, keyword: "" })
 
 											}}><IconEraser size={16} /></div>
@@ -150,7 +158,7 @@ const GalleryPicker = (props) => {
 										)}
 									</div>
 
-									<div className=" hover:bg-gray-400 rounded-sm cursor-pointer px-2 py-2 bg-gray-600 text-white" onClick={ev => {
+									<div className={ICON_BUTTON} onClick={ev => {
 
 										setenableUpload(!enableUpload)
 									}}><IconUpload size={16} /></div>
@@ -162,7 +170,7 @@ const GalleryPicker = (props) => {
 
 								<div className="flex gap-2  justify-between ">
 									<div className="flex gap-2">
-										<div className=" hover:bg-gray-400 rounded-sm cursor-pointer px-1 py-1 bg-gray-600 text-white" onClick={ev => {
+										<div className={ICON_BUTTON_SM} onClick={ev => {
 											var value = parseInt(queryPrams.paged);
 											value = (value > 1) ? value - 1 : 1;
 
@@ -174,7 +182,7 @@ const GalleryPicker = (props) => {
 											var value = parseInt(ev.target.value);
 											setqueryPrams({ ...queryPrams, paged: value })
 										}} /></div>
-										<div className=" hover:bg-gray-400 rounded-sm cursor-pointer px-1 py-1 bg-gray-600 text-white" onClick={ev => {
+										<div className={ICON_BUTTON_SM} onClick={ev => {
 											var value = parseInt(queryPrams.paged) + 1;
 
 

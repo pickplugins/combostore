@@ -184,6 +184,13 @@ export const useCounterStore = create((set) => ({
       "label": "PayPal",
       "value": "paypal",
     },
+    "stripe": {
+
+      "id": 'stripe',
+      "enable": false,
+      "label": "Stripe (Card)",
+      "value": "stripe",
+    },
     "aamarpay": {
 
       "id": 'aamarpay',
@@ -293,6 +300,10 @@ export const useCounterStore = create((set) => ({
     "paypal": {
       "label": "PayPal",
       "value": "paypal",
+    },
+    "stripe": {
+      "label": "Card",
+      "value": "stripe",
     },
   },
   couriersPrams: {

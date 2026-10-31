@@ -150,7 +150,7 @@ const SendToCourier = ({ order_id }) => {
             </div>
 
             <div className="flex  gap-3">
-              <div className="hover:bg-gray-400 rounded-sm cursor-pointer px-4 py-2 bg-gray-600 text-white flex gap-2 w-max">Send to Courier</div>
+              <div className="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-gray-800 cursor-pointer w-max">Send to Courier</div>
 
               {loading && (
                 <Spinner />

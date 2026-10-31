@@ -734,19 +734,23 @@ const EditorActions = (props) => {
 
 									var { checked, name } = ev.target;
 
-									console.log(pageData?.includeHeader);
+									console.log(pageData?.disableHeader);
 
 
 									var metaX = (pageData?.meta);
-									var meta = { ...metaX, includeHeader: !pageData?.meta?.includeHeader }
+									var meta = { ...metaX, disableHeader: !pageData?.meta?.disableHeader }
 									setpageData({ ...pageData, meta: meta })
 
 								}} >
-									{pageData?.meta?.includeHeader && (<IconLayoutNavbar size={18} />)}
-									{!pageData?.meta?.includeHeader && (<IconLayoutNavbarInactive size={18} />)}
+									{!pageData?.meta?.disableHeader && (<>
+										<IconLayoutNavbar size={18} /> Disable Header
+									</>)}
+									{pageData?.meta?.disableHeader && (<>
+										<IconLayoutNavbarInactive size={18} /> Disabled Header
+									</>)}
 
 
-									<span>Include Header</span>
+									<span></span>
 								</div>
 
 							</div>
@@ -757,7 +761,7 @@ const EditorActions = (props) => {
 
 
 									var metaX = (pageData?.meta);
-									var meta = { ...metaX, includeFooter: !pageData?.meta?.includeFooter }
+									var meta = { ...metaX, disableFooter: !pageData?.meta?.disableFooter }
 									setpageData({ ...pageData, meta: meta })
 
 
@@ -767,9 +771,12 @@ const EditorActions = (props) => {
 								}} >
 
 
-									{pageData?.meta?.includeFooter && (<IconLayoutBottombar size={18} />)}
-									{!pageData?.meta?.includeFooter && (<IconLayoutBottombarInactive size={18} />)}
-									<span>Include Footer</span>
+									{!pageData?.meta?.disableFooter && (
+										<><IconLayoutBottombar size={18} /> Disable Footer</>
+									)}
+									{pageData?.meta?.disableFooter && (<>
+										<IconLayoutBottombarInactive size={18} /> Disabled Footer
+									</>)}
 								</div>
 
 							</div>

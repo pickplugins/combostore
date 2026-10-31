@@ -4,13 +4,14 @@ import React from "react";
 
 import EntriesTable from "../../components/EntriesTable";
 import { useState, useEffect, useContext, useRef } from "react";
-import { IconFileDollar, IconPlus, IconMinus, IconDotsVertical, IconEqual, IconX } from "@tabler/icons-react";
+import { IconPlus, IconFilter, IconDotsVertical, IconTrash, IconX } from "@tabler/icons-react";
 
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { format } from "date-fns";
 
 import PopoverButton from '../../components/PopoverButton';
+import PurchaseEdit from '../../components/pages/PurchaseEdit';
 import ToggleContent from '../../components/ToggleContent';
 import OrderItemsList from '../../components/OrderItemsList';
 import UsersPicker from '../../components/shop-elements/UsersPicker';
@@ -22,6 +23,47 @@ const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
 import { useUtilsStore } from '../../store/useUtilsStore';
 
+
+/* Status pills, previously two stacks of hand-written spans with the label
+   and tone repeated per case. Keys and tones match the orders list. */
+const BADGE_BASE =
+  "inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1 ring-inset";
+
+const PURCHASE_STATUS_BADGES = {
+  pending: { label: "Pending", classes: "bg-yellow-50 text-yellow-700 ring-yellow-200" },
+  processing: { label: "Processing", classes: "bg-blue-50 text-blue-700 ring-blue-200" },
+  completed: { label: "Completed", classes: "bg-green-50 text-green-700 ring-green-200" },
+  hold: { label: "Hold", classes: "bg-orange-50 text-orange-700 ring-orange-200" },
+  cancelled: { label: "Cancelled", classes: "bg-red-50 text-red-700 ring-red-200" },
+  canceled: { label: "Canceled", classes: "bg-red-50 text-red-700 ring-red-200" },
+  refunded: { label: "Refunded", classes: "bg-amber-50 text-amber-700 ring-amber-200" },
+  failed: { label: "Failed", classes: "bg-red-50 text-red-700 ring-red-200" },
+};
+
+const PAYMENT_STATUS_BADGES = {
+  pending: { label: "Pending", classes: "bg-yellow-50 text-yellow-700 ring-yellow-200" },
+  paid: { label: "Paid", classes: "bg-green-50 text-green-700 ring-green-200" },
+  failed: { label: "Failed", classes: "bg-red-50 text-red-700 ring-red-200" },
+  delayed: { label: "Delayed", classes: "bg-amber-50 text-amber-700 ring-amber-200" },
+  due: { label: "Due", classes: "bg-red-50 text-red-700 ring-red-200" },
+  partial: { label: "Partial", classes: "bg-blue-50 text-blue-700 ring-blue-200" },
+  refunded: { label: "Refunded", classes: "bg-blue-50 text-blue-700 ring-blue-200" },
+};
+
+const PRIMARY_BUTTON =
+  "inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-gray-800 cursor-pointer w-max";
+
+const TOOLBAR_BUTTON =
+  "inline-flex h-9 items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 text-sm font-medium text-gray-700 transition-colors hover:border-gray-400 hover:bg-gray-50 cursor-pointer";
+
+const DANGER_BUTTON =
+  "inline-flex items-center gap-2 rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-red-700 cursor-pointer";
+
+const FILTER_CHIP =
+  "flex items-center gap-1 rounded-full border border-indigo-200 bg-indigo-50 py-0.5 pl-2.5 pr-1 text-xs text-indigo-700";
+
+const FILTER_CHIP_CLEAR =
+  "inline-flex h-5 w-5 cursor-pointer items-center justify-center rounded-full text-indigo-400 transition-colors hover:bg-indigo-200 hover:text-indigo-800 [&>svg]:size-3.5";
 
 
 const Purchases = (props) => {
@@ -318,29 +360,24 @@ const Purchases = (props) => {
 
   function callbackFormatDate(entry, columnIndex) {
 
-    var format = "d/m/Y";
-    var dateInput = entry.updated_at;
-    // Ensure date is in a proper format for parsing
-    const dateObj = new Date(dateInput.replace(" ", "T"));
-
-    if (isNaN(dateObj)) {
-      throw new Error("Invalid date format");
-    }
-
-    // Extract date components
-    const day = String(dateObj.getDate()).padStart(2, '0');
-    const month = String(dateObj.getMonth() + 1).padStart(2, '0'); // Months are zero-based
-    const year = dateObj.getFullYear();
-
-    // Replace format placeholders with actual values
-    //return ;
-
+    /* Both stamps, stacked and labelled. The old copy parsed the date by
+       hand into values it never used, and threw from inside render when a
+       row had no `updated_at` - which took the whole table down with it. */
     return (
       <td
         key={columnIndex}>
-        <div className="text-center px-5! text-xs">
-          <div className="flex flex-col"><div>Created:</div> <div>{formatDate(entry.created_at)}</div></div>
-          <div className="flex flex-col"><div>Updated:</div> <div>{formatDate(entry.updated_at)}</div></div>
+        <div className="px-5! text-center text-xs text-gray-500">
+
+          <div className="flex flex-col">
+            <span className="text-gray-400">Created</span>
+            <span className="tabular-nums">{entry.created_at ? formatDate(entry.created_at) : "-"}</span>
+          </div>
+
+          <div className="mt-1.5 flex flex-col">
+            <span className="text-gray-400">Updated</span>
+            <span className="tabular-nums">{entry.updated_at ? formatDate(entry.updated_at) : "-"}</span>
+          </div>
+
         </div>
       </td>
 
@@ -358,6 +395,17 @@ const Purchases = (props) => {
         <Link className=" text-gray-600 font-bold" href={`/dashboard/purchases/${entry.id}`}>
           {"#" + entry.id}
         </Link>
+
+        <div className="flex justify-center gap-3 text-xs text-gray-500">
+
+          <PopoverButton buttonLabel={"Edit"} buttonIcon={null} title={"Edit Purchase"} drawer={"right"} buttonClass={`cursor-pointer hover:text-gray-700`}>
+
+            <div className="p-5 bg-gray-50 text-left">
+              <PurchaseEdit id={entry.id} />
+            </div>
+
+          </PopoverButton>
+        </div>
       </td>
 
     );
@@ -406,29 +454,32 @@ const Purchases = (props) => {
 
     var total = (parseFloat(entry.subtotal_amount || 0) + parseFloat(entry.shipping_amount || 0)) - (parseFloat(entry.discount_amount || 0) + parseFloat(entry.advance_payment || 0));
 
-
+    /* Label and figure as two columns, so the amounts line up instead of
+       running on as sentences. A line only shows when it carries a value. */
+    const lines = [
+      { label: "Sub Total", value: entry.subtotal_amount, sign: "" },
+      { label: "Discount", value: entry.discount_amount, sign: "-" },
+      { label: "Delivery Charge", value: entry.shipping_amount, sign: "+" },
+      { label: "Advance Payment", value: entry.advance_payment, sign: "-" },
+    ].filter(line => parseFloat(line.value || 0) > 0);
 
     return (
       <td className="text-right px-5!"
         key={columnIndex}>
-        <div className="flex flex-col gap-2 text-xs py-3">
+        <div className="flex flex-col gap-1 py-3 text-xs">
 
-          {entry.subtotal_amount > 0 && (
-            <div>Sub Total: {wrapCurrency(entry.subtotal_amount)}</div>
-          )}
-          {entry.discount_amount > 0 && (
-            <div>Discount: -{wrapCurrency(entry.discount_amount)}</div>
-          )}
-          {entry.shipping_amount > 0 && (
-            <div>Delivery Charge: +{wrapCurrency(entry.shipping_amount)}</div>
-          )}
-          {entry.advance_payment > 0 && (
-            <div>Advance Payment: -{wrapCurrency(entry.advance_payment)}</div>
-          )}
-
+          {lines.map(line => (
+            <div key={line.label} className="flex justify-between gap-4 text-gray-500">
+              <span className="whitespace-nowrap">{line.label}</span>
+              <span className="tabular-nums">{line.sign}{wrapCurrency(line.value)}</span>
+            </div>
+          ))}
 
           {total > 0 && (
-            <div className="font-bold border-t border-dashed  border-gray-300 pt-2">Total: {wrapCurrency(total)}</div>
+            <div className="mt-1 flex justify-between gap-4 border-t border-dashed border-gray-300 pt-2 text-sm font-semibold text-gray-900">
+              <span>Total</span>
+              <span className="tabular-nums">{wrapCurrency(total)}</span>
+            </div>
           )}
 
         </div>
@@ -442,44 +493,15 @@ const Purchases = (props) => {
 
   function callbackStatus(entry, columnIndex) {
 
-
+    const badge = PURCHASE_STATUS_BADGES[entry.status];
 
     return (
       <td className="text-left text-sm px-5!"
         key={columnIndex}>
 
-        <div className={` text-xs `}>
-          {(entry.status == 'pending') && (
-            <span className="inline-flex items-center whitespace-nowrap rounded-full bg-yellow-50 px-2.5 py-1 text-[11px] font-semibold text-yellow-700 ring-1 ring-inset ring-yellow-200">Pending</span>
-          )}
-          {entry.status == 'completed' && (
-            <span className="inline-flex items-center whitespace-nowrap rounded-full bg-green-50 px-2.5 py-1 text-[11px] font-semibold text-green-700 ring-1 ring-inset ring-green-200">Completed</span>
-          )}
-          {entry.status == 'cancelled' && (
-            <span className="inline-flex items-center whitespace-nowrap rounded-full bg-red-50 px-2.5 py-1 text-[11px] font-semibold text-red-700 ring-1 ring-inset ring-red-200">Cancelled</span>
-          )}
-          {entry.status == 'refunded' && (
-            <span className="inline-flex items-center whitespace-nowrap rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700 ring-1 ring-inset ring-amber-200">Refunded</span>
-          )}
-          {entry.status == 'failed' && (
-            <span className="inline-flex items-center whitespace-nowrap rounded-full bg-red-50 px-2.5 py-1 text-[11px] font-semibold text-red-700 ring-1 ring-inset ring-red-200">Failed</span>
-          )}
-          {entry.status == 'processing' && (
-            <span className="inline-flex items-center whitespace-nowrap rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-semibold text-blue-700 ring-1 ring-inset ring-blue-200">Processing</span>
-          )}
-          {entry.status == 'canceled' && (
-            <span className="inline-flex items-center whitespace-nowrap rounded-full bg-red-50 px-2.5 py-1 text-[11px] font-semibold text-red-700 ring-1 ring-inset ring-red-200">Canceled</span>
-          )}
-          {entry.status == 'hold' && (
-            <span className="inline-flex items-center whitespace-nowrap rounded-full bg-orange-50 px-2.5 py-1 text-[11px] font-semibold text-orange-700 ring-1 ring-inset ring-orange-200">Hold</span>
-          )}
-
-
-        </div>
-
-
-
-
+        {badge && (
+          <span className={`${BADGE_BASE} ${badge.classes}`}>{badge.label}</span>
+        )}
 
       </td>
 
@@ -487,42 +509,22 @@ const Purchases = (props) => {
   }
   function callbackPaymentStatus(entry, columnIndex) {
 
-
+    const badge = PAYMENT_STATUS_BADGES[entry.payment_status || "pending"];
 
     return (
       <td className="text-left text-sm px-5!"
         key={columnIndex}>
 
+        <div className="flex flex-col items-start gap-1.5">
 
-        <div className="flex flex-col gap-2">
-
-          <div className={` text-xs `}>
-            {(entry.payment_status == 'pending' || entry.payment_status == '') && (
-              <span className="inline-flex items-center whitespace-nowrap rounded-full bg-yellow-50 px-2.5 py-1 text-[11px] font-semibold text-yellow-700 ring-1 ring-inset ring-yellow-200">Pending</span>
-            )}
-            {entry.payment_status == 'paid' && (
-              <span className="inline-flex items-center whitespace-nowrap rounded-full bg-green-50 px-2.5 py-1 text-[11px] font-semibold text-green-700 ring-1 ring-inset ring-green-200">Paid</span>
-            )}
-            {entry.payment_status == 'failed' && (
-              <span className="inline-flex items-center whitespace-nowrap rounded-full bg-red-50 px-2.5 py-1 text-[11px] font-semibold text-red-700 ring-1 ring-inset ring-red-200">failed</span>
-            )}
-            {entry.payment_status == 'delayed' && (
-              <span className="inline-flex items-center whitespace-nowrap rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700 ring-1 ring-inset ring-amber-200">Delayed</span>
-            )}
-            {entry.payment_status == 'due' && (
-              <span className="inline-flex items-center whitespace-nowrap rounded-full bg-red-50 px-2.5 py-1 text-[11px] font-semibold text-red-700 ring-1 ring-inset ring-red-200">Due</span>
-            )}
-            {entry.payment_status == 'partial' && (
-              <span className="inline-flex items-center whitespace-nowrap rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-semibold text-blue-700 ring-1 ring-inset ring-blue-200">Partial</span>
-            )}
-            {entry.payment_status == 'refunded' && (
-              <span className="inline-flex items-center whitespace-nowrap rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-semibold text-blue-700 ring-1 ring-inset ring-blue-200">Refunded</span>
-            )}
-
-          </div>
+          {badge && (
+            <span className={`${BADGE_BASE} ${badge.classes}`}>{badge.label}</span>
+          )}
 
           {entry.payment_method?.length > 0 && (
-            <div className="text-xs">Method: {paymentGateways[entry.payment_method]?.label}</div>
+            <div className="text-xs text-gray-500">
+              <span className="text-gray-400">Method:</span> {paymentGateways[entry.payment_method]?.label}
+            </div>
           )}
 
         </div>
@@ -633,16 +635,16 @@ const Purchases = (props) => {
         <div className="flex flex-wrap gap-3 items-center">
 
 
-          <div className="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-gray-800 cursor-pointer w-max" onClick={(ev) => {
+          <div className={PRIMARY_BUTTON} onClick={(ev) => {
             add_purchase();
           }}>
-            <IconPlus />
-            Add Purchase
+            <IconPlus size={16} />
+            {("Add Purchase")}
           </div>
 
 
 
-          <PopoverButton wrapperClass={`bg-white `} enableCloseBtn={false} buttonLabel={("Filter Purchases")} buttonIcon={<IconFileDollar />} title={"Filter Purchases"} position={"leftTop"}>
+          <PopoverButton wrapperClass={``} enableCloseBtn={false} buttonClass={TOOLBAR_BUTTON} buttonLabel={("Filter Purchases")} buttonIcon={<IconFilter size={16} />} title={"Filter Purchases"} position={"leftTop"} popoverClass={`absolute z-[999] w-[400px] overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg`}>
 
             <div className="p-4 w-[400px]">
               <div className="flex flex-col gap-3 ">
@@ -735,22 +737,22 @@ const Purchases = (props) => {
 
 
 
-          <div className=" px-4  flex gap-2">
+          <div className="flex flex-wrap justify-end gap-2 px-4">
 
 
             {queryPrams?.payment_method?.length > 0 && (
-              <div className="flex items-center gap-1 rounded-full border border-indigo-200 bg-indigo-50 py-0.5 pl-2.5 pr-1 text-xs text-indigo-700">
+              <div className={FILTER_CHIP}>
                 <div className="whitespace-nowrap">{('Payment Method')}: {queryPrams?.payment_method}</div>
-                <div className="inline-flex h-5 w-5 cursor-pointer items-center justify-center rounded-full text-indigo-400 transition-colors hover:bg-indigo-200 hover:text-indigo-800 [&>svg]:size-3.5" onClick={ev => {
+                <div className={FILTER_CHIP_CLEAR} onClick={ev => {
                   setqueryPrams({ ...queryPrams, payment_method: "" })
                 }}><IconX /></div>
               </div>
             )}
 
             {queryPrams?.payment_status?.length > 0 && (
-              <div className="flex items-center gap-1 rounded-full border border-indigo-200 bg-indigo-50 py-0.5 pl-2.5 pr-1 text-xs text-indigo-700">
+              <div className={FILTER_CHIP}>
                 <div className="whitespace-nowrap">{('Payment Status')}: {queryPrams?.payment_status}</div>
-                <div className="inline-flex h-5 w-5 cursor-pointer items-center justify-center rounded-full text-indigo-400 transition-colors hover:bg-indigo-200 hover:text-indigo-800 [&>svg]:size-3.5" onClick={ev => {
+                <div className={FILTER_CHIP_CLEAR} onClick={ev => {
                   setqueryPrams({ ...queryPrams, payment_status: "" })
                 }}><IconX /></div>
               </div>
@@ -759,9 +761,9 @@ const Purchases = (props) => {
 
 
             {queryPrams?.product?.title?.length > 0 && (
-              <div className="flex items-center gap-1 rounded-full border border-indigo-200 bg-indigo-50 py-0.5 pl-2.5 pr-1 text-xs text-indigo-700">
+              <div className={FILTER_CHIP}>
                 <div className="whitespace-nowrap">{('Product')}: {queryPrams?.product?.title}</div>
-                <div className="inline-flex h-5 w-5 cursor-pointer items-center justify-center rounded-full text-indigo-400 transition-colors hover:bg-indigo-200 hover:text-indigo-800 [&>svg]:size-3.5" onClick={ev => {
+                <div className={FILTER_CHIP_CLEAR} onClick={ev => {
                   setqueryPrams({ ...queryPrams, product: {} })
                 }}><IconX /></div>
               </div>
@@ -770,18 +772,18 @@ const Purchases = (props) => {
 
 
             {queryPrams?.customer?.display_name?.length > 0 && (
-              <div className="flex items-center gap-1 rounded-full border border-indigo-200 bg-indigo-50 py-0.5 pl-2.5 pr-1 text-xs text-indigo-700">
+              <div className={FILTER_CHIP}>
                 <div className="whitespace-nowrap">{('Customer')}: {queryPrams?.customer?.display_name}</div>
-                <div className="inline-flex h-5 w-5 cursor-pointer items-center justify-center rounded-full text-indigo-400 transition-colors hover:bg-indigo-200 hover:text-indigo-800 [&>svg]:size-3.5" onClick={ev => {
+                <div className={FILTER_CHIP_CLEAR} onClick={ev => {
                   setqueryPrams({ ...queryPrams, customer: "" })
                 }}><IconX /></div>
               </div>
             )}
 
             {queryPrams?.status?.length > 0 && (
-              <div className="flex items-center gap-1 rounded-full border border-indigo-200 bg-indigo-50 py-0.5 pl-2.5 pr-1 text-xs text-indigo-700">
+              <div className={FILTER_CHIP}>
                 <div className="whitespace-nowrap">{('Status')}: {queryPrams?.status}</div>
-                <div className="inline-flex h-5 w-5 cursor-pointer items-center justify-center rounded-full text-indigo-400 transition-colors hover:bg-indigo-200 hover:text-indigo-800 [&>svg]:size-3.5" onClick={ev => {
+                <div className={FILTER_CHIP_CLEAR} onClick={ev => {
                   setqueryPrams({ ...queryPrams, status: "" })
                 }}><IconX /></div>
               </div>
@@ -870,11 +872,12 @@ const Purchases = (props) => {
 								</PopoverButton> */}
 
               <div
-                className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-red-700 cursor-pointer"
+                className={DANGER_BUTTON}
                 onClick={() => {
                   delete_purchases();
                 }}>
-                {("Delete Orders")}
+                <IconTrash size={16} />
+                {("Delete Purchases")} ({selectedRows.length})
               </div>
             </div>
           )}
@@ -899,18 +902,42 @@ const Purchases = (props) => {
       />
 
 
-      <div className="justify-end">
-
+      {/*
+        Totals for the current filter. These were four loose lines of text
+        hanging off the right edge; the figures now sit in a card and share
+        a column so they can be read down.
+      */}
+      <div className="flex justify-end">
 
         {sumData && (
 
-          <div className="flex flex-col gap-2 text-right px-10">
+          <div className="w-full max-w-[320px] rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
 
-            <div className="text-sm">Items Total: +{wrapCurrency(sumData?.subtotal_amount)}</div>
-            <div className="text-sm">Shipping: +{wrapCurrency(sumData?.shipping_amount)}</div>
-            <div className="text-sm">Tax: +{wrapCurrency(sumData?.tax_amount)}</div>
-            <div className="text-sm">Discount: -{wrapCurrency(sumData?.discount_amount)}</div>
-            <div className="border-0 border-t-2 font-bold pt-3 border-dashed">Total: {wrapCurrency(sumData?.total_amount - sumData?.discount_amount)}</div>
+            <div className="flex flex-col gap-1.5 text-xs">
+
+              <div className="flex justify-between gap-4 text-gray-500">
+                <span>{("Items Total")}</span>
+                <span className="tabular-nums">+{wrapCurrency(sumData?.subtotal_amount)}</span>
+              </div>
+              <div className="flex justify-between gap-4 text-gray-500">
+                <span>{("Shipping")}</span>
+                <span className="tabular-nums">+{wrapCurrency(sumData?.shipping_amount)}</span>
+              </div>
+              <div className="flex justify-between gap-4 text-gray-500">
+                <span>{("Tax")}</span>
+                <span className="tabular-nums">+{wrapCurrency(sumData?.tax_amount)}</span>
+              </div>
+              <div className="flex justify-between gap-4 text-gray-500">
+                <span>{("Discount")}</span>
+                <span className="tabular-nums">-{wrapCurrency(sumData?.discount_amount)}</span>
+              </div>
+
+              <div className="mt-1 flex justify-between gap-4 border-t border-dashed border-gray-300 pt-2 text-sm font-semibold text-gray-900">
+                <span>{("Total")}</span>
+                <span className="tabular-nums">{wrapCurrency(sumData?.total_amount - sumData?.discount_amount)}</span>
+              </div>
+
+            </div>
 
           </div>
 

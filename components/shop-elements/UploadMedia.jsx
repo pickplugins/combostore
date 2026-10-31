@@ -1,6 +1,11 @@
 import React, { useState, useRef } from "react";
 import { useCounterStore } from '../../store/useCounterStore'
 
+/* Buttons here were dark gray slabs that lightened on hover. */
+const PRIMARY_BUTTON =
+  "inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-gray-800 cursor-pointer";
+
+
 export default function UploadMedia({
 	acceptedTypes = "*/*",
 	multiple = true,
@@ -89,7 +94,7 @@ export default function UploadMedia({
 					onChange={handleFileChange}
 				/>
 
-				<div className="hover:bg-gray-400 rounded-sm cursor-pointer px-4 py-1 bg-gray-600 text-white flex gap-2 w-max"
+				<div className={`${PRIMARY_BUTTON} w-max`}
 					onClick={handleUpload}
 					disabled={uploading || files.length === 0}
 				>

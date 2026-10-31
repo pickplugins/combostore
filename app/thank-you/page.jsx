@@ -13,6 +13,14 @@ import { getPageTemplate } from "@/lib/getPageTemplate";
 import PageBuilderContent from "@/components/PageBuilder/PageBuilderContent";
 
 
+/*
+  One marker per gateway the buyer is redirected away to. Each is set by that
+  gateway's checkout button and read back here; see the effect below for why
+  the cart is emptied on this page rather than at checkout.
+*/
+const REDIRECT_PAYMENT_MARKERS = ['aamarpay:pending_order', 'stripe:pending_order'];
+
+
 const page = ({ params }) => {
 
 
@@ -182,15 +190,19 @@ const page = ({ params }) => {
 
 
   /*
-    A gateway the buyer is redirected away to - aamarPay - cannot empty the
-    cart itself: the checkout page is gone by the time the payment lands, and
-    the order is marked paid on the server. So the cart is emptied here
-    instead, on the way back.
+    A gateway the buyer is redirected away to - aamarPay, Stripe - cannot
+    empty the cart itself: the checkout page is gone by the time the payment
+    lands, and the order is marked paid on the server. So the cart is emptied
+    here instead, on the way back.
 
     The marker the checkout left behind is what makes that safe. Without it,
     anyone reopening an old paid order would lose the cart they had just
     filled; with it, only the order this browser was sent off to pay for
     clears anything, and only once.
+
+    Every redirect gateway's marker is checked, because the buyer may have
+    started at one and paid at another - and only the markers naming this order
+    are cleared, so a stale one cannot empty a cart filled since.
   */
   useEffect(() => {
 
@@ -198,22 +210,25 @@ const page = ({ params }) => {
       return;
     }
 
-    let pending = null;
+    const matched = REDIRECT_PAYMENT_MARKERS.filter(key => {
+      try {
+        return window.sessionStorage.getItem(key) === slug;
+      } catch (error) {
+        /* Private mode, or storage switched off. Nothing to clear. */
+        return false;
+      }
+    });
 
-    try {
-      pending = window.sessionStorage.getItem('aamarpay:pending_order');
-    } catch (error) {
-      /* Private mode, or storage switched off. Nothing to clear. */
-    }
-
-    if (pending !== slug) {
+    if (!matched.length) {
       return;
     }
 
-    try {
-      window.sessionStorage.removeItem('aamarpay:pending_order');
-    } catch (error) {
-    }
+    matched.forEach(key => {
+      try {
+        window.sessionStorage.removeItem(key);
+      } catch (error) {
+      }
+    });
 
     resetCartItems();
     setcartToggle(!cartToggle);

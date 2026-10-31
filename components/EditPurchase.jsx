@@ -20,8 +20,33 @@ import WidgetWrapper from '../components/WidgetWrapper';
 import UsersPicker from '../components/shop-elements/UsersPicker';
 import PurchaseItemsPicker from '../components/shop-elements/PurchaseItemsPicker';
 
+/* Toolbar buttons here were dark gray slabs that lightened on hover. */
+const SECONDARY_BUTTON =
+  "inline-flex h-9 items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 text-sm font-medium text-gray-700 transition-colors hover:border-gray-400 hover:bg-gray-50 cursor-pointer";
+
+
 
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
+
+/*
+  Field styling for this screen.
+
+  The base control rules in globals.css are commented out, so an input with no
+  classes renders as a raw browser default - which is how fields here ended up
+  wearing one-off strings of `!border-2`, `!shadow-none` and `focus:border-0`,
+  each slightly different from the next. These three cover every field.
+
+  Selects are left to the unlayered `select` rule in globals.css, which beats
+  utilities on the element and already styles them to match; they only need
+  their width and text size here.
+*/
+const FIELD =
+  "w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 shadow-sm transition-colors hover:border-gray-400";
+
+const FIELD_SM =
+  "rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-xs text-gray-700 shadow-sm transition-colors hover:border-gray-400";
+
+const SELECT = "w-full text-sm text-gray-700";
 
 
 
@@ -440,7 +465,7 @@ const EditPurchase = (props) => {
           <div><PurchaseItemsPicker placeholder="Search items..." onPick={onAddProducts} /></div>
 
           <div className="flex gap-2 items-center">
-            <div className='p-2 flex gap-2 items-center rounded-sm text-sm cursor-pointer  bg-gray-600 hover:bg-gray-400 text-white'
+            <div className={SECONDARY_BUTTON}
               onClick={ev => {
                 var lineItemsX = [...lineItems]
                 lineItemsX.push({ "purchase_id": purchaseData?.id, "product_id": '', "product_name": "Custom Product Title", "sku": "", "quantity": 1, "price": 0, "subtotal": 0, "tax": 0, "total": 0, "meta": null, })
@@ -454,7 +479,7 @@ const EditPurchase = (props) => {
             </div>
 
             {lineItems?.length > 0 && (
-              <div className='p-2 rounded-sm text-sm cursor-pointer  bg-gray-600 hover:bg-gray-400 text-white'
+              <div className={SECONDARY_BUTTON}
                 onClick={ev => {
                   seteditLineItems(!editLineItems)
                 }}
@@ -523,7 +548,7 @@ const EditPurchase = (props) => {
                         <div className="flex">
 
                           <div>
-                            <input className="text-xs !w-[400px]  text-left !border-2 border-solid border-gray-400 !shadow-none text-center focus:border-0" type="text" step="0.01" value={item.product_name} onChange={ev => {
+                            <input className={`${FIELD_SM} w-full text-left lg:w-[400px]`} type="text" step="0.01" value={item.product_name} onChange={ev => {
 
                               var lineItemsX = [...lineItems]
                               lineItemsX[index].product_name = (ev.target.value);
@@ -549,7 +574,7 @@ const EditPurchase = (props) => {
 
                               <div className="flex gap-2 items-center">
                                 <div>Price: </div>
-                                <div><input className="text-xs w-24  text-left !border-2 border-solid border-gray-400 !shadow-none text-center focus:border-0" type="number" step="0.01" value={item.price} onChange={ev => {
+                                <div><input className={`${FIELD_SM} w-24 text-right tabular-nums`} type="number" step="0.01" value={item.price} onChange={ev => {
 
                                   var lineItemsX = [...lineItems]
                                   lineItemsX[index].price = parseFloat(ev.target.value);
@@ -558,7 +583,7 @@ const EditPurchase = (props) => {
                               </div>
                               <div className="flex gap-2 items-center">
                                 <div>Quantity: </div>
-                                <div><input className="text-xs w-24  text-left !border-2 border-solid border-gray-400 !shadow-none text-center focus:border-0" type="number" step="0.01" value={item.quantity} onChange={ev => {
+                                <div><input className={`${FIELD_SM} w-24 text-right tabular-nums`} type="number" step="0.01" value={item.quantity} onChange={ev => {
 
                                   var lineItemsX = [...lineItems]
                                   lineItemsX[index].quantity = parseFloat(ev.target.value);
@@ -669,7 +694,7 @@ const EditPurchase = (props) => {
 
 
             <div className="">
-              <input type="text" className="lg:w-auto w-full" value={purchaseData?.discount_amount} onChange={ev => {
+              <input type="text" className={FIELD} value={purchaseData?.discount_amount} onChange={ev => {
                 var value = ev.target.value;
                 setpurchaseData({ ...purchaseData, discount_amount: value })
 
@@ -700,7 +725,7 @@ const EditPurchase = (props) => {
 
 
             <div className="">
-              <input type="text" className="lg:w-auto w-full" value={purchaseData?.advance_payment} onChange={ev => {
+              <input type="text" className={FIELD} value={purchaseData?.advance_payment} onChange={ev => {
                 var value = ev.target.value;
                 setpurchaseData({ ...purchaseData, advance_payment: value })
 
@@ -714,7 +739,7 @@ const EditPurchase = (props) => {
 
 
             <div className="">
-              <textarea type="text" className="lg:w-auto w-full" value={purchaseData?.advance_payment_note} onChange={ev => {
+              <textarea type="text" className={`${FIELD} min-h-24`} value={purchaseData?.advance_payment_note} onChange={ev => {
                 var value = ev.target.value;
                 setpurchaseData({ ...purchaseData, advance_payment_note: value })
 
@@ -770,7 +795,7 @@ const EditPurchase = (props) => {
 
 
             <div className="">
-              <input type="text" className="lg:w-auto w-full" value={purchaseData?.shipping_amount} onChange={ev => {
+              <input type="text" className={FIELD} value={purchaseData?.shipping_amount} onChange={ev => {
                 var value = ev.target.value;
                 setpurchaseData({ ...purchaseData, shipping_amount: value })
 
@@ -900,7 +925,7 @@ const EditPurchase = (props) => {
               <div className=" flex flex-col gap-1  ">
                 <div className="  py-2 lg:w-60 ">{("Billing Name")}</div>
                 <div className="">
-                  <input type="text" className=" !w-full  !border-2 border-solid border-gray-400 !shadow-none !outline-none focus:border-0" value={purchaseData?.billing_name} onChange={ev => {
+                  <input type="text" className={FIELD} value={purchaseData?.billing_name} onChange={ev => {
                     var value = ev.target.value;
                     setpurchaseData({ ...purchaseData, billing_name: value })
                   }} />
@@ -909,7 +934,7 @@ const EditPurchase = (props) => {
               <div className=" flex flex-col gap-1  ">
                 <div className="  py-2 lg:w-60 ">{("Billing Email")}</div>
                 <div className="">
-                  <input type="text" className=" !w-full  !border-2 border-solid border-gray-400 !shadow-none !outline-none focus:border-0" value={purchaseData?.billing_email} onChange={ev => {
+                  <input type="text" className={FIELD} value={purchaseData?.billing_email} onChange={ev => {
                     var value = ev.target.value;
                     setpurchaseData({ ...purchaseData, billing_email: value })
                   }} />
@@ -918,7 +943,7 @@ const EditPurchase = (props) => {
               <div className=" flex flex-col gap-1  ">
                 <div className="  py-2 lg:w-60 ">{("Billing Phone")}</div>
                 <div className="">
-                  <input type="text" className=" !w-full  !border-2 border-solid border-gray-400 !shadow-none !outline-none focus:border-0" value={purchaseData?.billing_phone} onChange={ev => {
+                  <input type="text" className={FIELD} value={purchaseData?.billing_phone} onChange={ev => {
                     var value = ev.target.value;
                     setpurchaseData({ ...purchaseData, billing_phone: value })
                   }} />
@@ -927,7 +952,7 @@ const EditPurchase = (props) => {
               <div className=" flex flex-col gap-1  ">
                 <div className="  py-2 lg:w-60 ">{("Billing Address")}</div>
                 <div className="">
-                  <textarea className=" !w-full  !border-2 border-solid border-gray-400 !shadow-none !outline-none focus:border-0" value={purchaseData?.billing_address} onChange={ev => {
+                  <textarea className={`${FIELD} min-h-24`} value={purchaseData?.billing_address} onChange={ev => {
                     var value = ev.target.value;
                     setpurchaseData({ ...purchaseData, billing_address: value })
                   }} />
@@ -957,7 +982,7 @@ const EditPurchase = (props) => {
 
 
 
-          <select name="status" className="!border-2 border-solid border-gray-400 !shadow-none !outline-none focus:border-0" value={purchaseData?.status} id="" onChange={ev => {
+          <select name="status" className={SELECT} value={purchaseData?.status} id="" onChange={ev => {
             var value = ev.target.value;
             setpurchaseData({ ...purchaseData, status: value })
           }}>
@@ -981,7 +1006,7 @@ const EditPurchase = (props) => {
           <div className="  py-2 lg:w-60 font-bold">{('Payment Method')}</div>
 
 
-          <select name="payment_method" className="lg:w-auto w-full !border-2 border-solid border-gray-400 !shadow-none !outline-none focus:border-0" value={purchaseData?.payment_method} id="" onChange={ev => {
+          <select name="payment_method" className={SELECT} value={purchaseData?.payment_method} id="" onChange={ev => {
             var value = ev.target.value;
             setpurchaseData({ ...purchaseData, payment_method: value })
           }}>
@@ -1006,7 +1031,7 @@ const EditPurchase = (props) => {
           <div className="  py-2 lg:w-60 font-bold">{('Payment status')}</div>
 
 
-          <select name="payment_status" className="lg:w-auto w-full !border-2 border-solid border-gray-400 !shadow-none !outline-none focus:border-0" value={purchaseData?.payment_status} id="" onChange={ev => {
+          <select name="payment_status" className={SELECT} value={purchaseData?.payment_status} id="" onChange={ev => {
             var value = ev.target.value;
             setpurchaseData({ ...purchaseData, payment_status: value })
           }}>
@@ -1041,7 +1066,7 @@ const EditPurchase = (props) => {
 
 
           <div className="">
-            <input type="text" className="lg:w-auto w-full !border-2 border-solid border-gray-400 !shadow-none !outline-none focus:border-0" value={purchaseData?.transaction_id} onChange={ev => {
+            <input type="text" className={FIELD} value={purchaseData?.transaction_id} onChange={ev => {
               var value = ev.target.value;
               setpurchaseData({ ...purchaseData, transaction_id: value })
             }} />

@@ -20,6 +20,7 @@ import Tabs from '../components/Tabs';
 import Tab from '../components/Tab';
 import ToggleContent from '../components/ToggleContent';
 import GalleryPicker from "../components/shop-elements/GalleryPicker";
+import { getStripeConfig } from "../lib/stripe";
 
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 const appUrl = process.env.NEXT_PUBLIC_STORE_URL;
@@ -50,7 +51,7 @@ const SettingsGlobal = (props) => {
   const { formatDate, wrapCurrency } = useUtilsStore()
 
 
-  const { token, cartToggle, setcartToggle, notifications, addNotification, cartItems, addCartItems, resetCartItems, userDataX, setUserDataX, navToggle, setnavToggle, lang, setlang, paymentGateways, couriersPrams, setSettings } = useCounterStore()
+  const { token, cartToggle, setcartToggle, notifications, addNotification, cartItems, addCartItems, resetCartItems, userDataX, setUserDataX, navToggle, setnavToggle, lang, setlang, paymentGateways, couriersPrams, setSettings, currency } = useCounterStore()
 
   // var orderId = props?.order_id
   var [loading, setloading] = useState(false);
@@ -65,6 +66,40 @@ const SettingsGlobal = (props) => {
 
   useEffect(() => {
     get_settings();
+  }, []);
+
+
+  /*
+    Stripe's secret key lives in the server env, not in these settings - the
+    storefront reads the settings blob through a public endpoint, so a secret
+    put here would be served to anyone who asked for it. That leaves the
+    dashboard unable to show the key, and with no way to tell whether one
+    exists either, so it asks the server: `enable` here and a working key are
+    two different things, and a store that has only the first would switch
+    cards on and hear about it from its buyers.
+  */
+  var [stripeStatus, setstripeStatus] = useState(null);
+
+  useEffect(() => {
+
+    let cancelled = false;
+
+    getStripeConfig()
+      .then(config => {
+        if (!cancelled) {
+          setstripeStatus(config);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setstripeStatus(null);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+
   }, []);
 
 
@@ -816,6 +851,16 @@ const SettingsGlobal = (props) => {
                 value until a full reload.
               */
               setSettings(settingsData)
+
+              /*
+                The Stripe panel reports what the server is actually using,
+                which has just changed. Asked again rather than assumed from
+                what was typed - and with `fresh`, because the server caches
+                the settings it reads. A key left blank so the env takes over,
+                or one WordPress did not store, then shows as what is really
+                in force.
+              */
+              getStripeConfig({ fresh: true }).then(setstripeStatus).catch(() => { })
             }
             if (status == 'failed') {
               addNotification({ type: 'error', title: 'Settings update failed', content: message })
@@ -2281,7 +2326,7 @@ const SettingsGlobal = (props) => {
 
                                   <div className="flex flex-col gap-5">
 
-                                    <div className=" hover:bg-gray-400 w-fit rounded-sm cursor-pointer px-4 py-2 bg-gray-600 text-white" onClick={ev => {
+                                    <div className={`${PRIMARY_BUTTON} w-fit`} onClick={ev => {
 
                                       // setsettingsData(prev => ({
                                       //   ...prev,
@@ -3283,6 +3328,261 @@ const SettingsGlobal = (props) => {
 
                             </>
                           )}
+                          {providerKey == 'stripe' && (
+
+                            <>
+
+                              <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Enable?")}</div>
+                                <div className="flex gap-3">
+                                  <input type="checkbox" name="enable" id={`enable-${providerKey}`}
+                                    checked={settingsData?.paymentGateways?.[providerKey]?.['enable']}
+                                    className=" !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
+
+                                    value={settingsData?.paymentGateways?.[providerKey]?.['enable']}
+                                    onChange={(ev) => {
+
+                                      setsettingsData(prev => ({
+                                        ...prev,
+                                        paymentGateways: {
+                                          ...prev.paymentGateways,
+                                          [providerKey]: {
+                                            ...prev.paymentGateways[providerKey],
+                                            ['enable']: !prev.paymentGateways[providerKey]?.['enable']
+                                          }
+                                        }
+                                      }));
+
+                                    }} />
+                                  <label htmlFor={`enable-${providerKey}`} className="cursor-pointer">{settingsData?.paymentGateways?.[providerKey]?.['enable'] ? "Enabled" : "Disabled"}</label>
+                                </div>
+                              </div>
+
+
+                              {/*
+                                The credentials. These are written into the
+                                settings blob, so they are only as private as
+                                that blob is - see the note at the foot of this
+                                panel for what that means and what guards it.
+
+                                `type="password"` so a key is not left legible
+                                on a shared screen, and autoComplete off so no
+                                browser offers to save it as a login.
+                              */}
+                              <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Secret key")}</div>
+                                <div className="flex flex-col gap-1">
+                                  <input
+                                    type="password"
+                                    name={'secret_key'}
+                                    autoComplete="off"
+                                    placeholder={'sk_test_... or sk_live_...'}
+                                    className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
+                                    value={settingsData?.paymentGateways?.[providerKey]?.['secret_key'] ?? ''}
+                                    onChange={(ev) => {
+                                      const { name, value } = ev.target;
+                                      setsettingsData(prev => ({
+                                        ...prev,
+                                        paymentGateways: {
+                                          ...prev.paymentGateways,
+                                          [providerKey]: {
+                                            ...prev.paymentGateways[providerKey],
+                                            [name]: value
+                                          }
+                                        }
+                                      }));
+
+                                    }}
+                                  />
+
+                                  {/* What the server is actually using, which
+                                      is not always what is typed above: a
+                                      blank field here falls back to the env,
+                                      and nothing takes effect until Save. */}
+                                  {stripeStatus?.enabled && (
+                                    <div className="text-xs text-green-700">
+                                      In use{stripeStatus?.source === 'env' ? " from the server env" : ""}
+                                      {stripeStatus?.livemode
+                                        ? " - live mode, real cards will be charged"
+                                        : " - test mode"}
+                                    </div>
+                                  )}
+                                  {!stripeStatus?.enabled && (
+                                    <div className="text-xs text-red-600">
+                                      No key in use - card payment will not appear at
+                                      checkout, whatever this switch says. Save the page
+                                      after entering one.
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+
+
+                              <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Webhook signing secret")}</div>
+                                <div className="flex flex-col gap-1">
+                                  <input
+                                    type="password"
+                                    name={'webhook_secret'}
+                                    autoComplete="off"
+                                    placeholder={'whsec_...'}
+                                    className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
+                                    value={settingsData?.paymentGateways?.[providerKey]?.['webhook_secret'] ?? ''}
+                                    onChange={(ev) => {
+                                      const { name, value } = ev.target;
+                                      setsettingsData(prev => ({
+                                        ...prev,
+                                        paymentGateways: {
+                                          ...prev.paymentGateways,
+                                          [providerKey]: {
+                                            ...prev.paymentGateways[providerKey],
+                                            [name]: value
+                                          }
+                                        }
+                                      }));
+
+                                    }}
+                                  />
+
+                                  {stripeStatus?.webhook_configured && (
+                                    <div className="text-xs text-green-700">Signing secret in use</div>
+                                  )}
+                                  {!stripeStatus?.webhook_configured && (
+                                    <div className="text-xs text-yellow-700">
+                                      No signing secret in use. Payments still work, but an
+                                      order is left unpaid when the buyer closes the tab
+                                      before Stripe sends them back.
+                                    </div>
+                                  )}
+
+                                  {stripeStatus?.webhook_url && (
+                                    <div className="text-xs text-gray-600">
+                                      Register this URL with Stripe for the event
+                                      <span className="font-mono"> checkout.session.completed</span>:
+                                      <span className="font-mono select-all break-all"> {stripeStatus.webhook_url}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+
+
+                              <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Charge currency")}</div>
+                                <div className="flex flex-col gap-1">
+                                  <input
+                                    type="text"
+                                    name={'currency'}
+                                    placeholder={'USD'}
+                                    className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
+                                    value={settingsData?.paymentGateways?.[providerKey]?.['currency'] ?? ''}
+                                    onChange={(ev) => {
+                                      const { name, value } = ev.target;
+                                      setsettingsData(prev => ({
+                                        ...prev,
+                                        paymentGateways: {
+                                          ...prev.paymentGateways,
+                                          [providerKey]: {
+                                            ...prev.paymentGateways[providerKey],
+                                            [name]: value
+                                          }
+                                        }
+                                      }));
+
+                                    }}
+                                  />
+
+                                  <div className="text-xs text-gray-600">
+                                    In use: {stripeStatus?.currency || "USD"}
+                                    {currency && stripeStatus?.currency === currency
+                                      && " - the same as this store, so nothing is converted"}
+                                  </div>
+
+                                  {/*
+                                    Stripe does not take every currency a store
+                                    might price in - BDT among them - and with no
+                                    rate the server refuses the payment rather
+                                    than charge a guessed amount. Worth saying
+                                    here, where it can still be fixed, rather
+                                    than leaving a buyer to find it at checkout.
+                                  */}
+                                  {stripeStatus?.enabled && currency && stripeStatus?.currency !== currency && (
+                                    <>
+                                      {stripeStatus?.exchange_rate > 0 && (
+                                        <div className="text-xs text-gray-600">
+                                          Converted at {stripeStatus.exchange_rate} {currency}
+                                          {" "}per 1 {stripeStatus.currency}, rounded up.
+                                        </div>
+                                      )}
+                                      {!(stripeStatus?.exchange_rate > 0) && (
+                                        <div className="text-xs text-red-600">
+                                          This store prices in {currency}, which is not what
+                                          Stripe charges in, and no exchange rate is set - so
+                                          card payments will be refused until one is.
+                                        </div>
+                                      )}
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+
+
+                              <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Exchange rate")}</div>
+                                <div className="flex flex-col gap-1">
+                                  <input
+                                    type="text"
+                                    name={'exchange_rate'}
+                                    placeholder={'e.g. 120'}
+                                    className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
+                                    value={settingsData?.paymentGateways?.[providerKey]?.['exchange_rate'] ?? ''}
+                                    onChange={(ev) => {
+                                      const { name, value } = ev.target;
+                                      setsettingsData(prev => ({
+                                        ...prev,
+                                        paymentGateways: {
+                                          ...prev.paymentGateways,
+                                          [providerKey]: {
+                                            ...prev.paymentGateways[providerKey],
+                                            [name]: value
+                                          }
+                                        }
+                                      }));
+
+                                    }}
+                                  />
+
+                                  <div className="text-xs text-gray-600">
+                                    How many {currency || 'store currency'} make 1
+                                    {" "}{stripeStatus?.currency || 'USD'}. Only needed when
+                                    the two differ; leave it blank when they match.
+                                  </div>
+                                </div>
+                              </div>
+
+
+                              <div className="flex flex-col gap-2 py-3.5">
+                                <div className="text-xs text-gray-600">
+                                  These credentials are stored with the rest of the store
+                                  settings. The storefront is served those settings through
+                                  an open endpoint, so the two secrets above are stripped out
+                                  of it before it reaches a browser and are only ever read
+                                  server-side - but they are held in the database rather than
+                                  in a secrets manager, and anything else that can read the
+                                  settings can read them. Leave a field blank to fall back to
+                                  the server env instead
+                                  (<span className="font-mono">STRIPE_SECRET_KEY</span>,
+                                  <span className="font-mono"> STRIPE_WEBHOOK_SECRET</span>,
+                                  <span className="font-mono"> STRIPE_CURRENCY</span>,
+                                  <span className="font-mono"> STRIPE_EXCHANGE_RATE</span>),
+                                  which keeps them out of the database altogether. Use a
+                                  restricted key where you can, and rotate it in Stripe if
+                                  you suspect it has leaked.
+                                </div>
+                              </div>
+
+                            </>
+                          )}
+
                           {providerKey == 'aamarpay' && (
 
                             <>
@@ -3556,7 +3856,7 @@ const SettingsGlobal = (props) => {
 
             <div className="flex flex-col gap-5">
 
-              <div className=" hover:bg-gray-400 w-fit rounded-sm cursor-pointer px-4 py-2 bg-gray-600 text-white" onClick={ev => {
+              <div className={`${PRIMARY_BUTTON} w-fit`} onClick={ev => {
 
                 setsettingsData(prev => ({
                   ...prev,
@@ -4643,7 +4943,7 @@ const SettingsGlobal = (props) => {
 
               <div className="flex flex-col gap-5">
 
-                <div className=" hover:bg-gray-400 w-fit rounded-sm cursor-pointer px-4 py-2 bg-gray-600 text-white" onClick={ev => {
+                <div className={`${PRIMARY_BUTTON} w-fit`} onClick={ev => {
 
                   setsettingsData(prev => ({
                     ...prev,

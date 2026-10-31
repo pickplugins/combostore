@@ -6,6 +6,14 @@ import { useUtilsStore } from '../../store/useUtilsStore';
 import Spinner from '../Spinner';
 import { useCounterStore } from '../../store/useCounterStore'
 
+/* Icon buttons, in place of small dark slabs around a bare icon. */
+const ICON_BUTTON =
+  "inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-500 transition-colors hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 cursor-pointer";
+
+const ICON_BUTTON_SM =
+  "inline-flex h-7 w-7 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-500 transition-colors hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 cursor-pointer";
+
+
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
 const ProductsTemplatePicker = (props) => {
@@ -132,12 +140,12 @@ const ProductsTemplatePicker = (props) => {
 
 
 				{loading && (
-					<div className="hover:bg-gray-400 rounded-sm cursor-pointer px-2 py-2 bg-gray-600 text-white"><Spinner /></div>
+					<div className="px-2 py-2 text-gray-400"><Spinner size={18} /></div>
 				)}
 				{!loading && (
 					<>
 						{queryPrams.keyword.length > 0 && (
-							<div className=" hover:bg-gray-400 rounded-sm cursor-pointer px-2 py-2 bg-gray-600 text-white" onClick={ev => {
+							<div className={ICON_BUTTON} onClick={ev => {
 								setqueryPrams({ ...queryPrams, keyword: "" })
 							}}><IconEraser /></div>
 						)}
@@ -181,12 +189,12 @@ const ProductsTemplatePicker = (props) => {
 					</div>
 
 					<div className="flex gap-2 items-center py-10">
-						<div className=" hover:bg-gray-400 rounded-sm cursor-pointer px-1 py-1 bg-gray-600 text-white" onClick={ev => {
+						<div className={ICON_BUTTON_SM} onClick={ev => {
 							setqueryPrams({ ...queryPrams, page: queryPrams.page - 1 })
 						}}><IconArrowNarrowLeft size={16} /></div>
 						<div className="text-sm font-medium px-2">{queryPrams.page} </div>
 
-						<div className=" hover:bg-gray-400 rounded-sm cursor-pointer px-1 py-1 bg-gray-600 text-white" onClick={ev => {
+						<div className={ICON_BUTTON_SM} onClick={ev => {
 							setqueryPrams({ ...queryPrams, page: queryPrams.page + 1 })
 						}}><IconArrowNarrowRight size={16} /></div>
 						{loading && (

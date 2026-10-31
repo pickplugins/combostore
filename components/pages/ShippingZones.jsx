@@ -15,6 +15,7 @@ import { format } from "date-fns";
 import PopoverButton from '../../components/PopoverButton';
 import FraudCheck from '../../components/FraudCheck';
 import ShippingCreate from '../../components/ShippingCreate';
+import ShippingZoneEdit from '../../components/ShippingZoneEdit';
 import OrderBulkUpdate from '../../components/OrderBulkUpdate';
 import ToggleContent from '../../components/ToggleContent';
 import OrderCourier from '../../components/OrderCourier';
@@ -382,9 +383,19 @@ const ShippingZones = (props) => {
       <td data-label="ID" className="text-left px-4 "
         key={columnIndex}>
         <div className="py-3 text-sm sm:pr-5">
-          <Link className=" text-gray-600 font-bold" href={`/dashboard/shipping-zones/${entry.id}`}>
-            {"#" + entry.id}
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link className=" text-gray-600 font-bold" href={`/dashboard/shipping-zones/${entry.id}`}>
+              {"#" + entry.id}
+            </Link>
+
+            <PopoverButton buttonLabel={""} buttonIcon={<IconEdit size={16} />} title={"Edit Shipping Zone"} drawer={"right"} buttonClass={`inline-flex h-8 w-8 items-center justify-center rounded-lg border border-transparent bg-transparent text-gray-400 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:text-gray-900 cursor-pointer`}>
+
+              <div className="p-5 bg-gray-50 text-left">
+                <ShippingZoneEdit id={entry.id} />
+              </div>
+
+            </PopoverButton>
+          </div>
           <div className="flex flex-col text-xs"><div>Created:</div> <div>{formatDate(entry.created_at)}</div></div>
           <div className="flex flex-col text-xs"><div>Updated:</div> <div>{formatDate(entry.updated_at)}</div></div>
         </div>

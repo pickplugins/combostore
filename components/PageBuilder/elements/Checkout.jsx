@@ -1522,6 +1522,28 @@ const Checkout = (props) => {
 						<div className="">
 
 
+							{checkoutData.payment_method == "stripe" && (
+								<div className="flex flex-col gap-2">
+
+									{/*
+										A still picture of StripeCheckoutButton, not the button
+										itself: this file is the builder's preview, and the real
+										one creates an order and leaves for Stripe the moment it
+										is clicked - which is not something to do to someone
+										laying out a page. CheckoutView renders the live one.
+									*/}
+									<div className="w-full rounded-sm bg-[#635BFF] px-4 py-3 text-center font-semibold text-white">
+										Pay {wrapCurrency(cartTotalPay)} by card
+									</div>
+
+									<div className="text-xs text-gray-500">
+										You will be taken to Stripe to pay by card, and brought back
+										here afterwards.
+									</div>
+
+								</div>
+							)}
+
 							{checkoutData.payment_method == "aamarpay" && (
 								<div>
 

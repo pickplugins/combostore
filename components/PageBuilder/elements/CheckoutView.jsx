@@ -24,7 +24,9 @@ import BkashCheckoutButton from "../../../components/shop-elements/BkashCheckout
 import NagadCheckoutButton from "../../../components/shop-elements/NagadCheckoutButton";
 import AamarPayCheckoutButton from "../../../components/shop-elements/AamarPayCheckoutButton";
 import PayPalCheckoutButton from "../../../components/shop-elements/PayPalCheckoutButton";
+import StripeCheckoutButton from "../../../components/shop-elements/StripeCheckoutButton";
 import { getPayPalConfig } from "../../../lib/paypal";
+import { getStripeConfig } from "../../../lib/stripe";
 
 
 
@@ -90,6 +92,13 @@ const CheckoutView = (props) => {
 		and that one answer decides both the tile below and the buttons.
 	*/
 	const [paypalConfig, setpaypalConfig] = useState(null);
+	/*
+		Stripe answers for itself too, and for the same reason: its secret key is
+		in the server env, not in the settings blob, so the dashboard's switch
+		alone cannot tell whether a card payment would actually work. The tile is
+		shown when both agree - the store enabled it and the server has a key.
+	*/
+	const [stripeConfig, setstripeConfig] = useState(null);
 	const [readyToSubmitOrder, setreadyToSubmitOrder] = useState({ error: null, message: "" });
 	const [contactAdded, setcontactAdded] = useState({ error: null, message: "" });
 	const [orderData, setorderData] = useState({ order_id: null, status: null, });
@@ -522,11 +531,42 @@ const CheckoutView = (props) => {
 	}, [serverUrl]);
 
 
+	/* Asked once, for the same reason as PayPal's: the key and the charge
+		 currency are fixed for the store. */
+	useEffect(() => {
+
+		let cancelled = false;
+
+		getStripeConfig()
+			.then(config => {
+				if (!cancelled) {
+					setstripeConfig(config);
+				}
+			})
+			.catch(() => {
+				/* Stripe simply does not appear; the other methods still work. */
+				if (!cancelled) {
+					setstripeConfig(null);
+				}
+			});
+
+		return () => {
+			cancelled = true;
+		};
+
+	}, []);
+
+
 	/*
 		The methods to offer: whatever the dashboard enabled, plus PayPal when
 		the gateway itself reports ready. Keeping PayPal out of the settings blob
 		means it is not in `settings.paymentGateways`, and a second enable
 		switch there would only be something else to forget.
+
+		Stripe is the other way round - it is in the settings blob, so the store
+		chooses whether to offer cards - but the tile is dropped when the server
+		has no key, because a buyer picking it would then get as far as the pay
+		button and no further.
 	*/
 	const gatewayList = (() => {
 		const list = { ...(paymentGateways || {}) };
@@ -535,6 +575,10 @@ const CheckoutView = (props) => {
 			list.paypal = { ...(list.paypal || {}), enable: true, label: paypalConfig?.label || 'PayPal' };
 		} else {
 			delete list.paypal;
+		}
+
+		if (list.stripe && !stripeConfig?.enabled) {
+			delete list.stripe;
 		}
 
 		return list;
@@ -1512,6 +1556,26 @@ const CheckoutView = (props) => {
 									ensureOrder={() => ensureOrderForPayment('paypal')}
 									onPaid={onPaymentComplete}
 									onError={(message) => addNotification({ type: 'error', title: 'PayPal', content: message })}
+								/>
+
+							</div>
+						)}
+
+						{checkoutData.payment_method == "stripe" && (
+							<div className="flex flex-col gap-3">
+
+								{/* No Submit Order button here on purpose, as with PayPal:
+									  paying at Stripe is the submit. The order is created
+									  when the buyer clicks, and the callback route - or the
+									  webhook, if they close the tab - marks it paid once
+									  Stripe confirms the payment. */}
+								<StripeCheckoutButton
+									total={checkoutData?.total_amount}
+									currency={currencySymbole}
+									config={stripeConfig}
+									orderCurrency={checkoutData?.currency ?? currency}
+									ensureOrder={() => ensureOrderForPayment('stripe')}
+									onError={(message) => addNotification({ type: 'error', title: 'Stripe', content: message })}
 								/>
 
 							</div>

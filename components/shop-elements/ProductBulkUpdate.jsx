@@ -13,6 +13,18 @@ import ToggleContent from "../../components/ToggleContent";
 import Spinner from "../../components/Spinner";
 import { useCounterStore } from '../../store/useCounterStore'
 
+/* Buttons here were dark gray slabs that lightened on hover. */
+const PRIMARY_BUTTON =
+  "inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-gray-800 cursor-pointer";
+
+/* Icon buttons, in place of small dark slabs around a bare icon. */
+const ICON_BUTTON =
+  "inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-500 transition-colors hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 cursor-pointer";
+
+const ICON_BUTTON_ON =
+  "inline-flex h-8 w-8 items-center justify-center rounded-lg border border-amber-200 bg-amber-50 text-amber-500 transition-colors hover:bg-amber-100 cursor-pointer";
+
+
 
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 const storeUrl = process.env.NEXT_PUBLIC_STORE_URL;
@@ -1301,7 +1313,7 @@ const ProductBulkUpdate = (props) => {
 
 
 									<div className="flex">
-										<div className="p-2 hover:bg-gray-400 rounded-sm cursor-pointer px-4 bg-gray-600 text-white"
+										<div className={PRIMARY_BUTTON}
 
 											onClick={ev => {
 
@@ -1570,7 +1582,7 @@ const ProductBulkUpdate = (props) => {
 
 							<div className="bg-white  rounded-sm px-5 py-3 flex justify-between items-center">
 
-								<div className="p-2 hover:bg-gray-400 rounded-sm cursor-pointer px-4 bg-gray-600 text-white"
+								<div className={PRIMARY_BUTTON}
 									onClick={ev => {
 										update_product_bulk()
 									}}
@@ -1599,7 +1611,7 @@ const ProductBulkUpdate = (props) => {
 
 
 
-											}} className="p-2 hover:bg-gray-400 rounded-sm cursor-pointer px-2 bg-gray-600 text-white">
+											}} className={currentObject?.featured ? ICON_BUTTON_ON : ICON_BUTTON}>
 
 												{currentObject?.featured && (
 													<><IconStarFilled /></>

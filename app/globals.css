@@ -236,6 +236,174 @@ table {
   table-layout: fixed;
 }
 
+
+article {
+
+
+  /* Default CSS for Dynamic HTML in React */
+
+  :root {
+    --font-body: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    --font-heading: 'Poppins', sans-serif;
+    --color-text: #333;
+    --color-heading: #111;
+    --color-link: #2563eb;
+    --color-link-hover: #1e40af;
+    --color-muted: #666;
+    --color-border: #e5e7eb;
+    --color-bg-light: #f9fafb;
+    --color-bg-dark: #f3f4f6;
+    --radius: 8px;
+  }
+
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+    color: var(--color-heading);
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+    font-weight: 600;
+  }
+
+  h1 {
+    font-size: 2rem;
+  }
+
+  h2 {
+    font-size: 1.75rem;
+  }
+
+  h3 {
+    font-size: 1.5rem;
+  }
+
+  h4 {
+    font-size: 1.25rem;
+  }
+
+  h5 {
+    font-size: 1.1rem;
+  }
+
+  h6 {
+    font-size: 1rem;
+  }
+
+  p {
+    margin: 1em 0;
+  }
+
+  a {
+    color: var(--color-link);
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+
+  a:hover {
+    color: var(--color-link-hover);
+    text-decoration: underline;
+  }
+
+  ul, ol {
+    padding-left: 1.5rem;
+    margin: 1em 0;
+  }
+
+  li {
+    margin: 0.5em 0;
+    list-style: disc;
+  }
+
+  blockquote {
+    border-left: 4px solid var(--color-border);
+    padding-left: 1em;
+    color: var(--color-muted);
+    font-style: italic;
+    background-color: var(--color-bg-light);
+    margin: 1em 0;
+  }
+
+  code {
+    background: var(--color-bg-dark);
+    padding: 0.2em 0.4em;
+    font-size: 0.95em;
+    border-radius: 4px;
+    font-family: monospace;
+  }
+
+  pre {
+    background: var(--color-bg-dark);
+    padding: 1em;
+    overflow-x: auto;
+    border-radius: var(--radius);
+    font-family: monospace;
+    font-size: 0.95em;
+  }
+
+  img {
+    max-width: 100%;
+    border-radius: var(--radius);
+    margin: 1em 0;
+  }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1.5em 0;
+  }
+
+  table, th, td {
+    border: 1px solid var(--color-border);
+  }
+
+  th, td {
+    padding: 0.75em 1em;
+    text-align: left;
+  }
+
+  form input,
+  form select,
+  form textarea,
+  button {
+    font-family: inherit;
+    font-size: 1rem;
+    padding: 0.5em 1em;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background-color: white;
+    margin-bottom: 1em;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  button {
+    background-color: var(--color-link);
+    color: white;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  button:hover {
+    background-color: var(--color-link-hover);
+  }
+
+  hr {
+    border: none;
+    height: 1px;
+    background-color: var(--color-border);
+    margin: 2em 0;
+  }
+
+  .container {
+    max-width: 800px;
+    margin: auto;
+    padding: 2rem 1rem;
+  }
+
+
+}
+
+
 /*
   Below `md`, data tables stop being tables and become one card per row, each
   cell on its own line labelled by its column header. A twenty-column orders

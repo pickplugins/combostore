@@ -5,6 +5,11 @@ import { IconArrowNarrowRightDashed, IconArrowNarrowLeftDashed, IconCopy, IconBr
 import StarRating from "./StarRating";
 import { useCounterStore } from '../../store/useCounterStore'
 
+/* Buttons here were dark gray slabs that lightened on hover. */
+const PRIMARY_BUTTON =
+  "inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-gray-800 cursor-pointer";
+
+
 
 const CommentsForm = (props) => {
 
@@ -191,7 +196,7 @@ const CommentsForm = (props) => {
 
 				</div>
 
-				<div className="p-2 text-center hover:bg-gray-400 rounded-sm cursor-pointer px-4 bg-gray-600 text-white"
+				<div className={`${PRIMARY_BUTTON} justify-center`}
 					onClick={ev => {
 						submit_comment()
 					}}

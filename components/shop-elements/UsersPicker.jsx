@@ -183,7 +183,7 @@ const UsersPicker = (props) => {
 
 
 			{loading && (
-				<div className="hover:bg-gray-400 rounded-sm cursor-pointer px-2 py-2 bg-gray-600 text-white"><Spinner /></div>
+				<div className="px-2 py-2 text-gray-400"><Spinner size={18} /></div>
 			)}
 			{!loading && (
 				<>
