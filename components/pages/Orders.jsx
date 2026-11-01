@@ -4,7 +4,8 @@ import React from "react";
 import { useRouter } from "next/navigation";
 
 import EntriesTable from "../../components/EntriesTable";
-import { useState, useEffect, useContext, useRef } from "react";
+import { loadOrdersQuery, saveOrdersQuery } from "../../lib/ordersQuery";
+import { useState, useEffect, useContext } from "react";
 import Spinner from "../../components/Spinner";
 import { IconFilter, IconFileDollar, IconEyeShare, IconTrash, IconCopy, IconDotsVertical, IconPackages, IconX, IconEdit, IconPrinter, IconListNumbers, IconMapDollar, IconSquareCheck, IconSquareCheckFilled, IconListDetails, IconNotes } from "@tabler/icons-react";
 
@@ -102,7 +103,6 @@ const Orders = (props) => {
   var [sumData, setsumData] = useState(null);
   var [showProfit, setshowProfit] = useState(true);
 
-  const hasFetched = useRef(false);
 
   function onSelectRows(rows) {
 
@@ -482,18 +482,38 @@ const Orders = (props) => {
   }
 
 
+  /*
+    The saved query comes back in an effect, not in the useState above, because
+    the server has no sessionStorage and the first render has to match its HTML.
+
+    Nothing is fetched until then. Responses are not checked for being current,
+    so a fetch of the defaults could land after the restored one and replace it.
+    The merge is built on `previous` because EntriesTable reports its own copy of
+    the defaults as it mounts, just before this runs.
+  */
+  const [queryRestored, setqueryRestored] = useState(false);
+
   useEffect(() => {
+    const saved = loadOrdersQuery();
 
-    fetchPosts();
+    if (saved) {
+      setqueryPrams((previous) => ({ ...previous, ...saved }));
+    }
 
-  }, [queryPrams]);
-
-  useEffect(() => {
-    if (hasFetched.current) return;
-
-    hasFetched.current = true;
-    fetchPosts();
+    setqueryRestored(true);
   }, []);
+
+  useEffect(() => {
+
+    /* After a reload the token arrives from an effect above this page. */
+    if (!queryRestored || !token) {
+      return;
+    }
+
+    saveOrdersQuery(queryPrams);
+    fetchPosts();
+
+  }, [queryRestored, queryPrams, token]);
 
 
   function onChangeQueryPrams(queryPrams) {

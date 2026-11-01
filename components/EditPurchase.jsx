@@ -328,7 +328,7 @@ const EditPurchase = (props) => {
       setpurchaseData({
         ...purchaseData,
         supplier_id: user?.id,
-        billing_address: user?.billing_address1 + user?.billing_address2,
+        billing_address: [user?.billing_address1, user?.billing_address2].filter(Boolean).join(" "),
         billing_name: user?.name,
         billing_phone: user?.phone,
         billing_email: user?.email,
@@ -882,7 +882,7 @@ const EditPurchase = (props) => {
                     <div className="flex items-center gap-2"> {customerData?.city}</div>
                     <div className="flex items-center gap-2"> {customerData?.country}</div>
                     <div className="flex items-center gap-2 text-white bg-gray-600 text-sm px-3 py-1 rounded-sm cursor-pointer" onClick={() => {
-                      navigator.clipboard.writeText(customerData?.billing_address1 + " " + customerData?.billing_address2 + " " + customerData?.city + " " + customerData?.country)
+                      navigator.clipboard.writeText([customerData?.billing_address1, customerData?.billing_address2, customerData?.city, customerData?.country].filter(Boolean).join(" "))
                       addNotification({ type: 'success', title: 'Address Copied', content: "Address Copied" })
                     }}>
                       <IconCopy size={16} /> Copy

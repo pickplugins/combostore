@@ -32,6 +32,7 @@ import { getEpsConfig } from "../../../lib/eps";
 import { getAamarPayConfig } from "../../../lib/aamarpay";
 import { getBkashConfig } from "../../../lib/bkash";
 import { getNagadConfig } from "../../../lib/nagad";
+import { loadCheckoutDraft, saveCheckoutDraft, clearCheckoutDraft } from "../../../lib/checkoutDraft";
 
 
 
@@ -161,7 +162,7 @@ const CheckoutView = (props) => {
 		"billing_name": userDataX?.name,
 		"billing_address1": userDataX?.billing_address1,
 		"billing_address2": userDataX?.billing_address2,
-		"billing_address": userDataX?.billing_address1 + " " + userDataX?.billing_address2,
+		"billing_address": [userDataX?.billing_address1, userDataX?.billing_address2].filter(Boolean).join(" "),
 		"billing_phone": userDataX?.phone,
 		"billing_email": userDataX?.email,
 		"billing_country": userDataX?.billing_country ?? defaultCountry,
@@ -518,6 +519,39 @@ const CheckoutView = (props) => {
 	}, []);
 
 
+	/*
+		Put back what was typed before leaving checkout. This has to stay below
+		the effects above: two of them replace checkoutData with the copy from
+		this first render, which would wipe anything restored ahead of them.
+
+		It runs in an effect, not in the useState above, because the server has
+		no localStorage and the first render has to match what it sent.
+	*/
+	const [draftLoaded, setdraftLoaded] = useState(false);
+	const orderPlaced = useRef(false);
+
+	useEffect(() => {
+		const draft = loadCheckoutDraft(userDataX?.id);
+
+		setcheckoutData((previous) => ({ ...previous, ...draft }));
+		setdraftLoaded(true);
+	}, []);
+
+	useEffect(() => {
+		if (draftLoaded && !orderPlaced.current) {
+			saveCheckoutDraft(userDataX?.id, checkoutData);
+		}
+	}, [draftLoaded, checkoutData]);
+
+
+	/* Stops saving as well as clearing: emptying the cart can still update
+		 checkoutData, and that must not write the details back. */
+	function discardDraft() {
+		orderPlaced.current = true;
+		clearCheckoutDraft();
+	}
+
+
 
 
 
@@ -775,6 +809,7 @@ const CheckoutView = (props) => {
 			content: result?.message || '',
 		});
 
+		discardDraft();
 		resetCartItems();
 		setcartToggle(!cartToggle);
 
@@ -843,6 +878,7 @@ const CheckoutView = (props) => {
 						var message = res?.message;
 
 						if (status == 'success') {
+							discardDraft();
 							addNotification({ type: 'success', title: 'Order Created', content: message })
 							resetCartItems();
 							setcartToggle(!cartToggle)
@@ -1071,6 +1107,7 @@ const CheckoutView = (props) => {
 						var message = res?.message;
 
 						if (status == 'success') {
+							discardDraft();
 							addNotification({ type: 'success', title: 'Order Created', content: message })
 							resetCartItems();
 							setcartToggle(!cartToggle)

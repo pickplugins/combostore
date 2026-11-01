@@ -3,6 +3,8 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { useCounterStore } from '../store/useCounterStore'
 import { useRouter } from "next/navigation";
+import { clearCheckoutDraft } from "@/lib/checkoutDraft";
+import { clearOrdersQuery } from "@/lib/ordersQuery";
 
 
 const AuthContext = createContext(null);
@@ -177,6 +179,8 @@ export function AuthProvider({ children }) {
     localStorage.removeItem("token");
     setToken(null);
     setUserDataX(null);
+    clearCheckoutDraft();
+    clearOrdersQuery();
     router.push("/login");
   };
 

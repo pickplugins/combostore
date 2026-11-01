@@ -9,6 +9,7 @@ import { useAuthStore } from "@/store/authStore";
 import Spinner from "@/components/Spinner";
 import InvoiceWithPDF from "@/components/InvoiceWithPDF";
 import { sendMetaEvent } from "@/lib/sendMetaEvent";
+import { clearCheckoutDraft } from "@/lib/checkoutDraft";
 import { getPageTemplate } from "@/lib/getPageTemplate";
 import PageBuilderContent from "@/components/PageBuilder/PageBuilderContent";
 
@@ -209,6 +210,9 @@ const page = ({ params }) => {
     if (orderData?.payment_status !== 'paid') {
       return;
     }
+
+    /* A buyer sent back from a failed payment still needs what they typed. */
+    clearCheckoutDraft();
 
     const matched = REDIRECT_PAYMENT_MARKERS.filter(key => {
       try {
