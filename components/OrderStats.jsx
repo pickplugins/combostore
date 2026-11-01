@@ -19,7 +19,14 @@ const REQUEST_DEFAULTS = { keyword: "", page: 1, order: "DESC", per_page: 10 };
   the same green. Changing a colour or reordering means checking it again.
 */
 const SERIES = [
+  { id: "total_amount", label: "Total amount", color: "#2a78d6", source: "orders", field: "total_amount" },
+  { id: "discount_amount", label: "Discount", color: "#eb6834", source: "orders", field: "discount_amount" },
+  { id: "gross_profit", label: "Gross profit", color: "#1baf7a", source: "orders", field: "gross_profit" },
+  { id: "shipping_amount", label: "Shipping", color: "#eda100", source: "orders", field: "shipping_amount" },
   { id: "subtotal_amount", label: "Subtotal", color: "#e87ba4", source: "orders", field: "subtotal_amount" },
+  { id: "net_profit", label: "Net profit", color: "#008300", source: "orders", field: "net_profit" },
+  { id: "purchases", label: "Purchases", color: "#6250d6", source: "purchases", field: "total_amount" },
+  { id: "expenses", label: "Expenses", color: "#e34948", source: "expenses", field: "total_amount" },
 ];
 
 /* Eight lines at once is unreadable, so the chart opens on the three that tell
@@ -28,7 +35,14 @@ const INITIAL_LINES = ["total_amount", "net_profit", "expenses"];
 
 /* Tiles read as an income statement; the chart keeps the palette's order. */
 const TILE_ORDER = [
-  // "subtotal_amount",
+  "total_amount",
+  "subtotal_amount",
+  "gross_profit",
+  "net_profit",
+  "discount_amount",
+  "shipping_amount",
+  "expenses",
+  "purchases",
 ];
 
 const MONEY_FORMAT = { minimumFractionDigits: 2, maximumFractionDigits: 2 };
@@ -59,7 +73,7 @@ const StatTile = ({ label, color, value, moneyPrefix, moneySuffix, blurred }) =>
  * Sales totals and their trend for whatever the Dashboard asks for.
  *
  * Props:
- *   query       What to show: the Dashboard's date range and query filters.
+ *   query       What to show: the date range and the `OrderStatsFilters` fields.
  *   refreshKey  Change it to load the same query again.
  */
 const OrderStats = ({ query, refreshKey }) => {
@@ -77,7 +91,7 @@ const OrderStats = ({ query, refreshKey }) => {
 
   var waitingForDates = query.range == 'custom' && !(query.first_date && query.last_date);
 
-  /* The Dashboard builds a new `query` object on every render, so the request
+  /* The screen builds a new `query` object on every render, so the request
      follows what is in it rather than which object it is. */
   var requestBody = JSON.stringify({ ...REQUEST_DEFAULTS, ...query });
 
@@ -117,8 +131,6 @@ const OrderStats = ({ query, refreshKey }) => {
         if (!isCurrent()) {
           return;
         }
-
-        console.log("Stats response:", res);
 
         const rows = { orders: res?.orders || [], expenses: res?.expenses || [], purchases: res?.purchases || [] };
         const labels = rows.orders.map(row => row.order_date);
@@ -202,6 +214,24 @@ const OrderStats = ({ query, refreshKey }) => {
           keeps its shape while the numbers change. */}
       <div className={`flex flex-col gap-4 transition-opacity ${loading ? "opacity-60" : ""}`} aria-busy={loading}>
 
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          {TILE_ORDER.map((id) => {
+
+            var series = SERIES.find(item => item.id == id);
+
+            return (
+              <StatTile
+                key={id}
+                label={series.label}
+                color={series.color}
+                value={totals[id]}
+                moneyPrefix={moneyPrefix}
+                moneySuffix={moneySuffix}
+                blurred={privacyMode}
+              />
+            )
+          })}
+        </div>
 
         {/* With nothing loaded the chart would say nothing was recorded, which
             neither a failed request nor a half-chosen range shows. */}

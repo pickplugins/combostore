@@ -10,8 +10,6 @@ const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
 import { IconCopy, IconEyeShare, IconDotsVertical, IconEdit, IconTrash, IconStarFilled, IconStar, IconFileDollar, IconExclamationCircle, IconRosetteDiscountCheck, IconX, IconZoomExclamationFilled, IconPlaylistX } from "@tabler/icons-react";
 import PopoverButton from "../../components/PopoverButton";
-import ProductEdit from "../../components/shop-elements/ProductEdit";
-import ProductBulkUpdate from "../../components/shop-elements/ProductBulkUpdate";
 
 import Image from "next/image";
 

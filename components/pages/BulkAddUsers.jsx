@@ -10,10 +10,6 @@ import { useCounterStore } from '../../store/useCounterStore'
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
 import { IconCopy, IconEyeShare, IconDotsVertical, IconEdit, IconTrash, IconStarFilled, IconStar, IconFileDollar, IconExclamationCircle, IconRosetteDiscountCheck, IconX, IconZoomExclamationFilled, IconPlaylistX } from "@tabler/icons-react";
-import PopoverButton from "../../components/PopoverButton";
-import ProductEdit from "../../components/shop-elements/ProductEdit";
-import TermsPicker from "../../components/shop-elements/TermsPicker";
-import TagsPicker from "../../components/shop-elements/TagsPicker";
 
 
 
