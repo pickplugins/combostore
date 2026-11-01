@@ -26,7 +26,7 @@ import {
  * Set up at https://dashboard.stripe.com/webhooks against
  * `<NEXT_PUBLIC_APP_URL>/api/stripe/webhook`, subscribed to
  * `checkout.session.completed` and `checkout.session.async_payment_succeeded`.
- * The signing secret goes in the dashboard's Stripe panel, or the env.
+ * The signing secret goes in the dashboard's Stripe panel.
  */
 
 /* The session is paid by the time either of these fires. */
@@ -45,7 +45,7 @@ export async function POST(request) {
       the endpoint as failing is how they find out.
     */
     console.error(
-      "A Stripe webhook arrived but no signing secret is set, in the dashboard or the env."
+      "A Stripe webhook arrived but no signing secret is set in the dashboard."
     );
 
     return NextResponse.json(

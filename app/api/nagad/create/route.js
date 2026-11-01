@@ -1,102 +1,70 @@
 import { NextResponse } from "next/server";
-import crypto from "crypto";
 
+import {
+  createNagadPayment,
+  getOrderByHash,
+  resolveNagadConfig,
+} from "@/lib/nagad-server";
+
+/** The buyer's IPv4 address, which Nagad asks for, if the request carries one. */
+function clientIp(request) {
+  const forwarded = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+  const address = String(forwarded || request.headers.get("x-real-ip") || "")
+    .replace(/^::ffff:/, "");
+
+  return /^\d{1,3}(\.\d{1,3}){3}$/.test(address) ? address : undefined;
+}
+
+/**
+ * Start a Nagad payment for an order that already exists.
+ *
+ * The browser sends an order hash and nothing else. The amount is read from the
+ * order row, so there is no total here to tamper with.
+ */
 export async function POST(request) {
   try {
-    const { orderId, amount, items } = await request.json();
+    const body = await request.json().catch(() => ({}));
+    const orderHash = String(body?.order_hash || "").trim();
 
-    if (!orderId || !amount || Number(amount) <= 0) {
+    if (!(await resolveNagadConfig()).configured) {
       return NextResponse.json(
-        { message: "Invalid order information." },
+        { message: "Nagad is not configured for this store." },
+        { status: 503 }
+      );
+    }
+
+    if (!orderHash) {
+      return NextResponse.json(
+        { message: "No order was given to pay for." },
         { status: 400 }
       );
     }
 
-    // Save a PENDING order in your database first.
-    // await db.order.create({
-    //   data: {
-    //     orderId,
-    //     amount,
-    //     status: "PENDING",
-    //     items: JSON.stringify(items),
-    //   },
-    // });
+    const order = await getOrderByHash(orderHash);
 
-    const baseUrl = process.env.NEXT_PUBLIC_STORE_URL;
-
-    const callbackUrl = `${baseUrl}/payment/nagad/callback`;
-    const cancelUrl = `${baseUrl}/payment/nagad/cancel`;
-
-    /*
-      IMPORTANT:
-      Replace this sample body, endpoint, encryption, and signature logic
-      with the exact Nagad merchant API specification given to you.
-
-      Never expose:
-      - NAGAD_MERCHANT_ID
-      - NAGAD_MERCHANT_PRIVATE_KEY
-      - NAGAD_GATEWAY_PUBLIC_KEY
-    */
-
-    const paymentPayload = {
-      merchantId: process.env.NAGAD_MERCHANT_ID,
-      orderId,
-      amount: String(amount),
-      currencyCode: "050",
-      challenge: crypto.randomUUID(),
-      callbackUrl,
-      cancelUrl,
-    };
-
-    /*
-      Example only:
-      Nagad commonly requires encrypted/signed payloads.
-      Your actual integration may use RSA encryption and a signature
-      generated with your merchant private key.
-    */
-
-    const nagadResponse = await fetch(
-      process.env.NAGAD_INITIALIZE_PAYMENT_URL,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(paymentPayload),
-      }
-    );
-
-    const nagadData = await nagadResponse.json();
-
-    if (!nagadResponse.ok) {
-
+    if (!order?.id) {
       return NextResponse.json(
-        { message: "Nagad payment initialization failed." },
-        { status: 500 }
+        { message: "That order could not be found." },
+        { status: 404 }
       );
     }
 
-    /*
-      Change this based on Nagad’s real response.
-      It may be `callBackUrl`, `paymentUrl`, or another field.
-    */
-    const paymentUrl = nagadData.paymentUrl;
-
-    if (!paymentUrl) {
+    /* Already settled - sending them to Nagad would charge twice. */
+    if (String(order.payment_status).toLowerCase() === "paid") {
       return NextResponse.json(
-        { message: "Nagad did not return a payment URL." },
-        { status: 500 }
+        { message: "This order has already been paid.", alreadyPaid: true },
+        { status: 409 }
       );
     }
 
-    return NextResponse.json({
-      success: true,
-      paymentUrl,
-    });
+    const payment = await createNagadPayment(order, orderHash, clientIp(request));
+
+    return NextResponse.json({ paymentUrl: payment.paymentUrl });
   } catch (error) {
+    console.error("Nagad create failed", error);
 
     return NextResponse.json(
-      { message: "Unable to create Nagad payment." },
+      { message: error?.message || "Unable to start payment" },
       { status: 500 }
     );
   }

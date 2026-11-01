@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 
 import {
-  aamarPayConfig,
   createAamarPayPayment,
   getOrderByHash,
+  resolveAamarPayConfig,
 } from "@/lib/aamarpay-server";
 
 /**
@@ -18,7 +18,7 @@ export async function POST(request) {
     const body = await request.json().catch(() => ({}));
     const orderHash = String(body?.order_hash || "").trim();
 
-    if (!aamarPayConfig().configured) {
+    if (!(await resolveAamarPayConfig()).configured) {
       return NextResponse.json(
         { message: "aamarPay is not configured for this store." },
         { status: 503 }

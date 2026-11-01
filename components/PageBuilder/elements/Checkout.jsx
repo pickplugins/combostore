@@ -5,7 +5,9 @@ import { useState, useEffect, useContext, useRef } from "react";
 import { useCategory } from "../context/CategoryContext";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import Image from "next/image";
 import { useUtilsStore } from '../../../store/useUtilsStore';
+import { useCounterStore } from '../../../store/useCounterStore';
 import DropDown from "../../../components/DropDown";
 import ToggleContent from "../../../components/ToggleContent";
 import Spinner from "../../../components/Spinner";
@@ -54,8 +56,16 @@ const Checkout = (props) => {
 
 	const [archiveData, setarchiveData] = useState({});
 
-	var settings = {}
+	const settings = useCounterStore((state) => state.settings);
+	const fetchSettings = useCounterStore((state) => state.fetchSettings);
+	const paymentGatewaysArgs = useCounterStore((state) => state.paymentGatewaysArgs);
 	var coupons = {}
+
+	useEffect(() => {
+		if (!settings) {
+			fetchSettings();
+		}
+	}, [settings, fetchSettings]);
 
 
 	const paymentGateways = settings?.paymentGateways;
@@ -1477,9 +1487,11 @@ const Checkout = (props) => {
 
 									if (enable) {
 										return (
-											<div key={key} className={`flex items-center cursor-pointer gap-2 p-2 rounded-sm border border-2 text-sm  ${checkoutData.payment_method == key ? 'border-gray-600' : 'border-gray-200'}`} onClick={ev => {
-												setcheckoutData({ ...checkoutData, payment_method: key })
-											}}>
+											/* Display only: choosing a method here would render the
+											   payment branches below, and several of those are live
+											   buttons this preview must not run. CheckoutView has the
+											   selectable tiles. */
+											<div key={key} className="flex items-center gap-2 p-2 rounded-sm border border-2 text-sm border-gray-200">
 
 
 
@@ -1493,7 +1505,11 @@ const Checkout = (props) => {
 													<IconCircleDashed size={16} />
 												)}
 
-												<div>{paymentGatewaysArgs[key]?.label}</div>
+												<div>{paymentGatewaysArgs[key]?.label ?? method?.label ?? key}</div>
+
+												{method?.logo?.src && (
+													<Image unoptimized src={method.logo.src} width={100} height={100} alt="" className="ml-auto h-6 w-auto max-w-[80px] object-contain" />
+												)}
 
 											</div>
 										)

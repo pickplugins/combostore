@@ -176,28 +176,50 @@ export const useCounterStore = create((set) => ({
       "value": "roketPersonal",
     },
 
-    "paypal": {
+    // "paypal": {
 
-      "id": 'paypal',
-      "enable": false,
-      "comingSoon": true,
-      "label": "PayPal",
-      "value": "paypal",
-    },
-    "stripe": {
+    //   "id": 'paypal',
+    //   "enable": false,
+    //   "comingSoon": true,
+    //   "label": "PayPal",
+    //   "value": "paypal",
+    // },
+    // "stripe": {
 
-      "id": 'stripe',
-      "enable": false,
-      "label": "Stripe (Card)",
-      "value": "stripe",
-    },
+    //   "id": 'stripe',
+    //   "enable": false,
+    //   "comingSoon": true,
+    //   "label": "Stripe (Card)",
+    //   "value": "stripe",
+    // },
     "aamarpay": {
 
       "id": 'aamarpay',
       "enable": false,
-      "comingSoon": true,
+      // "comingSoon": true,
       "label": "aamarPay",
       "value": "aamarpay",
+    },
+    "eps": {
+
+      "id": 'eps',
+      "enable": false,
+      "label": "EPS",
+      "value": "eps",
+    },
+    "bkash": {
+
+      "id": 'bkash',
+      "enable": false,
+      "label": "bKash",
+      "value": "bkash",
+    },
+    "nagad": {
+
+      "id": 'nagad',
+      "enable": false,
+      "label": "Nagad",
+      "value": "nagad",
     },
     "sslcommerz": {
 
@@ -227,17 +249,9 @@ export const useCounterStore = create((set) => ({
 
 
 
-    // "nagad": {
-    //   "label": "Nagad",
-    //   "value": "nagad",
-    // },
     // "roket": {
     //   "label": "Roket",
     //   "value": "roket",
-    // },
-    // "bkash": {
-    //   "label": "Bkash",
-    //   "value": "bkash",
     // },
     // "sslcommerz": {
     //   "label": "SSLCommerz",
@@ -246,10 +260,6 @@ export const useCounterStore = create((set) => ({
     // "aamarpay": {
     //   "label": "aamarPay",
     //   "value": "aamarpay",
-    // },
-    // "eps": {
-    //   "label": "EPS",
-    //   "value": "eps",
     // },
   },
   paymentGatewaysArgs: {
@@ -296,6 +306,10 @@ export const useCounterStore = create((set) => ({
     "aamarpay": {
       "label": "aamarPay",
       "value": "aamarpay",
+    },
+    "eps": {
+      "label": "EPS",
+      "value": "eps",
     },
     "paypal": {
       "label": "PayPal",

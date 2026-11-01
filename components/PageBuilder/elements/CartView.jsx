@@ -25,7 +25,7 @@ const CartView = (props) => {
 	var tag = options?.tag ?? 'h1';
 
 
-	const trackPageVisit = useUtilsStore((state) => state.trackPageVisit);
+	// const trackPageVisit = useUtilsStore((state) => state.trackPageVisit);
 
 	const { cartToggle, setcartToggle, notifications, addNotification, cartStep, setcartStep, cartItems, addCartItems, removeCartItems, resetCartItems, updateCartItems, userDataX, setUserDataX, navToggle, setnavToggle, lang, coupons, setCoupons, cartTotalPay, setcartTotalPay, cartTotal, setcartTotal, shippingMethod, setshippingMethod, shippingCost, setshippingCost, cartDiscount } = useCounterStore()
 

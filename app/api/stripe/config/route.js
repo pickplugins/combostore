@@ -14,10 +14,9 @@ function webhookUrl() {
 /**
  * What the browser may know about Stripe.
  *
- * The credentials can come from the dashboard's own settings or from the server
- * env, and either way they stay on the server: this route answers with facts
- * *about* them, never the values. That is what the checkout needs in order to
- * decide whether to offer cards at all - a store can have the method switched
+ * The credentials come from the dashboard's settings and stay on the server:
+ * this route answers with facts *about* them, never the values. That is what
+ * the checkout needs in order to decide whether to offer cards at all - a store can have the method switched
  * on with no key behind it, and buyers would otherwise meet an error at the
  * last step - plus the one thing needed for a label, which is the currency a
  * card will actually be charged in.
@@ -40,12 +39,10 @@ export async function GET(request) {
         livemode: config.livemode,
         /*
           For the dashboard, which has no other way to tell a store why cards
-          are not working: whether each secret exists, and which side it came
-          from - never the secret itself.
+          are not working: whether the secret exists, never the secret itself.
         */
         webhook_configured: Boolean(config.webhookSecret),
         webhook_url: webhookUrl(),
-        source: config.source,
       },
     },
     /* Settings are already cached for a minute inside resolveStripeConfig;

@@ -21,6 +21,10 @@ import Tab from '../components/Tab';
 import ToggleContent from '../components/ToggleContent';
 import GalleryPicker from "../components/shop-elements/GalleryPicker";
 import { getStripeConfig } from "../lib/stripe";
+import { getEpsConfig } from "../lib/eps";
+import { getAamarPayConfig } from "../lib/aamarpay";
+import { getBkashConfig } from "../lib/bkash";
+import { getNagadConfig } from "../lib/nagad";
 
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 const appUrl = process.env.NEXT_PUBLIC_STORE_URL;
@@ -70,15 +74,119 @@ const SettingsGlobal = (props) => {
 
 
   /*
-    Stripe's secret key lives in the server env, not in these settings - the
-    storefront reads the settings blob through a public endpoint, so a secret
-    put here would be served to anyone who asked for it. That leaves the
-    dashboard unable to show the key, and with no way to tell whether one
-    exists either, so it asks the server: `enable` here and a working key are
-    two different things, and a store that has only the first would switch
-    cards on and hear about it from its buyers.
+    Stripe's key is typed on this page, but what the server sees is what counts:
+    `enable` here and a working key are two different things, and a store that
+    has only the first would switch cards on and hear about it from its buyers.
+    So the panel asks the server what is in force.
   */
   var [stripeStatus, setstripeStatus] = useState(null);
+
+  /*
+    EPS is the same story as Stripe, and more so: it needs all five of its
+    credentials. Without this an admin switching EPS on with one missing would
+    see nothing wrong and hear about it from buyers.
+  */
+  var [epsStatus, setepsStatus] = useState(null);
+
+  /*
+    And aamarPay, whose Store ID and token fields on this page are the only
+    place its credentials come from. This is whether the server sees both.
+  */
+  var [aamarpayStatus, setaamarpayStatus] = useState(null);
+
+  /* bKash too: what its panel shows is what the server sees. */
+  var [bkashStatus, setbkashStatus] = useState(null);
+
+  /* And Nagad, whose keys only count here once the server can parse them. */
+  var [nagadStatus, setnagadStatus] = useState(null);
+
+  useEffect(() => {
+
+    let cancelled = false;
+
+    getNagadConfig()
+      .then(config => {
+        if (!cancelled) {
+          setnagadStatus(config);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setnagadStatus(null);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+
+  }, []);
+
+  useEffect(() => {
+
+    let cancelled = false;
+
+    getBkashConfig()
+      .then(config => {
+        if (!cancelled) {
+          setbkashStatus(config);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setbkashStatus(null);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+
+  }, []);
+
+  useEffect(() => {
+
+    let cancelled = false;
+
+    getAamarPayConfig()
+      .then(config => {
+        if (!cancelled) {
+          setaamarpayStatus(config);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setaamarpayStatus(null);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+
+  }, []);
+
+  useEffect(() => {
+
+    let cancelled = false;
+
+    getEpsConfig()
+      .then(config => {
+        if (!cancelled) {
+          setepsStatus(config);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setepsStatus(null);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+
+  }, []);
 
   useEffect(() => {
 
@@ -856,11 +964,20 @@ const SettingsGlobal = (props) => {
                 The Stripe panel reports what the server is actually using,
                 which has just changed. Asked again rather than assumed from
                 what was typed - and with `fresh`, because the server caches
-                the settings it reads. A key left blank so the env takes over,
-                or one WordPress did not store, then shows as what is really
-                in force.
+                the settings it reads. A key WordPress did not store then shows
+                as missing rather than in use.
               */
               getStripeConfig({ fresh: true }).then(setstripeStatus).catch(() => { })
+
+              /*
+                And EPS's panel, for the same reason and in the same way: the
+                credentials just typed are in the blob that was saved, so what
+                is in force has to be asked for again rather than assumed.
+              */
+              getEpsConfig({ fresh: true }).then(setepsStatus).catch(() => { })
+              getAamarPayConfig({ fresh: true }).then(setaamarpayStatus).catch(() => { })
+              getBkashConfig({ fresh: true }).then(setbkashStatus).catch(() => { })
+              getNagadConfig({ fresh: true }).then(setnagadStatus).catch(() => { })
             }
             if (status == 'failed') {
               addNotification({ type: 'error', title: 'Settings update failed', content: message })
@@ -979,6 +1096,43 @@ const SettingsGlobal = (props) => {
     );
   }
 
+
+  /*
+    The logo row of a gateway's panel. A plain function rather than a component:
+    it is called inline in every gateway's block, right after its Enable row,
+    and a component declared in here would remount the picker on each keystroke.
+  */
+  function gatewayLogoRow(providerKey) {
+
+    var logo = settingsData?.paymentGateways?.[providerKey]?.logo;
+
+    return (
+      <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+        <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Logo")}</div>
+        <div className="">
+          <div className="flex flex-col gap-3">
+            {logo?.src && (
+              <div className="w-fit border border-solid border-gray-400 rounded-sm overflow-hidden">
+                <Image unoptimized src={logo.src} width={100} height={100} alt={``} />
+              </div>
+            )}
+            <GalleryPicker popupClass="fixed h-[700px] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50" onPick={(media) => {
+              setsettingsData(prev => ({
+                ...prev,
+                paymentGateways: {
+                  ...prev.paymentGateways,
+                  [providerKey]: {
+                    ...prev.paymentGateways[providerKey],
+                    logo: { id: media.id, title: media.title, src: media.src }
+                  }
+                }
+              }));
+            }} />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   function PaymentGatewaysItemTitle({ item, enable, index }) {
 
@@ -1409,8 +1563,10 @@ const SettingsGlobal = (props) => {
               >{("Cancel")}</button>
             </div>
           )}
+
           <button
             type='button'
+            disabled={loading}
             className={PRIMARY_BUTTON}
 
             onClick={ev => {
@@ -1430,7 +1586,9 @@ const SettingsGlobal = (props) => {
 
 
 
-      <Tabs activeTab={'store'}
+      <Tabs
+        disable={loading}
+        activeTab={'store'}
         orientation="vertical"
         activeClass="active-tab "
         wrapperClass=" gap-6"
@@ -2317,343 +2475,342 @@ const SettingsGlobal = (props) => {
                                 </div>
                               </div>
 
+                              {settingsData?.paymentGateways?.[providerKey]?.['enable'] && (
+                                <div className="flex flex-col gap-5">
+                                  {gatewayLogoRow(providerKey)}
 
 
 
-                              <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
-                                <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Bank Accounts")}</div>
-                                <div className="">
 
-                                  <div className="flex flex-col gap-5">
+                                  <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                    <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Bank Accounts")}</div>
+                                    <div className="">
 
-                                    <div className={`${PRIMARY_BUTTON} w-fit`} onClick={ev => {
+                                      <div className="flex flex-col gap-5">
 
-                                      // setsettingsData(prev => ({
-                                      //   ...prev,
-                                      //   paymentGateways: {
-                                      //     ...prev.paymentGateways,
-                                      //     [providerKey]: {
-                                      //       ...prev.paymentGateways[providerKey],
-                                      //       ['enable']: !prev.paymentGateways[providerKey]?.['enable']
-                                      //     }
-                                      //   }
-                                      // }));
+                                        <div className={`${PRIMARY_BUTTON} w-fit`} onClick={ev => {
 
-                                      setsettingsData(prev => ({
-                                        ...prev,
-                                        paymentGateways: {
-                                          ...prev.paymentGateways,
-                                          [providerKey]: {
-                                            ...prev.paymentGateways[providerKey],
-                                            ['accounts']: [...(prev.paymentGateways[providerKey]?.['accounts'] || []), {
-                                              "bankName": "",
-                                              "accountNumber": "",
-                                              "accountType": "",
-                                              "branch": "",
-                                              "swiftCode": "",
-                                              "routingNumber": "",
-                                            }]
+                                          // setsettingsData(prev => ({
+                                          //   ...prev,
+                                          //   paymentGateways: {
+                                          //     ...prev.paymentGateways,
+                                          //     [providerKey]: {
+                                          //       ...prev.paymentGateways[providerKey],
+                                          //       ['enable']: !prev.paymentGateways[providerKey]?.['enable']
+                                          //     }
+                                          //   }
+                                          // }));
+
+                                          setsettingsData(prev => ({
+                                            ...prev,
+                                            paymentGateways: {
+                                              ...prev.paymentGateways,
+                                              [providerKey]: {
+                                                ...prev.paymentGateways[providerKey],
+                                                ['accounts']: [...(prev.paymentGateways[providerKey]?.['accounts'] || []), {
+                                                  "bankName": "",
+                                                  "accountNumber": "",
+                                                  "accountType": "",
+                                                  "branch": "",
+                                                  "swiftCode": "",
+                                                  "routingNumber": "",
+                                                }]
+                                              }
+                                            }
+                                          }));
+
+
+
+
+
+
+
+                                        }}>Add</div>
+
+
+
+                                        <div className="flex gap-3 flex-col">
+                                          {settingsData?.paymentGateways?.[providerKey]?.['accounts'] && settingsData?.paymentGateways?.[providerKey]?.['accounts']?.map((item, index) => {
+
+
+
+
+                                            return (
+                                              <ToggleContent key={index} title={<PaymentGatewaysBankItemTitle item={item} title={settingsData?.paymentGateways?.accounts?.[index]?.bankName ?? 'Bank Name'} index={index} />}
+                                                contentClass="bg-gray-200 !text-gray-800 lg:p-4 py-4"
+                                                headerClass=""
+                                                headerTitleClass=""
+                                                wrapperClass="w-full"
+                                              >
+
+                                                <div className="flex flex-col gap-5">
+                                                  <div className="flex flex-wrap gap-2 items-center">
+                                                    <label htmlFor="label" className="lg:w-40">Bank Name</label>
+                                                    <input
+                                                      type="text"
+                                                      name={'bankName'}
+                                                      placeholder={'Bank Name'}
+                                                      className=" px-2 py-1 lg:flex-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
+                                                      value={settingsData?.paymentGateways[providerKey]?.accounts?.[index]?.bankName}
+                                                      onChange={(ev) => {
+                                                        const { name, value } = ev.target;
+
+                                                        var field = 'bankName';
+
+                                                        setsettingsData(prev => {
+                                                          const updatedAccounts = [
+                                                            ...(prev.paymentGateways[providerKey]?.accounts || [])
+                                                          ];
+
+                                                          updatedAccounts[index] = {
+                                                            ...updatedAccounts[index],
+                                                            [field]: value,
+                                                          };
+
+                                                          return {
+                                                            ...prev,
+                                                            paymentGateways: {
+                                                              ...prev.paymentGateways,
+                                                              [providerKey]: {
+                                                                ...prev.paymentGateways[providerKey],
+                                                                accounts: updatedAccounts,
+                                                              },
+                                                            },
+                                                          };
+                                                        });
+
+
+                                                      }}
+                                                    />
+                                                  </div>
+                                                  <div className="flex flex-wrap gap-2 items-center">
+                                                    <label htmlFor="label" className="lg:w-40">Account Number</label>
+                                                    <input
+                                                      type="text"
+                                                      name={'accountNumber'}
+                                                      placeholder={'Account Number'}
+                                                      className=" px-2 py-1 lg:flex-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
+                                                      value={settingsData?.paymentGateways[providerKey]?.accounts?.[index]?.['accountNumber']}
+                                                      onChange={(ev) => {
+                                                        const { name, value } = ev.target;
+                                                        var field = 'accountNumber';
+
+                                                        setsettingsData(prev => {
+                                                          const updatedAccounts = [
+                                                            ...(prev.paymentGateways[providerKey]?.accounts || [])
+                                                          ];
+
+                                                          updatedAccounts[index] = {
+                                                            ...updatedAccounts[index],
+                                                            [field]: value,
+                                                          };
+
+                                                          return {
+                                                            ...prev,
+                                                            paymentGateways: {
+                                                              ...prev.paymentGateways,
+                                                              [providerKey]: {
+                                                                ...prev.paymentGateways[providerKey],
+                                                                accounts: updatedAccounts,
+                                                              },
+                                                            },
+                                                          };
+                                                        });
+                                                      }}
+                                                    />
+                                                  </div>
+                                                  <div className="flex flex-wrap gap-2 items-center">
+                                                    <label htmlFor="label" className="lg:w-40">Account Type</label>
+                                                    <input
+                                                      type="text"
+                                                      name={'accountType'}
+                                                      placeholder={'Account Type'}
+                                                      className=" px-2 py-1 lg:flex-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
+                                                      value={settingsData?.paymentGateways[providerKey]?.accounts?.[index]?.['accountType']}
+                                                      onChange={(ev) => {
+                                                        const { name, value } = ev.target;
+                                                        var field = 'accountType';
+
+                                                        setsettingsData(prev => {
+                                                          const updatedAccounts = [
+                                                            ...(prev.paymentGateways[providerKey]?.accounts || [])
+                                                          ];
+
+                                                          updatedAccounts[index] = {
+                                                            ...updatedAccounts[index],
+                                                            [field]: value,
+                                                          };
+
+                                                          return {
+                                                            ...prev,
+                                                            paymentGateways: {
+                                                              ...prev.paymentGateways,
+                                                              [providerKey]: {
+                                                                ...prev.paymentGateways[providerKey],
+                                                                accounts: updatedAccounts,
+                                                              },
+                                                            },
+                                                          };
+                                                        });
+                                                      }}
+                                                    />
+                                                  </div>
+                                                  <div className="flex flex-wrap gap-2 items-center">
+                                                    <label htmlFor="label" className="lg:w-40">Branch</label>
+                                                    <input
+                                                      type="text"
+                                                      name={'branch'}
+                                                      placeholder={'Branch'}
+                                                      className=" px-2 py-1 lg:flex-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
+                                                      value={settingsData?.paymentGateways[providerKey]?.accounts?.[index]?.['branch']}
+                                                      onChange={(ev) => {
+                                                        const { name, value } = ev.target;
+                                                        var field = 'branch';
+
+                                                        setsettingsData(prev => {
+                                                          const updatedAccounts = [
+                                                            ...(prev.paymentGateways[providerKey]?.accounts || [])
+                                                          ];
+
+                                                          updatedAccounts[index] = {
+                                                            ...updatedAccounts[index],
+                                                            [field]: value,
+                                                          };
+
+                                                          return {
+                                                            ...prev,
+                                                            paymentGateways: {
+                                                              ...prev.paymentGateways,
+                                                              [providerKey]: {
+                                                                ...prev.paymentGateways[providerKey],
+                                                                accounts: updatedAccounts,
+                                                              },
+                                                            },
+                                                          };
+                                                        });
+                                                      }}
+                                                    />
+                                                  </div>
+                                                  <div className="flex flex-wrap gap-2 items-center">
+                                                    <label htmlFor="label" className="lg:w-40">Swift Code</label>
+                                                    <input
+                                                      type="text"
+                                                      name={'swiftCode'}
+                                                      placeholder={'Swift Code'}
+                                                      className=" px-2 py-1 lg:flex-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
+                                                      value={settingsData?.paymentGateways[providerKey]?.accounts?.[index]?.['swiftCode']}
+                                                      onChange={(ev) => {
+                                                        const { name, value } = ev.target;
+                                                        var field = 'swiftCode';
+
+                                                        setsettingsData(prev => {
+                                                          const updatedAccounts = [
+                                                            ...(prev.paymentGateways[providerKey]?.accounts || [])
+                                                          ];
+
+                                                          updatedAccounts[index] = {
+                                                            ...updatedAccounts[index],
+                                                            [field]: value,
+                                                          };
+
+                                                          return {
+                                                            ...prev,
+                                                            paymentGateways: {
+                                                              ...prev.paymentGateways,
+                                                              [providerKey]: {
+                                                                ...prev.paymentGateways[providerKey],
+                                                                accounts: updatedAccounts,
+                                                              },
+                                                            },
+                                                          };
+                                                        });
+                                                      }}
+                                                    />
+                                                  </div>
+                                                  <div className="flex flex-wrap gap-2 items-center">
+                                                    <label htmlFor="label" className="lg:w-40">Routing Number</label>
+                                                    <input
+                                                      type="text"
+                                                      name={'routingNumber'}
+                                                      placeholder={'Routing Number'}
+                                                      className=" px-2 py-1 lg:flex-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
+                                                      value={settingsData?.paymentGateways[providerKey]?.accounts?.[index]?.['routingNumber']}
+                                                      onChange={(ev) => {
+                                                        const { name, value } = ev.target;
+                                                        var field = 'routingNumber';
+
+                                                        setsettingsData(prev => {
+                                                          const updatedAccounts = [
+                                                            ...(prev.paymentGateways[providerKey]?.accounts || [])
+                                                          ];
+
+                                                          updatedAccounts[index] = {
+                                                            ...updatedAccounts[index],
+                                                            [field]: value,
+                                                          };
+
+                                                          return {
+                                                            ...prev,
+                                                            paymentGateways: {
+                                                              ...prev.paymentGateways,
+                                                              [providerKey]: {
+                                                                ...prev.paymentGateways[providerKey],
+                                                                accounts: updatedAccounts,
+                                                              },
+                                                            },
+                                                          };
+                                                        });
+                                                      }}
+                                                    />
+                                                  </div>
+
+
+
+
+
+
+
+                                                </div>
+
+                                              </ToggleContent>
+                                            )
                                           }
-                                        }
-                                      }));
+                                          )}
+                                        </div>
 
-
-
-
-
-
-
-                                    }}>Add</div>
-
-
-
-                                    <div className="flex gap-3 flex-col">
-                                      {settingsData?.paymentGateways?.[providerKey]?.['accounts'] && settingsData?.paymentGateways?.[providerKey]?.['accounts']?.map((item, index) => {
-
-
-
-
-                                        return (
-                                          <ToggleContent key={index} title={<PaymentGatewaysBankItemTitle item={item} title={settingsData?.paymentGateways?.accounts?.[index]?.bankName ?? 'Bank Name'} index={index} />}
-                                            contentClass="bg-gray-200 !text-gray-800 lg:p-4 py-4"
-                                            headerClass=""
-                                            headerTitleClass=""
-                                            wrapperClass="w-full"
-                                          >
-
-                                            <div className="flex flex-col gap-5">
-                                              <div className="flex flex-wrap gap-2 items-center">
-                                                <label htmlFor="label" className="lg:w-40">Bank Name</label>
-                                                <input
-                                                  type="text"
-                                                  name={'bankName'}
-                                                  placeholder={'Bank Name'}
-                                                  className=" px-2 py-1 lg:flex-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                                  value={settingsData?.paymentGateways[providerKey]?.accounts?.[index]?.bankName}
-                                                  onChange={(ev) => {
-                                                    const { name, value } = ev.target;
-
-                                                    var field = 'bankName';
-
-                                                    setsettingsData(prev => {
-                                                      const updatedAccounts = [
-                                                        ...(prev.paymentGateways[providerKey]?.accounts || [])
-                                                      ];
-
-                                                      updatedAccounts[index] = {
-                                                        ...updatedAccounts[index],
-                                                        [field]: value,
-                                                      };
-
-                                                      return {
-                                                        ...prev,
-                                                        paymentGateways: {
-                                                          ...prev.paymentGateways,
-                                                          [providerKey]: {
-                                                            ...prev.paymentGateways[providerKey],
-                                                            accounts: updatedAccounts,
-                                                          },
-                                                        },
-                                                      };
-                                                    });
-
-
-                                                  }}
-                                                />
-                                              </div>
-                                              <div className="flex flex-wrap gap-2 items-center">
-                                                <label htmlFor="label" className="lg:w-40">Account Number</label>
-                                                <input
-                                                  type="text"
-                                                  name={'accountNumber'}
-                                                  placeholder={'Account Number'}
-                                                  className=" px-2 py-1 lg:flex-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                                  value={settingsData?.paymentGateways[providerKey]?.accounts?.[index]?.['accountNumber']}
-                                                  onChange={(ev) => {
-                                                    const { name, value } = ev.target;
-                                                    var field = 'accountNumber';
-
-                                                    setsettingsData(prev => {
-                                                      const updatedAccounts = [
-                                                        ...(prev.paymentGateways[providerKey]?.accounts || [])
-                                                      ];
-
-                                                      updatedAccounts[index] = {
-                                                        ...updatedAccounts[index],
-                                                        [field]: value,
-                                                      };
-
-                                                      return {
-                                                        ...prev,
-                                                        paymentGateways: {
-                                                          ...prev.paymentGateways,
-                                                          [providerKey]: {
-                                                            ...prev.paymentGateways[providerKey],
-                                                            accounts: updatedAccounts,
-                                                          },
-                                                        },
-                                                      };
-                                                    });
-                                                  }}
-                                                />
-                                              </div>
-                                              <div className="flex flex-wrap gap-2 items-center">
-                                                <label htmlFor="label" className="lg:w-40">Account Type</label>
-                                                <input
-                                                  type="text"
-                                                  name={'accountType'}
-                                                  placeholder={'Account Type'}
-                                                  className=" px-2 py-1 lg:flex-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                                  value={settingsData?.paymentGateways[providerKey]?.accounts?.[index]?.['accountType']}
-                                                  onChange={(ev) => {
-                                                    const { name, value } = ev.target;
-                                                    var field = 'accountType';
-
-                                                    setsettingsData(prev => {
-                                                      const updatedAccounts = [
-                                                        ...(prev.paymentGateways[providerKey]?.accounts || [])
-                                                      ];
-
-                                                      updatedAccounts[index] = {
-                                                        ...updatedAccounts[index],
-                                                        [field]: value,
-                                                      };
-
-                                                      return {
-                                                        ...prev,
-                                                        paymentGateways: {
-                                                          ...prev.paymentGateways,
-                                                          [providerKey]: {
-                                                            ...prev.paymentGateways[providerKey],
-                                                            accounts: updatedAccounts,
-                                                          },
-                                                        },
-                                                      };
-                                                    });
-                                                  }}
-                                                />
-                                              </div>
-                                              <div className="flex flex-wrap gap-2 items-center">
-                                                <label htmlFor="label" className="lg:w-40">Branch</label>
-                                                <input
-                                                  type="text"
-                                                  name={'branch'}
-                                                  placeholder={'Branch'}
-                                                  className=" px-2 py-1 lg:flex-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                                  value={settingsData?.paymentGateways[providerKey]?.accounts?.[index]?.['branch']}
-                                                  onChange={(ev) => {
-                                                    const { name, value } = ev.target;
-                                                    var field = 'branch';
-
-                                                    setsettingsData(prev => {
-                                                      const updatedAccounts = [
-                                                        ...(prev.paymentGateways[providerKey]?.accounts || [])
-                                                      ];
-
-                                                      updatedAccounts[index] = {
-                                                        ...updatedAccounts[index],
-                                                        [field]: value,
-                                                      };
-
-                                                      return {
-                                                        ...prev,
-                                                        paymentGateways: {
-                                                          ...prev.paymentGateways,
-                                                          [providerKey]: {
-                                                            ...prev.paymentGateways[providerKey],
-                                                            accounts: updatedAccounts,
-                                                          },
-                                                        },
-                                                      };
-                                                    });
-                                                  }}
-                                                />
-                                              </div>
-                                              <div className="flex flex-wrap gap-2 items-center">
-                                                <label htmlFor="label" className="lg:w-40">Swift Code</label>
-                                                <input
-                                                  type="text"
-                                                  name={'swiftCode'}
-                                                  placeholder={'Swift Code'}
-                                                  className=" px-2 py-1 lg:flex-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                                  value={settingsData?.paymentGateways[providerKey]?.accounts?.[index]?.['swiftCode']}
-                                                  onChange={(ev) => {
-                                                    const { name, value } = ev.target;
-                                                    var field = 'swiftCode';
-
-                                                    setsettingsData(prev => {
-                                                      const updatedAccounts = [
-                                                        ...(prev.paymentGateways[providerKey]?.accounts || [])
-                                                      ];
-
-                                                      updatedAccounts[index] = {
-                                                        ...updatedAccounts[index],
-                                                        [field]: value,
-                                                      };
-
-                                                      return {
-                                                        ...prev,
-                                                        paymentGateways: {
-                                                          ...prev.paymentGateways,
-                                                          [providerKey]: {
-                                                            ...prev.paymentGateways[providerKey],
-                                                            accounts: updatedAccounts,
-                                                          },
-                                                        },
-                                                      };
-                                                    });
-                                                  }}
-                                                />
-                                              </div>
-                                              <div className="flex flex-wrap gap-2 items-center">
-                                                <label htmlFor="label" className="lg:w-40">Routing Number</label>
-                                                <input
-                                                  type="text"
-                                                  name={'routingNumber'}
-                                                  placeholder={'Routing Number'}
-                                                  className=" px-2 py-1 lg:flex-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                                  value={settingsData?.paymentGateways[providerKey]?.accounts?.[index]?.['routingNumber']}
-                                                  onChange={(ev) => {
-                                                    const { name, value } = ev.target;
-                                                    var field = 'routingNumber';
-
-                                                    setsettingsData(prev => {
-                                                      const updatedAccounts = [
-                                                        ...(prev.paymentGateways[providerKey]?.accounts || [])
-                                                      ];
-
-                                                      updatedAccounts[index] = {
-                                                        ...updatedAccounts[index],
-                                                        [field]: value,
-                                                      };
-
-                                                      return {
-                                                        ...prev,
-                                                        paymentGateways: {
-                                                          ...prev.paymentGateways,
-                                                          [providerKey]: {
-                                                            ...prev.paymentGateways[providerKey],
-                                                            accounts: updatedAccounts,
-                                                          },
-                                                        },
-                                                      };
-                                                    });
-                                                  }}
-                                                />
-                                              </div>
-
-
-
-
-
-
-
-                                            </div>
-
-                                          </ToggleContent>
-                                        )
-                                      }
-                                      )}
+                                      </div>
                                     </div>
+                                  </div>
 
+
+                                  <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                    <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Description")}</div>
+                                    <div className="flex gap-3">
+                                      <input
+                                        type="text"
+                                        name={'description'}
+                                        placeholder={'description'}
+                                        className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
+                                        value={settingsData?.paymentGateways?.[providerKey]?.['description']}
+                                        onChange={(ev) => {
+                                          const { name, value } = ev.target;
+                                          setsettingsData(prev => ({
+                                            ...prev,
+                                            paymentGateways: {
+                                              ...prev.paymentGateways,
+                                              [providerKey]: {
+                                                ...prev.paymentGateways[providerKey],
+                                                [name]: value
+                                              }
+                                            }
+                                          }));
+
+                                        }}
+                                      />
+                                    </div>
                                   </div>
                                 </div>
-                              </div>
-
-
-                              <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
-                                <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Description")}</div>
-                                <div className="flex gap-3">
-                                  <input
-                                    type="text"
-                                    name={'description'}
-                                    placeholder={'description'}
-                                    className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                    value={settingsData?.paymentGateways?.[providerKey]?.['description']}
-                                    onChange={(ev) => {
-                                      const { name, value } = ev.target;
-                                      setsettingsData(prev => ({
-                                        ...prev,
-                                        paymentGateways: {
-                                          ...prev.paymentGateways,
-                                          [providerKey]: {
-                                            ...prev.paymentGateways[providerKey],
-                                            [name]: value
-                                          }
-                                        }
-                                      }));
-
-                                    }}
-                                  />
-                                </div>
-                              </div>
-
-
-
-
-
-
-
+                              )}
 
                             </>
                           )}
@@ -2689,165 +2846,194 @@ const SettingsGlobal = (props) => {
                                 </div>
                               </div>
 
+                              {settingsData?.paymentGateways?.[providerKey]?.['enable'] && (
+                                <div className="flex flex-col gap-5">
+                                  {gatewayLogoRow(providerKey)}
 
-                              <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
-                                <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Sandbox")}</div>
-                                <div className="flex gap-3">
-                                  <input type="checkbox" name="sandbox" id={`sandbox-${providerKey}`}
-                                    checked={settingsData?.paymentGateways?.[providerKey]?.['sandbox']}
-                                    className="lg:w-auto w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
 
-                                    value={settingsData?.paymentGateways?.[providerKey]?.['sandbox']}
-                                    onChange={(ev) => {
-                                      const value = ev.target.value;
+                                  <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                    <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Sandbox")}</div>
+                                    <div className="flex gap-3">
+                                      <input type="checkbox" name="sandbox" id={`sandbox-${providerKey}`}
+                                        checked={settingsData?.paymentGateways?.[providerKey]?.['sandbox']}
+                                        className="lg:w-auto w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
 
-                                      setsettingsData(prev => ({
-                                        ...prev,
-                                        paymentGateways: {
-                                          ...prev.paymentGateways,
-                                          [providerKey]: {
-                                            ...prev.paymentGateways[providerKey],
-                                            ['sandbox']: !prev.paymentGateways[providerKey]?.['sandbox']
-                                          }
-                                        }
-                                      }));
+                                        value={settingsData?.paymentGateways?.[providerKey]?.['sandbox']}
+                                        onChange={(ev) => {
+                                          const value = ev.target.value;
 
-                                    }} />
-                                  <label htmlFor={`sandbox-${providerKey}`} className="cursor-pointer">{settingsData?.paymentGateways?.[providerKey]?.['sandbox'] ? "Enabled" : "Disabled"}</label>
+                                          setsettingsData(prev => ({
+                                            ...prev,
+                                            paymentGateways: {
+                                              ...prev.paymentGateways,
+                                              [providerKey]: {
+                                                ...prev.paymentGateways[providerKey],
+                                                ['sandbox']: !prev.paymentGateways[providerKey]?.['sandbox']
+                                              }
+                                            }
+                                          }));
+
+                                        }} />
+                                      <label htmlFor={`sandbox-${providerKey}`} className="cursor-pointer">{settingsData?.paymentGateways?.[providerKey]?.['sandbox'] ? "Enabled" : "Disabled"}</label>
+                                    </div>
+                                  </div>
+
+                                  {/* What the server is actually using, which is
+                                      not always what is typed below: nothing takes
+                                      effect until Save. */}
+                                  <div className="py-1 text-xs">
+                                    {bkashStatus?.enabled && (
+                                      <div className="text-green-700">
+                                        Credentials in use
+                                        {bkashStatus?.sandbox
+                                          ? " - sandbox mode, no real money will move"
+                                          : " - live mode, real payments will be taken"}
+                                      </div>
+                                    )}
+                                    {bkashStatus && !bkashStatus?.enabled && (
+                                      <div className="text-red-600">
+                                        Not configured - bKash will not appear at checkout,
+                                        whatever the switch above says. Still missing:
+                                        {!bkashStatus?.app_configured && " app key or app secret;"}
+                                        {!bkashStatus?.credentials_configured && " username or password;"}
+                                        {" "}Save the page after filling them in.
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                    <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Store ID")}</div>
+                                    <div className="flex gap-3">
+                                      <input
+                                        type="text"
+                                        name={'store_id'}
+                                        placeholder={'store_id'}
+                                        className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
+                                        value={settingsData?.paymentGateways?.[providerKey]?.['store_id']}
+                                        onChange={(ev) => {
+                                          const { name, value } = ev.target;
+                                          setsettingsData(prev => ({
+                                            ...prev,
+                                            paymentGateways: {
+                                              ...prev.paymentGateways,
+                                              [providerKey]: {
+                                                ...prev.paymentGateways[providerKey],
+                                                [name]: value
+                                              }
+                                            }
+                                          }));
+
+                                        }}
+                                      />
+                                    </div>
+                                  </div>
+                                  <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                    <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("App Key")}</div>
+                                    <div className="flex gap-3">
+                                      <input
+                                        type="text"
+                                        name={'client_id'}
+                                        placeholder={'client_id'}
+                                        className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
+                                        value={settingsData?.paymentGateways?.[providerKey]?.['client_id']}
+                                        onChange={(ev) => {
+                                          const { name, value } = ev.target;
+                                          setsettingsData(prev => ({
+                                            ...prev,
+                                            paymentGateways: {
+                                              ...prev.paymentGateways,
+                                              [providerKey]: {
+                                                ...prev.paymentGateways[providerKey],
+                                                [name]: value
+                                              }
+                                            }
+                                          }));
+
+                                        }}
+                                      />
+                                    </div>
+                                  </div>
+
+                                  <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                    <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("App Secret")}</div>
+                                    <div className="flex gap-3">
+                                      <input
+                                        type="text"
+                                        name={'client_secret'}
+                                        placeholder={'client_secret'}
+                                        className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
+                                        value={settingsData?.paymentGateways?.[providerKey]?.['client_secret']}
+                                        onChange={(ev) => {
+                                          const { name, value } = ev.target;
+                                          setsettingsData(prev => ({
+                                            ...prev,
+                                            paymentGateways: {
+                                              ...prev.paymentGateways,
+                                              [providerKey]: {
+                                                ...prev.paymentGateways[providerKey],
+                                                [name]: value
+                                              }
+                                            }
+                                          }));
+
+                                        }}
+                                      />
+                                    </div>
+                                  </div>
+                                  <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                    <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Username")}</div>
+                                    <div className="flex gap-3">
+                                      <input
+                                        type="text"
+                                        name={'username'}
+                                        placeholder={'username'}
+                                        className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
+                                        value={settingsData?.paymentGateways?.[providerKey]?.['username']}
+                                        onChange={(ev) => {
+                                          const { name, value } = ev.target;
+                                          setsettingsData(prev => ({
+                                            ...prev,
+                                            paymentGateways: {
+                                              ...prev.paymentGateways,
+                                              [providerKey]: {
+                                                ...prev.paymentGateways[providerKey],
+                                                [name]: value
+                                              }
+                                            }
+                                          }));
+
+                                        }}
+                                      />
+                                    </div>
+                                  </div>
+                                  <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                    <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Password")}</div>
+                                    <div className="flex gap-3">
+                                      <input
+                                        type="text"
+                                        name={'password'}
+                                        placeholder={'password'}
+                                        className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
+                                        value={settingsData?.paymentGateways?.[providerKey]?.['password']}
+                                        onChange={(ev) => {
+                                          const { name, value } = ev.target;
+                                          setsettingsData(prev => ({
+                                            ...prev,
+                                            paymentGateways: {
+                                              ...prev.paymentGateways,
+                                              [providerKey]: {
+                                                ...prev.paymentGateways[providerKey],
+                                                [name]: value
+                                              }
+                                            }
+                                          }));
+
+                                        }}
+                                      />
+                                    </div>
+                                  </div>
                                 </div>
-                              </div>
-
-                              <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
-                                <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Store ID")}</div>
-                                <div className="flex gap-3">
-                                  <input
-                                    type="text"
-                                    name={'store_id'}
-                                    placeholder={'store_id'}
-                                    className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                    value={settingsData?.paymentGateways?.[providerKey]?.['store_id']}
-                                    onChange={(ev) => {
-                                      const { name, value } = ev.target;
-                                      setsettingsData(prev => ({
-                                        ...prev,
-                                        paymentGateways: {
-                                          ...prev.paymentGateways,
-                                          [providerKey]: {
-                                            ...prev.paymentGateways[providerKey],
-                                            [name]: value
-                                          }
-                                        }
-                                      }));
-
-                                    }}
-                                  />
-                                </div>
-                              </div>
-                              <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
-                                <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Client ID")}</div>
-                                <div className="flex gap-3">
-                                  <input
-                                    type="text"
-                                    name={'client_id'}
-                                    placeholder={'client_id'}
-                                    className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                    value={settingsData?.paymentGateways?.[providerKey]?.['client_id']}
-                                    onChange={(ev) => {
-                                      const { name, value } = ev.target;
-                                      setsettingsData(prev => ({
-                                        ...prev,
-                                        paymentGateways: {
-                                          ...prev.paymentGateways,
-                                          [providerKey]: {
-                                            ...prev.paymentGateways[providerKey],
-                                            [name]: value
-                                          }
-                                        }
-                                      }));
-
-                                    }}
-                                  />
-                                </div>
-                              </div>
-
-                              <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
-                                <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Client Secret")}</div>
-                                <div className="flex gap-3">
-                                  <input
-                                    type="text"
-                                    name={'client_secret'}
-                                    placeholder={'client_secret'}
-                                    className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                    value={settingsData?.paymentGateways?.[providerKey]?.['client_secret']}
-                                    onChange={(ev) => {
-                                      const { name, value } = ev.target;
-                                      setsettingsData(prev => ({
-                                        ...prev,
-                                        paymentGateways: {
-                                          ...prev.paymentGateways,
-                                          [providerKey]: {
-                                            ...prev.paymentGateways[providerKey],
-                                            [name]: value
-                                          }
-                                        }
-                                      }));
-
-                                    }}
-                                  />
-                                </div>
-                              </div>
-                              <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
-                                <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Username")}</div>
-                                <div className="flex gap-3">
-                                  <input
-                                    type="text"
-                                    name={'username'}
-                                    placeholder={'username'}
-                                    className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                    value={settingsData?.paymentGateways?.[providerKey]?.['username']}
-                                    onChange={(ev) => {
-                                      const { name, value } = ev.target;
-                                      setsettingsData(prev => ({
-                                        ...prev,
-                                        paymentGateways: {
-                                          ...prev.paymentGateways,
-                                          [providerKey]: {
-                                            ...prev.paymentGateways[providerKey],
-                                            [name]: value
-                                          }
-                                        }
-                                      }));
-
-                                    }}
-                                  />
-                                </div>
-                              </div>
-                              <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
-                                <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Password")}</div>
-                                <div className="flex gap-3">
-                                  <input
-                                    type="text"
-                                    name={'password'}
-                                    placeholder={'password'}
-                                    className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                    value={settingsData?.paymentGateways?.[providerKey]?.['password']}
-                                    onChange={(ev) => {
-                                      const { name, value } = ev.target;
-                                      setsettingsData(prev => ({
-                                        ...prev,
-                                        paymentGateways: {
-                                          ...prev.paymentGateways,
-                                          [providerKey]: {
-                                            ...prev.paymentGateways[providerKey],
-                                            [name]: value
-                                          }
-                                        }
-                                      }));
-
-                                    }}
-                                  />
-                                </div>
-                              </div>
+                              )}
 
                             </>
                           )}
@@ -2884,60 +3070,67 @@ const SettingsGlobal = (props) => {
                                 </div>
                               </div>
 
+                              {settingsData?.paymentGateways?.[providerKey]?.['enable'] && (
+                                <div className="flex flex-col gap-5">
+                                  {gatewayLogoRow(providerKey)}
 
-                              <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
-                                <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Phone Number")}</div>
-                                <div className="flex gap-3">
-                                  <input
-                                    type="text"
-                                    name={'phone_number'}
-                                    placeholder={'phone_number'}
-                                    className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                    value={settingsData?.paymentGateways?.[providerKey]?.['phone_number']}
-                                    onChange={(ev) => {
-                                      const { name, value } = ev.target;
-                                      setsettingsData(prev => ({
-                                        ...prev,
-                                        paymentGateways: {
-                                          ...prev.paymentGateways,
-                                          [providerKey]: {
-                                            ...prev.paymentGateways[providerKey],
-                                            [name]: value
-                                          }
-                                        }
-                                      }));
 
-                                    }}
-                                  />
+                                  <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                    <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Phone Number")}</div>
+                                    <div className="flex gap-3">
+                                      <input
+                                        type="text"
+                                        name={'phone_number'}
+                                        placeholder={'phone_number'}
+                                        className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
+                                        value={settingsData?.paymentGateways?.[providerKey]?.['phone_number']}
+                                        onChange={(ev) => {
+                                          const { name, value } = ev.target;
+                                          setsettingsData(prev => ({
+                                            ...prev,
+                                            paymentGateways: {
+                                              ...prev.paymentGateways,
+                                              [providerKey]: {
+                                                ...prev.paymentGateways[providerKey],
+                                                [name]: value
+                                              }
+                                            }
+                                          }));
+
+                                        }}
+                                      />
+                                    </div>
+                                  </div>
+
+                                  <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                    <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Description")}</div>
+                                    <div className="flex gap-3">
+                                      <input
+                                        type="text"
+                                        name={'description'}
+                                        placeholder={'description'}
+                                        className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
+                                        value={settingsData?.paymentGateways?.[providerKey]?.['description']}
+                                        onChange={(ev) => {
+                                          const { name, value } = ev.target;
+                                          setsettingsData(prev => ({
+                                            ...prev,
+                                            paymentGateways: {
+                                              ...prev.paymentGateways,
+                                              [providerKey]: {
+                                                ...prev.paymentGateways[providerKey],
+                                                [name]: value
+                                              }
+                                            }
+                                          }));
+
+                                        }}
+                                      />
+                                    </div>
+                                  </div>
                                 </div>
-                              </div>
+                              )}
 
-                              <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
-                                <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Description")}</div>
-                                <div className="flex gap-3">
-                                  <input
-                                    type="text"
-                                    name={'description'}
-                                    placeholder={'description'}
-                                    className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                    value={settingsData?.paymentGateways?.[providerKey]?.['description']}
-                                    onChange={(ev) => {
-                                      const { name, value } = ev.target;
-                                      setsettingsData(prev => ({
-                                        ...prev,
-                                        paymentGateways: {
-                                          ...prev.paymentGateways,
-                                          [providerKey]: {
-                                            ...prev.paymentGateways[providerKey],
-                                            [name]: value
-                                          }
-                                        }
-                                      }));
-
-                                    }}
-                                  />
-                                </div>
-                              </div>
                             </>
                           )}
 
@@ -2973,88 +3166,172 @@ const SettingsGlobal = (props) => {
                                 </div>
                               </div>
 
+                              {settingsData?.paymentGateways?.[providerKey]?.['enable'] && (
+                                <div className="flex flex-col gap-5">
+                                  {gatewayLogoRow(providerKey)}
 
-                              <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
-                                <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Sandbox")}</div>
-                                <div className="flex gap-3">
-                                  <input type="checkbox" name="sandbox" id={`sandbox-${providerKey}`}
-                                    checked={settingsData?.paymentGateways?.[providerKey]?.['sandbox']}
-                                    className="lg:w-auto w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
 
-                                    value={settingsData?.paymentGateways?.[providerKey]?.['sandbox']}
-                                    onChange={(ev) => {
-                                      const value = ev.target.value;
+                                  <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                    <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Sandbox")}</div>
+                                    <div className="flex gap-3">
+                                      <input type="checkbox" name="sandbox" id={`sandbox-${providerKey}`}
+                                        checked={settingsData?.paymentGateways?.[providerKey]?.['sandbox']}
+                                        className="lg:w-auto w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
 
-                                      setsettingsData(prev => ({
-                                        ...prev,
-                                        paymentGateways: {
-                                          ...prev.paymentGateways,
-                                          [providerKey]: {
-                                            ...prev.paymentGateways[providerKey],
-                                            ['sandbox']: !prev.paymentGateways[providerKey]?.['sandbox']
-                                          }
-                                        }
-                                      }));
+                                        value={settingsData?.paymentGateways?.[providerKey]?.['sandbox']}
+                                        onChange={(ev) => {
+                                          const value = ev.target.value;
 
-                                    }} />
-                                  <label htmlFor={`sandbox-${providerKey}`} className="cursor-pointer">{settingsData?.paymentGateways?.[providerKey]?.['sandbox'] ? "Enabled" : "Disabled"}</label>
+                                          setsettingsData(prev => ({
+                                            ...prev,
+                                            paymentGateways: {
+                                              ...prev.paymentGateways,
+                                              [providerKey]: {
+                                                ...prev.paymentGateways[providerKey],
+                                                ['sandbox']: !prev.paymentGateways[providerKey]?.['sandbox']
+                                              }
+                                            }
+                                          }));
+
+                                        }} />
+                                      <label htmlFor={`sandbox-${providerKey}`} className="cursor-pointer">{settingsData?.paymentGateways?.[providerKey]?.['sandbox'] ? "Enabled" : "Disabled"}</label>
+                                    </div>
+                                  </div>
+
+                                  {/* What the server is actually using, which is
+                                      not always what is typed below: nothing takes
+                                      effect until Save. */}
+                                  <div className="py-1 text-xs">
+                                    {nagadStatus?.enabled && (
+                                      <div className="text-green-700">
+                                        Credentials in use
+                                        {nagadStatus?.sandbox
+                                          ? " - sandbox mode, no real money will move"
+                                          : " - live mode, real payments will be taken"}
+                                      </div>
+                                    )}
+                                    {nagadStatus && !nagadStatus?.enabled && (
+                                      <div className="text-red-600">
+                                        Not configured - Nagad will not appear at checkout,
+                                        whatever the switch above says. Still missing:
+                                        {!nagadStatus?.merchant_configured && " merchant id or number;"}
+                                        {!nagadStatus?.private_key_configured && " a readable merchant private key;"}
+                                        {!nagadStatus?.public_key_configured && " a readable Nagad public key;"}
+                                        {" "}Save the page after filling them in.
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                    <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Merchant ID")}</div>
+                                    <div className="flex gap-3">
+                                      <input
+                                        type="text"
+                                        name={'merchant_id'}
+                                        placeholder={'merchant_id'}
+                                        className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
+                                        value={settingsData?.paymentGateways?.[providerKey]?.['merchant_id'] ?? ''}
+                                        onChange={(ev) => {
+                                          const { name, value } = ev.target;
+                                          setsettingsData(prev => ({
+                                            ...prev,
+                                            paymentGateways: {
+                                              ...prev.paymentGateways,
+                                              [providerKey]: {
+                                                ...prev.paymentGateways[providerKey],
+                                                [name]: value
+                                              }
+                                            }
+                                          }));
+
+                                        }}
+                                      />
+                                    </div>
+                                  </div>
+
+                                  <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                    <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Merchant Number")}</div>
+                                    <div className="flex gap-3">
+                                      <input
+                                        type="text"
+                                        name={'merchant_number'}
+                                        placeholder={'merchant_number'}
+                                        className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
+                                        value={settingsData?.paymentGateways?.[providerKey]?.['merchant_number'] ?? ''}
+                                        onChange={(ev) => {
+                                          const { name, value } = ev.target;
+                                          setsettingsData(prev => ({
+                                            ...prev,
+                                            paymentGateways: {
+                                              ...prev.paymentGateways,
+                                              [providerKey]: {
+                                                ...prev.paymentGateways[providerKey],
+                                                [name]: value
+                                              }
+                                            }
+                                          }));
+
+                                        }}
+                                      />
+                                    </div>
+                                  </div>
+
+                                  <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                    <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Merchant Private Key")}</div>
+                                    <div className="flex gap-3">
+                                      <textarea
+                                        rows={5}
+                                        name={'merchant_private_key'}
+                                        placeholder={'merchant_private_key'}
+                                        className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
+                                        value={settingsData?.paymentGateways?.[providerKey]?.['merchant_private_key'] ?? ''}
+                                        onChange={(ev) => {
+                                          const { name, value } = ev.target;
+                                          setsettingsData(prev => ({
+                                            ...prev,
+                                            paymentGateways: {
+                                              ...prev.paymentGateways,
+                                              [providerKey]: {
+                                                ...prev.paymentGateways[providerKey],
+                                                [name]: value
+                                              }
+                                            }
+                                          }));
+
+                                        }}
+                                      />
+                                    </div>
+                                  </div>
+
+                                  <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                    <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Nagad Public Key")}</div>
+                                    <div className="flex gap-3">
+                                      <textarea
+                                        rows={5}
+                                        name={'gateway_public_key'}
+                                        placeholder={'gateway_public_key'}
+                                        className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
+                                        value={settingsData?.paymentGateways?.[providerKey]?.['gateway_public_key'] ?? ''}
+                                        onChange={(ev) => {
+                                          const { name, value } = ev.target;
+                                          setsettingsData(prev => ({
+                                            ...prev,
+                                            paymentGateways: {
+                                              ...prev.paymentGateways,
+                                              [providerKey]: {
+                                                ...prev.paymentGateways[providerKey],
+                                                [name]: value
+                                              }
+                                            }
+                                          }));
+
+                                        }}
+                                      />
+                                    </div>
+                                  </div>
                                 </div>
-                              </div>
+                              )}
 
-                              <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
-                                <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Store ID")}</div>
-                                <div className="flex gap-3">
-                                  <input
-                                    type="text"
-                                    name={'store_id'}
-                                    placeholder={'store_id'}
-                                    className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                    value={settingsData?.paymentGateways?.[providerKey]?.['store_id']}
-                                    onChange={(ev) => {
-                                      const { name, value } = ev.target;
-                                      setsettingsData(prev => ({
-                                        ...prev,
-                                        paymentGateways: {
-                                          ...prev.paymentGateways,
-                                          [providerKey]: {
-                                            ...prev.paymentGateways[providerKey],
-                                            [name]: value
-                                          }
-                                        }
-                                      }));
-
-                                    }}
-                                  />
-                                </div>
-                              </div>
-
-
-                              <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
-                                <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("token")}</div>
-                                <div className="flex gap-3">
-                                  <input
-                                    type="text"
-                                    name={'token'}
-                                    placeholder={'token'}
-                                    className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                    value={settingsData?.paymentGateways?.[providerKey]?.['token']}
-                                    onChange={(ev) => {
-                                      const { name, value } = ev.target;
-                                      setsettingsData(prev => ({
-                                        ...prev,
-                                        paymentGateways: {
-                                          ...prev.paymentGateways,
-                                          [providerKey]: {
-                                            ...prev.paymentGateways[providerKey],
-                                            [name]: value
-                                          }
-                                        }
-                                      }));
-
-                                    }}
-                                  />
-                                </div>
-                              </div>
                             </>
                           )}
 
@@ -3090,88 +3367,95 @@ const SettingsGlobal = (props) => {
                                 </div>
                               </div>
 
+                              {settingsData?.paymentGateways?.[providerKey]?.['enable'] && (
+                                <div className="flex flex-col gap-5">
+                                  {gatewayLogoRow(providerKey)}
 
-                              <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
-                                <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Sandbox")}</div>
-                                <div className="flex gap-3">
-                                  <input type="checkbox" name="sandbox" id={`sandbox-${providerKey}`}
-                                    checked={settingsData?.paymentGateways?.[providerKey]?.['sandbox']}
-                                    className="lg:w-auto w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
 
-                                    value={settingsData?.paymentGateways?.[providerKey]?.['sandbox']}
-                                    onChange={(ev) => {
-                                      const value = ev.target.value;
+                                  <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                    <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Sandbox")}</div>
+                                    <div className="flex gap-3">
+                                      <input type="checkbox" name="sandbox" id={`sandbox-${providerKey}`}
+                                        checked={settingsData?.paymentGateways?.[providerKey]?.['sandbox']}
+                                        className="lg:w-auto w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
 
-                                      setsettingsData(prev => ({
-                                        ...prev,
-                                        paymentGateways: {
-                                          ...prev.paymentGateways,
-                                          [providerKey]: {
-                                            ...prev.paymentGateways[providerKey],
-                                            ['sandbox']: !prev.paymentGateways[providerKey]?.['sandbox']
-                                          }
-                                        }
-                                      }));
+                                        value={settingsData?.paymentGateways?.[providerKey]?.['sandbox']}
+                                        onChange={(ev) => {
+                                          const value = ev.target.value;
 
-                                    }} />
-                                  <label htmlFor={`sandbox-${providerKey}`} className="cursor-pointer">{settingsData?.paymentGateways?.[providerKey]?.['sandbox'] ? "Enabled" : "Disabled"}</label>
+                                          setsettingsData(prev => ({
+                                            ...prev,
+                                            paymentGateways: {
+                                              ...prev.paymentGateways,
+                                              [providerKey]: {
+                                                ...prev.paymentGateways[providerKey],
+                                                ['sandbox']: !prev.paymentGateways[providerKey]?.['sandbox']
+                                              }
+                                            }
+                                          }));
+
+                                        }} />
+                                      <label htmlFor={`sandbox-${providerKey}`} className="cursor-pointer">{settingsData?.paymentGateways?.[providerKey]?.['sandbox'] ? "Enabled" : "Disabled"}</label>
+                                    </div>
+                                  </div>
+
+                                  <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                    <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Store ID")}</div>
+                                    <div className="flex gap-3">
+                                      <input
+                                        type="text"
+                                        name={'store_id'}
+                                        placeholder={'store_id'}
+                                        className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
+                                        value={settingsData?.paymentGateways?.[providerKey]?.['store_id']}
+                                        onChange={(ev) => {
+                                          const { name, value } = ev.target;
+                                          setsettingsData(prev => ({
+                                            ...prev,
+                                            paymentGateways: {
+                                              ...prev.paymentGateways,
+                                              [providerKey]: {
+                                                ...prev.paymentGateways[providerKey],
+                                                [name]: value
+                                              }
+                                            }
+                                          }));
+
+                                        }}
+                                      />
+                                    </div>
+                                  </div>
+
+
+                                  <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                    <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("token")}</div>
+                                    <div className="flex gap-3">
+                                      <input
+                                        type="text"
+                                        name={'token'}
+                                        placeholder={'token'}
+                                        className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
+                                        value={settingsData?.paymentGateways?.[providerKey]?.['token']}
+                                        onChange={(ev) => {
+                                          const { name, value } = ev.target;
+                                          setsettingsData(prev => ({
+                                            ...prev,
+                                            paymentGateways: {
+                                              ...prev.paymentGateways,
+                                              [providerKey]: {
+                                                ...prev.paymentGateways[providerKey],
+                                                [name]: value
+                                              }
+                                            }
+                                          }));
+
+                                        }}
+                                      />
+                                    </div>
+                                  </div>
                                 </div>
-                              </div>
+                              )}
 
-                              <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
-                                <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Store ID")}</div>
-                                <div className="flex gap-3">
-                                  <input
-                                    type="text"
-                                    name={'store_id'}
-                                    placeholder={'store_id'}
-                                    className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                    value={settingsData?.paymentGateways?.[providerKey]?.['store_id']}
-                                    onChange={(ev) => {
-                                      const { name, value } = ev.target;
-                                      setsettingsData(prev => ({
-                                        ...prev,
-                                        paymentGateways: {
-                                          ...prev.paymentGateways,
-                                          [providerKey]: {
-                                            ...prev.paymentGateways[providerKey],
-                                            [name]: value
-                                          }
-                                        }
-                                      }));
-
-                                    }}
-                                  />
-                                </div>
-                              </div>
-
-
-                              <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
-                                <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("token")}</div>
-                                <div className="flex gap-3">
-                                  <input
-                                    type="text"
-                                    name={'token'}
-                                    placeholder={'token'}
-                                    className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                    value={settingsData?.paymentGateways?.[providerKey]?.['token']}
-                                    onChange={(ev) => {
-                                      const { name, value } = ev.target;
-                                      setsettingsData(prev => ({
-                                        ...prev,
-                                        paymentGateways: {
-                                          ...prev.paymentGateways,
-                                          [providerKey]: {
-                                            ...prev.paymentGateways[providerKey],
-                                            [name]: value
-                                          }
-                                        }
-                                      }));
-
-                                    }}
-                                  />
-                                </div>
-                              </div>
                             </>
                           )}
 
@@ -3209,88 +3493,95 @@ const SettingsGlobal = (props) => {
                                 </div>
                               </div>
 
+                              {settingsData?.paymentGateways?.[providerKey]?.['enable'] && (
+                                <div className="flex flex-col gap-5">
+                                  {gatewayLogoRow(providerKey)}
 
-                              <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
-                                <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Sandbox")}</div>
-                                <div className="flex gap-3">
-                                  <input type="checkbox" name="sandbox" id={`sandbox-${providerKey}`}
-                                    checked={settingsData?.paymentGateways?.[providerKey]?.['sandbox']}
-                                    className="lg:w-auto w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
 
-                                    value={settingsData?.paymentGateways?.[providerKey]?.['sandbox']}
-                                    onChange={(ev) => {
-                                      const value = ev.target.value;
+                                  <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                    <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Sandbox")}</div>
+                                    <div className="flex gap-3">
+                                      <input type="checkbox" name="sandbox" id={`sandbox-${providerKey}`}
+                                        checked={settingsData?.paymentGateways?.[providerKey]?.['sandbox']}
+                                        className="lg:w-auto w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
 
-                                      setsettingsData(prev => ({
-                                        ...prev,
-                                        paymentGateways: {
-                                          ...prev.paymentGateways,
-                                          [providerKey]: {
-                                            ...prev.paymentGateways[providerKey],
-                                            ['sandbox']: !prev.paymentGateways[providerKey]?.['sandbox']
-                                          }
-                                        }
-                                      }));
+                                        value={settingsData?.paymentGateways?.[providerKey]?.['sandbox']}
+                                        onChange={(ev) => {
+                                          const value = ev.target.value;
 
-                                    }} />
-                                  <label htmlFor={`sandbox-${providerKey}`} className="cursor-pointer">{settingsData?.paymentGateways?.[providerKey]?.['sandbox'] ? "Enabled" : "Disabled"}</label>
+                                          setsettingsData(prev => ({
+                                            ...prev,
+                                            paymentGateways: {
+                                              ...prev.paymentGateways,
+                                              [providerKey]: {
+                                                ...prev.paymentGateways[providerKey],
+                                                ['sandbox']: !prev.paymentGateways[providerKey]?.['sandbox']
+                                              }
+                                            }
+                                          }));
+
+                                        }} />
+                                      <label htmlFor={`sandbox-${providerKey}`} className="cursor-pointer">{settingsData?.paymentGateways?.[providerKey]?.['sandbox'] ? "Enabled" : "Disabled"}</label>
+                                    </div>
+                                  </div>
+
+                                  <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                    <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Store ID")}</div>
+                                    <div className="flex gap-3">
+                                      <input
+                                        type="text"
+                                        name={'store_id'}
+                                        placeholder={'store_id'}
+                                        className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
+                                        value={settingsData?.paymentGateways?.[providerKey]?.['store_id']}
+                                        onChange={(ev) => {
+                                          const { name, value } = ev.target;
+                                          setsettingsData(prev => ({
+                                            ...prev,
+                                            paymentGateways: {
+                                              ...prev.paymentGateways,
+                                              [providerKey]: {
+                                                ...prev.paymentGateways[providerKey],
+                                                [name]: value
+                                              }
+                                            }
+                                          }));
+
+                                        }}
+                                      />
+                                    </div>
+                                  </div>
+
+
+                                  <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                    <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("token")}</div>
+                                    <div className="flex gap-3">
+                                      <input
+                                        type="text"
+                                        name={'token'}
+                                        placeholder={'token'}
+                                        className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
+                                        value={settingsData?.paymentGateways?.[providerKey]?.['token']}
+                                        onChange={(ev) => {
+                                          const { name, value } = ev.target;
+                                          setsettingsData(prev => ({
+                                            ...prev,
+                                            paymentGateways: {
+                                              ...prev.paymentGateways,
+                                              [providerKey]: {
+                                                ...prev.paymentGateways[providerKey],
+                                                [name]: value
+                                              }
+                                            }
+                                          }));
+
+                                        }}
+                                      />
+                                    </div>
+                                  </div>
                                 </div>
-                              </div>
+                              )}
 
-                              <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
-                                <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Store ID")}</div>
-                                <div className="flex gap-3">
-                                  <input
-                                    type="text"
-                                    name={'store_id'}
-                                    placeholder={'store_id'}
-                                    className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                    value={settingsData?.paymentGateways?.[providerKey]?.['store_id']}
-                                    onChange={(ev) => {
-                                      const { name, value } = ev.target;
-                                      setsettingsData(prev => ({
-                                        ...prev,
-                                        paymentGateways: {
-                                          ...prev.paymentGateways,
-                                          [providerKey]: {
-                                            ...prev.paymentGateways[providerKey],
-                                            [name]: value
-                                          }
-                                        }
-                                      }));
-
-                                    }}
-                                  />
-                                </div>
-                              </div>
-
-
-                              <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
-                                <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("token")}</div>
-                                <div className="flex gap-3">
-                                  <input
-                                    type="text"
-                                    name={'token'}
-                                    placeholder={'token'}
-                                    className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                    value={settingsData?.paymentGateways?.[providerKey]?.['token']}
-                                    onChange={(ev) => {
-                                      const { name, value } = ev.target;
-                                      setsettingsData(prev => ({
-                                        ...prev,
-                                        paymentGateways: {
-                                          ...prev.paymentGateways,
-                                          [providerKey]: {
-                                            ...prev.paymentGateways[providerKey],
-                                            [name]: value
-                                          }
-                                        }
-                                      }));
-
-                                    }}
-                                  />
-                                </div>
-                              </div>
                             </>
                           )}
                           {providerKey == 'cod' && (
@@ -3326,6 +3617,12 @@ const SettingsGlobal = (props) => {
                                 </div>
                               </div>
 
+                              {settingsData?.paymentGateways?.[providerKey]?.['enable'] && (
+                                <div className="flex flex-col gap-5">
+                                  {gatewayLogoRow(providerKey)}
+                                </div>
+                              )}
+
                             </>
                           )}
                           {providerKey == 'stripe' && (
@@ -3358,227 +3655,225 @@ const SettingsGlobal = (props) => {
                                 </div>
                               </div>
 
+                              {settingsData?.paymentGateways?.[providerKey]?.['enable'] && (
+                                <div className="flex flex-col gap-5">
+                                  {gatewayLogoRow(providerKey)}
 
-                              {/*
-                                The credentials. These are written into the
-                                settings blob, so they are only as private as
-                                that blob is - see the note at the foot of this
-                                panel for what that means and what guards it.
-
-                                `type="password"` so a key is not left legible
-                                on a shared screen, and autoComplete off so no
-                                browser offers to save it as a login.
-                              */}
-                              <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
-                                <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Secret key")}</div>
-                                <div className="flex flex-col gap-1">
-                                  <input
-                                    type="password"
-                                    name={'secret_key'}
-                                    autoComplete="off"
-                                    placeholder={'sk_test_... or sk_live_...'}
-                                    className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                    value={settingsData?.paymentGateways?.[providerKey]?.['secret_key'] ?? ''}
-                                    onChange={(ev) => {
-                                      const { name, value } = ev.target;
-                                      setsettingsData(prev => ({
-                                        ...prev,
-                                        paymentGateways: {
-                                          ...prev.paymentGateways,
-                                          [providerKey]: {
-                                            ...prev.paymentGateways[providerKey],
-                                            [name]: value
-                                          }
-                                        }
-                                      }));
-
-                                    }}
-                                  />
-
-                                  {/* What the server is actually using, which
-                                      is not always what is typed above: a
-                                      blank field here falls back to the env,
-                                      and nothing takes effect until Save. */}
-                                  {stripeStatus?.enabled && (
-                                    <div className="text-xs text-green-700">
-                                      In use{stripeStatus?.source === 'env' ? " from the server env" : ""}
-                                      {stripeStatus?.livemode
-                                        ? " - live mode, real cards will be charged"
-                                        : " - test mode"}
-                                    </div>
-                                  )}
-                                  {!stripeStatus?.enabled && (
-                                    <div className="text-xs text-red-600">
-                                      No key in use - card payment will not appear at
-                                      checkout, whatever this switch says. Save the page
-                                      after entering one.
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-
-
-                              <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
-                                <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Webhook signing secret")}</div>
-                                <div className="flex flex-col gap-1">
-                                  <input
-                                    type="password"
-                                    name={'webhook_secret'}
-                                    autoComplete="off"
-                                    placeholder={'whsec_...'}
-                                    className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                    value={settingsData?.paymentGateways?.[providerKey]?.['webhook_secret'] ?? ''}
-                                    onChange={(ev) => {
-                                      const { name, value } = ev.target;
-                                      setsettingsData(prev => ({
-                                        ...prev,
-                                        paymentGateways: {
-                                          ...prev.paymentGateways,
-                                          [providerKey]: {
-                                            ...prev.paymentGateways[providerKey],
-                                            [name]: value
-                                          }
-                                        }
-                                      }));
-
-                                    }}
-                                  />
-
-                                  {stripeStatus?.webhook_configured && (
-                                    <div className="text-xs text-green-700">Signing secret in use</div>
-                                  )}
-                                  {!stripeStatus?.webhook_configured && (
-                                    <div className="text-xs text-yellow-700">
-                                      No signing secret in use. Payments still work, but an
-                                      order is left unpaid when the buyer closes the tab
-                                      before Stripe sends them back.
-                                    </div>
-                                  )}
-
-                                  {stripeStatus?.webhook_url && (
-                                    <div className="text-xs text-gray-600">
-                                      Register this URL with Stripe for the event
-                                      <span className="font-mono"> checkout.session.completed</span>:
-                                      <span className="font-mono select-all break-all"> {stripeStatus.webhook_url}</span>
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-
-
-                              <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
-                                <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Charge currency")}</div>
-                                <div className="flex flex-col gap-1">
-                                  <input
-                                    type="text"
-                                    name={'currency'}
-                                    placeholder={'USD'}
-                                    className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                    value={settingsData?.paymentGateways?.[providerKey]?.['currency'] ?? ''}
-                                    onChange={(ev) => {
-                                      const { name, value } = ev.target;
-                                      setsettingsData(prev => ({
-                                        ...prev,
-                                        paymentGateways: {
-                                          ...prev.paymentGateways,
-                                          [providerKey]: {
-                                            ...prev.paymentGateways[providerKey],
-                                            [name]: value
-                                          }
-                                        }
-                                      }));
-
-                                    }}
-                                  />
-
-                                  <div className="text-xs text-gray-600">
-                                    In use: {stripeStatus?.currency || "USD"}
-                                    {currency && stripeStatus?.currency === currency
-                                      && " - the same as this store, so nothing is converted"}
-                                  </div>
 
                                   {/*
-                                    Stripe does not take every currency a store
-                                    might price in - BDT among them - and with no
-                                    rate the server refuses the payment rather
-                                    than charge a guessed amount. Worth saying
-                                    here, where it can still be fixed, rather
-                                    than leaving a buyer to find it at checkout.
+                                    The credentials. These are written into the
+                                    settings blob, so they are only as private as
+                                    that blob is - see the note at the foot of this
+                                    panel for what that means and what guards it.
+
+                                    `type="password"` so a key is not left legible
+                                    on a shared screen, and autoComplete off so no
+                                    browser offers to save it as a login.
                                   */}
-                                  {stripeStatus?.enabled && currency && stripeStatus?.currency !== currency && (
-                                    <>
-                                      {stripeStatus?.exchange_rate > 0 && (
-                                        <div className="text-xs text-gray-600">
-                                          Converted at {stripeStatus.exchange_rate} {currency}
-                                          {" "}per 1 {stripeStatus.currency}, rounded up.
+                                  <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                    <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Secret key")}</div>
+                                    <div className="flex flex-col gap-1">
+                                      <input
+                                        type="password"
+                                        name={'secret_key'}
+                                        autoComplete="off"
+                                        placeholder={'sk_test_... or sk_live_...'}
+                                        className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
+                                        value={settingsData?.paymentGateways?.[providerKey]?.['secret_key'] ?? ''}
+                                        onChange={(ev) => {
+                                          const { name, value } = ev.target;
+                                          setsettingsData(prev => ({
+                                            ...prev,
+                                            paymentGateways: {
+                                              ...prev.paymentGateways,
+                                              [providerKey]: {
+                                                ...prev.paymentGateways[providerKey],
+                                                [name]: value
+                                              }
+                                            }
+                                          }));
+
+                                        }}
+                                      />
+
+                                      {/* What the server is actually using, which
+                                          is not always what is typed above:
+                                          nothing takes effect until Save. */}
+                                      {stripeStatus?.enabled && (
+                                        <div className="text-xs text-green-700">
+                                          In use
+                                          {stripeStatus?.livemode
+                                            ? " - live mode, real cards will be charged"
+                                            : " - test mode"}
                                         </div>
                                       )}
-                                      {!(stripeStatus?.exchange_rate > 0) && (
+                                      {!stripeStatus?.enabled && (
                                         <div className="text-xs text-red-600">
-                                          This store prices in {currency}, which is not what
-                                          Stripe charges in, and no exchange rate is set - so
-                                          card payments will be refused until one is.
+                                          No key in use - card payment will not appear at
+                                          checkout, whatever this switch says. Save the page
+                                          after entering one.
                                         </div>
                                       )}
-                                    </>
-                                  )}
-                                </div>
-                              </div>
+                                    </div>
+                                  </div>
 
 
-                              <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
-                                <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Exchange rate")}</div>
-                                <div className="flex flex-col gap-1">
-                                  <input
-                                    type="text"
-                                    name={'exchange_rate'}
-                                    placeholder={'e.g. 120'}
-                                    className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                    value={settingsData?.paymentGateways?.[providerKey]?.['exchange_rate'] ?? ''}
-                                    onChange={(ev) => {
-                                      const { name, value } = ev.target;
-                                      setsettingsData(prev => ({
-                                        ...prev,
-                                        paymentGateways: {
-                                          ...prev.paymentGateways,
-                                          [providerKey]: {
-                                            ...prev.paymentGateways[providerKey],
-                                            [name]: value
-                                          }
-                                        }
-                                      }));
+                                  <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                    <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Webhook signing secret")}</div>
+                                    <div className="flex flex-col gap-1">
+                                      <input
+                                        type="password"
+                                        name={'webhook_secret'}
+                                        autoComplete="off"
+                                        placeholder={'whsec_...'}
+                                        className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
+                                        value={settingsData?.paymentGateways?.[providerKey]?.['webhook_secret'] ?? ''}
+                                        onChange={(ev) => {
+                                          const { name, value } = ev.target;
+                                          setsettingsData(prev => ({
+                                            ...prev,
+                                            paymentGateways: {
+                                              ...prev.paymentGateways,
+                                              [providerKey]: {
+                                                ...prev.paymentGateways[providerKey],
+                                                [name]: value
+                                              }
+                                            }
+                                          }));
 
-                                    }}
-                                  />
+                                        }}
+                                      />
 
-                                  <div className="text-xs text-gray-600">
-                                    How many {currency || 'store currency'} make 1
-                                    {" "}{stripeStatus?.currency || 'USD'}. Only needed when
-                                    the two differ; leave it blank when they match.
+                                      {stripeStatus?.webhook_configured && (
+                                        <div className="text-xs text-green-700">Signing secret in use</div>
+                                      )}
+                                      {!stripeStatus?.webhook_configured && (
+                                        <div className="text-xs text-yellow-700">
+                                          No signing secret in use. Payments still work, but an
+                                          order is left unpaid when the buyer closes the tab
+                                          before Stripe sends them back.
+                                        </div>
+                                      )}
+
+                                      {stripeStatus?.webhook_url && (
+                                        <div className="text-xs text-gray-600">
+                                          Register this URL with Stripe for the event
+                                          <span className="font-mono"> checkout.session.completed</span>:
+                                          <span className="font-mono select-all break-all"> {stripeStatus.webhook_url}</span>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+
+
+                                  <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                    <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Charge currency")}</div>
+                                    <div className="flex flex-col gap-1">
+                                      <input
+                                        type="text"
+                                        name={'currency'}
+                                        placeholder={'USD'}
+                                        className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
+                                        value={settingsData?.paymentGateways?.[providerKey]?.['currency'] ?? ''}
+                                        onChange={(ev) => {
+                                          const { name, value } = ev.target;
+                                          setsettingsData(prev => ({
+                                            ...prev,
+                                            paymentGateways: {
+                                              ...prev.paymentGateways,
+                                              [providerKey]: {
+                                                ...prev.paymentGateways[providerKey],
+                                                [name]: value
+                                              }
+                                            }
+                                          }));
+
+                                        }}
+                                      />
+
+                                      <div className="text-xs text-gray-600">
+                                        In use: {stripeStatus?.currency || "USD"}
+                                        {currency && stripeStatus?.currency === currency
+                                          && " - the same as this store, so nothing is converted"}
+                                      </div>
+
+                                      {/*
+                                        Stripe does not take every currency a store
+                                        might price in - BDT among them - and with no
+                                        rate the server refuses the payment rather
+                                        than charge a guessed amount. Worth saying
+                                        here, where it can still be fixed, rather
+                                        than leaving a buyer to find it at checkout.
+                                      */}
+                                      {stripeStatus?.enabled && currency && stripeStatus?.currency !== currency && (
+                                        <>
+                                          {stripeStatus?.exchange_rate > 0 && (
+                                            <div className="text-xs text-gray-600">
+                                              Converted at {stripeStatus.exchange_rate} {currency}
+                                              {" "}per 1 {stripeStatus.currency}, rounded up.
+                                            </div>
+                                          )}
+                                          {!(stripeStatus?.exchange_rate > 0) && (
+                                            <div className="text-xs text-red-600">
+                                              This store prices in {currency}, which is not what
+                                              Stripe charges in, and no exchange rate is set - so
+                                              card payments will be refused until one is.
+                                            </div>
+                                          )}
+                                        </>
+                                      )}
+                                    </div>
+                                  </div>
+
+
+                                  <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                    <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Exchange rate")}</div>
+                                    <div className="flex flex-col gap-1">
+                                      <input
+                                        type="text"
+                                        name={'exchange_rate'}
+                                        placeholder={'e.g. 120'}
+                                        className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
+                                        value={settingsData?.paymentGateways?.[providerKey]?.['exchange_rate'] ?? ''}
+                                        onChange={(ev) => {
+                                          const { name, value } = ev.target;
+                                          setsettingsData(prev => ({
+                                            ...prev,
+                                            paymentGateways: {
+                                              ...prev.paymentGateways,
+                                              [providerKey]: {
+                                                ...prev.paymentGateways[providerKey],
+                                                [name]: value
+                                              }
+                                            }
+                                          }));
+
+                                        }}
+                                      />
+
+                                      <div className="text-xs text-gray-600">
+                                        How many {currency || 'store currency'} make 1
+                                        {" "}{stripeStatus?.currency || 'USD'}. Only needed when
+                                        the two differ; leave it blank when they match.
+                                      </div>
+                                    </div>
+                                  </div>
+
+
+                                  <div className="flex flex-col gap-2 py-3.5">
+                                    <div className="text-xs text-gray-600">
+                                      These credentials are stored with the rest of the store
+                                      settings. The storefront is served those settings through
+                                      an open endpoint, so the two secrets above are stripped out
+                                      of it before it reaches a browser and are only ever read
+                                      server-side - but they are held in the database rather than
+                                      in a secrets manager, and anything else that can read the
+                                      settings can read them. Use a restricted key where you
+                                      can, and rotate it in Stripe if you suspect it has leaked.
+                                    </div>
                                   </div>
                                 </div>
-                              </div>
-
-
-                              <div className="flex flex-col gap-2 py-3.5">
-                                <div className="text-xs text-gray-600">
-                                  These credentials are stored with the rest of the store
-                                  settings. The storefront is served those settings through
-                                  an open endpoint, so the two secrets above are stripped out
-                                  of it before it reaches a browser and are only ever read
-                                  server-side - but they are held in the database rather than
-                                  in a secrets manager, and anything else that can read the
-                                  settings can read them. Leave a field blank to fall back to
-                                  the server env instead
-                                  (<span className="font-mono">STRIPE_SECRET_KEY</span>,
-                                  <span className="font-mono"> STRIPE_WEBHOOK_SECRET</span>,
-                                  <span className="font-mono"> STRIPE_CURRENCY</span>,
-                                  <span className="font-mono"> STRIPE_EXCHANGE_RATE</span>),
-                                  which keeps them out of the database altogether. Use a
-                                  restricted key where you can, and rotate it in Stripe if
-                                  you suspect it has leaked.
-                                </div>
-                              </div>
+                              )}
 
                             </>
                           )}
@@ -3615,17 +3910,110 @@ const SettingsGlobal = (props) => {
                                 </div>
                               </div>
 
+                              {settingsData?.paymentGateways?.[providerKey]?.['enable'] && (
+                                <div className="flex flex-col gap-5">
+                                  {gatewayLogoRow(providerKey)}
+
+
+                                  <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                    <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Sandbox")}</div>
+                                    <div className="flex gap-3">
+                                      <input type="checkbox" name="sandbox" id={`sandbox-${providerKey}`}
+                                        checked={settingsData?.paymentGateways?.[providerKey]?.['sandbox']}
+                                        className="lg:w-auto w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
+
+                                        value={settingsData?.paymentGateways?.[providerKey]?.['sandbox']}
+                                        onChange={(ev) => {
+                                          const value = ev.target.value;
+
+                                          setsettingsData(prev => ({
+                                            ...prev,
+                                            paymentGateways: {
+                                              ...prev.paymentGateways,
+                                              [providerKey]: {
+                                                ...prev.paymentGateways[providerKey],
+                                                ['sandbox']: !prev.paymentGateways[providerKey]?.['sandbox']
+                                              }
+                                            }
+                                          }));
+
+                                        }} />
+                                      <label htmlFor={`sandbox-${providerKey}`} className="cursor-pointer">{settingsData?.paymentGateways?.[providerKey]?.['sandbox'] ? "Enabled" : "Disabled"}</label>
+                                    </div>
+                                  </div>
+
+                                  <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                    <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Store ID")}</div>
+                                    <div className="flex gap-3">
+                                      <input
+                                        type="text"
+                                        name={'store_id'}
+                                        placeholder={'store_id'}
+                                        className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
+                                        value={settingsData?.paymentGateways?.[providerKey]?.['store_id']}
+                                        onChange={(ev) => {
+                                          const { name, value } = ev.target;
+                                          setsettingsData(prev => ({
+                                            ...prev,
+                                            paymentGateways: {
+                                              ...prev.paymentGateways,
+                                              [providerKey]: {
+                                                ...prev.paymentGateways[providerKey],
+                                                [name]: value
+                                              }
+                                            }
+                                          }));
+
+                                        }}
+                                      />
+                                    </div>
+                                  </div>
+
+
+                                  <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                    <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("token")}</div>
+                                    <div className="flex gap-3">
+                                      <input
+                                        type="text"
+                                        name={'token'}
+                                        placeholder={'token'}
+                                        className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
+                                        value={settingsData?.paymentGateways?.[providerKey]?.['token']}
+                                        onChange={(ev) => {
+                                          const { name, value } = ev.target;
+                                          setsettingsData(prev => ({
+                                            ...prev,
+                                            paymentGateways: {
+                                              ...prev.paymentGateways,
+                                              [providerKey]: {
+                                                ...prev.paymentGateways[providerKey],
+                                                [name]: value
+                                              }
+                                            }
+                                          }));
+
+                                        }}
+                                      />
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+
+                            </>
+                          )}
+                          {providerKey == 'eps' && (
+
+                            <>
 
                               <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
-                                <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Sandbox")}</div>
+                                <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Enable?")}</div>
                                 <div className="flex gap-3">
-                                  <input type="checkbox" name="sandbox" id={`sandbox-${providerKey}`}
-                                    checked={settingsData?.paymentGateways?.[providerKey]?.['sandbox']}
-                                    className="lg:w-auto w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
+                                  <input type="checkbox" name="enable" id={`enable-${providerKey}`}
+                                    checked={settingsData?.paymentGateways?.[providerKey]?.['enable'] ?? false}
+                                    className=" !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
 
-                                    value={settingsData?.paymentGateways?.[providerKey]?.['sandbox']}
+                                    value={settingsData?.paymentGateways?.[providerKey]?.['enable']}
                                     onChange={(ev) => {
-                                      const value = ev.target.value;
 
                                       setsettingsData(prev => ({
                                         ...prev,
@@ -3633,70 +4021,256 @@ const SettingsGlobal = (props) => {
                                           ...prev.paymentGateways,
                                           [providerKey]: {
                                             ...prev.paymentGateways[providerKey],
-                                            ['sandbox']: !prev.paymentGateways[providerKey]?.['sandbox']
+                                            ['enable']: !prev.paymentGateways[providerKey]?.['enable']
                                           }
                                         }
                                       }));
 
                                     }} />
-                                  <label htmlFor={`sandbox-${providerKey}`} className="cursor-pointer">{settingsData?.paymentGateways?.[providerKey]?.['sandbox'] ? "Enabled" : "Disabled"}</label>
+                                  <label htmlFor={`enable-${providerKey}`} className="cursor-pointer">{settingsData?.paymentGateways?.[providerKey]?.['enable'] ? "Enabled" : "Disabled"}</label>
                                 </div>
                               </div>
 
-                              <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
-                                <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Store ID")}</div>
-                                <div className="flex gap-3">
-                                  <input
-                                    type="text"
-                                    name={'store_id'}
-                                    placeholder={'store_id'}
-                                    className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                    value={settingsData?.paymentGateways?.[providerKey]?.['store_id']}
-                                    onChange={(ev) => {
-                                      const { name, value } = ev.target;
-                                      setsettingsData(prev => ({
-                                        ...prev,
-                                        paymentGateways: {
-                                          ...prev.paymentGateways,
-                                          [providerKey]: {
-                                            ...prev.paymentGateways[providerKey],
-                                            [name]: value
-                                          }
-                                        }
-                                      }));
+                              {settingsData?.paymentGateways?.[providerKey]?.['enable'] && (
+                                <div className="flex flex-col gap-5">
+                                  {gatewayLogoRow(providerKey)}
 
-                                    }}
-                                  />
+                                  <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                    <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Sandbox")}</div>
+                                    <div className="flex gap-3">
+                                      <input type="checkbox" name="sandbox" id={`sandbox-${providerKey}`}
+                                        checked={settingsData?.paymentGateways?.[providerKey]?.['sandbox'] ?? false}
+                                        className=" !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
+
+                                        value={settingsData?.paymentGateways?.[providerKey]?.['sandbox']}
+                                        onChange={(ev) => {
+
+                                          setsettingsData(prev => ({
+                                            ...prev,
+                                            paymentGateways: {
+                                              ...prev.paymentGateways,
+                                              [providerKey]: {
+                                                ...prev.paymentGateways[providerKey],
+                                                ['sandbox']: !prev.paymentGateways[providerKey]?.['sandbox']
+                                              }
+                                            }
+                                          }));
+
+                                        }} />
+                                      <label htmlFor={`sandbox-${providerKey}`} className="cursor-pointer">{settingsData?.paymentGateways?.[providerKey]?.['sandbox'] ? "Enabled" : "Disabled"}</label>
+                                    </div>
+                                  </div>
+
+                                  {/* What the server is actually using, which is
+                                      not always what is typed below: nothing takes
+                                      effect until Save. */}
+                                  <div className="py-1 text-xs">
+                                    {epsStatus?.enabled && (
+                                      <div className="text-green-700">
+                                        Credentials in use
+                                        {epsStatus?.sandbox
+                                          ? " - sandbox mode, no real money will move"
+                                          : " - live mode, real payments will be taken"}
+                                      </div>
+                                    )}
+                                    {epsStatus && !epsStatus?.enabled && (
+                                      <div className="text-red-600">
+                                        Not configured - EPS will not appear at checkout,
+                                        whatever the switch above says. Still missing:
+                                        {!epsStatus?.merchant_configured && " merchant id or store id;"}
+                                        {!epsStatus?.credentials_configured && " username or password;"}
+                                        {!epsStatus?.hash_key_configured && " hash key;"}
+                                        {" "}Save the page after filling them in.
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                    <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Merchant ID")}</div>
+                                    <div className="flex gap-3">
+                                      <input
+                                        type="text"
+                                        name={'merchant_id'}
+                                        placeholder={'from the EPS merchant portal'}
+                                        className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
+                                        value={settingsData?.paymentGateways?.[providerKey]?.['merchant_id'] ?? ''}
+                                        onChange={(ev) => {
+                                          const { name, value } = ev.target;
+                                          setsettingsData(prev => ({
+                                            ...prev,
+                                            paymentGateways: {
+                                              ...prev.paymentGateways,
+                                              [providerKey]: {
+                                                ...prev.paymentGateways[providerKey],
+                                                [name]: value
+                                              }
+                                            }
+                                          }));
+
+                                        }}
+                                      />
+                                    </div>
+                                  </div>
+
+                                  <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                    <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Store ID")}</div>
+                                    <div className="flex gap-3">
+                                      <input
+                                        type="text"
+                                        name={'store_id'}
+                                        placeholder={'from the EPS merchant portal'}
+                                        className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
+                                        value={settingsData?.paymentGateways?.[providerKey]?.['store_id'] ?? ''}
+                                        onChange={(ev) => {
+                                          const { name, value } = ev.target;
+                                          setsettingsData(prev => ({
+                                            ...prev,
+                                            paymentGateways: {
+                                              ...prev.paymentGateways,
+                                              [providerKey]: {
+                                                ...prev.paymentGateways[providerKey],
+                                                [name]: value
+                                              }
+                                            }
+                                          }));
+
+                                        }}
+                                      />
+                                    </div>
+                                  </div>
+
+                                  <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                    <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Username")}</div>
+                                    <div className="flex gap-3">
+                                      <input
+                                        type="text"
+                                        name={'username'}
+                                        placeholder={'merchant login email'}
+                                        className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
+                                        value={settingsData?.paymentGateways?.[providerKey]?.['username'] ?? ''}
+                                        onChange={(ev) => {
+                                          const { name, value } = ev.target;
+                                          setsettingsData(prev => ({
+                                            ...prev,
+                                            paymentGateways: {
+                                              ...prev.paymentGateways,
+                                              [providerKey]: {
+                                                ...prev.paymentGateways[providerKey],
+                                                [name]: value
+                                              }
+                                            }
+                                          }));
+
+                                        }}
+                                      />
+                                    </div>
+                                  </div>
+
+                                  <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                    <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Password")}</div>
+                                    <div className="flex gap-3">
+                                      <input
+                                        type="password"
+                                        autoComplete="off"
+                                        name={'password'}
+                                        placeholder={'••••••••'}
+                                        className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
+                                        value={settingsData?.paymentGateways?.[providerKey]?.['password'] ?? ''}
+                                        onChange={(ev) => {
+                                          const { name, value } = ev.target;
+                                          setsettingsData(prev => ({
+                                            ...prev,
+                                            paymentGateways: {
+                                              ...prev.paymentGateways,
+                                              [providerKey]: {
+                                                ...prev.paymentGateways[providerKey],
+                                                [name]: value
+                                              }
+                                            }
+                                          }));
+
+                                        }}
+                                      />
+                                    </div>
+                                  </div>
+
+                                  <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                    <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Hash key")}</div>
+                                    <div className="flex gap-3">
+                                      <input
+                                        type="password"
+                                        autoComplete="off"
+                                        name={'hash_key'}
+                                        placeholder={'••••••••'}
+                                        className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
+                                        value={settingsData?.paymentGateways?.[providerKey]?.['hash_key'] ?? ''}
+                                        onChange={(ev) => {
+                                          const { name, value } = ev.target;
+                                          setsettingsData(prev => ({
+                                            ...prev,
+                                            paymentGateways: {
+                                              ...prev.paymentGateways,
+                                              [providerKey]: {
+                                                ...prev.paymentGateways[providerKey],
+                                                [name]: value
+                                              }
+                                            }
+                                          }));
+
+                                        }}
+                                      />
+                                    </div>
+                                  </div>
+
+                                  <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                    <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Description")}</div>
+                                    <div className="flex gap-3">
+                                      <input
+                                        type="text"
+                                        name={'description'}
+                                        placeholder={'Pay by card, bKash, Nagad, Rocket or internet banking'}
+                                        className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
+                                        value={settingsData?.paymentGateways?.[providerKey]?.['description'] ?? ''}
+                                        onChange={(ev) => {
+                                          const { name, value } = ev.target;
+                                          setsettingsData(prev => ({
+                                            ...prev,
+                                            paymentGateways: {
+                                              ...prev.paymentGateways,
+                                              [providerKey]: {
+                                                ...prev.paymentGateways[providerKey],
+                                                [name]: value
+                                              }
+                                            }
+                                          }));
+
+                                        }}
+                                      />
+                                    </div>
+                                  </div>
+
+                                  <div className="py-3.5 text-xs text-gray-600">
+                                    <div>
+                                      The password and hash key are stored with these
+                                      settings, so they are stripped out of the copy the
+                                      storefront is served - a browser only ever learns
+                                      whether EPS is usable, never what these say.
+                                    </div>
+                                    <div className="pt-2">
+                                      EPS settles in BDT and its API takes no currency field,
+                                      so it is only offered for orders priced in taka.
+                                    </div>
+                                    <div className="pt-2">
+                                      EPS publishes no server-to-server notification, so an
+                                      order whose buyer closes the tab on the EPS page stays
+                                      pending until they come back. Nothing is charged twice -
+                                      a paid order is never sent to the gateway again - but
+                                      those are worth checking against the EPS portal.
+                                    </div>
+                                  </div>
                                 </div>
-                              </div>
+                              )}
 
-
-                              <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
-                                <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("token")}</div>
-                                <div className="flex gap-3">
-                                  <input
-                                    type="text"
-                                    name={'token'}
-                                    placeholder={'token'}
-                                    className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                    value={settingsData?.paymentGateways?.[providerKey]?.['token']}
-                                    onChange={(ev) => {
-                                      const { name, value } = ev.target;
-                                      setsettingsData(prev => ({
-                                        ...prev,
-                                        paymentGateways: {
-                                          ...prev.paymentGateways,
-                                          [providerKey]: {
-                                            ...prev.paymentGateways[providerKey],
-                                            [name]: value
-                                          }
-                                        }
-                                      }));
-
-                                    }}
-                                  />
-                                </div>
-                              </div>
                             </>
                           )}
                           {providerKey == 'paypal' && (
@@ -3731,88 +4305,95 @@ const SettingsGlobal = (props) => {
                                 </div>
                               </div>
 
+                              {settingsData?.paymentGateways?.[providerKey]?.['enable'] && (
+                                <div className="flex flex-col gap-5">
+                                  {gatewayLogoRow(providerKey)}
 
-                              <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
-                                <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Sandbox")}</div>
-                                <div className="flex gap-3">
-                                  <input type="checkbox" name="sandbox" id={`sandbox-${providerKey}`}
-                                    checked={settingsData?.paymentGateways?.[providerKey]?.['sandbox']}
-                                    className="lg:w-auto w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
 
-                                    value={settingsData?.paymentGateways?.[providerKey]?.['sandbox']}
-                                    onChange={(ev) => {
-                                      const value = ev.target.value;
+                                  <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                    <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Sandbox")}</div>
+                                    <div className="flex gap-3">
+                                      <input type="checkbox" name="sandbox" id={`sandbox-${providerKey}`}
+                                        checked={settingsData?.paymentGateways?.[providerKey]?.['sandbox']}
+                                        className="lg:w-auto w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
 
-                                      setsettingsData(prev => ({
-                                        ...prev,
-                                        paymentGateways: {
-                                          ...prev.paymentGateways,
-                                          [providerKey]: {
-                                            ...prev.paymentGateways[providerKey],
-                                            ['sandbox']: !prev.paymentGateways[providerKey]?.['sandbox']
-                                          }
-                                        }
-                                      }));
+                                        value={settingsData?.paymentGateways?.[providerKey]?.['sandbox']}
+                                        onChange={(ev) => {
+                                          const value = ev.target.value;
 
-                                    }} />
-                                  <label htmlFor={`sandbox-${providerKey}`} className="cursor-pointer">{settingsData?.paymentGateways?.[providerKey]?.['sandbox'] ? "Enabled" : "Disabled"}</label>
+                                          setsettingsData(prev => ({
+                                            ...prev,
+                                            paymentGateways: {
+                                              ...prev.paymentGateways,
+                                              [providerKey]: {
+                                                ...prev.paymentGateways[providerKey],
+                                                ['sandbox']: !prev.paymentGateways[providerKey]?.['sandbox']
+                                              }
+                                            }
+                                          }));
+
+                                        }} />
+                                      <label htmlFor={`sandbox-${providerKey}`} className="cursor-pointer">{settingsData?.paymentGateways?.[providerKey]?.['sandbox'] ? "Enabled" : "Disabled"}</label>
+                                    </div>
+                                  </div>
+
+                                  <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                    <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Store ID")}</div>
+                                    <div className="flex gap-3">
+                                      <input
+                                        type="text"
+                                        name={'store_id'}
+                                        placeholder={'store_id'}
+                                        className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
+                                        value={settingsData?.paymentGateways?.[providerKey]?.['store_id']}
+                                        onChange={(ev) => {
+                                          const { name, value } = ev.target;
+                                          setsettingsData(prev => ({
+                                            ...prev,
+                                            paymentGateways: {
+                                              ...prev.paymentGateways,
+                                              [providerKey]: {
+                                                ...prev.paymentGateways[providerKey],
+                                                [name]: value
+                                              }
+                                            }
+                                          }));
+
+                                        }}
+                                      />
+                                    </div>
+                                  </div>
+
+
+                                  <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                    <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("token")}</div>
+                                    <div className="flex gap-3">
+                                      <input
+                                        type="text"
+                                        name={'token'}
+                                        placeholder={'token'}
+                                        className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
+                                        value={settingsData?.paymentGateways?.[providerKey]?.['token']}
+                                        onChange={(ev) => {
+                                          const { name, value } = ev.target;
+                                          setsettingsData(prev => ({
+                                            ...prev,
+                                            paymentGateways: {
+                                              ...prev.paymentGateways,
+                                              [providerKey]: {
+                                                ...prev.paymentGateways[providerKey],
+                                                [name]: value
+                                              }
+                                            }
+                                          }));
+
+                                        }}
+                                      />
+                                    </div>
+                                  </div>
                                 </div>
-                              </div>
+                              )}
 
-                              <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
-                                <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Store ID")}</div>
-                                <div className="flex gap-3">
-                                  <input
-                                    type="text"
-                                    name={'store_id'}
-                                    placeholder={'store_id'}
-                                    className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                    value={settingsData?.paymentGateways?.[providerKey]?.['store_id']}
-                                    onChange={(ev) => {
-                                      const { name, value } = ev.target;
-                                      setsettingsData(prev => ({
-                                        ...prev,
-                                        paymentGateways: {
-                                          ...prev.paymentGateways,
-                                          [providerKey]: {
-                                            ...prev.paymentGateways[providerKey],
-                                            [name]: value
-                                          }
-                                        }
-                                      }));
-
-                                    }}
-                                  />
-                                </div>
-                              </div>
-
-
-                              <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
-                                <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("token")}</div>
-                                <div className="flex gap-3">
-                                  <input
-                                    type="text"
-                                    name={'token'}
-                                    placeholder={'token'}
-                                    className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                    value={settingsData?.paymentGateways?.[providerKey]?.['token']}
-                                    onChange={(ev) => {
-                                      const { name, value } = ev.target;
-                                      setsettingsData(prev => ({
-                                        ...prev,
-                                        paymentGateways: {
-                                          ...prev.paymentGateways,
-                                          [providerKey]: {
-                                            ...prev.paymentGateways[providerKey],
-                                            [name]: value
-                                          }
-                                        }
-                                      }));
-
-                                    }}
-                                  />
-                                </div>
-                              </div>
                             </>
                           )}
 

@@ -25,8 +25,13 @@ import NagadCheckoutButton from "../../../components/shop-elements/NagadCheckout
 import AamarPayCheckoutButton from "../../../components/shop-elements/AamarPayCheckoutButton";
 import PayPalCheckoutButton from "../../../components/shop-elements/PayPalCheckoutButton";
 import StripeCheckoutButton from "../../../components/shop-elements/StripeCheckoutButton";
+import EpsCheckoutButton from "../../../components/shop-elements/EpsCheckoutButton";
 import { getPayPalConfig } from "../../../lib/paypal";
 import { getStripeConfig } from "../../../lib/stripe";
+import { getEpsConfig } from "../../../lib/eps";
+import { getAamarPayConfig } from "../../../lib/aamarpay";
+import { getBkashConfig } from "../../../lib/bkash";
+import { getNagadConfig } from "../../../lib/nagad";
 
 
 
@@ -93,12 +98,27 @@ const CheckoutView = (props) => {
 	*/
 	const [paypalConfig, setpaypalConfig] = useState(null);
 	/*
-		Stripe answers for itself too, and for the same reason: its secret key is
-		in the server env, not in the settings blob, so the dashboard's switch
-		alone cannot tell whether a card payment would actually work. The tile is
-		shown when both agree - the store enabled it and the server has a key.
+		Stripe answers for itself too: its secret key is stripped from the
+		settings this page is served, so the dashboard's switch alone cannot tell
+		whether a card payment would actually work. The tile is shown when both
+		agree - the store enabled it and the server has a key.
 	*/
 	const [stripeConfig, setstripeConfig] = useState(null);
+	/*
+		EPS is the same case as Stripe: the store turns it on in the dashboard,
+		but its five credentials are stripped from what this page is served, so
+		the switch alone cannot tell whether a payment would get anywhere. The
+		tile is shown when both agree.
+	*/
+	const [epsConfig, setepsConfig] = useState(null);
+	/*
+		And aamarPay, which is the same case again: the switch is in the
+		settings blob but the browser is not shown the signature key behind it.
+	*/
+	const [aamarpayConfig, setaamarpayConfig] = useState(null);
+	/* bKash and Nagad are the same case again. */
+	const [bkashConfig, setbkashConfig] = useState(null);
+	const [nagadConfig, setnagadConfig] = useState(null);
 	const [readyToSubmitOrder, setreadyToSubmitOrder] = useState({ error: null, message: "" });
 	const [contactAdded, setcontactAdded] = useState({ error: null, message: "" });
 	const [orderData, setorderData] = useState({ order_id: null, status: null, });
@@ -336,6 +356,11 @@ const CheckoutView = (props) => {
 		var country = checkoutData?.shipping_country.length > 0 ? checkoutData?.shipping_country : checkoutData?.billing_country
 		var city = checkoutData?.shipping_city.length > 0 ? checkoutData?.shipping_city : checkoutData?.billing_city
 
+		if (!city || city == null || city == undefined) {
+
+			return;
+
+		}
 
 		prams.country = country
 		prams.city = city
@@ -550,6 +575,58 @@ const CheckoutView = (props) => {
 				}
 			});
 
+		getEpsConfig()
+			.then(config => {
+				if (!cancelled) {
+					setepsConfig(config);
+				}
+			})
+			.catch(() => {
+				/* EPS simply does not appear; the other methods still work. */
+				if (!cancelled) {
+					setepsConfig(null);
+				}
+			});
+
+		getAamarPayConfig()
+			.then(config => {
+				if (!cancelled) {
+					setaamarpayConfig(config);
+				}
+			})
+			.catch(() => {
+				/* aamarPay simply does not appear; the rest still work. */
+				if (!cancelled) {
+					setaamarpayConfig(null);
+				}
+			});
+
+		getBkashConfig()
+			.then(config => {
+				if (!cancelled) {
+					setbkashConfig(config);
+				}
+			})
+			.catch(() => {
+				/* bKash simply does not appear; the rest still work. */
+				if (!cancelled) {
+					setbkashConfig(null);
+				}
+			});
+
+		getNagadConfig()
+			.then(config => {
+				if (!cancelled) {
+					setnagadConfig(config);
+				}
+			})
+			.catch(() => {
+				/* Nagad simply does not appear; the rest still work. */
+				if (!cancelled) {
+					setnagadConfig(null);
+				}
+			});
+
 		return () => {
 			cancelled = true;
 		};
@@ -566,7 +643,10 @@ const CheckoutView = (props) => {
 		Stripe is the other way round - it is in the settings blob, so the store
 		chooses whether to offer cards - but the tile is dropped when the server
 		has no key, because a buyer picking it would then get as far as the pay
-		button and no further.
+		button and no further. EPS is dropped for the same reason, and also for
+		an order in a currency it cannot settle: EPS charges in taka and takes
+		no currency field, so offering it would mean charging the figure as
+		though it were taka.
 	*/
 	const gatewayList = (() => {
 		const list = { ...(paymentGateways || {}) };
@@ -579,6 +659,30 @@ const CheckoutView = (props) => {
 
 		if (list.stripe && !stripeConfig?.enabled) {
 			delete list.stripe;
+		}
+
+		if (list.aamarpay && !aamarpayConfig?.enabled) {
+			delete list.aamarpay;
+		}
+
+		/* Taka only, for the same reason as EPS below. */
+		const inTaka = String(checkoutData?.currency ?? currency ?? 'BDT').toUpperCase() === 'BDT';
+
+		if (list.bkash && (!bkashConfig?.enabled || !inTaka)) {
+			delete list.bkash;
+		}
+
+		if (list.nagad && (!nagadConfig?.enabled || !inTaka)) {
+			delete list.nagad;
+		}
+
+		if (list.eps) {
+			const settlesHere = String(checkoutData?.currency ?? currency ?? 'BDT').toUpperCase()
+				=== String(epsConfig?.currency || 'BDT').toUpperCase();
+
+			if (!epsConfig?.enabled || !settlesHere) {
+				delete list.eps;
+			}
 		}
 
 		return list;
@@ -825,7 +929,10 @@ const CheckoutView = (props) => {
 			.catch((_error) => {
 				//this.saveAsStatus = 'error';
 				// handle the error
+				setloading(false);
 			});
+
+		setloading(false);
 
 	}
 
@@ -1284,8 +1391,6 @@ const CheckoutView = (props) => {
 							</div>
 
 
-
-
 						</div>
 
 
@@ -1398,11 +1503,12 @@ const CheckoutView = (props) => {
 
 					{shippingMethods.length == 0 && (
 
-						<div className="italic text-sm">
-							No shipping methods
+						<div className="italic text-sm text-red-400">
+							No shipping methods, Please choose your country and city to find shipping methods.
 						</div>
 
 					)}
+
 
 					{shippingMethods.length > 0 && (
 
@@ -1514,6 +1620,10 @@ const CheckoutView = (props) => {
 												  label for would otherwise render as a blank tile. */}
 											<div>{paymentGatewaysArgs[key]?.label ?? method?.label ?? key}</div>
 
+											{method?.logo?.src && (
+												<Image unoptimized src={method.logo.src} width={100} height={100} alt="" className="ml-auto h-6 w-auto max-w-[80px] object-contain" />
+											)}
+
 										</div>
 									)
 
@@ -1595,6 +1705,48 @@ const CheckoutView = (props) => {
 									onError={(message) => addNotification({ type: 'error', title: 'aamarPay', content: message })}
 								/>
 
+								{paymentGateways?.aamarpay?.description && (
+									<div className="text-sm text-gray-600">
+										{paymentGateways.aamarpay.description}
+									</div>
+								)}
+
+								{aamarpayConfig?.sandbox && (
+									<div className="text-xs text-amber-600">
+										aamarPay is in sandbox mode - no real money will move.
+									</div>
+								)}
+
+							</div>
+						)}
+
+						{checkoutData.payment_method == "eps" && (
+							<div className="flex flex-col gap-3">
+
+								{/* No Submit Order button here on purpose, as with
+									  aamarPay: paying at EPS is the submit. The order is
+									  created when the buyer clicks, and the callback route
+									  marks it paid once EPS's status API confirms the
+									  payment. */}
+								<EpsCheckoutButton
+									total={checkoutData?.total_amount}
+									currency={currencySymbole}
+									ensureOrder={() => ensureOrderForPayment('eps')}
+									onError={(message) => addNotification({ type: 'error', title: 'EPS', content: message })}
+								/>
+
+								{paymentGateways?.eps?.description && (
+									<div className="text-sm text-gray-600">
+										{paymentGateways.eps.description}
+									</div>
+								)}
+
+								{epsConfig?.sandbox && (
+									<div className="text-xs text-amber-600">
+										EPS is in sandbox mode - no real money will move.
+									</div>
+								)}
+
 							</div>
 						)}
 
@@ -1674,22 +1826,19 @@ const CheckoutView = (props) => {
 
 
 						{checkoutData.payment_method == "bkash" && (
-							<div>
+							<div className="flex flex-col gap-3">
 
-								{JSON.stringify(orderData)}
-
-
-								{/* <BkashButton amount={checkoutData?.total_amount} orderId={checkoutData?.order_id} /> */}
 								<BkashCheckoutButton
-									orderId={orderData?.order_id}
 									total={checkoutData?.total_amount}
-									onPaymentSuccess={(payment) => {
-
-
-										// clearCart();
-										// closeCart();
-									}}
+									ensureOrder={() => ensureOrderForPayment('bkash')}
+									onError={(message) => addNotification({ type: 'error', title: 'bKash', content: message })}
 								/>
+
+								{paymentGateways?.bkash?.description && (
+									<div className="text-sm text-gray-600">
+										{paymentGateways.bkash.description}
+									</div>
+								)}
 
 							</div>
 						)}
@@ -1791,11 +1940,18 @@ const CheckoutView = (props) => {
 
 
 						{checkoutData.payment_method == "nagad" && (
-							<div>
+							<div className="flex flex-col gap-3">
 								<NagadCheckoutButton
-									cartItems={[]}
-									totalAmount={checkoutData?.total_amount}
+									total={checkoutData?.total_amount}
+									ensureOrder={() => ensureOrderForPayment('nagad')}
+									onError={(message) => addNotification({ type: 'error', title: 'Nagad', content: message })}
 								/>
+
+								{paymentGateways?.nagad?.description && (
+									<div className="text-sm text-gray-600">
+										{paymentGateways.nagad.description}
+									</div>
+								)}
 
 							</div>
 						)}

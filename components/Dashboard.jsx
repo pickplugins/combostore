@@ -32,6 +32,8 @@ import {
   IconAlertTriangle,
   IconChartPie,
   IconDatabaseOff,
+  IconX,
+  IconFilter,
 } from "@tabler/icons-react";
 import Spinner from '../components/Spinner';
 import ChartComponent from '../components/ChartComponent';
@@ -39,6 +41,9 @@ import WidgetWrapper from '../components/WidgetWrapper';
 import PopoverButton from '../components/PopoverButton';
 import { useCounterStore } from '../store/useCounterStore'
 import { useUtilsStore } from '../store/useUtilsStore';
+import OrderStats from "../components/OrderStats";
+import UsersPicker from '../components/shop-elements/UsersPicker';
+import ProductsPicker from '../components/shop-elements/ProductsPicker';
 
 
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
@@ -87,6 +92,56 @@ const DATE_INPUT_CLASSES =
 
 const SECTION_TITLE_CLASSES =
   "text-[11px] font-semibold uppercase tracking-wider text-gray-500";
+
+const DEFAULT_SALES_FILTERS = {
+  customer_id: "",
+  customer_name: "",
+  product_id: "",
+  product_name: "",
+  orderStatus: "completed",
+  paymentStatus: "paid",
+  paymentMethod: "",
+};
+
+const FILTER_LABEL_CLASSES = "mb-1.5 block text-xs font-medium text-gray-500";
+
+const FILTER_SELECT_CLASSES =
+  "flex h-9 w-full cursor-pointer items-center justify-between gap-2 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-700 transition-colors hover:border-gray-400 hover:bg-gray-50";
+
+/* The pickers bring their own heavier input, so it is matched to the dropdowns
+   beside it from the outside rather than changed on every screen that uses them. */
+const FILTER_PICKER_CLASSES =
+  "[&_input]:!h-9 [&_input]:!w-full [&_input]:!rounded-lg [&_input]:!border [&_input]:!border-gray-300 [&_input]:!bg-white [&_input]:!px-3 [&_input]:!py-0 [&_input]:!text-sm [&_input]:!text-gray-700 [&_input]:!shadow-none [&_input]:!outline-none [&_input]:transition-colors [&_input:hover]:!border-gray-400 [&_input:focus]:!border-brand [&_input:focus]:!ring-2 [&_input:focus]:!ring-brand/15 [&_.absolute]:!w-full";
+
+const FILTER_RESET_CLASSES =
+  "inline-flex h-7 items-center !rounded-lg !border !border-gray-300 !bg-white !px-2.5 !py-0 !text-xs !font-medium !text-gray-600 !shadow-none transition-colors hover:!border-gray-400 hover:!bg-gray-50 hover:!text-gray-900";
+
+
+const SALES_FILTERS_BUTTON_CLASSES =
+  "h-9 cursor-pointer items-center rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-700 shadow-sm transition-colors hover:border-gray-400 hover:bg-gray-50";
+
+/* Overflow stays visible: the dropdown menus and picker results open past the
+   bottom of the panel, and PopoverButton's default panel would clip them. On a
+   phone the button can sit anywhere in the wrapped toolbar, so the panel is
+   placed against the window instead of the button. */
+const SALES_FILTERS_PANEL_CLASSES =
+  "fixed inset-x-4 top-20 z-[999] rounded-lg border border-gray-200 bg-white shadow-lg sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:mt-2 sm:w-[600px]";
+
+
+/** The customer or product a filter is set to, with a way to clear it. */
+const SelectedFilter = ({ name, onClear }) => (
+  <div className="flex h-9 items-center justify-between gap-2 rounded-lg border border-brand/30 bg-brand-50 pl-3 pr-1.5 text-sm text-brand-800">
+    <span className="truncate" title={name}>{name}</span>
+    <button
+      type="button"
+      title="Clear"
+      aria-label={`Clear ${name}`}
+      onClick={onClear}
+      className="inline-flex h-6 w-6 shrink-0 items-center justify-center !rounded-md !border-0 !bg-transparent !p-0 !text-brand-700 !shadow-none transition-colors hover:!bg-brand-100">
+      <IconX size={14} />
+    </button>
+  </div>
+);
 
 
 const StatCard = ({ label, value, icon: Icon, tone, blurred, compact }) => (
@@ -194,7 +249,7 @@ const ListRow = ({ rank, media, titleHtml, blurTitle, value, valueSub, valueTone
 
 const Dashboard = (props) => {
 
-  const { token, settings, appData, notifications, addNotification, userDataX, setUserDataX, privacyMode, currencySymbole, currencyPosition } = useCounterStore()
+  const { token, settings, appData, notifications, addNotification, userDataX, setUserDataX, privacyMode, currencySymbole, currencyPosition, orderStatusArgs, paymentStatusArgs, paymentGateways } = useCounterStore()
   const { wrapCurrency } = useUtilsStore()
 
 
@@ -204,6 +259,46 @@ const Dashboard = (props) => {
   var [topSellingQuery, settopSellingQuery] = useState({ loading: false, keyword: "", range: '7days', paged: 1, order: "DESC", per_page: 10, first_date: "", last_date: "" });
   var [topCustomersQuery, settopCustomersQuery] = useState({ loading: false, keyword: "", range: '7days', paged: 1, order: "DESC", per_page: 10, first_date: "", last_date: "" });
   var [lowStockQuery, setlowStockQuery] = useState({ loading: false, keyword: "", range: '7days', paged: 1, order: "DESC", per_page: 10, first_date: "", last_date: "" });
+
+  /* Kept apart from `queryPrams` because these only narrow the Sales Performance
+     widget: the rest of the page answers to the range alone, and a customer in
+     there would refetch all of it and imply the KPIs above were filtered too. */
+  var [orderStatsFilters, setorderStatsFilters] = useState(DEFAULT_SALES_FILTERS);
+  var [orderStatsRefresh, setorderStatsRefresh] = useState(0);
+
+  /* Counted against the defaults, which are not empty: the button shows this
+     while the panel is closed, and untouched filters should not read as active. */
+  var activeSalesFilters = ["customer_id", "product_id", "orderStatus", "paymentStatus", "paymentMethod"]
+    .filter(key => orderStatsFilters[key] !== DEFAULT_SALES_FILTERS[key]).length;
+
+  function setSalesFilters(patch) {
+    setorderStatsFilters(prev => ({ ...prev, ...patch }))
+  }
+
+  function onPickSalesCustomer(args) {
+
+    fetch(serverUrl + "wp-json/combo-store/v2/get_customer", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ id: args?.id }),
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Token validation failed");
+        }
+
+        return response.json();
+      })
+      .then((res) => {
+        setSalesFilters({ customer_id: args?.id, customer_name: res?.customer?.name ?? `#${args?.id}` })
+      })
+      .catch(() => {
+        addNotification({ type: 'error', title: 'Customer', content: 'The customer could not be loaded.' })
+      });
+  }
 
   var [loading, setloading] = useState(false);
   var [chartData, setchartData] = useState({ labels: [], datasets: [] });
@@ -1253,12 +1348,84 @@ const Dashboard = (props) => {
 
               />
 
+              <PopoverButton
+                wrapperClass=""
+                position=""
+                title={("Sales filters")}
+                buttonLabel={
+                  <>
+                    {("Sales filters")}
+                    {activeSalesFilters > 0 && (
+                      <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-brand px-1 text-[11px] font-semibold text-white">
+                        {activeSalesFilters}
+                      </span>
+                    )}
+                  </>
+                }
+                buttonIcon={<IconFilter size={16} />}
+                buttonClass={SALES_FILTERS_BUTTON_CLASSES}
+                popoverClass={SALES_FILTERS_PANEL_CLASSES}>
+
+                <div className="p-4">
+
+                  <div className="mb-3 flex min-h-7 flex-wrap items-center justify-between gap-2">
+                    <div className="text-xs text-gray-500">{("These filters apply to Sales Performance only.")}</div>
+
+                    {activeSalesFilters > 0 && (
+                      <button type="button" className={FILTER_RESET_CLASSES} onClick={() => setSalesFilters(DEFAULT_SALES_FILTERS)}>
+                        {("Reset")}
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+
+                    <div className={`min-w-0 sm:col-span-3 ${FILTER_PICKER_CLASSES}`}>
+                      <span className={FILTER_LABEL_CLASSES}>{("Customer")}</span>
+                      {orderStatsFilters.customer_id
+                        ? <SelectedFilter name={orderStatsFilters.customer_name} onClear={() => setSalesFilters({ customer_id: "", customer_name: "" })} />
+                        : <UsersPicker placeholder="Search customer" role={`customer`} onPick={onPickSalesCustomer} />}
+                    </div>
+
+                    <div className={`min-w-0 sm:col-span-3 ${FILTER_PICKER_CLASSES}`}>
+                      <span className={FILTER_LABEL_CLASSES}>{("Product")}</span>
+                      {orderStatsFilters.product_id
+                        ? <SelectedFilter name={orderStatsFilters.product_name} onClear={() => setSalesFilters({ product_id: "", product_name: "" })} />
+                        : <ProductsPicker placeholder="Search product" onPick={(item) => setSalesFilters({ product_id: item?.id, product_name: item?.title })} />}
+                    </div>
+
+                    {/* A default is a plain value; a choice is an option object. */}
+                    <div className="min-w-0">
+                      <span className={FILTER_LABEL_CLASSES}>{("Order status")}</span>
+                      <DropDown allowReset={true} multiple={false} labelClass={FILTER_SELECT_CLASSES} value={orderStatsFilters.orderStatus?.value ?? orderStatsFilters.orderStatus} options={orderStatusArgs} label={`All`} onOptionsChoose={(args) => {
+                        setSalesFilters({ orderStatus: args ?? "" })
+                      }} />
+                    </div>
+
+                    <div className="min-w-0">
+                      <span className={FILTER_LABEL_CLASSES}>{("Payment method")}</span>
+                      <DropDown allowReset={true} multiple={false} labelClass={FILTER_SELECT_CLASSES} value={orderStatsFilters.paymentMethod?.value ?? ""} options={paymentGateways} label={`All`} onOptionsChoose={(args) => {
+                        setSalesFilters({ paymentMethod: args ?? "" })
+                      }} />
+                    </div>
+
+                    <div className="min-w-0">
+                      <span className={FILTER_LABEL_CLASSES}>{("Payment status")}</span>
+                      <DropDown allowReset={true} multiple={false} position="right" labelClass={FILTER_SELECT_CLASSES} value={orderStatsFilters.paymentStatus?.value ?? orderStatsFilters.paymentStatus} options={paymentStatusArgs} label={`All`} onOptionsChoose={(args) => {
+                        setSalesFilters({ paymentStatus: args ?? "" })
+                      }} />
+                    </div>
+                  </div>
+                </div>
+              </PopoverButton>
+
               <button
                 type="button"
                 title="Refresh"
                 className={ICON_BUTTON}
                 onClick={ev => {
                   fetchPosts()
+                  setorderStatsRefresh(count => count + 1)
                 }}>
 
                 {loading && (
@@ -1305,7 +1472,13 @@ const Dashboard = (props) => {
                   )}
                 </div>
               }>
-              <ChartComponent chartData={chartData} />
+              {/* <ChartComponent chartData={chartData} /> */}
+
+              <OrderStats
+                query={{ ...orderStatsFilters, range: queryPrams?.range, first_date: queryPrams?.first_date, last_date: queryPrams?.last_date }}
+                refreshKey={orderStatsRefresh}
+              />
+
             </WidgetWrapper>
           </div>
 

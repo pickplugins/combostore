@@ -1,4 +1,8 @@
 import { redactStripeSettings } from "@/lib/stripe-server";
+import { redactEpsSettings } from "@/lib/eps-server";
+import { redactAamarPaySettings } from "@/lib/aamarpay-server";
+import { redactBkashSettings } from "@/lib/bkash-server";
+import { redactNagadSettings } from "@/lib/nagad-server";
 
 /**
  * The store's settings, for the storefront.
@@ -6,11 +10,14 @@ import { redactStripeSettings } from "@/lib/stripe-server";
  * This is the one place the settings blob crosses into a browser, and it is
  * open - no token, no session - because the storefront needs it on a cold page
  * load. So anything secret has to come out on the way through: Stripe's keys
- * are editable in the dashboard, which means they live in this blob, and
- * without `redactStripeSettings` they would be handed to anyone who asked for
- * `/api/settings`. The dashboard reads its own copy through the authenticated
- * `get_settings` route instead, which is how it can still show them to an
- * admin.
+ * and aamarPay's, EPS's, bKash's and Nagad's credentials are editable in the dashboard,
+ * which means they live in this blob, and without the redaction below they would
+ * be handed to anyone who asked for `/api/settings`. The dashboard reads its own copy through the
+ * authenticated `get_settings` route instead, which is how it can still show
+ * them to an admin.
+ *
+ * Each gateway redacts its own fields and passes the rest of the blob through,
+ * so they chain: a gateway added later adds a call here and nothing else.
  */
 export async function GET() {
 
@@ -37,9 +44,12 @@ export async function GET() {
   // console.log("API data:", data); // 👈 add this
 
   /* Some installs answer with the blob wrapped in `settings`, some bare. */
+  const strip = (settings) =>
+    redactNagadSettings(redactBkashSettings(redactAamarPaySettings(redactEpsSettings(redactStripeSettings(settings)))));
+
   const redacted = data?.settings
-    ? { ...data, settings: redactStripeSettings(data.settings) }
-    : redactStripeSettings(data);
+    ? { ...data, settings: strip(data.settings) }
+    : strip(data);
 
   return Response.json(redacted);
 }

@@ -58,7 +58,6 @@ const GlobalHeader = () => {
 		'top-customers': { label: ("Top Customers"), value: "top-customers" },
 		'bulk-submit-product': { label: ("Bulk Submit Product"), value: "bulk-submit-product" },
 		'bulk-add-users': { label: ("Bulk Add Users"), value: "bulk-add-users" },
-		'stats-orders': { label: ("Stats Orders"), value: "stats-orders" },
 		'top-customers': { label: ("Top Customers"), value: "top-customers" },
 		'top-selling-products': { label: ("Top Selling Products"), value: "top-selling-products" },
 		'create-tickets': { label: ("Create Tickets"), value: "create-tickets" },

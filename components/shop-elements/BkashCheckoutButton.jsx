@@ -1,99 +1,117 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
-export default function BkashCheckoutButton({ total, orderId, onPaymentSuccess }) {
-  const [loading, setLoading] = useState(false);
+/**
+ * The bKash button at checkout.
+ *
+ * bKash hosts the payment itself, so this is a redirect and not a widget: the
+ * order is created first, the server asks bKash for a payment URL against that
+ * order, and the buyer leaves for it. They come back to /api/bkash/callback,
+ * which takes the payment and marks the order paid - nothing on this side of
+ * the redirect decides anything about money.
+ *
+ * Props:
+ *   total       Order total, for the amount on the button.
+ *   ensureOrder async () => ({ order_id, order_hash }) - creates or reuses the order.
+ *   onError     (message) => void - for a notification; the button shows its own text too.
+ */
+export default function BkashCheckoutButton({ total, ensureOrder, onError }) {
+  const [status, setStatus] = useState("ready"); // ready | starting | redirecting
+  const [message, setMessage] = useState("");
 
-  useEffect(() => {
-    function handleBkashResult(event) {
-      // Only accept messages from your own site.
-      if (event.origin !== window.location.origin) return;
-
-      const result = event.data;
-
-      if (result?.type !== "BKASH_PAYMENT_RESULT") return;
-
-      setLoading(false);
-
-      if (result.status === "success") {
-
-
-        onPaymentSuccess?.(result);
-
-        // Example:
-        // clearCart();
-        // closeSlideCart();
-        // router.push(`/order-success?paymentID=${result.paymentID}`);
-      } else {
-        alert(result.message || "bKash payment was not completed.");
-      }
-    }
-
-    window.addEventListener("message", handleBkashResult);
-
-    return () => {
-      window.removeEventListener("message", handleBkashResult);
-    };
-  }, [onPaymentSuccess]);
+  const amount = Number(total);
+  const payable = Number.isFinite(amount) && amount > 0;
+  const busy = status !== "ready";
 
   async function payWithBkash() {
-    setLoading(true);
-
-    // Open first to avoid browser popup blockers.
-    const popup = window.open(
-      "",
-      "bkashPayment",
-      "width=500,height=720,scrollbars=yes,resizable=yes"
-    );
-
-    if (!popup) {
-      setLoading(false);
-      alert("Please allow popups to continue with bKash.");
+    if (busy || !payable) {
       return;
     }
 
-    popup.document.write("<p>Opening bKash payment...</p>");
+    setStatus("starting");
+    setMessage("");
 
     try {
-      const response = await fetch("/api/bkash/create", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          amount: total,
-          invoiceNumber: orderId,
-        }),
-      });
+      const order = await ensureOrder();
 
-      const data = await response.json();
-
-
-
-
-      if (!response.ok) {
-        throw new Error(data.error || "Could not start bKash payment");
+      if (!order?.order_hash) {
+        throw new Error("The order could not be prepared.");
       }
 
+      const response = await fetch("/api/bkash/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ order_hash: order.order_hash }),
+      });
 
+      const data = await response.json().catch(() => null);
 
-      //popup.location.href = data.bkashURL;
+      /* Already paid - send them to the order rather than charge twice. */
+      if (response.status === 409) {
+        window.location.href = `/thank-you/${order.order_hash}`;
+
+        return;
+      }
+
+      if (!response.ok || !data?.bkashURL) {
+        throw new Error(data?.message || "Could not start the bKash payment.");
+      }
+
+      setStatus("redirecting");
+
+      /*
+        The cart cannot be emptied here - the payment has not happened yet, and
+        the buyer may well come back unpaid. This marker is what lets the
+        thank-you page empty it on the way back, and only for the order this
+        browser was actually sent off to pay for.
+      */
+      try {
+        window.sessionStorage.setItem("bkash:pending_order", order.order_hash);
+      } catch (error) {
+        /* Private mode: the cart survives the trip, which is harmless. */
+      }
+
+      /* A top-level navigation: the gateway owns the page from here. */
+      window.location.href = data.bkashURL;
     } catch (error) {
-      popup.close();
-      setLoading(false);
-      alert(error.message || "Unable to start bKash payment.");
+      setStatus("ready");
+      setMessage(error.message);
+      onError?.(error.message);
     }
   }
 
   return (
-    <div
-      type="button"
-      onClick={payWithBkash}
-      disabled={loading || Number(total) <= 0}
-      className="w-full rounded-lg text-center cursor-pointer bg-pink-600 px-4 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
-    >
-      {loading ? "Opening bKash..." : `Pay ৳${Number(total).toFixed(2)} with bKash`}
+    <div className="flex flex-col gap-2">
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={payWithBkash}
+        onKeyDown={(ev) => {
+          if (ev.key === "Enter" || ev.key === " ") {
+            payWithBkash();
+          }
+        }}
+        aria-disabled={busy || !payable}
+        className={`w-full rounded-lg px-4 py-3 text-center font-semibold text-white ${
+          busy || !payable
+            ? "cursor-not-allowed bg-gray-400"
+            : "cursor-pointer bg-pink-600"
+        }`}
+      >
+        {status === "starting" && "Preparing secure payment…"}
+        {status === "redirecting" && "Taking you to bKash…"}
+        {status === "ready"
+          && (payable
+            ? `Pay ৳${amount.toFixed(2)} with bKash`
+            : "Nothing to pay")}
+      </div>
+
+      <div className="text-xs text-gray-500">
+        You will be taken to bKash to pay, and brought back here afterwards.
+      </div>
+
+      {message && <div className="text-sm text-red-500">{message}</div>}
     </div>
   );
 }

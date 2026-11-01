@@ -90,7 +90,7 @@ const GridOptions = (props) => {
 
 				</div>
 				<div className="flex justify-between items-center text-sm">
-					<div>Enable Order Notes?</div>
+					<div>Enable Order Subscription?</div>
 					<div className="cursor-pointer " onClick={ev => {
 						var optionsX = { ...options }
 						optionsX.orderSubscription = !optionsX.orderSubscription

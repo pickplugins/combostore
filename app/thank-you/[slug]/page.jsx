@@ -18,7 +18,7 @@ import PageBuilderContent from "@/components/PageBuilder/PageBuilderContent";
   gateway's checkout button and read back here; see the effect below for why
   the cart is emptied on this page rather than at checkout.
 */
-const REDIRECT_PAYMENT_MARKERS = ['aamarpay:pending_order', 'stripe:pending_order'];
+const REDIRECT_PAYMENT_MARKERS = ['aamarpay:pending_order', 'stripe:pending_order', 'eps:pending_order', 'bkash:pending_order', 'nagad:pending_order'];
 
 
 const page = ({ params }) => {
@@ -190,8 +190,8 @@ const page = ({ params }) => {
 
 
   /*
-    A gateway the buyer is redirected away to - aamarPay, Stripe - cannot
-    empty the cart itself: the checkout page is gone by the time the payment
+    A gateway the buyer is redirected away to - aamarPay, Stripe, EPS, bKash, Nagad -
+    cannot empty the cart itself: the checkout page is gone by the time the payment
     lands, and the order is marked paid on the server. So the cart is emptied
     here instead, on the way back.
 

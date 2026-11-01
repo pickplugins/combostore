@@ -112,7 +112,6 @@ const NAVS = [
 
 
 	{ label: ("Stats"), value: "stats", icon: <IconDeviceDesktopAnalytics />, roles: ['administrator', 'store_manager'] },
-	{ label: ("Order Stats"), value: "stats-orders", icon: <IconBasketCheck />, parent: "stats", roles: ['administrator', 'store_manager'] },
 	{ label: ("Activity"), value: "activity", icon: <IconActivityHeartbeat />, parent: "stats", roles: ['administrator', 'store_manager'] },
 	{ label: ("Stocks"), value: "stocks", icon: <IconStackPush />, parent: "stats", roles: ['administrator', 'store_manager'] },
 	{ label: ("Stocks History"), value: "stocks-history", icon: <IconStackPush />, parent: "stats", roles: ['administrator', 'store_manager'] },
