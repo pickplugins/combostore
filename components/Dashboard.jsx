@@ -1364,7 +1364,8 @@ const Dashboard = (props) => {
                 }
                 buttonIcon={<IconFilter size={16} />}
                 buttonClass={SALES_FILTERS_BUTTON_CLASSES}
-                popoverClass={SALES_FILTERS_PANEL_CLASSES}>
+                popoverClass={SALES_FILTERS_PANEL_CLASSES}
+                closeOnOutsideClick={true}>
 
                 <div className="p-4">
 

@@ -214,7 +214,7 @@ const OrderStats = ({ query, refreshKey }) => {
           keeps its shape while the numbers change. */}
       <div className={`flex flex-col gap-4 transition-opacity ${loading ? "opacity-60" : ""}`} aria-busy={loading}>
 
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {/* <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           {TILE_ORDER.map((id) => {
 
             var series = SERIES.find(item => item.id == id);
@@ -231,7 +231,7 @@ const OrderStats = ({ query, refreshKey }) => {
               />
             )
           })}
-        </div>
+        </div> */}
 
         {/* With nothing loaded the chart would say nothing was recorded, which
             neither a failed request nor a half-chosen range shows. */}

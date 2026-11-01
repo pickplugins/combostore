@@ -1,6 +1,6 @@
 import PropTypes from "prop-types";
 import React from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { IconLibraryPhoto, IconCheckbox, IconSquare, IconFidgetSpinner, IconTrash, IconStarFilled, IconStar, IconX } from "@tabler/icons-react";
 
 
@@ -55,6 +55,27 @@ const PopoverButton = (props) => {
 		return () => clearTimeout(timer);
 	}, [isOpen, drawer]);
 
+	/*
+		Opt-in, because many callers hold forms a stray click should not close.
+		It listens for the press rather than the click: by the time a click
+		reaches the document, picking an option may have removed its target
+		from the panel, and that would read as a click outside.
+	*/
+	const wrapperRef = useRef(null);
+
+	useEffect(() => {
+		if (!props.closeOnOutsideClick || !isOpen) return;
+
+		const onPress = ev => {
+			if (!wrapperRef.current?.contains(ev.target)) {
+				toggle();
+			}
+		};
+
+		document.addEventListener("pointerdown", onPress);
+		return () => document.removeEventListener("pointerdown", onPress);
+	}, [props.closeOnOutsideClick, isOpen]);
+
 	var positionClass = "";
 
 	if (position == 'topLeft') {
@@ -95,7 +116,7 @@ const PopoverButton = (props) => {
 		</div>
 	);
 
-	return <div className={`relative ${wrapperClass}`}>
+	return <div ref={wrapperRef} className={`relative ${wrapperClass}`}>
 
 		<div className={`${buttonClass} flex gap-2 w-max`} onClick={toggle}>
 			{buttonIcon}
