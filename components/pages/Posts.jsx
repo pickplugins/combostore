@@ -5,6 +5,7 @@ import React from "react";
 import { useState, useEffect, useContext } from "react";
 import EntriesTable from "../../components/EntriesTable";
 import { useCounterStore } from '../../store/useCounterStore'
+import { loadPostsQuery, savePostsQuery } from "../../lib/postsQuery";
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
 import PopoverButton from '../../components/PopoverButton';
@@ -227,10 +228,38 @@ const Posts = () => {
 
 
 
+	/*
+		The saved query comes back in an effect, not in the useState above, because
+		the server has no sessionStorage and the first render has to match its HTML.
+
+		Nothing is fetched until then. Responses are not checked for being current,
+		so a fetch of the defaults could land after the restored one and replace it.
+		The merge is built on `previous` because EntriesTable reports its own copy of
+		the defaults as it mounts, just before this runs.
+	*/
+	const [queryRestored, setqueryRestored] = useState(false);
+
+	useEffect(() => {
+		const saved = loadPostsQuery();
+
+		if (saved) {
+			setqueryPrams((previous) => ({ ...previous, ...saved }));
+		}
+
+		setqueryRestored(true);
+	}, []);
+
 	useEffect(() => {
 
+		/* After a reload the token arrives from an effect above this page. */
+		if (!queryRestored || !token) {
+			return;
+		}
+
+		savePostsQuery(queryPrams);
 		fetchPosts();
-	}, [queryPrams]);
+
+	}, [queryRestored, queryPrams, token]);
 
 
 	function onChangeQueryPrams(queryPrams) {
@@ -244,10 +273,6 @@ const Posts = () => {
 	function onRefreshRequest(rows) {
 		fetchPosts();
 	}
-
-	useEffect(() => {
-		fetchPosts();
-	}, []);
 
 
 

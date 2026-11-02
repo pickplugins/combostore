@@ -8,10 +8,10 @@ import { useCounterStore } from '../../store/useCounterStore'
 
 /* Icon buttons, in place of small dark slabs around a bare icon. */
 const ICON_BUTTON =
-  "inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-500 transition-colors hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 cursor-pointer";
+	"inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-500 transition-colors hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 cursor-pointer";
 
 const ICON_BUTTON_SM =
-  "inline-flex h-7 w-7 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-500 transition-colors hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 cursor-pointer";
+	"inline-flex h-7 w-7 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-500 transition-colors hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 cursor-pointer";
 
 
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;

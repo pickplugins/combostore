@@ -71,7 +71,8 @@ const PostEdit = ({ id }) => {
 
 
 
-            product.addons = [...product.addons, 'brands']
+            /* get_product returns no addons for a post, only for a product. */
+            product.addons = [...(product.addons ?? []), 'brands']
 
 
             setloading(false);

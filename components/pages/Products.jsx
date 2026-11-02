@@ -7,6 +7,7 @@ import EntriesTable from "../../components/EntriesTable";
 import DropDown from "../../components/DropDown";
 import { useCounterStore } from '../../store/useCounterStore'
 import { useUtilsStore } from '../../store/useUtilsStore';
+import { loadProductsQuery, saveProductsQuery } from "../../lib/productsQuery";
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
 
@@ -415,6 +416,37 @@ const Products = () => {
 	}
 
 	const [debouncedQuery, setDebouncedQuery] = useState(queryPrams);
+	const [queryRestored, setqueryRestored] = useState(false);
+
+
+	/*
+		The saved query comes back in an effect, not in the useState above, because
+		the server has no sessionStorage and the first render has to match its HTML.
+
+		Nothing is fetched until then. Responses are not checked for being current,
+		so a fetch of the defaults could land after the restored one and replace it.
+		The debounced copy is set too, so the restored list loads without the delay.
+	*/
+	useEffect(() => {
+		const saved = loadProductsQuery();
+
+		if (saved) {
+			const restored = { ...queryPrams, ...saved };
+
+			setqueryPrams(restored);
+			setDebouncedQuery(restored);
+		}
+
+		setqueryRestored(true);
+	}, []);
+
+
+	/* Saved straight away, not debounced: a product can be opened within the delay. */
+	useEffect(() => {
+		if (queryRestored) {
+			saveProductsQuery(queryPrams);
+		}
+	}, [queryRestored, queryPrams]);
 
 
 	useEffect(() => {
@@ -429,12 +461,15 @@ const Products = () => {
 
 
 	useEffect(() => {
-		if (debouncedQuery) {
 
-			fetchPosts();
-
+		/* After a reload the token arrives from an effect above this page. */
+		if (!queryRestored || !token) {
+			return;
 		}
-	}, [debouncedQuery]);
+
+		fetchPosts();
+
+	}, [queryRestored, debouncedQuery, token]);
 
 
 
@@ -462,7 +497,6 @@ const Products = () => {
 	}
 
 	useEffect(() => {
-		fetchPosts();
 		fetchTerms();
 		fetchBrands();
 	}, []);
@@ -844,7 +878,7 @@ const Products = () => {
 
 
 
-					<select name="" id="" className={FILTER_SELECT} onChange={ev => {
+					<select name="" id="" className={FILTER_SELECT} value={queryPrams?.category ?? ""} onChange={ev => {
 
 						var value = ev.target.value;
 
@@ -897,7 +931,7 @@ const Products = () => {
 						})}
 
 					</select>
-					<select name="" id="" className={FILTER_SELECT} onChange={ev => {
+					<select name="" id="" className={FILTER_SELECT} value={queryPrams?.brand ?? ""} onChange={ev => {
 
 						var value = ev.target.value;
 

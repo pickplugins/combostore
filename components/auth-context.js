@@ -5,6 +5,8 @@ import { useCounterStore } from '../store/useCounterStore'
 import { useRouter } from "next/navigation";
 import { clearCheckoutDraft } from "@/lib/checkoutDraft";
 import { clearOrdersQuery } from "@/lib/ordersQuery";
+import { clearProductsQuery } from "@/lib/productsQuery";
+import { clearPostsQuery } from "@/lib/postsQuery";
 
 
 const AuthContext = createContext(null);
@@ -181,6 +183,8 @@ export function AuthProvider({ children }) {
     setUserDataX(null);
     clearCheckoutDraft();
     clearOrdersQuery();
+    clearProductsQuery();
+    clearPostsQuery();
     router.push("/login");
   };
 

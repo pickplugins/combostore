@@ -35,7 +35,7 @@ const PostThumbnailView = (props) => {
 	if (post_type == 'post') {
 		postUrl = `${appUrl}blog/${postSlug}`;
 	}
-	if (post_type == 'product') {
+	if (post_type == 'cmb_product') {
 		postUrl = `${appUrl}product/${postSlug}`;
 	}
 

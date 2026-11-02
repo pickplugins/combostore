@@ -196,7 +196,7 @@ export const useCounterStore = create((set) => ({
 
       "id": 'aamarpay',
       "enable": false,
-      // "comingSoon": true,
+      "comingSoon": true,
       "label": "aamarPay",
       "value": "aamarpay",
     },
@@ -204,23 +204,29 @@ export const useCounterStore = create((set) => ({
 
       "id": 'eps',
       "enable": false,
+      "comingSoon": true,
+
       "label": "EPS",
       "value": "eps",
     },
-    "bkash": {
+    // "bkash": {
 
-      "id": 'bkash',
-      "enable": false,
-      "label": "bKash",
-      "value": "bkash",
-    },
-    "nagad": {
+    //   "id": 'bkash',
+    //   "enable": false,
+    //   "comingSoon": true,
 
-      "id": 'nagad',
-      "enable": false,
-      "label": "Nagad",
-      "value": "nagad",
-    },
+    //   "label": "bKash",
+    //   "value": "bkash",
+    // },
+    // "nagad": {
+
+    //   "id": 'nagad',
+    //   "enable": false,
+    //   "comingSoon": true,
+
+    //   "label": "Nagad",
+    //   "value": "nagad",
+    // },
     "sslcommerz": {
 
       "id": 'sslcommerz',
