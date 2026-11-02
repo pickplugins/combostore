@@ -8,14 +8,48 @@ import { useState, useEffect, useContext } from "react";
 import { useCounterStore } from '../../store/useCounterStore'
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
-import { useUtilsStore } from '../../store/useUtilsStore';
+import { IconActivity, IconCreditCard, IconDeviceDesktop, IconDeviceMobile, IconShoppingCartPlus } from "@tabler/icons-react";
+
+
+const CHIP = "inline-flex max-w-full items-center truncate rounded-md bg-gray-100 px-2 py-0.5 text-xs text-gray-700";
+
+const EMPTY = <span className="text-sm text-gray-300">—</span>;
+
+const EVENTS = {
+	addToCart: { label: "Add to cart", icon: IconShoppingCartPlus, classes: "bg-emerald-50 text-emerald-600" },
+	goToCheckout: { label: "Go to checkout", icon: IconCreditCard, classes: "bg-indigo-50 text-indigo-600" },
+};
+
+/* New events and sources appear here without a code change: "cartButton" reads "Cart button". */
+function humanize(text) {
+
+	if (!text) {
+		return "";
+	}
+
+	const words = String(text).replace(/([a-z0-9])([A-Z])/g, "$1 $2").replace(/[_-]+/g, " ").toLowerCase();
+
+	return words.charAt(0).toUpperCase() + words.slice(1);
+}
+
+/* `value` is whatever the storefront logged, so nothing here can assume valid JSON. */
+function parseValue(value) {
+
+	if (!value) {
+		return null;
+	}
+
+	try {
+		return JSON.parse(value);
+	} catch (_error) {
+		return value;
+	}
+}
 
 
 const Activity = () => {
 
-	const { wrapCurrency } = useUtilsStore()
-
-	const { token, appData, notifications, addNotification, userDataX, setUserDataX } = useCounterStore()
+	const { token, addNotification } = useCounterStore()
 
 
 
@@ -32,20 +66,12 @@ const Activity = () => {
 
 	var columns = {
 		check: { label: ("Check"), },
-		id: { label: ("ID"), callback: callbackTitle, classes: "w-30 text-center" },
-		event: { label: ("Event"), classes: "text-center" },
-		value: { label: "Value", callback: callbackValue, classes: "text-center" },
-
-		source: { label: ("Status"), classes: "text-center" },
-		device: { label: ("Device"), classes: "text-center" },
-		browser: { label: ("Browser"), classes: "text-center" },
-		platform: { label: ("Platform"), classes: "text-center" },
-		city: { label: ("City"), classes: "text-center" },
-
-
-
-
-		updated_at: { label: ("Datetime"), callback: callbackFormatDate, classes: "text-center" },
+		id: { label: ("Event"), callback: callbackEvent, classes: "text-left text-gray-600" },
+		value: { label: ("Details"), callback: callbackDetails, classes: "text-left text-gray-600" },
+		userid: { label: ("User"), callback: callbackUser, classes: "text-left text-gray-600" },
+		device: { label: ("Device"), callback: callbackDevice, classes: "text-left text-gray-600" },
+		city: { label: ("City"), callback: callbackCity, classes: "text-left text-gray-600" },
+		updated_at: { label: ("Datetime"), callback: callbackDatetime, classes: "text-right pr-2 text-gray-600" },
 	};
 
 
@@ -80,9 +106,6 @@ const Activity = () => {
 
 				if (response.ok && response.status < 400) {
 					response.json().then((res) => {
-						var errors = res?.errors;
-						var success = res?.success;
-
 						setloading(false);
 
 						get_activities();
@@ -94,8 +117,8 @@ const Activity = () => {
 				}
 			})
 			.catch((_error) => {
-				//this.saveAsStatus = 'error';
-				// handle the error
+				setloading(false);
+				addNotification({ type: 'error', title: 'Activities not deleted', content: "Your change could not be saved. Please try again." })
 			});
 	}
 
@@ -170,7 +193,6 @@ const Activity = () => {
 	function onChangeQueryPrams(queryPrams) {
 		if (queryPrams) {
 			setqueryPrams(queryPrams)
-			get_activities();
 		}
 
 	}
@@ -185,161 +207,160 @@ const Activity = () => {
 
 
 
-	function callbackFormatDate(entry, columnIndex) {
+	function callbackEvent(entry, columnIndex) {
 
-		var format = "d/m/Y";
-		var dateInput = entry.datetime;
-
-		if (!dateInput) {
-
-			return (
-				<td
-					key={columnIndex}>
-
-				</td>
-
-			);
-
-		}
-
-
-		// Ensure date is in a proper format for parsing
-		const dateObj = new Date(dateInput.replace(" ", "T"));
-
-		if (isNaN(dateObj)) {
-			throw new Error("Invalid date format");
-		}
-
-		// Extract date components
-		const day = String(dateObj.getDate()).padStart(2, '0');
-		const month = String(dateObj.getMonth() + 1).padStart(2, '0'); // Months are zero-based
-		const year = dateObj.getFullYear();
-
-		// Replace format placeholders with actual values
-		//return ;
+		var event = EVENTS[entry?.event];
+		var Icon = event?.icon ?? IconActivity;
 
 		return (
-			<td
-				key={columnIndex}>
-				{format.replace("d", day).replace("m", month).replace("Y", year)}
-			</td>
-
-		);
-
-	}
-
-
-
-	function callbackTitle(entry, columnIndex) {
-
-		return (
-			<td className="text-center py-3"
-				key={columnIndex}>
-				<Link className=" text-gray-600 font-bold" href={`/orders/${entry.id}`}>
-					{"#" + entry.id}
-				</Link>
-			</td>
-
-		);
-	}
-	function callbackValue(entry, columnIndex) {
-
-		return (
-			<td className="text-center py-3"
-				key={columnIndex}>
-				{entry.value}
-			</td>
-
-		);
-	}
-
-
-
-
-
-
-	function callbackUserName(entry, columnIndex) {
-
-		return (
-			<td className="text-center "
-				key={columnIndex}>
-				{entry.billing_name}
-			</td>
-
-		);
-	}
-
-	function callbackTotal(entry, columnIndex) {
-
-		return (
-			<td className="text-center "
-				key={columnIndex}>
-				<span>{wrapCurrency(entry.total_amount)}</span>
-			</td>
-
-		);
-	}
-	function callbackSubtotal(entry, columnIndex) {
-
-		return (
-			<td className="text-center "
-				key={columnIndex}>
-				<span>{wrapCurrency(entry.subtotal_amount)}</span>
-			</td>
-
-		);
-	}
-	function callbackDiscount(entry, columnIndex) {
-
-		return (
-			<td className="text-center "
-				key={columnIndex}>
-				<span>{wrapCurrency(entry.discount_amount)}</span>
-			</td>
-
-		);
-	}
-
-
-
-
-
-	function callbackStatus(entry, columnIndex) {
-
-		return (
-			<td className="text-center "
+			<td data-label="Event" className="!px-5 py-3 text-left"
 				key={columnIndex}>
 
-				<div className={` text-sm `}>
-					{(entry.payment_status == 'pending' || entry.payment_status == '') && (
-						<span className="inline-flex items-center whitespace-nowrap rounded-full bg-indigo-50 px-2.5 py-1 text-[11px] font-semibold text-indigo-700 ring-1 ring-inset ring-indigo-200">Pending</span>
-					)}
-					{entry.payment_status == 'completed' && (
-						<span className="inline-flex items-center whitespace-nowrap rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-200">Completed</span>
-					)}
-					{entry.payment_status == 'cancelled' && (
-						<span className="inline-flex items-center whitespace-nowrap rounded-full bg-red-50 px-2.5 py-1 text-[11px] font-semibold text-red-700 ring-1 ring-inset ring-red-200">Cancelled</span>
-					)}
-					{entry.payment_status == 'refunded' && (
-						<span className="inline-flex items-center whitespace-nowrap rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700 ring-1 ring-inset ring-amber-200">Refunded</span>
-					)}
-					{entry.payment_status == 'failed' && (
-						<span className="inline-flex items-center whitespace-nowrap rounded-full bg-red-50 px-2.5 py-1 text-[11px] font-semibold text-red-700 ring-1 ring-inset ring-red-200">Failed</span>
-					)}
-					{entry.payment_status == 'processing' && (
-						<span className="inline-flex items-center whitespace-nowrap rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-semibold text-blue-700 ring-1 ring-inset ring-blue-200">Processing</span>
-					)}
-					{entry.payment_status == 'on-hold' && (
-						<span className="inline-flex items-center whitespace-nowrap rounded-full bg-orange-50 px-2.5 py-1 text-[11px] font-semibold text-orange-700 ring-1 ring-inset ring-orange-200">Hold</span>
-					)}
+				<div className="flex min-w-0 flex-1 items-center gap-3">
 
+					<div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${event?.classes ?? "bg-gray-100 text-gray-500"}`}>
+						<Icon size={18} stroke={1.75} />
+					</div>
 
+					<div className="flex min-w-0 flex-1 flex-col gap-1 text-left">
+						<div className="text-sm font-medium text-gray-900">{event?.label ?? (humanize(entry?.event) || ("Unknown event"))}</div>
+
+						<div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
+							<span className="font-mono text-[11px] text-gray-400">#{entry?.id}</span>
+							{entry?.source && (
+								<span>{humanize(entry.source)}</span>
+							)}
+						</div>
+					</div>
 				</div>
-
 			</td>
 
 		);
 	}
+
+
+	function callbackDetails(entry, columnIndex) {
+
+		var value = parseValue(entry?.value);
+		var isObject = value && typeof value === "object";
+		var isEmpty = !value || (isObject && Object.keys(value).length === 0);
+		var { productId, ...rest } = isObject ? value : {};
+
+		return (
+			<td data-label="Details" className="!px-5 py-3 text-left"
+				key={columnIndex}>
+
+				{isEmpty && EMPTY}
+
+				{!isEmpty && (
+					<div className="flex flex-wrap items-center gap-1.5">
+
+						{productId && (
+							<Link className="text-sm text-gray-700 transition-colors hover:text-blue-600 hover:underline" href={`/dashboard/products/${productId}`}>
+								{("Product")} <span className="font-mono text-[11px] text-gray-400">#{productId}</span>
+							</Link>
+						)}
+
+						{!isObject && (
+							<span className={CHIP}>{String(value)}</span>
+						)}
+
+						{Object.entries(rest).map(([key, item]) => {
+							return (
+								<span key={key} className={CHIP}>{humanize(key)}: {typeof item === "object" ? JSON.stringify(item) : String(item)}</span>
+							)
+						})}
+
+					</div>
+				)}
+			</td>
+
+		);
+	}
+
+
+	function callbackUser(entry, columnIndex) {
+
+		var userId = parseInt(entry?.userid);
+
+		return (
+			<td data-label="User" className="!px-5 py-3 text-left"
+				key={columnIndex}>
+
+				{userId > 0 && (
+					<span className="text-sm text-gray-700">
+						{("User")} <span className="font-mono text-[11px] text-gray-400">#{userId}</span>
+					</span>
+				)}
+				{!(userId > 0) && (
+					<span className="text-sm text-gray-400">{("Guest")}</span>
+				)}
+			</td>
+
+		);
+	}
+
+
+	function callbackDevice(entry, columnIndex) {
+
+		/* The device field holds the whole user agent, kept as a tooltip. */
+		var isMobile = /Mobi|Android|iPhone|iPad/i.test(entry?.device ?? "");
+		var Icon = isMobile ? IconDeviceMobile : IconDeviceDesktop;
+
+		return (
+			<td data-label="Device" className="!px-5 py-3 text-left"
+				key={columnIndex}>
+
+				<div className="flex items-center gap-2" title={entry?.device}>
+					<Icon size={16} stroke={1.75} className="shrink-0 text-gray-400" />
+					<div className="flex min-w-0 flex-col text-left">
+						<span className="text-sm text-gray-700">{entry?.browser || ("Unknown")}</span>
+						{entry?.platform && (
+							<span className="text-xs text-gray-500">{entry.platform}</span>
+						)}
+					</div>
+				</div>
+			</td>
+
+		);
+	}
+
+
+	function callbackCity(entry, columnIndex) {
+
+		return (
+			<td data-label="City" className="!px-5 py-3 text-left"
+				key={columnIndex}>
+				{entry?.city ? <span className="text-sm text-gray-700">{entry.city}</span> : EMPTY}
+			</td>
+
+		);
+	}
+
+
+	function callbackDatetime(entry, columnIndex) {
+
+		/* A row with a bad date should show a dash, not take the whole table down. */
+		var date = new Date(String(entry?.datetime ?? "").replace(" ", "T"));
+		var valid = !isNaN(date);
+
+		return (
+			<td data-label="Datetime" className="!px-5 py-3 text-right"
+				key={columnIndex}>
+
+				{!valid && EMPTY}
+
+				{valid && (
+					<div className="flex flex-col items-end">
+						<span className="whitespace-nowrap text-sm tabular-nums text-gray-700">{date.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}</span>
+						<span className="whitespace-nowrap text-xs tabular-nums text-gray-500">{date.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}</span>
+					</div>
+				)}
+			</td>
+
+		);
+	}
+
 
 	return (
 		<div className="page-shell">
@@ -353,19 +374,20 @@ const Activity = () => {
 					</p>
 				</div>
 			</div>
-			<div className="flex gap-3 w-full md:justify-end ">
-				{selectedRows.length > 0 && (
+			{selectedRows.length > 0 && (
+				<div className="flex items-center justify-end gap-3">
 					<div
-						className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-red-700 cursor-pointer"
+						className="inline-flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700 transition-colors hover:bg-red-100 cursor-pointer"
 						onClick={() => {
-							delete_activities();
+							if (confirm("Please confirm?")) {
+								delete_activities();
+							}
 						}}>
 						{("Delete Activities")}
 					</div>
-				)}
+				</div>
+			)}
 
-
-			</div>
 			<EntriesTable
 				queryPrams={queryPrams}
 				columns={columns}

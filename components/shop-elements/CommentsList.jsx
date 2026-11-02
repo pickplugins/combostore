@@ -1,4 +1,5 @@
 import { useState, useEffect, useContext } from "react";
+import Image from "next/image";
 import CommentsForm from "./CommentsForm";
 import { IconStar, IconStarFilled, IconCopy, IconBrandOpenai, IconX, IconBookmark, IconHeart, IconHeartFilled, IconChevronDown, IconChevronUp, IconDownload, IconThumbUp, IconThumbDown, IconTags, IconLink, IconEyeSearch, IconHeartPlus, IconTrash, IconStackPop } from "@tabler/icons-react";
 
@@ -36,19 +37,19 @@ const CommentsList = (props) => {
 
 
 		return (
-			<div className={`${comment_parent > 0 ? "ml-7" : ""} bg-gray-200 rounded-sm p-3 `}>
+			<div className={`${comment_parent > 0 ? "ml-7" : ""} rounded-lg border border-gray-200 bg-gray-50 p-4`}>
 
-				<div className="flex gap-4 flex-col  ">
+				<div className="flex flex-col gap-3">
 
 					<div className="flex justify-between items-center">
 
 						<div className="w-max flex gap-2 items-center ">
-							<div className="w-[40px] h-[40px] rounded-full overflow-hidden">
-								<Image className="w-full h-full object-cover" src={comment?.avatar} alt={comment?.comment_author} width={40} height={40} />
+							<div className="h-8 w-8 shrink-0 overflow-hidden rounded-full border border-gray-200 bg-white">
+								<Image unoptimized className="h-8 w-8 object-cover" src={comment?.avatar} alt={comment?.comment_author} width={40} height={40} />
 
 
 							</div>
-							<div className="text-sm w-max ">{comment?.comment_author}</div>
+							<div className="w-max text-sm font-medium text-gray-900">{comment?.comment_author}</div>
 						</div>
 						<div>
 							{comment.rate > 0 && (
@@ -92,20 +93,20 @@ const CommentsList = (props) => {
 
 
 
-					<div className=" w-full text-sm ">
+					<div className="w-full text-sm leading-relaxed text-gray-700">
 						{comment?.comment_content}
 					</div>
 
-					<div className="flex justify-end gap-2 text-sm w-full">
+					<div className="flex w-full justify-end gap-3 text-xs font-medium">
 
-						<div className="cursor-pointer" onClick={ev => {
+						<div className="cursor-pointer text-gray-500 transition-colors hover:text-gray-900" onClick={ev => {
 
 							setreplyTo({ ...replyTo, index: index })
 
 						}}>Reply</div>
 
 						{replyTo.index == index && (
-							<div className="cursor-pointer text-red-400" onClick={ev => {
+							<div className="cursor-pointer text-red-600 hover:text-red-700" onClick={ev => {
 
 								setreplyTo({ ...replyTo, index: null })
 
@@ -135,7 +136,7 @@ const CommentsList = (props) => {
 		<div className="">
 
 
-			<div className="flex flex-col gap-5 max-h-[600px] overflow-auto">
+			<div className="flex max-h-[600px] flex-col gap-3 overflow-auto">
 				{comments?.map((comment, index) => {
 
 					return (

@@ -2,587 +2,316 @@
 import React from 'react'
 import Link from "next/link";
 
-
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
-
 
 import Comments from "../../components/shop-elements/Comments";
 
 import { useCounterStore } from '../../store/useCounterStore'
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
-import { IconArrowNarrowRightDashed, IconArrowNarrowLeftDashed, IconCopy, IconBrandOpenai, IconX, IconBookmark, IconHeart, IconHeartFilled, IconChevronDown, IconChevronUp, IconDownload, IconThumbUp, IconThumbDown, IconEyeSearch, IconReplace } from "@tabler/icons-react";
+import { IconArrowLeft } from "@tabler/icons-react";
 import Spinner from '../../components/Spinner';
+
+
+const CARD = "form-card rounded-xl border border-gray-200 bg-white shadow-sm";
+
+const CARD_TITLE = "border-b border-gray-200 px-5 py-4 text-base font-semibold text-gray-900";
+
+const INFO_LABEL = "text-xs font-medium text-gray-500";
+
+const CHIP = "inline-flex max-w-full items-center truncate rounded-md bg-gray-100 px-2 py-0.5 text-xs text-gray-700";
+
+const SELECT = "!w-40 shrink-0 !h-9!rounded-lg !border !border-gray-300 !bg-white !py-0 !pl-3 !pr-2 !text-sm !text-gray-600 !shadow-none transition-colors hover:!border-gray-400 focus:!border-gray-500 focus:!outline-none disabled:opacity-60";
+
+const STATUSES = {
+  open: { label: "Open", classes: "bg-emerald-50 text-emerald-700" },
+  processing: { label: "Processing", classes: "bg-blue-50 text-blue-700" },
+  closed: { label: "Closed", classes: "bg-gray-100 text-gray-600" },
+};
+
+const PRIORITIES = {
+  1: { label: "Normal", classes: "bg-gray-100 text-gray-600" },
+  10: { label: "High", classes: "bg-amber-50 text-amber-700" },
+  90: { label: "Urgent", classes: "bg-rose-50 text-rose-700" },
+};
+
+/* The server decides; this only stops showing controls that would be refused. */
+const STAFF_ROLES = ["administrator", "support_agent", "shop_manager", "store_manager"];
+
+
+/*
+  Tickets come from a public form, so their HTML is read as text here rather
+  than injected into an admin page. Block ends become line breaks first, which
+  keeps the customer's paragraphs. DOMParser never runs what it parses.
+*/
+function htmlToLines(html) {
+
+  if (!html) {
+    return [];
+  }
+
+  const marked = html
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/(p|div|li|h[1-6]|blockquote)>/gi, "\n");
+
+  const text = new DOMParser().parseFromString(marked, "text/html").body.textContent ?? "";
+
+  return text.split(/\n+/).map((line) => line.trim()).filter(Boolean);
+}
 
 
 const TicketEdit = ({ id }) => {
 
+  const { token, addNotification, userDataX } = useCounterStore()
 
-
-
-  const { token, appData, notifications, addNotification, userDataX, setUserDataX } = useCounterStore()
-
-
-
-  var [promptData, setpromptData] = useState(null);
+  var [ticket, setticket] = useState(null);
   var [loading, setloading] = useState(false);
-  var [editPlaceholders, seteditPlaceholders] = useState(null);
+  var [failed, setfailed] = useState(false);
+  var [saving, setsaving] = useState(false);
+
+  var isStaff = Object.values(userDataX?.roles ?? {}).some((role) => STAFF_ROLES.includes(role));
 
   function fetchPost() {
 
-
     setloading(true);
-
-    // if (!token) {
-    //   //throw new Error("No token found");
-    // }
-    var postData = {
-      id: id,
-    };
-    postData = JSON.stringify(postData);
+    setfailed(false);
 
     fetch(serverUrl + "wp-json/combo-store/v2/get_ticket", {
       method: "POST",
       headers: {
         'Content-Type': 'application/json',
-        // 'Authorization': `Bearer ${token}`
+        'Authorization': `Bearer ${token}`
       },
-      body: postData,
+      body: JSON.stringify({ id: id }),
     })
       .then((response) => {
 
         if (!response.ok) {
-          throw new Error('Token validation failed');
+          throw new Error('Ticket request failed');
         }
 
-        if (response.ok && response.status < 400) {
-          response.json().then((res) => {
+        return response.json();
+      })
+      .then((res) => {
 
-            var prompt = res?.prompt;
-
-
-
-
-            setpromptData(prompt)
-            setloading(false);
-
-
-
-            setTimeout(() => {
-            }, 500);
-          });
+        /* A missing ticket still comes back as a `prompt`, with every value null. */
+        if (!res?.prompt?.id) {
+          throw new Error('Ticket not found');
         }
+
+        setticket(res.prompt);
+        setloading(false);
       })
       .catch((_error) => {
-        //this.saveAsStatus = 'error';
-        // handle the error
+        setfailed(true);
+        setloading(false);
       });
 
   }
-
-  // useEffect(() => {
-  // 	fetchPost();
-  // }, []);
 
   useEffect(() => {
-    fetchPost();
-    setTimeout(() => {
-      viewPost(id)
-    }, 500)
-  }, [id]);
 
-
-
-
-
-  const copyData = (data) => {
-    navigator.clipboard
-      .writeText(data)
-      .then(() => {
-      })
-      .catch((err) => { });
-  };
-
-
-  function formatDate(dateInput) {
-
-
-    var format = "d/m/Y";
-    dateInput = dateInput == undefined ? '' : dateInput;
-    // Ensure date is in a proper format for parsing
-    const dateObj = new Date(dateInput.replace(" ", "T"));
-
-    if (isNaN(dateObj)) {
-      throw new Error("Invalid date format");
+    /* After a reload the token arrives from an effect above this page. */
+    if (!token) {
+      return;
     }
 
-    // Extract date components
-    const day = String(dateObj.getDate()).padStart(2, '0');
-    const month = String(dateObj.getMonth() + 1).padStart(2, '0'); // Months are zero-based
-    const year = dateObj.getFullYear();
+    fetchPost();
+  }, [id, token]);
 
-    //return ;
+
+  /* The change shows straight away and is put back if the server refuses it. */
+  function updateTicket(field, value) {
+
+    var previous = ticket[field];
+
+    setticket({ ...ticket, [field]: value });
+    setsaving(true);
+
+    fetch(serverUrl + "wp-json/combo-store/v2/update_ticket", {
+      method: "POST",
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ id: id, [field]: value }),
+    })
+      .then((response) => {
+
+        if (!response.ok) {
+          throw new Error('Ticket update failed');
+        }
+
+        return response.json();
+      })
+      .then((res) => {
+
+        if (!res?.success) {
+          throw new Error('Ticket update failed');
+        }
+
+        addNotification({ type: 'success', title: 'Ticket updated', content: "Your change has been saved." })
+        setsaving(false);
+      })
+      .catch((_error) => {
+        setticket((current) => ({ ...current, [field]: previous }));
+        addNotification({ type: 'error', title: 'Ticket not updated', content: "Your change could not be saved. Please try again." })
+        setsaving(false);
+      });
+
+  }
+
+
+  function renderChips(items) {
+
+    if (!items?.length) {
+      return <span className="text-sm text-gray-300">—</span>;
+    }
 
     return (
-      <>
-        {format.replace("d", day).replace("m", month).replace("Y", year)}
-      </>
-
+      <div className="flex flex-wrap justify-end gap-1.5">
+        {items.map((item, index) => {
+          return (
+            <span key={index} className={CHIP}>
+              <span dangerouslySetInnerHTML={{ __html: item.name }}></span>
+            </span>
+          )
+        })}
+      </div>
     );
-
   }
 
 
+  function renderField(field, options, fallback, label) {
 
-  function toSlug(text) {
-    return text
-      .toLowerCase()
-      .replace(/\[.*?\]/g, '')        // remove anything inside [ ]
-      .replace(/[^\w\s-]/g, '')       // remove non-word chars except space and dash
-      .replace(/\s+/g, '-')           // replace spaces with dashes
-      .replace(/-+/g, '-')            // collapse multiple dashes
-      .replace(/^-|-$/g, '');         // trim starting/trailing dash
-  }
+    var value = ticket?.[field] || fallback;
 
+    if (!isStaff) {
+      var pill = options[value];
 
-
-
-
-
-  function votePost(postId, action) {
-
-
-
-
-    if (!token) {
-
-      addNotification({ type: 'error', title: 'Login Required', content: "Please Login to vote prompt" })
-
-      //throw new Error("No token found");
+      return (
+        <span className={`inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold ${pill?.classes ?? ""}`}>{pill?.label ?? value}</span>
+      );
     }
 
-
-    // if (!token) {
-    // 	//throw new Error("No token found");
-    // }
-
-    // if (action) {
-    // 	return;
-    // }
-
-    var postData = {
-      id: postId,
-      action: action,
-    };
-
-
-
-    postData = JSON.stringify(postData);
-
-    fetch(serverUrl + "wp-json/combo-store/v2/post_vote", {
-      method: "POST",
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: postData,
-    })
-      .then((response) => {
-
-        if (!response.ok) {
-          throw new Error('Token validation failed');
-        }
-
-        if (response.ok && response.status < 400) {
-          response.json().then((res) => {
-
-
-
-            setTimeout(() => {
-              addNotification({ type: 'success', title: 'Great! You earned credits', content: "By Voting other content you will earn credits." })
-
-            }, 500);
-          });
-        }
-      })
-      .catch((_error) => {
-        //this.saveAsStatus = 'error';
-        // handle the error
-      });
-
-  }
-
-  function viewPost(postId) {
-
-
-
-    // if (!token) {
-    // 	//throw new Error("No token found");
-    // }
-
-    // if (action) {
-    // 	return;
-    // }
-
-    var postData = {
-      id: postId,
-      source: 'archive',
-    };
-
-
-    postData = JSON.stringify(postData);
-
-    fetch(serverUrl + "wp-json/combo-store/v2/post_view", {
-      method: "POST",
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: postData,
-    })
-      .then((response) => {
-
-        if (!response.ok) {
-          throw new Error('Token validation failed');
-        }
-
-        if (response.ok && response.status < 400) {
-          response.json().then((res) => {
-
-
-            setTimeout(() => {
-            }, 500);
-          });
-        }
-      })
-      .catch((_error) => {
-        //this.saveAsStatus = 'error';
-        // handle the error
-      });
-
-  }
-
-  function lovePost(postId) {
-
-
-
-    if (!token) {
-
-      addNotification({ type: 'error', title: 'Login Required', content: "Please Login to Love prompt" })
-
-      //throw new Error("No token found");
-    }
-
-    var loved = promptData?.loved;
-
-
-
-    var postData = {
-      object_id: postId,
-      source: 'archive',
-    };
-
-
-    postData = JSON.stringify(postData);
-
-    fetch(serverUrl + "wp-json/combo-store/v2/post_loved", {
-      method: "POST",
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: postData,
-    })
-      .then((response) => {
-
-        if (!response.ok) {
-          throw new Error('Token validation failed');
-        }
-
-        if (response.ok && response.status < 400) {
-          response.json().then((res) => {
-
-
-            setTimeout(() => {
-
-              if (loved) {
-                var loveCount = promptData.loveCount - 1;
-                loved = false;
-              } else {
-                var loveCount = promptData.loveCount + 1;
-                loved = true;
-                addNotification({ type: 'success', title: 'Great! You earned credits', content: "By Loving other content you will earn credits." })
-
-              }
-
-              setpromptData({ ...promptData, loveCount: loveCount, loved: loved })
-
-            }, 200);
-          });
-        }
-      })
-      .catch((_error) => {
-        //this.saveAsStatus = 'error';
-        // handle the error
-      });
-
+    return (
+      <select aria-label={label} className={SELECT} value={value} disabled={saving} onChange={ev => {
+        updateTicket(field, ev.target.value);
+      }}>
+        {Object.entries(options).map(([optionValue, option]) => {
+          return <option key={optionValue} value={optionValue}>{option.label}</option>
+        })}
+      </select>
+    );
   }
 
 
-
-
-  const communityComments = [
-    "Need help ASAP!",
-    "Can't log in.",
-    "Site is down?",
-    "Where's my order?",
-    "App keeps crashing.",
-    "Reset password link?",
-    "Live chat not working.",
-    "Billing error shown.",
-    "No reply yet.",
-    "Thanks for the fix!",
-    "Account locked out.",
-    "Payment failed again.",
-    "Error on checkout.",
-    "Still not working.",
-    "Please respond soon.",
-    "Issue not resolved.",
-    "Link is broken.",
-    "Stuck on loading.",
-    "Support is offline.",
-    "Can't upload files."
-  ];
-
-
-
-
-
-
+  var title = htmlToLines(ticket?.title).join(" ");
+  var authorName = ticket?.author?.name;
 
   return (
-    <div>
 
-      <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-4 px-4 py-6 sm:px-6">
+    <div className="page-shell">
 
-        {/* Page heading: this screen showed no title at all. */}
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <h1 className="text-xl font-semibold text-gray-900">
-            {("Ticket")} <span className="font-normal text-gray-400">#{id}</span>
-          </h1>
-        </div>
+      <div className="flex flex-col gap-2">
 
-        {loading && (
-          <div className=" flex justify-center">
-            <div className="form-card flex items-center gap-3 rounded-xl border border-gray-200 bg-white px-5 py-3 text-sm text-gray-600 shadow-sm"><Spinner /> <div>{("Loading")}</div></div>
-          </div>
+        <Link className="inline-flex w-fit items-center gap-1.5 text-xs font-medium text-gray-500 transition-colors hover:text-gray-900" href={`/dashboard/tickets/`}>
+          <IconArrowLeft size={14} /> {("Tickets")}
+        </Link>
 
-        )}
-
-
-        <div className="flex flex-col gap-6">
-
-          <div className="grid grid-cols-1 lg:grid-cols-1 rounded-xl border border-gray-200 bg-gray-50 p-5 gap-10 text-gray-700">
-
-            {/* {JSON.stringify(promptData?.gallery)} */}
-
-
-
-            <div className="text-left flex flex-col gap-4 ">
-              <div className="text-lg font-semibold text-gray-900">{promptData?.title}</div>
-
-              <div className='flex justify-between items-center'>
-                <div>
-                  <div className="flex gap-3 items-center">
-
-                    <div className="flex gap-4 items-center">
-
-                      <div className="  overflow-hidden">
-                        <Image className="rounded-full " src={promptData?.author.avatar} alt={promptData?.author.name} width={40} height={40} />
-                      </div>
-                      <div>
-
-
-                        <div className="text-left text-sm font-medium text-gray-900" href={`/author/${promptData?.author?.id}/`}>
-                          {promptData?.author.name}
-                        </div>
-                      </div>
-
-                    </div>
-
-
-                    {promptData?.categories.map((item, index) => {
-                      return (
-                        <div className="flex gap-2 flex-wrap items-start">
-                          <div>{("Categories")}</div>
-                          <div key={index} className="inline-flex items-center rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900 cursor-pointer">
-                            <span>{item.name}</span>
-                            {/* {promptData?.categories.length > (index + 1) && (
-                        <span>,</span>
-                      )} */}
-                          </div>
-                        </div>
-                      )
-                    })}
-
-
-
-
-
-
-
-
-
-                    {promptData?.tags.map((item, index) => {
-                      return (
-                        <>
-                          <div className="flex gap-2 flex-wrap">
-
-                            <div>	{("Tags")}</div>
-                            <div key={index} className="flex flex-wrap">
-                              <span>{item}</span>
-                              {promptData?.tags.length > (index + 1) && (
-                                <span>,</span>
-                              )}
-                            </div>
-                          </div>
-                        </>
-                      )
-                    })}
-
-
-                  </div>
-                </div>
-
-                <div className="flex gap-4 flex-wrap">
-                  <div className="flex gap-3 items-center">
-
-                    <div className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50 cursor-pointer" onClick={() => {
-
-
-                      votePost(promptData?.id, 'upvote');
-                      var voteCount = parseInt(promptData.voteCount) + 1;;
-                      setpromptData({ ...promptData, voteCount: voteCount })
-                    }}>
-                      <IconThumbUp width={20} />
-
-                    </div>
-
-                    <div>{promptData?.voteCount}</div>
-
-                    <div className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50 cursor-pointer" onClick={() => {
-
-                      votePost(promptData?.id, 'downvote');
-
-                      var voteCount = parseInt(promptData.voteCount) - 1;;
-                      setpromptData({ ...promptData, voteCount: voteCount })
-
-                    }}>
-                      <IconThumbDown width={20} />
-
-                    </div>
-
-                  </div>
-
-                  <div className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50 cursor-pointer" ><IconEyeSearch />
-                    <div>{promptData?.viewCount}</div>
-                  </div>
-
-
-
-                  <div className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50 cursor-pointer" onClick={ev => {
-
-
-
-
-
-                    lovePost(promptData?.id);
-
-                    var loved = !promptData.loved;
-                    setpromptData({ ...promptData, loved: loved })
-
-
-                  }}>
-
-                    {promptData?.loved && (
-                      <div className="flex gap-2 ">
-
-                        <div className="text-red-400">
-                          <IconHeartFilled />
-                        </div>
-
-                        <div>{promptData?.loveCount}</div>
-                      </div>
-                    )}
-                    {!promptData?.loved && (
-                      <div className="text-red-500 flex gap-2"><IconHeart /> <div>{promptData?.loveCount}</div></div>
-
-
-                    )}
-
-
-
-
-                  </div>
-
-                </div>
-              </div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-            </div>
-
-          </div>
-
-
-          {promptData?.content && (
-            <div className="rounded-xl border border-gray-200 bg-gray-50 p-5 gap-10 text-gray-700">
-
-              <div className=" w-full mx-auto">
-                <div className="text-2xl text-white mb-5">{("Ticket Details")}</div>
-
-                <div>
-                  {promptData?.content}
-                </div>
-              </div>
-
-
-
-            </div>
-          )}
-
-
-
-
-
-
-          <div>
-            <Comments dummyComments={communityComments} id={id} />
-          </div>
-
-
-
-
-
-
-
-
+        <div>
+          <h1 className="text-xl font-semibold text-gray-900">{title || ("Ticket")}</h1>
+          <p className="mt-0.5 flex items-center gap-2 text-xs text-gray-500">
+            <span className="font-mono text-[11px] text-gray-400">#{id}</span>
+          </p>
         </div>
 
       </div>
 
+      {loading && !ticket && (
+        <div className={`${CARD} flex items-center gap-3 px-5 py-3 text-sm text-gray-600`}>
+          <Spinner /> <div>{("Loading")}</div>
+        </div>
+      )}
 
+      {failed && (
+        <div className={`${CARD} flex flex-wrap items-center justify-between gap-3 px-5 py-3 text-sm text-gray-600`}>
+          <div>{("This ticket could not be loaded.")}</div>
+          <div className="cursor-pointer font-medium text-gray-900 hover:underline" onClick={fetchPost}>{("Try again")}</div>
+        </div>
+      )}
+
+      {ticket && (
+
+        <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
+
+          <div className="flex min-w-0 flex-col gap-4">
+
+            <div className={CARD}>
+              <div className={CARD_TITLE}>{("Ticket Details")}</div>
+
+              <div className="flex flex-col gap-3 p-5 text-sm leading-relaxed text-gray-700">
+                {htmlToLines(ticket?.content).map((line, index) => {
+                  return <p key={index}>{line}</p>
+                })}
+
+                {!ticket?.content && (
+                  <p className="text-gray-400">{("No details were given.")}</p>
+                )}
+              </div>
+            </div>
+
+            <Comments id={id} />
+
+          </div>
+
+          <div className="min-w-0 xl:sticky xl:top-[86px] xl:self-start">
+
+            <div className={CARD}>
+              <div className={CARD_TITLE}>{("Ticket Info")}</div>
+
+              <div className="flex flex-col divide-y divide-gray-100 px-5 py-1">
+
+                <div className="flex items-center justify-between gap-3 py-3">
+                  <div className={INFO_LABEL}>{("Status")}</div>
+                  {renderField("markedAs", STATUSES, "open", "Status")}
+                </div>
+
+                <div className="flex items-center justify-between gap-3 py-3">
+                  <div className={INFO_LABEL}>{("Priority")}</div>
+                  {renderField("priority", PRIORITIES, "1", "Priority")}
+                </div>
+
+                <div className="flex items-center justify-between gap-3 py-3">
+                  <div className={INFO_LABEL}>{("Customer")}</div>
+                  <div className="flex min-w-0 items-center gap-2 text-sm">
+                    <div className="h-8 w-8 shrink-0 overflow-hidden rounded-full border border-gray-200 bg-gray-50">
+                      {ticket?.author?.avatar && (
+                        <Image unoptimized className="h-8 w-8 object-cover" src={ticket.author.avatar} width={40} height={40} alt={``} />
+                      )}
+                    </div>
+                    <div className={`truncate ${authorName ? "text-gray-700" : "text-gray-400"}`}>{authorName || ("Guest")}</div>
+                  </div>
+                </div>
+
+                <div className="flex items-start justify-between gap-3 py-3">
+                  <div className={INFO_LABEL}>{("Categories")}</div>
+                  {renderChips(ticket?.categories)}
+                </div>
+
+                <div className="flex items-start justify-between gap-3 py-3">
+                  <div className={INFO_LABEL}>{("Tags")}</div>
+                  {renderChips(ticket?.tags)}
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      )}
 
     </div>
   )

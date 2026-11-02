@@ -7,7 +7,7 @@ import { useCounterStore } from '../../store/useCounterStore'
 
 /* Buttons here were dark gray slabs that lightened on hover. */
 const PRIMARY_BUTTON =
-  "inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-gray-800 cursor-pointer";
+  "inline-flex items-center gap-2 rounded-lg bg-[#634FE5] px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#5540d4] cursor-pointer";
 
 
 
@@ -151,11 +151,11 @@ const CommentsForm = (props) => {
 	return (
 		<div className="">
 
-			<div className="flex flex-col gap-5">
+			<div className="flex flex-col gap-4">
 
 				{postData?.purchased && (
-					<div className="flex flex-col gap-3">
-						<label htmlFor="" className="block ">
+					<div className="flex flex-col gap-1.5">
+						<label htmlFor="" className="block text-sm font-medium text-gray-700">
 							{("Rate this prompt")}
 						</label>
 						<StarRating rate={comment.rate} onChange={onChangeCommentRate} />
@@ -163,12 +163,12 @@ const CommentsForm = (props) => {
 				)}
 
 
-				<div className="flex flex-col gap-3">
-					<label htmlFor="" className="block ">
+				<div className="flex flex-col gap-1.5">
+					<label htmlFor="" className="block text-sm font-medium text-gray-700">
 						{("Write Comment")}
 					</label>
 					<textarea
-						className="!shadow-none h-40 bg-gray-200 !border-2 border-gray-600 px-2 py-1 rounded-sm w-full "
+						className="h-32 w-full rounded-lg !border !border-gray-300 px-3 py-2 text-sm !shadow-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
 						value={comment?.content}
 						onChange={(ev) => {
 							var value = ev.target.value;
@@ -185,7 +185,7 @@ const CommentsForm = (props) => {
 					{randomComments?.map((item, index) => {
 
 						return (
-							<div key={index} className="border rounded-full border-gray-600 px-2 py-1 cursor-pointer hover:bg-gray-500" onClick={ev => {
+							<div key={index} className="cursor-pointer rounded-full border border-gray-300 px-2 py-1 text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900" onClick={ev => {
 
 								setcomment({ ...comment, content: item });
 
@@ -196,7 +196,7 @@ const CommentsForm = (props) => {
 
 				</div>
 
-				<div className={`${PRIMARY_BUTTON} justify-center`}
+				<div className={`${PRIMARY_BUTTON} w-fit self-end`}
 					onClick={ev => {
 						submit_comment()
 					}}

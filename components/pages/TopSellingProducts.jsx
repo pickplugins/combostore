@@ -2,96 +2,61 @@
 
 import Link from "next/link";
 import React from "react";
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect } from "react";
 import EntriesTable from "../../components/EntriesTable";
-import DropDown from "../../components/DropDown";
 import { useCounterStore } from '../../store/useCounterStore'
+import { useUtilsStore } from '../../store/useUtilsStore';
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
-import { IconCopy, IconEyeShare, IconDotsVertical, IconEdit, IconTrash, IconStarFilled, IconStar, IconFileDollar, IconExclamationCircle, IconRosetteDiscountCheck, IconX, IconZoomExclamationFilled, IconPlaylistX } from "@tabler/icons-react";
-import PopoverButton from "../../components/PopoverButton";
-import ProductBulkUpdate from "../../components/shop-elements/ProductBulkUpdate";
+import { IconEyeShare, IconPhoto, IconX } from "@tabler/icons-react";
 
 import Image from "next/image";
 
 
+const ICON_BUTTON =
+  "inline-flex h-8 w-8 items-center justify-center rounded-lg border border-transparent text-gray-400 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:text-gray-900";
+
+const FILTER_INPUT =
+  "!w-40 !h-9 !rounded-lg !border !border-gray-300 !bg-white !py-0 !px-3 !text-sm !text-gray-600 !shadow-none transition-colors hover:!border-gray-400 focus:!border-gray-500 focus:!outline-none";
+
+const FILTER_CHIP = "flex items-center gap-1 rounded-full border border-indigo-200 bg-indigo-50 py-0.5 pl-2.5 pr-1 text-xs text-indigo-700";
+
+const FILTER_CHIP_CLOSE = "inline-flex h-5 w-5 cursor-pointer items-center justify-center rounded-full text-indigo-400 transition-colors hover:bg-indigo-200 hover:text-indigo-800 [&>svg]:size-3.5";
+
+const META_PILL = "rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide";
+
+
 const TopSellingProducts = (props) => {
 
+  const { token, addNotification } = useCounterStore()
+  const { wrapCurrency } = useUtilsStore()
 
+  var [queryPrams, setqueryPrams] = useState({ keyword: "", start_date: "", end_date: "", paged: 1, order: "DESC", per_page: 20 });
 
-  const { token, appData, notifications, addNotification, userDataX, setUserDataX, paymentGateways } = useCounterStore()
-
-
-
-  var [queryPrams, setqueryPrams] = useState({ is_admin: true, min_stock: 5, category: "", tag: null, keyword: "", paged: 1, orderby: "date", order: "DESC", per_page: 20, price: "" });
-  var [editProduct, seteditProduct] = useState({ id: null });
-
-
-
-
-  var [productsData, setproductsData] = useState({ posts: [], total: 20, maxPages: 1 });
-
-
+  var [productsData, setproductsData] = useState({ posts: [], total: 0, maxPages: 1 });
 
   var [loading, setloading] = useState(false);
-  var [selectedRows, setselectedRows] = useState([]);
-
-  var [queryTerms, setqueryTerms] = useState({ taxonomy: 'product_cat', order: "DESC", per_page: 99, });
-  var [querybrands, setquerybrands] = useState({ taxonomy: 'product_brand', order: "DESC", per_page: 99, });
-  var [terms, setterms] = useState([]);
-  var [brands, setbrands] = useState([]);
 
 
-
-  function onSelectRows(rows) {
-    setselectedRows(rows);
-  }
-
-
+  /* No `check` column: a ranking has nothing to act on in bulk. */
   var columns = {
-    check: { id: "check", label: ("Check"), },
-    id: { id: "id", label: ("Product"), callback: callbackTitle, classes: "w-96  text-gray-600" },
-    total_orders: { id: "total_orders", label: ("Total Orders"), callback: callbackTotalOrders, classes: "w-96  text-gray-600" },
-    total_units_sold: { id: "total_units_sold", label: ("Total Units Sold"), callback: callbackTotalUnitsSold, classes: "w-96  text-gray-600" },
-    // categories: { id: "categories", label: ("Categories"), callback: callbackCategories, classes: "text-left text-gray-600" },
-    // brands: { id: "brands", label: ("Brands"), callback: callbackBrands, classes: "text-left text-gray-600" },
-    // tags: { id: "tags", label: ("Tags"), callback: callbackTags, classes: "text-left" },
-    // brands: { id: "Brands", label: ("Brands"), callback: callbackBrands, classes: "text-left" },
-    // brands: { id:"brands",label: ("Brands"), callback: callbackBrands, classes: "text-left" },
-    // sku: { id:"sku",label: ("SKU"), },
-    // stock_count: { id: "stock_count", label: ("Stock"), callback: callbackStock, classes: "text-center text-gray-600" },
-    // price: { id: "price", label: ("Price"), callback: callbackPrice, classes: "text-center text-gray-600" },
-    // type: { id:"check",label: "Type", callback: callbackType },
-
-    // refunded_total: { id:"check",label: "Refunded" },
-    // visibility: { id: "visibility", label: ("Visibility"), callback: callbackVisibility },
-    // status: { id: "status", label: ("Status"), callback: callbackStatus },
+    id: { id: "id", label: ("Product"), callback: callbackProduct, classes: "w-96 text-left text-gray-600" },
+    total_orders: { id: "total_orders", label: ("Orders"), callback: callbackOrders, classes: "text-center text-gray-600" },
+    total_units_sold: { id: "total_units_sold", label: ("Units sold"), callback: callbackUnits, classes: "text-center text-gray-600" },
+    total_revenue: { id: "total_revenue", label: ("Revenue"), callback: callbackRevenue, classes: "text-center text-gray-600" },
     actions: { label: ("Actions"), callback: callbackActions, classes: "text-right pr-2 text-gray-600" },
-
   };
 
 
-
   async function fetchPosts() {
-
-
-
-
-
-    // if (!token) {
-    // 	//throw new Error("No token found");
-    // }
-
 
     if (queryPrams.paged < 0) {
       return;
     }
 
+    var request = queryPrams;
 
-    var postData = JSON.stringify(queryPrams);
     setloading(true);
-
-
 
     fetch(serverUrl + "wp-json/combo-store/v2/get_top_selling_products", {
       method: "POST",
@@ -99,7 +64,7 @@ const TopSellingProducts = (props) => {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },
-      body: postData,
+      body: JSON.stringify(request),
     })
       .then((response) => {
 
@@ -110,34 +75,28 @@ const TopSellingProducts = (props) => {
         if (response.ok && response.status < 400) {
           response.json().then((res) => {
 
+            /* The API returns products in rank order, so a row's rank comes from its page. */
+            var first = (request.paged - 1) * Number(request.per_page);
+            var ascending = request.order === "ASC";
+            var total = parseInt(res?.total) || 0;
 
-            var posts = res?.products;
-            var total = res?.total;
-            var max_pages = res?.max_pages;
+            var products = (res?.products ?? []).map((product, index) => {
+              var rank = ascending ? total - first - index : first + index + 1;
 
+              return { ...product, id: rank, rank: rank };
+            });
 
-            console.log(posts);
-
-
-            setproductsData({ posts: posts, total: total, maxPages: max_pages })
-            //setqueryPrams({ ...queryPrams, loading: false })
+            setproductsData({ posts: products, total: total, maxPages: parseInt(res?.max_pages) || 0 })
             setloading(false);
-
-
-            setTimeout(() => {
-            }, 500);
           });
         }
       })
       .catch((_error) => {
-        //this.saveAsStatus = 'error';
-        // handle the error
+        setloading(false);
+        addNotification({ type: 'error', title: 'Top products not loaded', content: "The list could not be loaded. Please try again." })
       });
 
   }
-
-
-
 
 
   const [debouncedQuery, setDebouncedQuery] = useState(queryPrams);
@@ -145,124 +104,85 @@ const TopSellingProducts = (props) => {
 
   useEffect(() => {
     const handler = setTimeout(() => {
-      setDebouncedQuery(queryPrams); // update debounced value after delay
-    }, 1000); // 500ms debounce delay
+      setDebouncedQuery(queryPrams);
+    }, 1000);
 
-    // Cleanup function: cancels the timeout if query changes before 500ms
     return () => clearTimeout(handler);
-  }, [queryPrams]); // run effect when query changes
-
+  }, [queryPrams]);
 
 
   useEffect(() => {
-    if (debouncedQuery) {
 
-      fetchPosts();
-
+    /* After a reload the token arrives from an effect above this page. */
+    if (!token) {
+      return;
     }
-  }, [debouncedQuery]);
 
+    fetchPosts();
 
-
-
-
-
-
-
-  // useEffect(() => {
-
-  // 	fetchPosts();
-  // }, [queryPrams]);
+  }, [debouncedQuery, token]);
 
 
   function onChangeQueryPrams(queryPrams) {
     if (queryPrams) {
       setqueryPrams(queryPrams)
-      //fetchPosts();
     }
-
   }
 
   function onRefreshRequest(rows) {
     fetchPosts();
   }
 
-  useEffect(() => {
-    fetchPosts();
 
-  }, []);
+  function callbackProduct(entry, columnIndex) {
 
-
-  function callbackActions(entry, columnIndex) {
-
-
-    var orderItems = entry?.order_items
-
-
+    var productId = parseInt(entry?.product_id);
+    var isCustom = !(productId > 0);
+    var exists = !isCustom && Boolean(entry?.product_exists);
+    var name = entry?.product_name || ("Unknown product");
 
     return (
-      <td data-label="Actions" className="text-sm"
+      <td data-label="Product" className="!px-5 py-3 text-left"
         key={columnIndex}>
-        <div className="sm:flex gap-2 justify-end sm:pr-5 text-sm">
 
+        <div className="flex min-w-0 flex-1 items-center gap-3">
 
+          <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-sm font-semibold tabular-nums ${entry?.rank <= 3 ? "bg-amber-50 text-amber-700" : "bg-gray-100 text-gray-500"}`}>
+            {entry?.rank}
+          </div>
 
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-gray-200 bg-gray-50 text-gray-300">
+            {entry?.product_image && (
+              <Image unoptimized className="h-12 w-12 object-cover" src={entry.product_image} width={100} height={100} alt={``} />
+            )}
+            {!entry?.product_image && (
+              <IconPhoto size={20} stroke={1.5} />
+            )}
+          </div>
 
+          <div className="flex min-w-0 flex-1 flex-col gap-1 text-left">
+            {exists && (
+              <Link className="text-left text-sm font-medium text-gray-900 transition-colors hover:text-blue-600 hover:underline" href={`/dashboard/products/${productId}`}>
+                {name}
+              </Link>
+            )}
+            {!exists && (
+              <div className="text-left text-sm font-medium text-gray-900">{name}</div>
+            )}
 
-        </div>
-
-      </td>
-
-    );
-  }
-
-
-  function callbackTitle(entry, columnIndex) {
-
-
-
-
-    return (
-      <td className="text-center pl-5 py-3"
-        key={`title-${entry?.id}`}>
-
-        <div className="flex gap-2 items-center">
-
-
-          <div className="text-left flex flex-col gap-2 flex-wrap flex-1 group ">
-            <Link className="text-left text-sm text-gray-600 font-medium " href={`/products/${entry?.product_id}`}>
-
-
-
-              {entry?.product_id && (
-
-                <>{entry?.product_name}</>
+            <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
+              {!isCustom && (
+                <span className="font-mono text-[11px] text-gray-400">#{productId}</span>
               )}
-
-              {entry?.product_id == 0 && (
-
-                <>**Custom Product**</>
+              {entry?.sku && (
+                <span>{entry.sku}</span>
               )}
-
-
-            </Link>
-
-            <div className="flex gap-3 text-xs text-gray-500 ">
-
-              <div>#{entry?.product_id}</div>
-              {entry?.status === "draft" && (
-                <div className="font-bold text-gray-500"> Draft</div>
+              {isCustom && (
+                <span className={`${META_PILL} bg-gray-100 text-gray-600`}>Custom</span>
               )}
-              {entry?.status === "pending" && (
-                <div className="font-bold text-gray-500"> Pending</div>
+              {!isCustom && !exists && (
+                <span className={`${META_PILL} bg-rose-100 text-rose-700`}>Deleted</span>
               )}
-
-
-              {/* <div className=" ">{entry?.sku}</div> */}
-
-
-
-
             </div>
           </div>
         </div>
@@ -272,83 +192,59 @@ const TopSellingProducts = (props) => {
   }
 
 
-  function callbackTotalOrders(entry, columnIndex) {
-
-    var type = entry.type;
-    var sale_price = entry.sale_price;
-    var regular_price = entry.regular_price;
+  function callbackOrders(entry, columnIndex) {
 
     return (
-      <td className=" pl-5"
+      <td data-label="Orders" className="!px-5 py-3 text-center"
         key={columnIndex}>
-        <div className="flex gap-2 justify-center text-sm">
-
-          {entry?.total_orders}
-
-
-
-        </div>
-      </td>
-
-    );
-  }
-  function callbackTotalUnitsSold(entry, columnIndex) {
-
-    var type = entry.type;
-    var sale_price = entry.sale_price;
-    var regular_price = entry.regular_price;
-
-    return (
-      <td className=" pl-5"
-        key={columnIndex}>
-        <div className="flex gap-2 justify-center text-sm">
-
-          {entry?.total_units_sold}
-
-
-
-        </div>
+        <span className="text-sm tabular-nums text-gray-700">{entry?.total_orders}</span>
       </td>
 
     );
   }
 
 
+  function callbackUnits(entry, columnIndex) {
 
+    return (
+      <td data-label="Units sold" className="!px-5 py-3 text-center"
+        key={columnIndex}>
+        <span className="text-sm font-semibold tabular-nums text-gray-900">{Number(entry?.total_units_sold)}</span>
+      </td>
 
-
-
-
-
-
-
-
-
-
-
-  var orderStatusPrams = {
-    draft: { label: 'Draft', value: 'draft' },
-    pending: { label: 'Pending', value: 'pending' },
-    publish: { label: 'Publish', value: 'publish' },
-    hold: { label: 'Hold', value: 'hold' }
-  }
-  var stockStatusOptions = {
-    instock: { label: 'In Stock', value: 'instock' },
-    outofstock: { label: 'Out of Stock', value: 'outofstock' }
+    );
   }
 
 
+  function callbackRevenue(entry, columnIndex) {
 
+    return (
+      <td data-label="Revenue" className="!px-5 py-3 text-center"
+        key={columnIndex}>
+        <span className="text-sm tabular-nums text-gray-600">{wrapCurrency(Number(entry?.total_revenue).toFixed(2))}</span>
+      </td>
 
-
-
-  function onFilterByStatus(args) {
-
-    setqueryPrams({ ...queryPrams, status: args?.value, paged: 1 })
+    );
   }
-  function onFilterByStockStatus(args) {
 
-    setqueryPrams({ ...queryPrams, stock_status: args?.value, paged: 1 })
+
+  function callbackActions(entry, columnIndex) {
+
+    var productId = parseInt(entry?.product_id);
+
+    return (
+      <td data-label="Actions" className="!px-5 py-3 text-sm"
+        key={columnIndex}>
+        <div className="flex items-center justify-end gap-1 text-sm">
+          {productId > 0 && entry?.product_exists && (
+            <Link title="View product" aria-label="View product" className={ICON_BUTTON} href={`/dashboard/products/${productId}`}>
+              <IconEyeShare size={18} />
+            </Link>
+          )}
+        </div>
+      </td>
+
+    );
   }
 
 
@@ -360,209 +256,47 @@ const TopSellingProducts = (props) => {
         <div>
           <h1 className="text-xl font-semibold text-gray-900">{("Top Selling Products")}</h1>
           <p className="mt-0.5 text-xs text-gray-500">
-            {productsData?.total ?? 0} {("products")}
+            {productsData?.total ?? 0} {("products, ranked by units sold on paid completed orders")}
           </p>
         </div>
       </div>
 
-      <div className="flex justify-between  ">
+      <div className="flex flex-wrap items-center gap-2">
+
+        <input
+          type="date"
+          aria-label="From date"
+          title="From date"
+          className={FILTER_INPUT}
+          value={queryPrams?.start_date ?? ""}
+          max={queryPrams?.end_date || undefined}
+          onChange={ev => {
+            setqueryPrams({ ...queryPrams, start_date: ev.target.value, paged: 1 });
+          }}
+        />
+
+        <input
+          type="date"
+          aria-label="To date"
+          title="To date"
+          className={FILTER_INPUT}
+          value={queryPrams?.end_date ?? ""}
+          min={queryPrams?.start_date || undefined}
+          onChange={ev => {
+            setqueryPrams({ ...queryPrams, end_date: ev.target.value, paged: 1 });
+          }}
+        />
+
+        {(queryPrams?.start_date || queryPrams?.end_date) && (
+          <div className={FILTER_CHIP}>
+            <div className="whitespace-nowrap">{('Dates')}: {queryPrams.start_date || "…"} – {queryPrams.end_date || "…"}</div>
+            <div className={FILTER_CHIP_CLOSE} onClick={ev => {
+              setqueryPrams({ ...queryPrams, start_date: "", end_date: "", paged: 1 })
+            }}><IconX /></div>
+          </div>
+        )}
 
-        <div className="flex flex-wrap gap-3  ">
-
-          <select name="" id="" className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 w-full xl:w-56 rounded-lg px-3 py-2 text-sm" onChange={ev => {
-
-            var value = ev.target.value;
-
-            setqueryPrams({ ...queryPrams, category: value, paged: 1 });
-
-          }}>
-            <option value={""}>{("All Categories")}</option>
-
-            {terms?.map(item => {
-
-              var children = item?.children;
-
-              if (children) {
-
-                return (
-
-                  <optgroup label={`${item.name}(${item.count})`} key={item.term_id}>
-                    <option value={item.slug} key={item.slug}>
-                      {item.name}({item.count})
-                    </option>
-
-
-                    {children?.map(childItem => {
-
-                      return (
-                        <option value={childItem.slug} key={childItem.term_id}>
-                          {childItem.name}({childItem.count})
-                        </option>
-
-                      )
-                    })}
-
-                  </optgroup>
-
-
-                )
-
-              }
-              if (!children) {
-                return (
-                  <option value={item.slug} key={item.term_id}>
-                    {item.name}({item.count})
-                  </option>
-                )
-              }
-
-
-
-
-            })}
-
-          </select>
-          <select name="" id="" className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 w-full xl:w-56 rounded-lg px-3 py-2 text-sm" onChange={ev => {
-
-            var value = ev.target.value;
-
-            setqueryPrams({ ...queryPrams, brand: value, paged: 1 });
-
-          }}>
-            <option value={""}>{("All Brands")}</option>
-
-            {brands?.map(item => {
-
-              var children = item?.children;
-
-              if (children) {
-
-                return (
-
-                  <optgroup label={`${item.name}(${item.count})`} key={item.term_id}>
-                    <option value={item.slug} key={item.slug}>
-                      {item.name}({item.count})
-                    </option>
-
-
-                    {children?.map(childItem => {
-
-                      return (
-                        <option value={childItem.slug} key={childItem.term_id}>
-                          {childItem.name}({childItem.count})
-                        </option>
-
-                      )
-                    })}
-
-                  </optgroup>
-
-
-                )
-
-              }
-              if (!children) {
-                return (
-                  <option value={item.slug} key={item.term_id}>
-                    {item.name}({item.count})
-                  </option>
-                )
-              }
-
-
-
-
-            })}
-
-          </select>
-
-
-          <input type="number" value={5} className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 w-20 rounded-lg px-3 py-2 text-sm" placeholder="Min Stock, ex: 5" onChange={ev => {
-
-            var value = ev.target.value;
-
-            setqueryPrams({ ...queryPrams, min_stock: value, paged: 1 });
-
-          }} />
-
-
-
-
-          <PopoverButton wrapperClass={`bg-white `} enableCloseBtn={false} buttonLabel={("Filter Products")} buttonIcon={<IconFileDollar />} title={"Filter Products"} position={"leftTop"}>
-
-            <div className="p-4 w-[400px]">
-              <div className="flex flex-col  gap-3 ">
-                <div className="flex justify-between">
-                  <div>Status</div>
-                  <div>
-                    <DropDown multiple={false} value={queryPrams?.status} options={orderStatusPrams} label={`Choose Status`} onOptionsChoose={onFilterByStatus} />
-                  </div>
-                </div>
-                <div className="flex justify-between">
-                  <div>Stock Status</div>
-                  <div>
-                    <DropDown multiple={false} value={queryPrams?.stock_status} options={stockStatusOptions} label={`Choose Stock Status`} onOptionsChoose={onFilterByStockStatus} />
-                  </div>
-                </div>
-
-
-
-
-
-
-
-
-
-              </div>
-            </div>
-
-          </PopoverButton>
-
-
-
-        </div>
-
-
-
-
-        <div className="flex gap-3 items-center justify-end ">
-          {selectedRows.length > 0 && (
-            <div
-              className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-red-700 cursor-pointer"
-              onClick={() => {
-                delete_products();
-              }}>
-              {("Delete Products")}
-            </div>
-          )}
-
-          {selectedRows.length > 0 && (
-
-            <PopoverButton buttonLabel={("Bulk Update")} buttonClass={`inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-gray-800 cursor-pointer`} buttonIcon={``} title={"Bulk Update"} position={""} popoverClass={`mx-auto w-3/4  fixed inset-x-0 top-10 h-[700px] overflow-y-auto z-[999] rounded-xl border border-gray-200 bg-white shadow-lg`} >
-
-              <div className="p-5 bg-gray-50">
-
-                <ProductBulkUpdate ids={selectedRows} />
-
-
-
-
-
-
-
-
-
-              </div>
-
-            </PopoverButton>
-          )}
-
-
-
-
-        </div>
       </div>
-
 
 
       <EntriesTable
@@ -572,8 +306,8 @@ const TopSellingProducts = (props) => {
         itemPath={""}
         onChange={onChangeQueryPrams}
         loading={loading}
-        selectedRows={selectedRows}
-        onSelectRows={onSelectRows}
+        selectedRows={[]}
+        onSelectRows={() => { }}
         onRefreshRequest={onRefreshRequest}
 
       />
