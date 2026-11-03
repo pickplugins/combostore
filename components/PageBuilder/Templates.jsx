@@ -580,12 +580,10 @@ const Templates = (props) => {
 
 
 
-	console.log('Hello 1');
 
 
 	useEffect(() => {
 
-		console.log('Hello 1');
 
 
 		get_templates();
