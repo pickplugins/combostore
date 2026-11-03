@@ -56,6 +56,9 @@ const PostLoop = (props) => {
 
 		var postData = JSON.stringify(queryPrams);
 
+		console.log(postData);
+
+
 		fetch(serverUrl + "wp-json/combo-store/v2/get_posts", {
 			cache: "no-store", // disables caching
 			method: "POST",
@@ -80,6 +83,7 @@ const PostLoop = (props) => {
 						var max_pages = res?.max_pages;
 
 
+						console.log(res);
 
 
 						// var termsX = [];
