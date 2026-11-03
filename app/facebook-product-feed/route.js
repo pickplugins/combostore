@@ -50,6 +50,9 @@ export async function GET() {
 
     const data = await response.json();
 
+    console.log(data?.posts);
+
+
     const products = Array.isArray(data?.posts)
       ? data.posts
       : [];
@@ -67,22 +70,13 @@ export async function GET() {
           product.description || product.title
         );
 
-        const price = escapeXml(
-          product.price
-        );
+        const price = escapeXml(product.price);
 
-        const link = escapeXml(
-          `${appUrl}/product/${product.slug}`
-        );
+        const link = escapeXml(`${appUrl}/product/${product.slug}`);
 
-        const image = escapeXml(
-          product.post_thumbnail_url
-        );
+        const image = escapeXml(product.post_thumbnail_url);
 
-        const availability =
-          Number(product.stock_status) == 'instock'
-            ? "in stock"
-            : "out of stock";
+        const availability = (product.stock_status) == 'instock' ? "in stock" : "out of stock";
 
         return `
                     <item>
