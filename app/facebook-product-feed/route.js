@@ -72,7 +72,7 @@ export async function GET() {
 
         const price = escapeXml(product.price);
 
-        const link = escapeXml(`${appUrl}/product/${product.slug}`);
+        const link = escapeXml(`${appUrl}product/${product.slug}`);
 
         const image = escapeXml(product.post_thumbnail_url);
 
