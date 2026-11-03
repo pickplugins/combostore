@@ -14,9 +14,10 @@ import useBlockHistory from "./useBlockHistory";
 import registry from "../../extensions";
 import { useExtensionsStore } from "../../store/useExtensionsStore";
 
+import Notify from "../../components/Notify";
 
 /* Canvas preview widths live in ./breakpoints.js, next to the breakpoints
-   they correspond to. */
+	 they correspond to. */
 
 const PANEL_TOGGLE =
 	"inline-flex h-8 w-8 items-center justify-center !rounded-lg !border-0 !bg-transparent !px-0 !py-0 !text-gray-400 !shadow-none transition-colors hover:!bg-white/10 hover:!text-white";
@@ -72,8 +73,8 @@ const PageBuilder = (props) => {
 	}, [activeExtensionIds]);
 
 	/* Editor chrome state. The two panels take 650px of a 1440px laptop
-	   between them, which leaves the canvas narrower than the page being
-	   designed, so either side can be folded away. */
+		 between them, which leaves the canvas narrower than the page being
+		 designed, so either side can be folded away. */
 	const [device, setDevice] = useState('Desktop');
 	const [leftOpen, setLeftOpen] = useState(true);
 	const [rightOpen, setRightOpen] = useState(true);
@@ -316,7 +317,7 @@ const PageBuilder = (props) => {
 		};
 
 		/* Deep cloned for the same reason as duplicateBlock: findAndPaste
-		   splices into the arrays it walks. */
+			 splices into the arrays it walks. */
 		const result = findAndPaste(JSON.parse(JSON.stringify(blocks)));
 
 		if (result) {
@@ -702,6 +703,9 @@ const PageBuilder = (props) => {
 						<PanelsRight handleMoveBlock={handleMoveBlock} selectedBlock={selectedBlock} blocks={blocks} setBlocks={setBlocks} elements={elements} deleteBlock={deleteBlock} updateBlock={updateBlock} duplicateBlock={duplicateBlock} handlePasteBlock={handlePasteBlock} handleReplaceBlock={handleReplaceBlock} pageData={pageData} setpageData={setpageData} />
 					</div>
 				</aside>
+
+				<Notify notifications={notifications} />
+
 
 			</div>
 

@@ -2,6 +2,7 @@
 
 import Sidebar from "./Sidebar";
 import GlobalHeader from "./GlobalHeader";
+import GlobalFooter from "./GlobalFooter";
 
 /*
   The frame shared by /dashboard and /settings.
@@ -20,21 +21,22 @@ import GlobalHeader from "./GlobalHeader";
   common way a dashboard ends up with a horizontal scrollbar.
 */
 export default function DashboardShell({ children }) {
-	return (
-		<div className="flex min-h-screen bg-gray-50">
+  return (
+    <div className="flex min-h-screen bg-gray-50">
 
-			<Sidebar />
+      <Sidebar />
 
-			<div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col">
 
-				<GlobalHeader />
+        <GlobalHeader />
 
-				{/* `isolate` keeps page-level sticky toolbars and popovers from
+        {/* `isolate` keeps page-level sticky toolbars and popovers from
 				    stacking above the header and the nav drawer. */}
-				<main className="isolate min-w-0 flex-1">{children}</main>
+        <main className="isolate min-w-0 flex-1">{children}</main>
+        <GlobalFooter />
 
-			</div>
+      </div>
 
-		</div>
-	);
+    </div>
+  );
 }

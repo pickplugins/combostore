@@ -50,6 +50,8 @@ const page = () => {
 
 		<div className="">
 
+
+
 			{/* The frame itself comes from app/dashboard/layout.jsx, so every
 			    dashboard route has it and not just this one. */}
 			{token && (

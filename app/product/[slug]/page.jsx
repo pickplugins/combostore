@@ -91,7 +91,6 @@ export default async function page({ params }) {
     var pageTemplateData = await getPageTemplate({ type: 'product' })
     var pageTemplatecontent = pageTemplateData?.content ? JSON.parse(pageTemplateData?.content) : [];
 
-    console.log(pageTemplateData);
 
 
     var pageTemplateHeader = pageTemplateData?.header ? JSON.parse(pageTemplateData?.header?.content) : [];
@@ -245,7 +244,6 @@ export default async function page({ params }) {
   //   },
   // });
 
-  console.log(productData);
 
   return (
     <>

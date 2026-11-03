@@ -1,5 +1,4 @@
 "use client";
-import Notify from "../components/Notify";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useCounterStore } from '../store/useCounterStore'
@@ -305,7 +304,6 @@ const GlobalHeader = () => {
 
 				<div>
 
-					<Notify notifications={notifications} />
 				</div>
 
 

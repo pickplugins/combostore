@@ -83,7 +83,6 @@ export default async function page({ params, searchParams }) {
 
   const eventId = generateFacebookEventId();
 
-  console.log(eventId);
 
   const eventData = {
     content_type: 'product_group',
