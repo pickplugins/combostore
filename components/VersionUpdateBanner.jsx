@@ -1,73 +1,79 @@
-import { useEffect, useState } from "react";
+"use client";
 
-const CURRENT_VERSION = process.env.NEXT_PUBLIC_APP_VERSION;
+import { useCallback, useEffect, useState } from "react";
+import { useCounterStore } from "../store/useCounterStore";
 
-// 🔁 Replace with your real repo
-const GITHUB_RELEASE_API =
-	"https://api.github.com/repos/pickplugins/comboshop.com.bd-dashboard/releases/latest";
+/*
+	Offers the latest GitHub release to a store admin and puts it live on click.
 
+	Everything goes through /api/update, which holds the store owner's Vercel
+	token server-side: it compares the running build's commit with the latest
+	release, and on POST promotes the build Vercel already made for it. Non-admins
+	get a 403 and stores onboarded before this existed answer `configured: false`;
+	both simply render nothing.
+*/
 export default function VersionUpdateBanner() {
-	const [latestVersion, setLatestVersion] = useState(null);
+	const { token } = useCounterStore();
+	const [info, setInfo] = useState(null);
 	const [dismissed, setDismissed] = useState(false);
+	const [updating, setUpdating] = useState(false);
+	const [error, setError] = useState("");
 
-	useEffect(() => {
-		fetch(GITHUB_RELEASE_API)
-			.then((res) => res.json())
-			.then((data) => {
+	const check = useCallback(() => {
+		if (!token) return;
+		fetch("/api/update", { headers: { Authorization: `Bearer ${token}` }, cache: "no-store" })
+			.then((res) => (res.ok ? res.json() : null))
+			.then((data) => setInfo(data))
+			.catch(() => setInfo(null));
+	}, [token]);
 
+	useEffect(() => { check(); }, [check]);
 
+	const update = async () => {
+		setUpdating(true);
+		setError("");
+		try {
+			const res = await fetch("/api/update", {
+				method: "POST",
+				headers: { Authorization: `Bearer ${token}` },
+			});
+			const data = await res.json().catch(() => ({}));
+			if (!res.ok || !data.ok) throw new Error(data.error || `Update failed (${res.status})`);
+			/* The domain switch takes a moment to reach every edge; reload after it. */
+			setTimeout(() => window.location.reload(), 4000);
+		} catch (err) {
+			setError(err.message);
+			setUpdating(false);
+		}
+	};
 
+	if (dismissed || !info?.configured || info.upToDate || !info.latest) return null;
 
-				if (data?.tag_name) {
-					setLatestVersion(data.tag_name.replace("v", ""));
-				}
-			})
-			.catch(() => { });
-	}, []);
-
-	if (
-		dismissed ||
-		!latestVersion ||
-		latestVersion === CURRENT_VERSION
-	) {
-		return null;
-	}
+	const building = !info.ready;
 
 	return (
-		<div
-			className="text-white bg-black p-4"
-		>
-			<span>
-				🚀 New dashboard version available ({latestVersion})
-			</span>
+		<div className="m-3 rounded-lg bg-black p-4 text-sm text-white">
+			<div className="mb-3">
+				🚀 New dashboard version available ({info.latest.name})
+				{building && (
+					<div className="mt-1 text-xs text-zinc-400">
+						Still building on Vercel - check again in a few minutes.
+					</div>
+				)}
+				{error && <div className="mt-1 text-xs text-red-400">{error}</div>}
+			</div>
 
-			<div>
+			<div className="flex gap-2">
 				<button
-					onClick={() => window.location.reload()}
-					style={{
-						marginRight: 10,
-						padding: "6px 12px",
-						background: "#22c55e",
-						color: "#000",
-						borderRadius: 4,
-						border: "none",
-						cursor: "pointer",
-					}}
-				>
-					Refresh
+					onClick={building ? check : update}
+					disabled={updating}
+					className="rounded bg-green-500 px-3 py-1.5 font-medium text-black disabled:opacity-60">
+					{updating ? "Updating…" : building ? "Check again" : "Update now"}
 				</button>
-
 				<button
 					onClick={() => setDismissed(true)}
-					style={{
-						padding: "6px 10px",
-						background: "transparent",
-						color: "#fff",
-						border: "1px solid #555",
-						borderRadius: 4,
-						cursor: "pointer",
-					}}
-				>
+					disabled={updating}
+					className="rounded border border-zinc-600 px-3 py-1.5">
 					Dismiss
 				</button>
 			</div>

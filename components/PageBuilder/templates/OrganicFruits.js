@@ -2380,9 +2380,8 @@ var template = [
                       "classes": "",
                       "queryPrams": {
                         "post_type": [
-                          "product"
-                        ],
-                        "order": "DESC",
+                          "cmb_product"
+                        ], "order": "DESC",
                         "orderby": "date",
                         "posts_per_page": "5",
                         "taxQuery": []
@@ -3619,9 +3618,8 @@ var template = [
                       "classes": "",
                       "queryPrams": {
                         "post_type": [
-                          "product"
-                        ],
-                        "order": "DESC",
+                          "cmb_product"
+                        ], "order": "DESC",
                         "orderby": "date",
                         "posts_per_page": "3",
                         "taxQuery": []
@@ -4962,9 +4960,8 @@ var template = [
                       "classes": "",
                       "queryPrams": {
                         "post_type": [
-                          "product"
-                        ],
-                        "order": "DESC",
+                          "cmb_product"
+                        ], "order": "DESC",
                         "orderby": "date",
                         "posts_per_page": "12",
                         "taxQuery": []
@@ -6281,9 +6278,8 @@ var template = [
                       "classes": "",
                       "queryPrams": {
                         "post_type": [
-                          "product"
-                        ],
-                        "order": "DESC",
+                          "cmb_product"
+                        ], "order": "DESC",
                         "orderby": "date",
                         "posts_per_page": "5",
                         "taxQuery": []
@@ -6882,9 +6878,8 @@ var template = [
                       "classes": "",
                       "queryPrams": {
                         "post_type": [
-                          "product"
-                        ],
-                        "order": "DESC",
+                          "cmb_product"
+                        ], "order": "DESC",
                         "orderby": "date",
                         "posts_per_page": "12",
                         "taxQuery": []
@@ -7514,9 +7509,8 @@ var template = [
                       "classes": "",
                       "queryPrams": {
                         "post_type": [
-                          "product"
-                        ],
-                        "order": "DESC",
+                          "cmb_product"
+                        ], "order": "DESC",
                         "orderby": "date",
                         "posts_per_page": "12",
                         "taxQuery": []
@@ -8146,9 +8140,8 @@ var template = [
                       "classes": "",
                       "queryPrams": {
                         "post_type": [
-                          "product"
-                        ],
-                        "order": "DESC",
+                          "cmb_product"
+                        ], "order": "DESC",
                         "orderby": "date",
                         "posts_per_page": "12",
                         "taxQuery": []

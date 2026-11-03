@@ -274,7 +274,7 @@ const SidebarContent = ({ token, onNavigate, navs }) => (
 			</>
 		)}
 
-		{/* <VersionUpdateBanner /> */}
+		{token && <VersionUpdateBanner />}
 	</>
 );
 

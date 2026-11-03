@@ -6770,7 +6770,7 @@ var template = [
                   "classes": "",
                   "queryPrams": {
                     "post_type": [
-                      "product"
+                      "cmb_product"
                     ],
                     "order": "DESC",
                     "orderby": "date",
@@ -7625,7 +7625,7 @@ var template = [
                   "classes": "",
                   "queryPrams": {
                     "post_type": [
-                      "product"
+                      "cmb_product"
                     ],
                     "order": "DESC",
                     "orderby": "date",
@@ -8019,7 +8019,7 @@ var template = [
                   "classes": "",
                   "queryPrams": {
                     "post_type": [
-                      "product"
+                      "cmb_product"
                     ],
                     "order": "DESC",
                     "orderby": "date",
@@ -8413,7 +8413,7 @@ var template = [
                   "classes": "",
                   "queryPrams": {
                     "post_type": [
-                      "product"
+                      "cmb_product"
                     ],
                     "order": "DESC",
                     "orderby": "date",

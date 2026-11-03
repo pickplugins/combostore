@@ -2632,7 +2632,7 @@ var template = [
                     "options": {
                       "classes": "",
                       "queryPrams": {
-                        "post_type": ["product"],
+                        "post_type": ["cmb_product"],
                         "order": "DESC",
                         "orderby": "date",
                         "posts_per_page": "8",
@@ -3199,7 +3199,7 @@ var template = [
                     "options": {
                       "classes": "",
                       "queryPrams": {
-                        "post_type": ["product"],
+                        "post_type": ["cmb_product"],
                         "order": "DESC",
                         "orderby": "date",
                         "posts_per_page": "12",
@@ -3465,7 +3465,7 @@ var template = [
                     "options": {
                       "classes": "",
                       "queryPrams": {
-                        "post_type": ["product"],
+                        "post_type": ["cmb_product"],
                         "order": "DESC",
                         "orderby": "date",
                         "posts_per_page": "12",
@@ -3731,7 +3731,7 @@ var template = [
                     "options": {
                       "classes": "",
                       "queryPrams": {
-                        "post_type": ["product"],
+                        "post_type": ["cmb_product"],
                         "order": "DESC",
                         "orderby": "date",
                         "posts_per_page": "12",
@@ -4601,7 +4601,7 @@ var template = [
                     "options": {
                       "classes": "",
                       "queryPrams": {
-                        "post_type": ["product"],
+                        "post_type": ["cmb_product"],
                         "order": "DESC",
                         "orderby": "date",
                         "posts_per_page": "12",
@@ -4715,7 +4715,7 @@ var template = [
                     "options": {
                       "classes": "",
                       "queryPrams": {
-                        "post_type": ["product"],
+                        "post_type": ["cmb_product"],
                         "order": "DESC",
                         "orderby": "date",
                         "posts_per_page": "12",
