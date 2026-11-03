@@ -89,7 +89,7 @@ const Grid = (props) => {
 
 
 			<div className={`${cssSelectors['navs-items']?.classes} flex overflow-x-auto scrollbar-hide ${orientation == 'vertical' ? " lg:flex-col mb-4 lg:flex-nowrap flex-wrap" : ""} `}>
-				{tabsItems.map((tab, index) => {
+				{tabsItems?.map((tab, index) => {
 
 					var isActive = activeTab === index;
 					const IconX = TablerIcons[tab.icon];

@@ -1,6 +1,6 @@
 "use client"
 import { useState, useEffect, useContext } from "react";
-import { IconSquareRoundedPlusFilled, IconSquareRoundedMinusFilled, IconStarFilled, IconStar, IconTrash, IconBasketCheck, IconChevronUp, IconChevronDown, IconX, IconShoppingCartCancel, IconLetterX, IconCornerUpLeftDouble } from "@tabler/icons-react";
+import { IconSquareRoundedPlusFilled, IconSquareRoundedMinusFilled, IconStarFilled, IconStar, IconTrash, IconBasketCheck, IconChevronUp, IconChevronDown, IconX, IconShoppingCartCancel, IconLetterX, IconCornerUpLeftDouble, IconShoppingCart } from "@tabler/icons-react";
 import Image from "next/image";
 import crypto from "crypto";
 import CheckoutView from "./CheckoutView";
@@ -23,6 +23,7 @@ const CartView = (props) => {
 
 	var options = props?.options;
 	var tag = options?.tag ?? 'h1';
+	var iconTrigger = options?.triggerStyle === 'icon';
 
 
 	// const trackPageVisit = useUtilsStore((state) => state.trackPageVisit);
@@ -173,7 +174,14 @@ const CartView = (props) => {
 
 
 
-			<div className={` ${cartItems.length == 0 ? 'hidden ' : "flex"} items-center text-sm gap-3 text-500 px-4 rounded-sm py-2 hover:bg-[#1b0e9f] bg-[#1b0e9f] cursor-pointer text-white`} onClick={ev => {
+			{iconTrigger && (
+				<button type="button" aria-label="Cart" className={cssSelectors['button']?.classes} onClick={() => setcartToggle(!cartToggle)}>
+					<span className={cssSelectors['button-icon']?.classes}><IconShoppingCart size={20} /></span>
+					<span className={cssSelectors['button-quantity']?.classes}>{cartItems.length}</span>
+				</button>
+			)}
+
+			<div className={` ${(cartItems.length == 0 || iconTrigger) ? 'hidden ' : "flex"} items-center text-sm gap-3 text-500 px-4 rounded-sm py-2 hover:bg-[#1b0e9f] bg-[#1b0e9f] cursor-pointer text-white`} onClick={ev => {
 				setcartToggle(!cartToggle)
 
 

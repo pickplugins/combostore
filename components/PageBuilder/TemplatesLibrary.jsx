@@ -74,9 +74,6 @@ const TemplatesLibrary = (props) => {
 
 		var postData = JSON.stringify(templateData);
 
-		console.log(postData);
-
-
 
 		setloading(true);
 		fetch(serverUrl + "wp-json/combo-store/v2/create_template", {
@@ -95,22 +92,19 @@ const TemplatesLibrary = (props) => {
 				if (response.ok && response.status < 400) {
 					response.json().then((res) => {
 
-						console.log(res);
-
-
 						//var resObj = JSON.parse(res)
 
 						var status = res?.status;
-						var messages = res?.messages;
+						var message = res?.message;
 
-
+						console.log(addNotification);
 
 						if (status == 'failed') {
-							addNotification({ type: 'error', title: 'Added failed', content: `Sorry,  added failed.${JSON.stringify(messages)}` })
+							addNotification({ type: 'error', title: 'Added failed', content: `Sorry,  added failed.${JSON.stringify(message)}` })
 						}
 
 						if (status == 'success') {
-							addNotification({ type: 'success', title: 'Added', content: "Added scuccessful." })
+							addNotification({ type: 'success', title: 'Added', content: message })
 						}
 
 

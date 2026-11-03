@@ -450,12 +450,12 @@ const EditorActions = (props) => {
 
 			console.log(res);
 
-
+			var message = res?.message;
 
 			if (res?.status == 'success') {
-				addNotification({ type: 'success', title: 'Page update', content: `` })
+				addNotification({ type: 'success', title: 'Page update', content: message })
 			} else {
-				addNotification({ type: 'error', title: 'Page updated failed', content: `` })
+				addNotification({ type: 'error', title: 'Page updated failed', content: message })
 			}
 		} catch (error) {
 			addNotification({ type: 'error', title: 'Page updated failed', content: error?.message ?? '' })
@@ -816,7 +816,6 @@ const EditorActions = (props) => {
 
 				</div>
 
-				{/* {JSON.stringify(DEVICES)} */}
 
 
 				{/* Canvas width. Absolutely centred so it does not drift as the

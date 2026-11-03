@@ -365,7 +365,7 @@ const QuickSearchView = (props) => {
 					setpromptsData({ ...promptsData, posts: [], total: 0, })
 
 
-				}} type="text" className={`${cssSelectors['input-search']?.classes}  w-full lg:w-max  px-3`} placeholder="Search..." />
+				}} type="text" className={`${cssSelectors['input-search']?.classes}  w-full lg:w-max  px-3`} placeholder={placeholder} />
 
 
 				{!loading && (

@@ -1,4 +1,4 @@
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, DM_Sans, Figtree, Hind_Siliguri } from "next/font/google";
 import "./globals.css";
 import TikTokPixel from '@/components/analytics/TikTokPixel';
 import FacebookPixel from '@/components/analytics/FacebookPixel';
@@ -23,6 +23,30 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
 	variable: "--font-geist-mono",
 	subsets: ["latin"],
+});
+
+/*
+	Fonts template blocks can opt into through font-[family-name:var(--font-...)].
+	preload is off because only some templates use them: a browser fetches these
+	files only on pages that actually render with them.
+*/
+const dmSans = DM_Sans({
+	variable: "--font-dm-sans",
+	subsets: ["latin"],
+	preload: false,
+});
+
+const figtree = Figtree({
+	variable: "--font-figtree",
+	subsets: ["latin"],
+	preload: false,
+});
+
+const hindSiliguri = Hind_Siliguri({
+	variable: "--font-hind-siliguri",
+	subsets: ["latin", "bengali"],
+	weight: ["300", "400", "500", "600", "700"],
+	preload: false,
 });
 
 export const metadata = {
@@ -91,7 +115,7 @@ export default function RootLayout({ children }) {
 
 			</head>
 			<body
-				className={`${geistSans.variable} ${geistMono.variable} antialiased `}>
+				className={`${geistSans.variable} ${geistMono.variable} ${dmSans.variable} ${figtree.variable} ${hindSiliguri.variable} antialiased `}>
 				<AuthProvider>
 					<NextTopLoader
 						color="#1b0e9f"

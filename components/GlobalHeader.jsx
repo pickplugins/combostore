@@ -304,19 +304,7 @@ const GlobalHeader = () => {
 
 
 				<div>
-					{/* <select
-						onChange={(e) => {
-							setlang(e.target.value);
-						}}
-						value={lang}
-						className="!text-white  bg-gray-600 hover:bg-gray-700 !py-[10px] ">
-						<option value="en">English</option>
-						<option value="bn">Bangla</option>
-						<option value="hi">Hindi</option>
-						<option value="zh">Chinese</option>
-						<option value="ja">Japanese</option>
-						<option value="es">Spanish</option>
-					</select> */}
+
 					<Notify notifications={notifications} />
 				</div>
 

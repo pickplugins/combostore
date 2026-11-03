@@ -117,7 +117,10 @@ const PostLoopView = (props) => {
 	useEffect(() => {
 
 
-		setqueryPrams(postGridAttr?.queryPrams)
+		/* Only a grid can change the query; a slider's stays as it was set. */
+		if (postGridAttr?.queryPrams) {
+			setqueryPrams(postGridAttr.queryPrams)
+		}
 
 	}, [postGridAttr?.queryPrams]);
 
