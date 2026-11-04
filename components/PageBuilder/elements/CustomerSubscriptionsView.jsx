@@ -6,8 +6,13 @@ import { useState, useEffect } from "react";
 import { IconColumns, IconPlus } from "@tabler/icons-react";
 import BlockRender from '../BlockRender';
 import EntriesTable from "../../../components/EntriesTable";
+import { useCounterStore } from '../../../store/useCounterStore';
+
+/* Both were used below but never defined, so the block threw on load. */
+const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
 const ColumnsView = (props) => {
+	const { token } = useCounterStore();
 	const {
 		block,
 
@@ -104,11 +109,13 @@ const ColumnsView = (props) => {
 
 		setloading(true);
 
+		/* The endpoint now requires the customer's token and returns only
+		   their own subscriptions. */
 		fetch(serverUrl + "wp-json/combo-store/v2/get_subscriptions", {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
-
+				Authorization: `Bearer ${token}`,
 			},
 			body: postData,
 		})
@@ -146,9 +153,10 @@ const ColumnsView = (props) => {
 
 
 
+	/* `token` too: after a reload it arrives from an effect after first render. */
 	useEffect(() => {
 		get_subscriptions();
-	}, [queryPrams]);
+	}, [queryPrams, token]);
 
 	var columns = {
 		// check: { label: ("Check") },

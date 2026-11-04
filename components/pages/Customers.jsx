@@ -7,15 +7,29 @@ import EntriesTable from "../../components/EntriesTable";
 import PopoverButton from "../../components/PopoverButton";
 import CustomerEdit from "../../components/pages/CustomerEdit";
 import { useCounterStore } from '../../store/useCounterStore'
+import Image from "next/image";
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
-import { IconEdit, IconEyeShare } from "@tabler/icons-react";
+import { IconEyeShare, IconDotsVertical, IconTrash, IconUserPlus, IconMail, IconPhone } from "@tabler/icons-react";
 
 
 const ICON_BUTTON =
   "inline-flex h-8 w-8 items-center justify-center rounded-lg border border-transparent text-gray-400 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:text-gray-900";
 
+const MENU_ITEM =
+  "flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900 cursor-pointer";
+
+const FILTER_SELECT =
+  "xl:w-56 w-full !h-9 !rounded-lg !border !border-gray-300 !bg-white !py-0 !pl-3 !pr-2 !text-sm !text-gray-600 !shadow-none transition-colors hover:!border-gray-400 focus:!border-gray-500 focus:!outline-none";
+
+const FORM_INPUT =
+  "!shadow-none !border !border-gray-300 !bg-white transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 w-full rounded-lg px-3 py-2 text-sm text-gray-800";
+
+const FORM_LABEL = "mb-1 block text-xs font-medium text-gray-600";
+
 const EMPTY = <span className="text-sm text-gray-300">—</span>;
+
+const EMPTY_NEW_CUSTOMER = { role: "customer", name: "", email: "", mobile: "", registerBy: "mobile" };
 
 /* Customers who sign up by phone get a generated `<phone>@mo.lo` address. */
 const PHONE_EMAIL = /@mo\.lo$/i;
@@ -46,6 +60,17 @@ function formatJoined(registered) {
 }
 
 
+function initialsOf(name) {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => Array.from(part)[0])
+    .join("")
+    .toUpperCase();
+}
+
+
 const Customers = () => {
 
   const { token, addNotification } = useCounterStore()
@@ -53,12 +78,19 @@ const Customers = () => {
   var [queryPrams, setqueryPrams] = useState({ role: "customer", keyword: "", paged: 1, orderby: "registered", order: "DESC", per_page: 20 });
 
   var [customersData, setcustomersData] = useState({ posts: [], total: 0, maxPages: 1 });
+  var [newCustomer, setnewCustomer] = useState(EMPTY_NEW_CUSTOMER);
 
   var [loading, setloading] = useState(false);
+  var [adding, setadding] = useState(false);
+  var [selectedRows, setselectedRows] = useState([]);
+
+  function onSelectRows(rows) {
+    setselectedRows(rows);
+  }
 
 
-  /* No `check` column: this page has no bulk action. */
   var columns = {
+    check: { id: "check", label: ("Check"), },
     id: { id: "id", label: ("Customer"), callback: callbackCustomer, classes: "w-96 text-left text-gray-600" },
     contact: { id: "contact", label: ("Contact"), callback: callbackContact, classes: "text-left text-gray-600" },
     total_orders: { id: "total_orders", label: ("Orders"), callback: callbackOrders, classes: "text-center text-gray-600" },
@@ -117,6 +149,81 @@ const Customers = () => {
   }
 
 
+  async function delete_customers(ids) {
+
+    ids = ids != undefined ? ids : selectedRows;
+
+    if (!ids?.length) {
+      return;
+    }
+
+    setloading(true);
+
+    fetch(serverUrl + "wp-json/combo-store/v2/delete_users", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ ids: ids }),
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Token validation failed");
+        }
+
+        response.json().then(() => {
+          setselectedRows([]);
+          addNotification({ type: 'success', title: 'Customers deleted', content: `${ids.length} customer(s) deleted.` })
+          fetchPosts();
+        });
+      })
+      .catch((_error) => {
+        setloading(false);
+        addNotification({ type: 'error', title: 'Delete failed', content: "The customers could not be deleted. Please try again." })
+      });
+  }
+
+
+  async function add_customer() {
+
+    setadding(true);
+
+    fetch(serverUrl + "wp-json/combo-store/v2/register_user", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(newCustomer),
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Token validation failed");
+        }
+
+        response.json().then((res) => {
+
+          /* register_user answers with a JSON-encoded string. */
+          var resObj = typeof res === "string" ? JSON.parse(res) : res;
+
+          if (resObj?.error) {
+            addNotification({ type: 'error', title: 'Customer not added', content: `Sorry, the customer could not be added. ${JSON.stringify(resObj?.messages ?? "")}` })
+          } else {
+            addNotification({ type: 'success', title: 'Customer added', content: "Customer added successfully." })
+            setnewCustomer(EMPTY_NEW_CUSTOMER);
+            fetchPosts();
+          }
+
+          setadding(false);
+        });
+      })
+      .catch((_error) => {
+        setadding(false);
+        addNotification({ type: 'error', title: 'Customer not added', content: "The request failed. Please try again." })
+      });
+  }
+
+
   const [debouncedQuery, setDebouncedQuery] = useState(queryPrams);
 
 
@@ -169,20 +276,32 @@ const Customers = () => {
 
         <div className="flex min-w-0 flex-1 items-center gap-3">
 
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-sm font-semibold uppercase text-gray-500">
-            {Array.from(name)[0]}
-          </div>
+          <Link href={`/dashboard/customers/${entry?.id}`} className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-gray-200 bg-gray-50 text-xs font-semibold text-gray-500">
+            {entry?.thumbnail?.src ? (
+              <Image unoptimized className="h-10 w-10 object-cover" src={entry.thumbnail.src} width={80} height={80} alt={``} />
+            ) : (
+              <span>{initialsOf(name) || "?"}</span>
+            )}
+          </Link>
 
           <div className="flex min-w-0 flex-1 flex-col gap-1 text-left">
-            <Link className="text-left text-sm font-medium text-gray-900 transition-colors hover:text-blue-600 hover:underline" href={`/dashboard/customers/${entry?.id}`}>
+            <Link className="truncate text-left text-sm font-medium text-gray-900 transition-colors hover:text-blue-600 hover:underline" href={`/dashboard/customers/${entry?.id}`}>
               {name}
             </Link>
 
             <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
               <span className="font-mono text-[11px] text-gray-400">#{entry?.id}</span>
               {hasSeparateLogin && (
-                <span>{entry.user_login}</span>
+                <span className="font-mono text-[11px]">{entry.user_login}</span>
               )}
+
+              <PopoverButton buttonLabel={"Edit"} buttonIcon={null} title={"Edit Customer"} drawer={"right"} buttonClass={`inline-flex items-center rounded-md px-1.5 py-0.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-900 cursor-pointer`}>
+
+                <div className="p-5 bg-gray-50 text-left">
+                  <CustomerEdit id={entry?.id} />
+                </div>
+
+              </PopoverButton>
             </div>
           </div>
         </div>
@@ -203,12 +322,18 @@ const Customers = () => {
         {!email && !phone && EMPTY}
 
         {(email || phone) && (
-          <div className="flex min-w-0 flex-col gap-1">
+          <div className="flex min-w-0 flex-col gap-1 text-sm text-gray-600">
             {email && (
-              <div className="truncate text-sm text-gray-700" title={email}>{email}</div>
+              <a href={`mailto:${email}`} title={email} className="inline-flex min-w-0 items-center gap-1.5 transition-colors hover:text-gray-900">
+                <IconMail size={14} className="shrink-0 text-gray-400" />
+                <span className="truncate">{email}</span>
+              </a>
             )}
             {phone && (
-              <div className="truncate text-xs tabular-nums text-gray-500">{phone}</div>
+              <a href={`tel:${phone}`} className="inline-flex items-center gap-1.5 tabular-nums transition-colors hover:text-gray-900">
+                <IconPhone size={14} className="shrink-0 text-gray-400" />
+                {phone}
+              </a>
             )}
           </div>
         )}
@@ -220,10 +345,22 @@ const Customers = () => {
 
   function callbackOrders(entry, columnIndex) {
 
+    var count = Number(entry?.total_orders ?? 0);
+
     return (
       <td data-label="Orders" className="!px-5 py-3 text-center"
         key={columnIndex}>
-        <span className="text-sm font-semibold tabular-nums text-gray-900">{entry?.total_orders ?? 0}</span>
+        <div className="flex justify-center">
+          {/* Repeat buyers stand out from one-off and never-ordered accounts. */}
+          <span className={`inline-flex min-w-8 items-center justify-center rounded-full px-2.5 py-1 text-xs font-semibold tabular-nums ${count > 1
+            ? "bg-emerald-50 text-emerald-700"
+            : count === 1
+              ? "bg-sky-50 text-sky-700"
+              : "bg-gray-100 text-gray-500"
+            }`}>
+            {count}
+          </span>
+        </div>
       </td>
 
     );
@@ -251,17 +388,24 @@ const Customers = () => {
         key={columnIndex}>
         <div className="flex items-center justify-end gap-1 text-sm">
 
-          <PopoverButton buttonLabel={" "} buttonIcon={<IconEdit size={18} />} title={"Edit Customer"} drawer={"right"} buttonClass={ICON_BUTTON}>
+          <PopoverButton wrapperClass={`flex justify-end `} buttonLabel={" "} buttonIcon={<IconDotsVertical size={18} />} title={"Actions"} position={"bottomRight"} popoverClass={`absolute z-[999] w-52 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg`} buttonClass={ICON_BUTTON}>
 
-            <div className="p-5 bg-gray-50 text-left">
-              <CustomerEdit id={entry?.id} />
+            <div className="p-1.5">
+              <div className="flex flex-col gap-0.5">
+                <Link className={MENU_ITEM} href={`/dashboard/customers/${entry?.id}`}>
+                  <IconEyeShare size={16} /> View
+                </Link>
+                <div className={`${MENU_ITEM} !text-red-600 hover:!bg-red-50 hover:!text-red-700`} onClick={() => {
+                  if (confirm("Please confirm?")) {
+                    delete_customers([entry?.id]);
+                  }
+                }}>
+                  <IconTrash size={16} /> Delete
+                </div>
+              </div>
             </div>
 
           </PopoverButton>
-
-          <Link title="View customer" aria-label="View customer" className={ICON_BUTTON} href={`/dashboard/customers/${entry?.id}`}>
-            <IconEyeShare size={18} />
-          </Link>
 
         </div>
       </td>
@@ -273,13 +417,105 @@ const Customers = () => {
   return (
     <div className="page-shell">
 
-      {/* Page heading: this screen had no title, only a row of controls. */}
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold text-gray-900">{("Customers")}</h1>
           <p className="mt-0.5 text-xs text-gray-500">
             {customersData?.total ?? 0} {("customers")}
           </p>
+        </div>
+
+        <PopoverButton
+          enableCloseBtn={false}
+          buttonLabel={("Add Customer")}
+          buttonIcon={<IconUserPlus size={16} />}
+          title={"Add Customer"}
+          position={"bottomRight"}
+          buttonClass={`inline-flex items-center gap-2 !rounded-lg !border-0 !bg-[#634FE5] !px-4 !py-2 !text-sm !font-semibold !text-white !shadow-sm transition-colors hover:!bg-[#5540d4] cursor-pointer`}
+          popoverClass={`absolute z-[999] mt-2 w-[360px] sm:w-[440px] overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg`}>
+
+          <div className="p-4">
+            <div className="mb-3 text-sm font-semibold text-gray-900">New customer</div>
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="sm:col-span-2">
+                <label htmlFor="new-customer-name" className={FORM_LABEL}>Name</label>
+                <input
+                  id="new-customer-name"
+                  type="text"
+                  placeholder="John Doe"
+                  className={FORM_INPUT}
+                  value={newCustomer.name}
+                  onChange={(ev) => setnewCustomer({ ...newCustomer, name: ev.target.value })}
+                />
+              </div>
+              <div>
+                <label htmlFor="new-customer-email" className={FORM_LABEL}>Email</label>
+                <input
+                  id="new-customer-email"
+                  type="email"
+                  placeholder="john@example.com"
+                  className={FORM_INPUT}
+                  value={newCustomer.email}
+                  onChange={(ev) => setnewCustomer({ ...newCustomer, email: ev.target.value })}
+                />
+              </div>
+              <div>
+                <label htmlFor="new-customer-mobile" className={FORM_LABEL}>Mobile</label>
+                <input
+                  id="new-customer-mobile"
+                  type="tel"
+                  className={FORM_INPUT}
+                  value={newCustomer.mobile}
+                  onChange={(ev) => setnewCustomer({ ...newCustomer, mobile: ev.target.value })}
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <label htmlFor="new-customer-register-by" className={FORM_LABEL}>Register by</label>
+                <select id="new-customer-register-by" className={FORM_INPUT} value={newCustomer.registerBy}
+                  onChange={(ev) => setnewCustomer({ ...newCustomer, registerBy: ev.target.value })}>
+                  <option value={`mobile`}>Mobile</option>
+                  <option value={`email`}>Email</option>
+                </select>
+              </div>
+
+              <button
+                type="button"
+                disabled={adding}
+                onClick={() => add_customer()}
+                className="sm:col-span-2 mt-1 inline-flex items-center justify-center gap-2 !rounded-lg !border-0 !bg-[#634FE5] px-4 py-2 text-sm font-semibold !text-white !shadow-sm transition-colors hover:!bg-[#5540d4] disabled:opacity-60 cursor-pointer">
+                {adding ? "Please wait…" : ("Create customer")}
+              </button>
+            </div>
+          </div>
+
+        </PopoverButton>
+      </div>
+
+      <div className="flex flex-wrap justify-between gap-3">
+
+        <div className="flex flex-wrap gap-2">
+          <select className={FILTER_SELECT} value={queryPrams.order} onChange={ev => {
+            setqueryPrams({ ...queryPrams, orderby: "registered", order: ev.target.value, paged: 1 });
+          }}>
+            <option value="DESC">{("Newest first")}</option>
+            <option value="ASC">{("Oldest first")}</option>
+          </select>
+        </div>
+
+        <div className="flex gap-3 items-center justify-end">
+          {selectedRows?.length > 0 && (
+            <div
+              className="inline-flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700 transition-colors hover:bg-red-100 cursor-pointer"
+              onClick={() => {
+                if (confirm(`Delete ${selectedRows.length} customer(s)?`)) {
+                  delete_customers();
+                }
+              }}>
+              <IconTrash size={16} />
+              {("Delete Customers")} ({selectedRows.length})
+            </div>
+          )}
         </div>
       </div>
 
@@ -291,10 +527,9 @@ const Customers = () => {
         itemPath={""}
         onChange={onChangeQueryPrams}
         loading={loading}
-        selectedRows={[]}
-        onSelectRows={() => { }}
+        selectedRows={selectedRows}
+        onSelectRows={onSelectRows}
         onRefreshRequest={onRefreshRequest}
-
       />
     </div>
   );

@@ -12,6 +12,7 @@ const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
 import { IconSettings, IconCheckbox, IconSquare, IconFidgetSpinner, IconTrash, IconStarFilled, IconStar, IconExternalLink } from "@tabler/icons-react";
 import GalleryPicker from "../../components/shop-elements/GalleryPicker";
+import { termsInTreeOrder, termAndDescendants } from "../../components/TermsListPage";
 
 
 const CategoryEdit = ({ id }) => {
@@ -24,6 +25,24 @@ const CategoryEdit = ({ id }) => {
   var [currentObject, setcurrentObject] = useState(null);
 
   var [loading, setloading] = useState(false);
+
+  /* Every category, for the parent picker. */
+  var [allCategories, setallCategories] = useState([]);
+
+  useEffect(() => {
+    fetch(serverUrl + "wp-json/combo-store/v2/get_terms", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ taxonomy: "product_cat", per_page: 999, hide_empty: false }),
+    })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((res) => setallCategories(Array.isArray(res?.terms) ? res.terms : []))
+      .catch(() => { });
+  }, []);
+
+  /* A category cannot sit under itself or under one of its own children. */
+  const blockedParents = termAndDescendants(allCategories, Number(id));
+  const parentOptions = termsInTreeOrder(allCategories).filter((term) => !blockedParents.has(term.term_id));
 
 
 
@@ -293,6 +312,26 @@ const CategoryEdit = ({ id }) => {
                       setcurrentObject({ ...currentObject, slug: value, slug: slug });
                     }}
                   />
+                </div>
+
+                <div className="flex flex-col gap-3 ">
+                  <label htmlFor="" className="block text-sm font-medium text-gray-700">
+                    {("Parent")}
+                  </label>
+                  <select
+                    className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 w-full rounded-lg bg-white px-3 py-2 text-sm"
+                    value={currentObject?.parent ? String(currentObject.parent) : ""}
+                    onChange={(ev) => {
+                      setcurrentObject({ ...currentObject, parent: ev.target.value ? Number(ev.target.value) : 0 });
+                    }}
+                  >
+                    <option value="">{("None (top level)")}</option>
+                    {parentOptions.map((term) => (
+                      <option key={term.term_id} value={String(term.term_id)}>
+                        {`${"   ".repeat(term.depth)}${term.depth ? "└ " : ""}${term.name}`}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
 

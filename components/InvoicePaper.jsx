@@ -48,6 +48,26 @@ export default function InvoicePaper(props) {
 		verticalAlign: "top",
 	};
 
+	/* Cell borders as four longhand sides. Mixing the `border` shorthand
+		 with `borderBottom` made React warn on every re-render (switching
+		 template, for one) and can leave a stale side behind when a cell
+		 changes from one style to another. `lineWidth` is the bottom rule's
+		 width in the "lines" layout. */
+	const cellBorders = (lineWidth) => {
+		const rule = `1px solid ${template.ruleColor}`;
+
+		if (template.table === "bordered") {
+			return { borderTop: rule, borderRight: rule, borderBottom: rule, borderLeft: rule };
+		}
+
+		return {
+			borderTop: "none",
+			borderRight: "none",
+			borderBottom: template.table === "lines" ? `${lineWidth}px solid ${template.ruleColor}` : "none",
+			borderLeft: "none",
+		};
+	};
+
 	/* The three table dresses. Bordered is a full grid, zebra drops the lines
 		 for alternating fills, lines keeps a hairline under each row and
 		 nothing else. */
@@ -59,14 +79,12 @@ export default function InvoicePaper(props) {
 		fontWeight: "bold",
 		color: template.table === "zebra" ? template.accentText : template.muted,
 		background: template.table === "zebra" ? template.accent : (template.table === "bordered" ? "#f5f5f5" : "transparent"),
-		border: template.table === "bordered" ? `1px solid ${template.ruleColor}` : "none",
-		borderBottom: template.table === "lines" ? `2px solid ${template.ruleColor}` : undefined,
+		...cellBorders(2),
 	};
 
 	const bodyCell = (index) => ({
 		...cell,
-		border: template.table === "bordered" ? `1px solid ${template.ruleColor}` : "none",
-		borderBottom: template.table === "lines" ? `1px solid ${template.ruleColor}` : undefined,
+		...cellBorders(1),
 		background: template.table === "zebra" && index % 2 === 1 ? "#f9fafb" : undefined,
 	});
 

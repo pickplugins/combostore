@@ -153,7 +153,7 @@ const page = ({ params }) => {
 
     lineItems?.map(item => {
 
-      items.push({ id: item.id, desc: item.title, qty: item.quantity, price: item.price })
+      items.push({ id: item.id, product_name: item.product_name || item.title, qty: item.quantity, price: item.price })
 
     })
 

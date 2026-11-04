@@ -37,6 +37,7 @@ const AddToCart = (props) => {
 
 	var id = props?.id;
 	var type = props?.type;
+	const cartOptions = props?.cartOptions;
 
 	var options = props?.options;
 	var iconSize = options?.iconSize ?? 20;
@@ -217,7 +218,7 @@ const AddToCart = (props) => {
 
 		var trackPrams = { productId: productId, userid: userDataX?.id, event: "addToCart", source: "cartButton" }
 
-		trackPageVisit(trackPrams);
+		//trackPageVisit(trackPrams);
 		// sendMetaEvent()
 		sendTikTokEvent()
 

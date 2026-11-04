@@ -51,7 +51,7 @@ const Products = () => {
 	var [selectedRows, setselectedRows] = useState([]);
 
 	var [queryTerms, setqueryTerms] = useState({ taxonomy: 'product_cat', order: "DESC", per_page: 999, paged: 1, hierarchical: true, });
-	var [querybrands, setquerybrands] = useState({ taxonomy: 'product_brand', order: "DESC", per_page: 99, paged: 1, });
+	var [querybrands, setquerybrands] = useState({ taxonomy: 'product_brand', order: "DESC", per_page: 999, paged: 1, });
 	var [terms, setterms] = useState([]);
 	var [brands, setbrands] = useState([]);
 

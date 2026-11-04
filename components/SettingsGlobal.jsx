@@ -271,6 +271,14 @@ const SettingsGlobal = (props) => {
         "measurement_id": "",
       }
     },
+    "googleTagManager": {
+      "id": 'googleTagManager',
+      "enable": false,
+      "label": "Google Tag Manager",
+      args: {
+        "id": "",
+      }
+    },
     "microsoftClarity": {
       "id": 'microsoftClarity',
       "enable": false,
@@ -5116,6 +5124,45 @@ const SettingsGlobal = (props) => {
 
                                     }}
                                   />
+                                </div>
+                              </div>
+
+
+                            </>
+                          )}
+                          {providerKey == 'googleTagManager' && (
+
+                            <>
+
+                              <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Container ID")}</div>
+                                <div className="flex flex-col gap-1">
+                                  <input
+                                    type="text"
+                                    name={'id'}
+                                    placeholder={'GTM-XXXXXXX'}
+                                    className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
+                                    value={settingsData?.apiKeys?.[providerKey]?.['id'] || ''}
+                                    onChange={(ev) => {
+                                      const { name, value } = ev.target;
+                                      setsettingsData(prev => ({
+                                        ...prev,
+                                        apiKeys: {
+                                          ...prev.apiKeys,
+                                          [providerKey]: {
+                                            ...prev?.apiKeys?.[providerKey],
+                                            [name]: value.trim().toUpperCase()
+                                          }
+                                        }
+                                      }));
+
+                                    }}
+                                  />
+                                  {settingsData?.apiKeys?.[providerKey]?.['id'] &&
+                                    !/^GTM-[A-Z0-9]+$/.test(settingsData.apiKeys[providerKey]['id']) && (
+                                      <p className="text-xs text-red-500">{("Container ID should look like GTM-XXXXXXX.")}</p>
+                                    )}
+                                  <p className="text-xs text-gray-500">{("Loaded on the storefront only while this item is enabled.")}</p>
                                 </div>
                               </div>
 

@@ -7,7 +7,7 @@ import EntriesTable from "../../components/EntriesTable";
 import { loadOrdersQuery, saveOrdersQuery } from "../../lib/ordersQuery";
 import { useState, useEffect, useContext } from "react";
 import Spinner from "../../components/Spinner";
-import { IconFilter, IconFileDollar, IconEyeShare, IconTrash, IconCopy, IconDotsVertical, IconPackages, IconX, IconEdit, IconPrinter, IconListNumbers, IconMapDollar, IconSquareCheck, IconSquareCheckFilled, IconListDetails, IconNotes } from "@tabler/icons-react";
+import { IconFilter, IconFileDollar, IconEyeShare, IconTrash, IconCopy, IconDotsVertical, IconPackages, IconX, IconEdit, IconPrinter, IconListNumbers, IconMapDollar, IconListDetails, IconNotes, IconPlus } from "@tabler/icons-react";
 
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -42,6 +42,9 @@ const BADGE_BASE =
   "inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1 ring-inset";
 
 const ORDER_STATUS_BADGES = {
+  /* `confirmed` is one of the store's order statuses (orderStatusArgs) but had
+     no badge, so confirmed orders showed an empty Status cell. */
+  confirmed: { label: "Confirmed", classes: "bg-indigo-50 text-indigo-700 ring-indigo-200" },
   pending: { label: "Pending", classes: "bg-amber-50 text-amber-700 ring-amber-200" },
   completed: { label: "Completed", classes: "bg-emerald-50 text-emerald-700 ring-emerald-200" },
   incomplete: { label: "Incomplete", classes: "bg-orange-50 text-orange-700 ring-orange-200" },
@@ -65,17 +68,44 @@ const PAYMENT_STATUS_BADGES = {
   refunded: { label: "Refunded", classes: "bg-rose-50 text-rose-700 ring-rose-200" },
 };
 
+/* Unknown statuses still get a neutral pill instead of an empty cell. */
+const FALLBACK_BADGE_CLASSES = "bg-gray-100 text-gray-600 ring-gray-200";
+const titleCase = (value) => String(value || "").replace(/[_-]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+
+/* Same as the Products screen. */
 const ICON_BUTTON =
-  "inline-flex h-8  px-2 items-center justify-center rounded-lg border border-transparent !py-0 text-gray-400 !shadow-none transition-colors hover:border-gray-300 border-gray-300 hover:!bg-gray-100 bg-gray-200 hover:text-gray-900 cursor-pointer";
+  "inline-flex h-8 min-w-8 px-1.5 items-center justify-center rounded-lg border border-transparent !py-0 text-gray-400 !shadow-none transition-colors hover:border-gray-300 hover:!bg-gray-100 hover:text-gray-900 cursor-pointer";
+
+const FILTER_SELECT =
+  "xl:w-48 w-full !h-9 !rounded-lg !border !border-gray-300 !bg-white !py-0 !pl-3 !pr-2 !text-sm !text-gray-600 !shadow-none transition-colors hover:!border-gray-400 focus:!border-gray-500 focus:!outline-none";
+
+const FILTER_CHIP =
+  "flex items-center gap-1 rounded-full border border-indigo-200 bg-indigo-50 py-0.5 pl-2.5 pr-1 text-xs text-indigo-700";
+
+const FILTER_CHIP_X =
+  "inline-flex h-5 w-5 cursor-pointer items-center justify-center rounded-full text-indigo-400 transition-colors hover:bg-indigo-200 hover:text-indigo-800";
 
 const MENU_ITEM =
   "flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900 cursor-pointer";
 
-const TOOLBAR_BUTTON =
-  "inline-flex h-9 items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 text-sm font-medium text-gray-700 transition-colors hover:border-gray-400 hover:bg-gray-50 cursor-pointer";
+const DATE_INPUT =
+  "w-44 !h-9 !rounded-lg !border !border-gray-300 !bg-white !px-3 !py-0 !text-sm !text-gray-700 !shadow-none transition-colors hover:!border-gray-400 focus:!border-[#634FE5] focus:!outline-none";
 
+/* The query keeps dates as "yyyy-MM-dd HH:mm:ss" strings (that is what is saved
+   and sent); react-datepicker needs a Date. */
+function toPickerDate(value) {
+  if (!value) return null;
+  var date = new Date(String(value).replace(" ", "T"));
+  return isNaN(date) ? null : date;
+}
+
+const TOOLBAR_BUTTON =
+  "inline-flex !h-9 items-center gap-2 !rounded-lg !border !border-gray-300 !bg-white !px-3 !py-0 !text-sm !font-medium !text-gray-700 !shadow-none transition-colors hover:!border-gray-400 hover:!bg-gray-50 cursor-pointer";
+
+/*  because the global `button` rule in globals.css is unlayered and
+   otherwise wins (grey text, border) - same as the Products screen. */
 const PRIMARY_BUTTON =
-  "inline-flex h-9 items-center gap-2 rounded-lg bg-[#634FE5] px-4 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#5540d4] cursor-pointer";
+  "inline-flex !h-9 items-center gap-2 !rounded-lg !border-0 !bg-[#634FE5] !px-4 !py-0 !text-sm !font-semibold !text-white !shadow-sm transition-colors hover:!bg-[#5540d4] disabled:opacity-50 cursor-pointer";
 
 
 const Orders = (props) => {
@@ -185,53 +215,11 @@ const Orders = (props) => {
   }
 
 
-  function update_stock() {
+  /* update_stock() and its "Add history" toolbar button are gone: the button
+     posted to add_stock_histoy, which ignores the request and always removes
+     2 units from product 10018 / variation 352 - leftover test code that
+     changed real stock on every click. */
 
-
-
-    var postData = {
-
-    };
-    postData = JSON.stringify(postData);
-    setloading(true);
-    fetch(serverUrl + "wp-json/combo-store/v2/add_stock_histoy", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: postData,
-    })
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Token validation failed");
-        }
-
-        if (response.ok && response.status < 400) {
-          response.json().then((res) => {
-            var errors = res?.errors;
-            var success = res?.success;
-
-            setloading(false);
-
-
-            console.log(res);
-
-
-            //fetchPosts();
-
-            //setselectedRows([]);
-
-
-
-          });
-        }
-      })
-      .catch((_error) => {
-        //this.saveAsStatus = 'error';
-        // handle the error
-      });
-  }
   function delete_orders(ids) {
 
 
@@ -276,6 +264,8 @@ const Orders = (props) => {
 
             setloading(false);
 
+            addNotification({ type: 'success', title: 'Deleted', content: `${ids.length} order(s) deleted.` })
+
             fetchPosts();
 
             setselectedRows([]);
@@ -286,8 +276,8 @@ const Orders = (props) => {
         }
       })
       .catch((_error) => {
-        //this.saveAsStatus = 'error';
-        // handle the error
+        setloading(false);
+        addNotification({ type: 'error', title: 'Delete failed', content: "Could not delete the selected order(s)." })
       });
   }
 
@@ -341,6 +331,8 @@ const Orders = (props) => {
 
             setloading(false);
 
+            addNotification({ type: 'success', title: 'Duplicated', content: `Order #${id} duplicated.` })
+
             fetchPosts();
 
             setselectedRows([]);
@@ -351,8 +343,8 @@ const Orders = (props) => {
         }
       })
       .catch((_error) => {
-        //this.saveAsStatus = 'error';
-        // handle the error
+        setloading(false);
+        addNotification({ type: 'error', title: 'Duplicate failed', content: `Could not duplicate order #${id}.` })
       });
   }
 
@@ -409,8 +401,8 @@ const Orders = (props) => {
         }
       })
       .catch((_error) => {
-        //this.saveAsStatus = 'error';
-        // handle the error
+        setloading(false);
+        addNotification({ type: 'error', title: 'Order not created', content: "The request failed. Please try again." })
       });
 
   }
@@ -452,31 +444,20 @@ const Orders = (props) => {
 
 
 
-            var orders = res?.posts;
-            var total = parseInt(res?.total);
-            var max_pages = parseInt(res?.max_pages);
-
-            console.log(orders);
-
-
+            /* With no matches the API can leave out `posts`, `total` and `max_pages`. */
+            var orders = res?.posts ?? [];
+            var total = parseInt(res?.total) || 0;
+            var max_pages = parseInt(res?.max_pages) || 1;
 
             setordersData({ posts: orders, total: total, maxPages: max_pages })
+            setsumData(sumOrderAmounts(orders));
             setloading(false);
-
-
-            setTimeout(() => {
-
-              var data = sumOrderAmounts(orders)
-
-              setsumData(data);
-
-            }, 500);
           });
         }
       })
       .catch((_error) => {
-        //this.saveAsStatus = 'error';
-        // handle the error
+        setloading(false);
+        addNotification({ type: 'error', title: 'Orders not loaded', content: "The list could not be loaded. Please try again." })
       });
 
   }
@@ -503,6 +484,29 @@ const Orders = (props) => {
     setqueryRestored(true);
   }, []);
 
+  /* Saved straight away, not debounced: an order can be opened within the delay. */
+  useEffect(() => {
+    if (queryRestored) {
+      saveOrdersQuery(queryPrams);
+    }
+  }, [queryRestored, queryPrams]);
+
+  /*
+    Fetched through a debounced copy, as on Products. Without it every
+    keystroke in the search box sent its own get_orders request, and since
+    responses are not checked for being current an earlier, slower one could
+    land last and show results for half a word.
+  */
+  const [debouncedQuery, setDebouncedQuery] = useState(queryPrams);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedQuery(queryPrams);
+    }, 500);
+
+    return () => clearTimeout(handler);
+  }, [queryPrams]);
+
   useEffect(() => {
 
     /* After a reload the token arrives from an effect above this page. */
@@ -510,10 +514,9 @@ const Orders = (props) => {
       return;
     }
 
-    saveOrdersQuery(queryPrams);
     fetchPosts();
 
-  }, [queryRestored, queryPrams, token]);
+  }, [queryRestored, debouncedQuery, token]);
 
 
   function onChangeQueryPrams(queryPrams) {
@@ -605,7 +608,8 @@ const Orders = (props) => {
         <div className={`group flex cursor-pointer flex-col gap-1 rounded-lg py-1 text-right text-sm transition-colors hover:bg-gray-100 lg:text-left ${privacyMode ? 'blur-[3px]' : ""}`}
           title="Click to copy customer details"
           onClick={() => {
-            navigator.clipboard.writeText(`${entry.billing_name} \n ${entry.billing_address} \n ${entry?.billing_phone}`)
+            /* Missing fields used to be copied as the word "undefined". */
+            navigator.clipboard.writeText([entry?.billing_name, entry?.billing_address, entry?.billing_phone].filter(Boolean).join("\n"))
             addNotification({ type: 'success', title: 'Info Copied', content: "Customer details copied" })
           }}
 
@@ -666,7 +670,12 @@ const Orders = (props) => {
                 </div>
               ))}
 
-              <div className={`${TOOLBAR_BUTTON} !h-8 w-fit text-xs`} onClick={() => {
+              {!orderItems?.length && (
+                <div className="rounded-lg border border-dashed border-gray-200 p-3 text-center text-xs text-gray-400">No items on this order.</div>
+              )}
+
+              {orderItems?.length > 0 && (
+              <div className="inline-flex h-8 w-fit cursor-pointer items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 text-xs font-medium text-gray-700 transition-colors hover:border-gray-400 hover:bg-gray-50" onClick={() => {
                 var copyText = '';
                 orderItems.map(item => {
 
@@ -682,6 +691,7 @@ const Orders = (props) => {
               }}>
                 <IconCopy size={16} /> Copy
               </div>
+              )}
 
 
             </div>
@@ -693,19 +703,20 @@ const Orders = (props) => {
             <div className="p-1.5">
 
               <div className="flex flex-col gap-0.5">
+                {/* "View" pointed at /orders/{id}, which the store does not have. */}
+                <Link className={MENU_ITEM} href={`/dashboard/orders/${entry.id}`}>
+                  <IconEyeShare size={16} /> Open
+                </Link>
                 <div className={MENU_ITEM} onClick={() => {
 
-                  if (confirm("Please confirm?")) {
+                  if (confirm(`Duplicate order #${entry.id}?`)) {
                     duplicate_order(entry.id);
                   }
                 }}>
                   <IconCopy size={16} /> Duplicate
                 </div>
-                <Link className={MENU_ITEM} href={`/orders/${entry.id}`}>
-                  <IconEyeShare size={16} /> View
-                </Link>
                 <div className={`${MENU_ITEM} !text-red-600 hover:!bg-red-50 hover:!text-red-700`} onClick={() => {
-                  if (confirm("Please confirm?")) {
+                  if (confirm(`Delete order #${entry.id}? This cannot be undone.`)) {
                     delete_orders([entry.id]);
                   }
 
@@ -802,15 +813,18 @@ const Orders = (props) => {
 
 
 
-    var badge = ORDER_STATUS_BADGES[entry.status];
+    var badge = ORDER_STATUS_BADGES[entry.status]
+      ?? (entry.status ? { label: orderStatusArgs?.[entry.status]?.label ?? titleCase(entry.status), classes: FALLBACK_BADGE_CLASSES } : null);
 
     return (
       <td data-label="Status" className="!px-5 py-3 text-left text-sm  "
         key={columnIndex}>
 
         <div className={` text-xs `}>
-          {badge && (
+          {badge ? (
             <span className={`${BADGE_BASE} ${badge.classes}`}>{badge.label}</span>
+          ) : (
+            <span className="text-gray-300">—</span>
           )}
 
 
@@ -908,6 +922,17 @@ const Orders = (props) => {
 
 
 
+  /* Filters inside the "More Filters" popover, and every active filter (for the chips). */
+  const moreFilterCount = [
+    queryPrams?.payment_method,
+    queryPrams?.customer?.display_name,
+    queryPrams?.product?.title,
+    queryPrams?.from_date,
+    queryPrams?.to_date,
+  ].filter(Boolean).length;
+  const activeFilterCount = moreFilterCount + [queryPrams?.status, queryPrams?.payment_status].filter(Boolean).length;
+
+
   function onAddProducts(item) {
 
 
@@ -923,56 +948,58 @@ const Orders = (props) => {
 
 
 
-      {/* Page heading: the screen had no title, only a row of controls. */}
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold text-gray-900">{("Orders")}</h1>
           <p className="mt-0.5 text-xs text-gray-500">
-            {ordersData?.total ?? 0} {("orders")}
+            {ordersData?.total ?? 0} {activeFilterCount > 0 ? ("orders match the filters") : ("orders")}
           </p>
         </div>
-      </div>
 
-      <div className="flex flex-wrap gap-3 w-full justify-between items-center ">
-
-
-
-        <div className="flex flex-wrap gap-2 items-center">
-
-
-          <PopoverButton wrapperClass={``} buttonClass={TOOLBAR_BUTTON} buttonLabel={("New Order")} buttonIcon={<IconFileDollar size={16} />} title={"New Order & Edit"} position={""}>
-
+        <div className="flex flex-wrap items-center gap-2">
+          <PopoverButton wrapperClass={``} buttonClass={TOOLBAR_BUTTON} buttonLabel={("Quick Order")} buttonIcon={<IconFileDollar size={16} />} title={"Quick Order"} position={"bottomRight"}>
             <div className="p-5 bg-gray-50">
               <OrderCreate onOrderCreated={onOrderCreated} />
             </div>
-
           </PopoverButton>
 
-          <div className={PRIMARY_BUTTON} onClick={ev => {
+          {/* Creates an empty order and opens it for editing. */}
+          <button type="button" className={PRIMARY_BUTTON} disabled={loading} onClick={ev => {
             create_order({ redirect: true })
-          }}> <IconFileDollar size={16} /> Add Order & Edit</div>
+          }}><IconPlus size={16} /> {("Add Order")}</button>
+        </div>
+      </div>
 
+      <div className="flex flex-wrap justify-between gap-3">
 
-          <PopoverButton wrapperClass={``} enableCloseBtn={false} buttonClass={TOOLBAR_BUTTON} buttonLabel={("Filter Orders")} buttonIcon={<IconFilter size={16} />} title={"Filter Orders"} position={"leftTop"} popoverClass={`absolute z-[999] w-[380px] overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg`}>
+        <div className="flex flex-wrap items-center gap-2">
+
+          <select className={FILTER_SELECT} value={queryPrams?.status ?? ""} onChange={ev => {
+            setqueryPrams({ ...queryPrams, status: ev.target.value, paged: 1 });
+          }}>
+            <option value="">{("All Statuses")}</option>
+            {Object.values(orderStatusArgs ?? {}).map(item => (
+              <option key={item.value} value={item.value}>{item.label}</option>
+            ))}
+          </select>
+
+          <select className={FILTER_SELECT} value={queryPrams?.payment_status ?? ""} onChange={ev => {
+            setqueryPrams({ ...queryPrams, payment_status: ev.target.value, paged: 1 });
+          }}>
+            <option value="">{("All Payments")}</option>
+            {Object.values(paymentStatusArgs ?? {}).map(item => (
+              <option key={item.value} value={item.value}>{item.label}</option>
+            ))}
+          </select>
+
+          <PopoverButton wrapperClass={``} enableCloseBtn={false} buttonClass={TOOLBAR_BUTTON} buttonLabel={moreFilterCount > 0 ? `${("More Filters")} (${moreFilterCount})` : ("More Filters")} buttonIcon={<IconFilter size={16} />} title={"More Filters"} position={"bottomLeft"} popoverClass={`absolute z-[999] w-[380px] overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg`}>
 
             <div className="p-4">
-              <div className="flex flex-col  gap-3 ">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="text-sm font-medium text-gray-700">Order Status</div>
-                  <div>
-                    <DropDown multiple={false} value={queryPrams?.status} options={orderStatusPrams} label={`Order Status`} onOptionsChoose={onFilterByStatus} />
-                  </div>
-                </div>
+              <div className="flex flex-col gap-3">
                 <div className="flex items-center justify-between gap-3">
                   <div className="text-sm font-medium text-gray-700">Payment Method</div>
                   <div>
                     <DropDown multiple={false} value={queryPrams?.payment_method} options={paymentGateways} label={`Payment Method`} onOptionsChoose={onFilterByPaymentMethod} />
-                  </div>
-                </div>
-                <div className="flex items-center justify-between gap-3">
-                  <div className="text-sm font-medium text-gray-700">Payment Status</div>
-                  <div>
-                    <DropDown multiple={false} value={queryPrams?.payment_status} options={paymentStatusPrams} label={`Payment Status`} onOptionsChoose={onFilterByPaymentStatus} />
                   </div>
                 </div>
                 <div className="flex items-center justify-between gap-3">
@@ -982,301 +1009,142 @@ const Orders = (props) => {
                   </div>
                 </div>
                 <div className="flex items-center justify-between gap-3">
-                  <div className="text-sm font-medium text-gray-700">Products</div>
+                  <div className="text-sm font-medium text-gray-700">Product</div>
                   <div>
                     <ProductsPicker placeholder="Search product..." onPick={onAddProducts} />
                   </div>
                 </div>
                 <div className="flex items-center justify-between gap-3">
-                  <div className="text-sm font-medium text-gray-700">Start Date</div>
+                  <div className="text-sm font-medium text-gray-700">From</div>
                   <div>
                     <DatePicker
                       showTimeSelect
-                      dateFormat="yyyy-MM-dd HH:mm:ss"
-                      selected={queryPrams?.from_date}
+                      isClearable
+                      placeholderText="Any date"
+                      dateFormat="yyyy-MM-dd HH:mm"
+                      className={DATE_INPUT}
+                      selected={toPickerDate(queryPrams?.from_date)}
                       onChange={(date) => {
-                        if (!date) return;
-
-                        const formattedDate = format(date, "yyyy-MM-dd HH:mm:ss");
-
-
-                        setqueryPrams({
-                          ...queryPrams,
-                          from_date: formattedDate
-                        });
+                        setqueryPrams({ ...queryPrams, from_date: date ? format(date, "yyyy-MM-dd HH:mm:ss") : "", paged: 1 });
                       }}
                     />
                   </div>
                 </div>
                 <div className="flex items-center justify-between gap-3">
-                  <div className="text-sm font-medium text-gray-700">End Date</div>
+                  <div className="text-sm font-medium text-gray-700">To</div>
                   <div>
                     <DatePicker
                       showTimeSelect
-                      dateFormat="yyyy-MM-dd HH:mm:ss"
-                      selected={queryPrams?.to_date}
+                      isClearable
+                      placeholderText="Any date"
+                      dateFormat="yyyy-MM-dd HH:mm"
+                      className={DATE_INPUT}
+                      selected={toPickerDate(queryPrams?.to_date)}
+                      minDate={toPickerDate(queryPrams?.from_date)}
                       onChange={(date) => {
-                        if (!date) return;
-
-                        const formattedDate = format(date, "yyyy-MM-dd HH:mm:ss");
-
-                        setqueryPrams({
-                          ...queryPrams,
-                          to_date: formattedDate
-                        });
+                        setqueryPrams({ ...queryPrams, to_date: date ? format(date, "yyyy-MM-dd HH:mm:ss") : "", paged: 1 });
                       }}
                     />
                   </div>
                 </div>
-                <div className="flex justify-between">
-                  <div></div>
-
-                  <div className="inline-flex w-max cursor-pointer items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-600" onClick={() => {
-                    setqueryPrams({
-                      ...queryPrams,
-                      status: "",
-                      payment_method: "",
-                      payment_status: "",
-                      customer: "",
-                      product: {},
-                      from_date: "",
-                      to_date: ""
-                    });
-                  }}>
-                    <IconX size={16} /> Reset Filters
-                  </div>
-
-                </div>
-
-
               </div>
             </div>
 
           </PopoverButton>
 
-          <div className={`${TOOLBAR_BUTTON} !text-xs`} title="Record a stock history entry" onClick={ev => {
-            update_stock();
-          }}>Add history</div>
+          <button type="button" className={TOOLBAR_BUTTON} title={showProfit ? "Hide profit figures" : "Show profit figures"} onClick={() => setshowProfit(!showProfit)}>
+            <IconMapDollar size={16} /> {showProfit ? ("Hide Profits") : ("Show Profits")}
+          </button>
 
         </div>
-        <div className=" flex gap-2">
 
+        {selectedRows?.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs font-medium text-gray-500">{selectedRows.length} {("selected")}</span>
 
-          <div className=" px-4  flex gap-2">
-
-
-
-
-            {queryPrams?.payment_method?.length > 0 && (
-              <div className="flex items-center gap-1 rounded-full border border-indigo-200 bg-indigo-50 py-0.5 pl-2.5 pr-1 text-xs text-indigo-700">
-                <div className="">{('Payment Method')}: {queryPrams?.payment_method}</div>
-                <div className="inline-flex h-5 w-5 cursor-pointer items-center justify-center rounded-full text-indigo-400 transition-colors hover:bg-indigo-200 hover:text-indigo-800" onClick={ev => {
-                  setqueryPrams({ ...queryPrams, payment_method: "" })
-                }}><IconX size={13} /></div>
+            <PopoverButton wrapperClass={``} buttonClass={TOOLBAR_BUTTON} buttonLabel={("Receipts")} buttonIcon={<IconPrinter size={16} />} title={"Print Receipts"} position={"bottomRight"}>
+              <div className="p-5 bg-gray-50">
+                <OrdersReceipt ids={selectedRows} ordersData={selectedOrdersData} />
               </div>
-            )}
-
-            {queryPrams?.payment_status?.length > 0 && (
-              <div className="flex items-center gap-1 rounded-full border border-indigo-200 bg-indigo-50 py-0.5 pl-2.5 pr-1 text-xs text-indigo-700">
-                <div className="">{('Payment Status')}: {queryPrams?.payment_status}</div>
-                <div className="inline-flex h-5 w-5 cursor-pointer items-center justify-center rounded-full text-indigo-400 transition-colors hover:bg-indigo-200 hover:text-indigo-800" onClick={ev => {
-                  setqueryPrams({ ...queryPrams, payment_status: "" })
-                }}><IconX size={13} /></div>
+            </PopoverButton>
+            <PopoverButton wrapperClass={``} buttonClass={TOOLBAR_BUTTON} buttonLabel={("Overview")} buttonIcon={<IconNotes size={16} />} title={"Orders Overview"} position={"bottomRight"}>
+              <div className="p-5 bg-gray-50">
+                <OrdersOverview ids={selectedRows} ordersData={selectedOrdersData} />
               </div>
-            )}
-
-
-
-            {queryPrams?.product?.title?.length > 0 && (
-              <div className="flex items-center gap-1 rounded-full border border-indigo-200 bg-indigo-50 py-0.5 pl-2.5 pr-1 text-xs text-indigo-700">
-                <div className="">{('Product')}: {queryPrams?.product?.title}</div>
-                <div className="inline-flex h-5 w-5 cursor-pointer items-center justify-center rounded-full text-indigo-400 transition-colors hover:bg-indigo-200 hover:text-indigo-800" onClick={ev => {
-                  setqueryPrams({ ...queryPrams, product: {} })
-                }}><IconX size={13} /></div>
+            </PopoverButton>
+            <PopoverButton wrapperClass={``} buttonClass={TOOLBAR_BUTTON} buttonLabel={("Product List")} buttonIcon={<IconListDetails size={16} />} title={"Product List"} position={"bottomRight"}>
+              <div className="p-5 bg-gray-50">
+                <OrdersProductList ids={selectedRows} ordersData={selectedOrdersData} />
               </div>
-            )}
-
-
-
-            {queryPrams?.customer?.display_name?.length > 0 && (
-              <div className="flex items-center gap-1 rounded-full border border-indigo-200 bg-indigo-50 py-0.5 pl-2.5 pr-1 text-xs text-indigo-700">
-                <div className="">{('Customer')}: {queryPrams?.customer?.display_name}</div>
-                <div className="inline-flex h-5 w-5 cursor-pointer items-center justify-center rounded-full text-indigo-400 transition-colors hover:bg-indigo-200 hover:text-indigo-800" onClick={ev => {
-                  setqueryPrams({ ...queryPrams, customer: "" })
-                }}><IconX size={13} /></div>
-              </div>
-            )}
-
-            {queryPrams?.status?.length > 0 && (
-              <div className="flex items-center gap-1 rounded-full border border-indigo-200 bg-indigo-50 py-0.5 pl-2.5 pr-1 text-xs text-indigo-700">
-                <div className="">{('Status')}: {queryPrams?.status}</div>
-                <div className="inline-flex h-5 w-5 cursor-pointer items-center justify-center rounded-full text-indigo-400 transition-colors hover:bg-indigo-200 hover:text-indigo-800" onClick={ev => {
-                  setqueryPrams({ ...queryPrams, status: "" })
-                }}><IconX size={13} /></div>
-              </div>
-            )}
-
-          </div>
-
-          <div className="flex gap-2">
-
-            <PopoverButton wrapperClass={``} buttonClass={ICON_BUTTON} buttonLabel={<IconMapDollar size={18} />} buttonIcon={``} title={"Show Profits"} position={"bottomRight"}>
-
-              <div className="p-4 w-[320px]">
-
-                <div className="flex gap-3 text-sm">
-
-                  {!showProfit && (
-                    <div className="flex gap-3 text-sm cursor-pointer" onClick={() => setshowProfit(true)}>
-                      <IconSquareCheckFilled /> Show Profits
-                    </div>
-                  )}
-                  {showProfit && (
-                    <div className="flex gap-3 text-sm cursor-pointer" onClick={() => setshowProfit(false)}>
-                      <IconSquareCheck /> Hide Profits
-                    </div>
-                  )}
-
-                </div>
-
+            </PopoverButton>
+            <PopoverButton wrapperClass={``} buttonClass={TOOLBAR_BUTTON} buttonLabel={("Bulk Update")} buttonIcon={<IconEdit size={16} />} title={"Bulk Update"} position={"bottomRight"}>
+              <div className="p-5 bg-gray-50">
+                <OrderBulkUpdate onOrderBulkUpdated={onOrderBulkUpdated} ids={selectedRows} />
               </div>
             </PopoverButton>
 
-            {selectedRows?.length > 0 && (
-              <>
-                <PopoverButton wrapperClass={``} buttonClass={ICON_BUTTON} buttonLabel={<IconPrinter size={18} />} buttonIcon={``} title={"Print"} position={""}>
-
-                  <div className="p-5 bg-gray-50">
-
-                    <OrdersReceipt ids={selectedRows} ordersData={selectedOrdersData} />
-
-                  </div>
-                </PopoverButton>
-                <PopoverButton wrapperClass={``} buttonClass={ICON_BUTTON} buttonLabel={<IconNotes size={18} />} buttonIcon={``} title={"Print"} position={""}>
-
-                  <div className="p-5 bg-gray-50">
-
-                    <OrdersOverview ids={selectedRows} ordersData={selectedOrdersData} />
-
-                  </div>
-                </PopoverButton>
-                <PopoverButton wrapperClass={``} buttonClass={ICON_BUTTON} buttonLabel={<IconListDetails size={18} />} buttonIcon={``} title={"Print"} position={""}>
-
-                  <div className="p-5 bg-gray-50">
-
-                    <OrdersProductList ids={selectedRows} ordersData={selectedOrdersData} />
-
-                  </div>
-                </PopoverButton>
-
-
-
-                <PopoverButton wrapperClass={``} buttonClass={ICON_BUTTON} buttonLabel={<IconEdit size={18} />} buttonIcon={``} title={"Bulk Update"} position={""}>
-
-                  <div className="p-5 bg-gray-50">
-
-                    <OrderBulkUpdate onOrderBulkUpdated={onOrderBulkUpdated} ids={selectedRows} />
-
-                  </div>
-                </PopoverButton>
-
-                {/* <PopoverButton wrapperClass={`bg-white`} buttonLabel={("Send to Courier")} buttonIcon={<IconTruckDelivery />} title={"Send to Courier"} position={""}>
-    
-                      <div className="p-5 bg-white">
-    
-    
-                        <div className=" lg:flex flex-wrap gap-3 py-3 items-center ">
-                          <div className="  py-2 lg:w-60 ">{('Select courier')}</div>
-    
-    
-                          <select name="shipping_method" value={courierPrams?.courier} id="" onChange={ev => {
-                            var value = ev.target.value;
-                            setcourierPrams({ ...courierPrams, courier: value })
-                          }}>
-    
-                            <option value="">Choose</option>
-                            <option value="kidobazar">KidoBazar Courier</option>
-                            <option value="steadfast">Steadfast Courier</option>
-                            <option value="pathao">Pathao Courier</option>
-                            <option value="karatoa">Karatoa Courier</option>
-                            <option value="sundarban">Sundarban Courier</option>
-                          </select>
-    
-    
-    
-    
-                        </div>
-    
-    
-                      </div>
-    
-                    </PopoverButton>
-                    <PopoverButton wrapperClass={`bg-white`} buttonLabel={("Fraud Check")} buttonIcon={<IconAlertTriangle />} title={"Fraud Check"} position={""}>
-    
-                      <div className="p-5 bg-white">
-    
-    
-    
-    
-                      </div>
-    
-                    </PopoverButton>
-    
-    
-                    <PopoverButton wrapperClass={`bg-white`} buttonLabel={("Add Note")} buttonIcon={<IconClipboardTextFilled />} title={"Add Note"} position={""}>
-    
-                      <div className="p-5 bg-white">
-    
-    
-                        <div className=" lg:flex flex-wrap gap-3 py-3 items-center ">
-                          <div className="  py-2 lg:w-60 ">{('Select courier')}</div>
-    
-    
-                          <select name="shipping_method" value={courierPrams?.courier} id="" onChange={ev => {
-                            var value = ev.target.value;
-                            setcourierPrams({ ...courierPrams, courier: value })
-                          }}>
-    
-                            <option value="">Choose</option>
-                            <option value="kidobazar">KidoBazar Courier</option>
-                            <option value="steadfast">Steadfast Courier</option>
-                            <option value="pathao">Pathao Courier</option>
-                            <option value="karatoa">Karatoa Courier</option>
-                            <option value="sundarban">Sundarban Courier</option>
-                          </select>
-    
-    
-    
-    
-                        </div>
-    
-    
-                      </div>
-    
-                    </PopoverButton> */}
-
-                <div
-                  className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-red-700 cursor-pointer"
-                  onClick={() => {
-                    if (confirm("Please confirm?")) {
-                      delete_orders()
-                    }
-                  }}>
-
-                  <IconTrash size={18} />
-
-                </div>
-              </>
-            )}
-
-
+            <div
+              className="inline-flex h-9 items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 text-sm font-semibold text-red-700 transition-colors hover:bg-red-100 cursor-pointer"
+              onClick={() => {
+                if (confirm(`Delete ${selectedRows.length} selected order(s)? This cannot be undone.`)) {
+                  delete_orders()
+                }
+              }}>
+              <IconTrash size={16} /> {("Delete")} ({selectedRows.length})
+            </div>
           </div>
-
-
-        </div>
-
-
+        )}
       </div>
+
+      {activeFilterCount > 0 && (
+        <div className="flex flex-wrap items-center gap-2">
+          {queryPrams?.status?.length > 0 && (
+            <div className={FILTER_CHIP}>
+              <span>{('Status')}: {orderStatusArgs?.[queryPrams.status]?.label ?? titleCase(queryPrams.status)}</span>
+              <span className={FILTER_CHIP_X} onClick={() => setqueryPrams({ ...queryPrams, status: "", paged: 1 })}><IconX size={13} /></span>
+            </div>
+          )}
+          {queryPrams?.payment_status?.length > 0 && (
+            <div className={FILTER_CHIP}>
+              <span>{('Payment')}: {paymentStatusArgs?.[queryPrams.payment_status]?.label ?? titleCase(queryPrams.payment_status)}</span>
+              <span className={FILTER_CHIP_X} onClick={() => setqueryPrams({ ...queryPrams, payment_status: "", paged: 1 })}><IconX size={13} /></span>
+            </div>
+          )}
+          {queryPrams?.payment_method?.length > 0 && (
+            <div className={FILTER_CHIP}>
+              <span>{('Method')}: {paymentGateways?.[queryPrams.payment_method]?.label ?? queryPrams.payment_method}</span>
+              <span className={FILTER_CHIP_X} onClick={() => setqueryPrams({ ...queryPrams, payment_method: "", paged: 1 })}><IconX size={13} /></span>
+            </div>
+          )}
+          {queryPrams?.customer?.display_name?.length > 0 && (
+            <div className={FILTER_CHIP}>
+              <span>{('Customer')}: {queryPrams.customer.display_name}</span>
+              <span className={FILTER_CHIP_X} onClick={() => setqueryPrams({ ...queryPrams, customer: {}, paged: 1 })}><IconX size={13} /></span>
+            </div>
+          )}
+          {queryPrams?.product?.title?.length > 0 && (
+            <div className={FILTER_CHIP}>
+              <span>{('Product')}: {queryPrams.product.title}</span>
+              <span className={FILTER_CHIP_X} onClick={() => setqueryPrams({ ...queryPrams, product: {}, paged: 1 })}><IconX size={13} /></span>
+            </div>
+          )}
+          {queryPrams?.from_date && (
+            <div className={FILTER_CHIP}>
+              <span>{('From')}: {String(queryPrams.from_date).slice(0, 16)}</span>
+              <span className={FILTER_CHIP_X} onClick={() => setqueryPrams({ ...queryPrams, from_date: "", paged: 1 })}><IconX size={13} /></span>
+            </div>
+          )}
+          {queryPrams?.to_date && (
+            <div className={FILTER_CHIP}>
+              <span>{('To')}: {String(queryPrams.to_date).slice(0, 16)}</span>
+              <span className={FILTER_CHIP_X} onClick={() => setqueryPrams({ ...queryPrams, to_date: "", paged: 1 })}><IconX size={13} /></span>
+            </div>
+          )}
+          <button type="button" className="!border-0 !bg-transparent !p-0 !text-xs !font-medium !text-gray-500 !shadow-none hover:!text-red-600" onClick={() => {
+            setqueryPrams({ ...queryPrams, status: "", payment_method: "", payment_status: "", customer: {}, product: {}, from_date: "", to_date: "", paged: 1 });
+          }}>{("Clear all")}</button>
+        </div>
+      )}
 
 
       <EntriesTable
@@ -1294,71 +1162,35 @@ const Orders = (props) => {
 
 
 
-      <div className="flex justify-between">
-
-
-        <div>
-
-        </div>
-
-        {sumData && (
-
-          <div className="flex w-full max-w-sm flex-col gap-1.5 rounded-xl border border-gray-200 bg-white p-4 text-right shadow-sm">
-
-
-            <div className="text-xs flex justify-between text-gray-500">
-              <div className="text-left">Sub Total:</div>
-              <div>{wrapCurrency(sumData?.subtotal_amount)}</div>
-            </div>
-            <div className="text-xs flex justify-between text-gray-500">
-              <div className="text-left">Discount:</div>
-              <div>-{wrapCurrency(sumData?.discount_amount)}</div>
-            </div>
-            <div className="text-xs flex justify-between text-gray-500">
-              <div className="text-left">Delivery Charge:</div>
-              <div>-{wrapCurrency(sumData?.shipping_amount)}</div>
+      {sumData && ordersData?.posts?.length > 0 && (
+        <div className="flex justify-end">
+          {/* Sums of the orders on this page only, not of every matching order.
+              Signs follow the row totals: delivery and tax add, discount and
+              advance payment subtract. */}
+          <div className="flex w-full max-w-sm flex-col gap-1.5 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+            <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-500">
+              {("This page")} · {ordersData.posts.length} {("orders")}
             </div>
 
+            <div className="flex justify-between text-xs text-gray-500"><span>Sub Total</span><span className="tabular-nums text-gray-700">{wrapCurrency(sumData?.subtotal_amount)}</span></div>
+            <div className="flex justify-between text-xs text-gray-500"><span>Discount</span><span className="tabular-nums text-rose-600">-{wrapCurrency(sumData?.discount_amount)}</span></div>
+            <div className="flex justify-between text-xs text-gray-500"><span>Delivery Charge</span><span className="tabular-nums text-emerald-600">+{wrapCurrency(sumData?.shipping_amount)}</span></div>
+            <div className="flex justify-between text-xs text-gray-500"><span>Tax</span><span className="tabular-nums text-gray-700">+{wrapCurrency(sumData?.tax_amount)}</span></div>
+            <div className="flex justify-between text-xs text-gray-500"><span>Advance Payment</span><span className="tabular-nums text-rose-600">-{wrapCurrency(sumData?.advance_payment)}</span></div>
 
-            <div className="text-xs flex justify-between text-gray-500">
-              <div className="text-left">Tax:</div>
-              <div>-{wrapCurrency(sumData?.tax_amount)}</div>
-            </div>
-            <div className="text-xs flex justify-between text-gray-500">
-              <div className="text-left">Advance payment:</div>
-              <div>{wrapCurrency(sumData?.advance_payment)}</div>
-            </div>
-
-
-
-
-
-            <div className="mt-2 flex justify-between border-t border-dashed border-gray-200 pt-2 text-sm font-semibold text-gray-900">
-              <div className="text-left">Total:</div>
-              <div>{wrapCurrency(sumData?.total_amount)}</div>
+            <div className="mt-1 flex justify-between border-t border-dashed border-gray-200 pt-2 text-sm font-semibold text-gray-900">
+              <span>Total</span><span className="tabular-nums">{wrapCurrency(sumData?.total_amount)}</span>
             </div>
 
             {showProfit && (
               <>
-                <div className="text-xs flex justify-between text-gray-500">
-                  <div className="text-left">Gross Profit:</div>
-                  <div>{wrapCurrency(sumData?.gross_profit)}</div>
-                </div>
-                <div className="text-xs flex justify-between text-gray-500">
-                  <div className="text-left">Net Profit:</div>
-                  <div>{wrapCurrency(sumData?.net_profit)}</div>
-                </div>
+                <div className="flex justify-between text-xs text-gray-500"><span>Gross Profit</span><span className="tabular-nums text-lime-600">{wrapCurrency(sumData?.gross_profit)}</span></div>
+                <div className="flex justify-between text-xs text-gray-500"><span>Net Profit</span><span className="tabular-nums text-lime-700">{wrapCurrency(sumData?.net_profit)}</span></div>
               </>
             )}
-
-
-
-
           </div>
-
-        )}
-
-      </div>
+        </div>
+      )}
     </div>
   );
 };

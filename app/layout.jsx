@@ -61,10 +61,34 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
 
-	var GA_ID = settings?.apiKeys?.googleAnalytics?.id;
-	var MC_ID = settings?.apiKeys?.microsoftClarity?.id;
+	/*
+		GA and Clarity used to load on every page even with no ID set, requesting
+		`?id=undefined`. Now each needs a well-formed ID (it is written into an
+		inline script) and must not be switched off. `enabled !== false` rather
+		than `=== true`: the checkbox was ignored until now, so stores that saved
+		an ID without ever ticking it keep their analytics; unticking it - which
+		stores `false` - turns the script off.
+	*/
+	var gaSettings = settings?.apiKeys?.googleAnalytics;
+	var GA_ID = gaSettings?.enabled !== false && /^(G|UA|AW|GT)-[A-Z0-9-]+$/i.test((gaSettings?.id || "").trim())
+		? gaSettings.id.trim()
+		: null;
+	var mcSettings = settings?.apiKeys?.microsoftClarity;
+	var MC_ID = mcSettings?.enabled !== false && /^[a-z0-9]+$/i.test((mcSettings?.id || "").trim())
+		? mcSettings.id.trim()
+		: null;
 	var FacebookPixel_ID = settings?.apiKeys?.facebookPixel?.pixel_id;
 	var TikTokpixelId = settings?.apiKeys?.tikTokPixel?.pixel_id
+
+	/*
+		Google Tag Manager, from Settings → API Keys. Loaded only while the item
+		is enabled, and only for a well-formed container ID: the ID is written
+		into an inline script, so anything else could inject code.
+	*/
+	var gtmSettings = settings?.apiKeys?.googleTagManager;
+	var GTM_ID = gtmSettings?.enabled && /^GTM-[A-Z0-9]+$/i.test(gtmSettings?.id || "")
+		? gtmSettings.id.toUpperCase()
+		: null;
 
 
 
@@ -85,13 +109,26 @@ export default function RootLayout({ children }) {
 
 
 
+				{/* Google Tag Manager */}
+				{GTM_ID && (
+					<Script id="gtm-init" strategy="afterInteractive">
+						{`(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','${GTM_ID}');`}
+					</Script>
+				)}
+
 				{/* Google Analytics */}
-				<Script
-					strategy="afterInteractive"
-					src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
-				/>
-				<Script id="gtag-init" strategy="afterInteractive">
-					{`
+				{GA_ID && (
+					<>
+						<Script
+							strategy="afterInteractive"
+							src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
+						/>
+						<Script id="gtag-init" strategy="afterInteractive">
+							{`
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
@@ -99,14 +136,20 @@ export default function RootLayout({ children }) {
               page_path: window.location.pathname,
             });
           `}
-				</Script>
-				<Script id="clarity-init" strategy="afterInteractive">
-					{`(function(c,l,a,r,i,t,y){
+						</Script>
+					</>
+				)}
+
+				{/* Microsoft Clarity */}
+				{MC_ID && (
+					<Script id="clarity-init" strategy="afterInteractive">
+						{`(function(c,l,a,r,i,t,y){
         c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
         t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
         y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
     })(window, document, "clarity", "script", "${MC_ID}");`}
-				</Script>
+					</Script>
+				)}
 
 
 
@@ -116,6 +159,17 @@ export default function RootLayout({ children }) {
 			</head>
 			<body
 				className={`${geistSans.variable} ${geistMono.variable} ${dmSans.variable} ${figtree.variable} ${hindSiliguri.variable} antialiased `}>
+				{/* Google Tag Manager (noscript) */}
+				{GTM_ID && (
+					<noscript>
+						<iframe
+							src={`https://www.googletagmanager.com/ns.html?id=${GTM_ID}`}
+							height="0"
+							width="0"
+							style={{ display: "none", visibility: "hidden" }}
+						/>
+					</noscript>
+				)}
 				<AuthProvider>
 					<NextTopLoader
 						color="#1b0e9f"

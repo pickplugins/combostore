@@ -2,33 +2,50 @@
 
 import Link from "next/link";
 import React from "react";
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect } from "react";
 import EntriesTable from "../../components/EntriesTable";
 import { useCounterStore } from '../../store/useCounterStore'
-import DropDown from '../../components/DropDown';
 import PopoverButton from '../../components/PopoverButton';
 import Spinner from '../../components/Spinner';
 import AttributeEdit from '../../components/pages/AttributeEdit';
 
 import Image from "next/image";
 
-import { IconChevronDown, IconChevronUp, IconBrowserPlus, IconFidgetSpinner, IconTrash, IconStarFilled, IconStar, IconClockPause, IconExclamationCircle, IconRosetteDiscountCheck, IconX } from "@tabler/icons-react";
+import { IconDotsVertical, IconEdit, IconPlus, IconTrash, IconTag, IconAdjustmentsHorizontal } from "@tabler/icons-react";
 
 
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
+/* Same control styles as the Products screen, so the two read as one system. */
+const ICON_BUTTON =
+	"inline-flex h-8 w-8 items-center justify-center rounded-lg border border-transparent text-gray-400 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:text-gray-900";
+
+const MENU_ITEM =
+	"flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900 cursor-pointer";
+
+const FILTER_SELECT =
+	"xl:w-56 w-full !h-9 !rounded-lg !border !border-gray-300 !bg-white !py-0 !pl-3 !pr-2 !text-sm !text-gray-600 !shadow-none transition-colors hover:!border-gray-400 focus:!border-gray-500 focus:!outline-none";
+
+const PRIMARY_BUTTON =
+	"inline-flex items-center gap-2 !rounded-lg !border-0 !bg-[#634FE5] !px-4 !py-2 !text-sm !font-semibold !text-white !shadow-sm transition-colors hover:!bg-[#5540d4] cursor-pointer";
+
+const TEXT_INPUT =
+	"w-full !h-9 !rounded-lg !border !border-gray-300 !bg-white !px-3 !text-sm !text-gray-700 !shadow-none transition-colors focus:!border-[#634FE5] focus:!outline-none focus:!ring-2 focus:!ring-[#634FE5]/20";
+
+const EMPTY_TERM = { name: '', slug: '', taxonomy: '', description: '', parent: '' };
+
+const toSlug = (value) => value.toLowerCase().trim().replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-+|-+$/g, '');
 
 
 const Attributes = () => {
 
+	const { token, addNotification, settings } = useCounterStore()
 
 
-	const { token, appData, notifications, addNotification, userDataX, setUserDataX, settings } = useCounterStore()
-
-
-	var [productsData, setproductsData] = useState({ posts: [], total: 20, maxPages: 1 });
+	var [productsData, setproductsData] = useState({ posts: [], total: 0, maxPages: 1 });
 	var [queryPrams, setqueryPrams] = useState({ taxonomy: "", keyword: "", paged: 1, order: "DESC", per_page: 10, hide_empty: false });
-	var [newPage, setnewPage] = useState({ name: '', slug: '', taxonomy: '', description: '', parent: '' });
+	var [debouncedQuery, setDebouncedQuery] = useState(queryPrams);
+	var [newPage, setnewPage] = useState(EMPTY_TERM);
 
 	var [attributes, setattributes] = useState([]);
 	var [loading, setloading] = useState(false);
@@ -37,19 +54,16 @@ const Attributes = () => {
 		setselectedRows(rows);
 	}
 
+	const currentAttribute = attributes.find(item => item.value === queryPrams?.taxonomy);
+
 
 	var columns = {
-		check: { label: ("Check"), },
-		id: { label: ("Title"), callback: callbackTitle, classes: "w-96 text-left" },
-		count: { label: ("Total Post"), callback: callbackCount, classes: "" },
-		slug: { label: ("Slug"), callback: callbackSlug, classes: "" },
-
-		// expiryDate: { label: "Expiry Date", callback: callbackExpiryDate },
-		// status: { label: ("Status"), callback: callbackStatus },
+		check: { id: "check", label: ("Check"), },
+		id: { id: "id", label: ("Value"), callback: callbackTitle, classes: "w-96 text-left text-gray-600" },
+		slug: { id: "slug", label: ("Slug"), callback: callbackSlug, classes: "text-left text-gray-600" },
+		count: { id: "count", label: ("Products"), callback: callbackCount, classes: "text-center text-gray-600" },
+		actions: { id: "actions", label: (""), callback: callbackActions, classes: "text-right" },
 	};
-
-
-
 
 
 	useEffect(() => {
@@ -64,28 +78,18 @@ const Attributes = () => {
 	}, [settings?.productAttributes]);
 
 
-
-
 	function delete_terms(ids) {
-
-
-		if (!token) {
-			//throw new Error("No token found");
-		}
-
-		if (queryPrams.paged < 0) {
-			return;
-		}
 
 		ids = ids != undefined ? ids : selectedRows;
 
+		if (!ids?.length) {
+			return;
+		}
 
-
-		var postData = {
+		var postData = JSON.stringify({
 			ids: ids,
 			taxonomy: queryPrams?.taxonomy
-		};
-		postData = JSON.stringify(postData);
+		});
 		setloading(true);
 		fetch(serverUrl + "wp-json/combo-store/v2/delete_terms", {
 			method: "POST",
@@ -99,37 +103,24 @@ const Attributes = () => {
 				if (!response.ok) {
 					throw new Error("Token validation failed");
 				}
-
-				if (response.ok && response.status < 400) {
-					response.json().then((res) => {
-						var errors = res?.errors;
-						var success = res?.success;
-
-						setloading(false);
-
-						fetchPosts();
-
-
-
-
-					});
-				}
+				return response.json();
 			})
-			.catch((_error) => {
-				//this.saveAsStatus = 'error';
-				// handle the error
+			.then(() => {
+				setselectedRows([]);
+				addNotification({ type: 'success', title: 'Deleted', content: `${ids.length} value(s) deleted.` })
+				fetchPosts();
+			})
+			.catch(() => {
+				setloading(false);
+				addNotification({ type: 'error', title: 'Delete failed', content: `Could not delete the selected value(s).` })
 			});
 	}
 
 	function add_term() {
 
-
-
-
-		if (queryPrams.taxonomy < 0) {
+		if (!queryPrams?.taxonomy) {
 			return;
 		}
-
 
 		var postData = JSON.stringify({ ...newPage, taxonomy: queryPrams?.taxonomy });
 		setloading(true);
@@ -145,52 +136,25 @@ const Attributes = () => {
 				if (!response.ok) {
 					throw new Error("Token validation failed");
 				}
-
-				if (response.ok && response.status < 400) {
-					response.json().then((res) => {
-						var errors = res?.errors;
-						var success = res?.success;
-
-						setloading(false);
-
-						fetchPosts();
-
-
-
-
-					});
-				}
+				return response.json();
 			})
-			.catch((_error) => {
-				//this.saveAsStatus = 'error';
-				// handle the error
+			.then(() => {
+				addNotification({ type: 'success', title: 'Created', content: `"${newPage.name}" added.` })
+				setnewPage(EMPTY_TERM);
+				fetchPosts();
+			})
+			.catch(() => {
+				setloading(false);
+				addNotification({ type: 'error', title: 'Create failed', content: `Could not add "${newPage.name}".` })
 			});
 	}
 
 
-
-
-
-
-
-
-
-
-
-
 	function fetchPosts() {
-
-
-
-		if (!token) {
-			//throw new Error("No token found");
-		}
-
 
 		if (queryPrams.taxonomy == undefined || queryPrams.taxonomy == "") {
 			return;
 		}
-
 
 		var postData = JSON.stringify(queryPrams);
 		setloading(true);
@@ -199,314 +163,249 @@ const Attributes = () => {
 			method: "POST",
 			headers: {
 				'Content-Type': 'application/json',
-				// 'Authorization': `Bearer ${token}`
 			},
 			body: postData,
 		})
 			.then((response) => {
-
 				if (!response.ok) {
 					throw new Error('Token validation failed');
 				}
-
-				if (response.ok && response.status < 400) {
-					response.json().then((res) => {
-
-
-
-						var posts = res?.terms;
-						var total = res?.total;
-						var max_pages = res?.max_pages;
-
-
-
-
-						setproductsData({ posts: posts, total: total, maxPages: max_pages })
-						//setqueryPrams({ ...queryPrams, loading: false })
-						setloading(false);
-
-
-						setTimeout(() => {
-						}, 500);
-					});
-				}
+				return response.json();
 			})
-			.catch((_error) => {
-				//this.saveAsStatus = 'error';
-				// handle the error
+			.then((res) => {
+				setproductsData({ posts: res?.terms ?? [], total: res?.total ?? 0, maxPages: res?.max_pages ?? 1 })
+				setloading(false);
+			})
+			.catch(() => {
+				setloading(false);
 			});
 
 	}
 
 
+	/* Typing in the search box should not fire a request per keystroke. */
 	useEffect(() => {
-
-		fetchPosts();
+		const handler = setTimeout(() => setDebouncedQuery(queryPrams), 400);
+		return () => clearTimeout(handler);
 	}, [queryPrams]);
+
+	useEffect(() => {
+		fetchPosts();
+	}, [debouncedQuery]);
 
 
 	function onChangeQueryPrams(queryPrams) {
 		if (queryPrams) {
 			setqueryPrams(queryPrams)
-			fetchPosts();
 		}
-
 	}
 
 	function onRefreshRequest(rows) {
 		fetchPosts();
 	}
 
-	useEffect(() => {
-		//checkUser();
-	}, []);
-
-
-
-
+	function confirmDelete(ids, label) {
+		if (confirm(`Delete ${label}? This cannot be undone.`)) {
+			delete_terms(ids);
+		}
+	}
 
 
 	function callbackTitle(entry, columnIndex) {
 
-
-
 		return (
-			<td className="text-center pl-5 py-3 px-5!"
+			<td data-label="Value" className="!px-5 py-3 text-left"
 				key={`title-${entry?.term_id}`}>
-				<div className="flex gap-3 items-center">
+				<div className="flex items-center gap-3">
 
+					<div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-gray-200 bg-gray-50 text-gray-300">
+						{/* Image from `thumbnail.src` ({id, title, src} as the editors save it);
+						    `thumbnail_url` (resolved by get_terms) covers other stored formats. */}
+						{(entry?.thumbnail?.src || entry?.thumbnail_url) ? (
+							<Image unoptimized className="h-10 w-10 object-cover" src={entry?.thumbnail?.src || entry.thumbnail_url} width={80} height={80} alt={``} />
+						) : (
+							<IconTag size={18} stroke={1.5} />
+						)}
+					</div>
 
-
-					{entry?.thumbnail?.src && (
-						<div style={{ width: "40px", height: "40px", overflow: "hidden" }} className="rounded-lg border border-gray-200 bg-gray-50">
-							<Image unoptimized src={entry?.thumbnail?.src} width={40} height={40} alt={``} />
-						</div>
-					)}
-
-
-					<div className="text-left">
-						<Link className="text-left text-gray-600 font-medium" href={`/dashboard/attributes/${entry?.term_id}`}>
+					<div className="flex min-w-0 flex-1 flex-col gap-1 text-left">
+						<Link className="truncate text-left text-sm font-medium text-gray-900 transition-colors hover:text-blue-600 hover:underline" href={`/dashboard/attributes/${entry?.term_id}`}>
 							{entry?.name}
 						</Link>
 
-						<div className="flex gap-3 text-sm text-gray-500">
+						<div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
+							<span className="font-mono text-[11px] text-gray-400">#{entry?.term_id}</span>
 
-							<div>#{entry?.term_id}</div>
-							<Link className="" href={`/dashboard/attributes/${entry?.term_id}`}>
-								View
-							</Link>
-
-							<PopoverButton buttonLabel={"Edit"} buttonIcon={null} title={"Edit Attribute"} drawer={"right"} buttonClass={`cursor-pointer hover:text-gray-700`}>
-
+							<PopoverButton buttonLabel={"Edit"} buttonIcon={null} title={"Edit Attribute"} drawer={"right"} buttonClass={`cursor-pointer text-gray-500 transition-colors hover:text-gray-900`}>
 								<div className="p-5 bg-gray-50 text-left">
 									<AttributeEdit id={entry?.term_id} />
 								</div>
-
 							</PopoverButton>
-							{/* <div className=" ">{entry?.sku}</div> */}
-							<div className="text-red-400 hover:text-red-500 cursor-pointer" onClick={() => {
-								delete_terms([entry?.term_id]);
-							}}>Delete</div>
-
-
 						</div>
 					</div>
 				</div>
 			</td>
-
 		);
 	}
 
-
-
-
-
-
-
+	function callbackSlug(entry, columnIndex) {
+		return (
+			<td data-label="Slug" className="!px-5 py-3 text-left"
+				key={`slug-${entry?.term_id}`}>
+				<span className="rounded-md bg-gray-100 px-2 py-0.5 font-mono text-xs text-gray-600">{entry?.slug}</span>
+			</td>
+		);
+	}
 
 	function callbackCount(entry, columnIndex) {
-
 		return (
-			<td className="text-center pl-5 px-5!"
-				key={`title-${entry?.term_id}`}>
-
-				{entry.count}
-
+			<td data-label="Products" className="!px-5 py-3 text-center text-sm"
+				key={`count-${entry?.term_id}`}>
+				<span className={entry?.count > 0 ? "font-medium text-gray-900" : "text-gray-400"}>{entry?.count ?? 0}</span>
 			</td>
-
-		);
-	}
-	function callbackSlug(entry, columnIndex) {
-
-		return (
-			<td className="text-center pl-5 px-5!"
-				key={`title-${entry?.term_id}`}
-			>
-
-
-				<span className="">{entry.slug}</span>
-
-			</td>
-
 		);
 	}
 
+	function callbackActions(entry, columnIndex) {
+		return (
+			<td data-label="Actions" className="!px-5 py-3 text-sm"
+				key={`actions-${entry?.term_id}`}>
+				<div className="flex items-center justify-end gap-1">
+					<PopoverButton wrapperClass={`flex justify-end`} buttonLabel={" "} buttonIcon={<IconDotsVertical size={18} />} title={"Actions"} position={"bottomRight"} popoverClass={`absolute z-[999] w-48 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg`} buttonClass={ICON_BUTTON}>
+						<div className="p-1.5">
+							<div className="flex flex-col gap-0.5">
+								<Link className={MENU_ITEM} href={`/dashboard/attributes/${entry?.term_id}`}>
+									<IconEdit size={16} /> Open
+								</Link>
+								<div className={`${MENU_ITEM} !text-red-600 hover:!bg-red-50 hover:!text-red-700`} onClick={() => {
+									confirmDelete([entry?.term_id], `"${entry?.name}"`);
+								}}>
+									<IconTrash size={16} /> Delete
+								</div>
+							</div>
+						</div>
+					</PopoverButton>
+				</div>
+			</td>
+		);
+	}
 
 
+	const createForm = (
+		<form className="flex w-72 flex-col gap-3 p-4" onSubmit={ev => {
+			ev.preventDefault();
+			if (!newPage.name.trim()) {
+				addNotification({ type: 'error', title: 'Name is empty', content: `Please add a name.` })
+				return;
+			}
+			add_term();
+		}}>
+			<label className="flex flex-col gap-1">
+				<span className="text-xs font-medium text-gray-600">{("Name")}</span>
+				<input className={TEXT_INPUT} type="text" placeholder="e.g. Large" autoFocus value={newPage?.name} onChange={ev => {
+					var value = ev.target.value;
+					setnewPage({ ...newPage, name: value, slug: toSlug(value) })
+				}} />
+			</label>
+			<label className="flex flex-col gap-1">
+				<span className="text-xs font-medium text-gray-600">{("Slug")}</span>
+				<input className={`${TEXT_INPUT} font-mono`} type="text" placeholder="e.g. large" value={newPage?.slug} onChange={ev => {
+					setnewPage({ ...newPage, slug: ev.target.value })
+				}} />
+			</label>
 
-
-
-
-
-
-
-
-
+			<div className="flex items-center gap-3">
+				<button type="submit" className={PRIMARY_BUTTON} disabled={loading}>
+					<IconPlus size={16} /> {("Add Value")}
+				</button>
+				{loading && <Spinner />}
+			</div>
+		</form>
+	);
 
 
 	return (
 
-
-
 		<div className="page-shell">
 
-			{/* Page heading: this screen had no title, only a row of controls. */}
 			<div className="flex flex-wrap items-end justify-between gap-3">
 				<div>
 					<h1 className="text-xl font-semibold text-gray-900">{("Attributes")}</h1>
 					<p className="mt-0.5 text-xs text-gray-500">
-						{productsData?.total ?? 0} {("attributes")}
+						{currentAttribute
+							? `${productsData?.total ?? 0} ${("values in")} ${currentAttribute.label}`
+							: ("Choose an attribute to manage its values")}
 					</p>
 				</div>
+
+				{currentAttribute && (
+					<PopoverButton wrapperClass={`flex justify-end`} buttonLabel={("Add Value")} buttonIcon={<IconPlus size={16} />} title={`Add ${currentAttribute.label} value`} position={"bottomRight"} popoverClass={`absolute z-[999] overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg`} buttonClass={PRIMARY_BUTTON}>
+						{createForm}
+					</PopoverButton>
+				)}
 			</div>
 
-			<div className="flex justify-between ">
+			<div className="flex flex-wrap justify-between gap-3">
 
-				<div className="flex gap-3 items-center">
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-					{attributes && (
-						<DropDown multiple={false} value={queryPrams?.taxonomy} options={attributes} label={`Choose`} onOptionsChoose={(args) => {
-
-							console.log('args', args)
-
-
-							setqueryPrams({ ...queryPrams, taxonomy: args.value })
-
-
-						}} />
-					)}
-
-					{queryPrams?.taxonomy && (
-						<PopoverButton wrapperClass={` flex justify-end`} buttonLabel={null} buttonIcon={<IconBrowserPlus size={16} />} title={"Create"} position={"bottomLeft"} buttonClass={`inline-flex items-center gap-2 rounded-lg bg-[#634FE5] px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#5540d4] cursor-pointer`}>
-
-
-							<div className="p-2 flex flex-col gap-3 w-full bg-gray-50">
-								<div className="flex flex-col gap-2">
-
-
-									<input className="" type="text" placeholder="Name" value={newPage?.name} onChange={ev => {
-
-										var value = ev.target.value;
-
-										setnewPage({ ...newPage, name: value, slug: value.toLowerCase().replace(/\s+/g, '-') })
-									}} />
-									<input className="" type="text" placeholder="Name" value={newPage?.slug} onChange={ev => {
-
-										var value = ev.target.value;
-
-										setnewPage({ ...newPage, slug: value })
-									}} />
-
-								</div>
-
-								<div className="flex items-center gap-3">
-									<div className="inline-flex items-center gap-2 rounded-lg bg-[#634FE5] px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#5540d4] cursor-pointer w-fit" onClick={ev => {
-
-										if (newPage.name.length == 0) {
-											addNotification({ type: 'error', title: 'Title is empty', content: `Please add title text.` })
-											return;
-
-										}
-
-										add_term()
-									}}>
-
-										Create
-									</div>
-
-									{loading && (
-										<Spinner />
-									)}
-								</div>
-
-							</div>
-
-						</PopoverButton>
-					)}
-
-
-
-
-
-
-
-
+				<div className="flex flex-wrap gap-2">
+					<select className={FILTER_SELECT} value={queryPrams?.taxonomy ?? ""} onChange={ev => {
+						setselectedRows([]);
+						setproductsData({ posts: [], total: 0, maxPages: 1 });
+						setqueryPrams({ ...queryPrams, taxonomy: ev.target.value, keyword: "", paged: 1 });
+					}}>
+						<option value={""}>{("Choose Attribute")}</option>
+						{attributes.map(item => (
+							<option value={item.value} key={item.value}>{item.label}</option>
+						))}
+					</select>
 				</div>
 
-
-
-
-
-
-
-				<div className="flex gap-3 md:justify-end p-4">
-					{selectedRows.length > 0 && (
+				<div className="flex gap-3 items-center justify-end">
+					{selectedRows?.length > 0 && (
 						<div
-							className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-red-700 cursor-pointer"
+							className="inline-flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700 transition-colors hover:bg-red-100 cursor-pointer"
 							onClick={() => {
-								delete_terms();
+								confirmDelete(selectedRows, `${selectedRows.length} selected value(s)`);
 							}}>
-							{("Delete Terms")}
+							<IconTrash size={16} /> {("Delete")} ({selectedRows.length})
 						</div>
 					)}
-
-
 				</div>
 			</div>
 
 
-
-			<EntriesTable
-				queryPrams={queryPrams}
-				columns={columns}
-				entries={productsData}
-				itemPath={""}
-				onChange={onChangeQueryPrams}
-				loading={loading}
-				selectedRows={selectedRows}
-				onSelectRows={onSelectRows}
-				onRefreshRequest={onRefreshRequest}
-
-			/>
+			{!currentAttribute ? (
+				<div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-gray-300 bg-white px-6 py-16 text-center">
+					<div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 text-gray-400">
+						<IconAdjustmentsHorizontal size={22} />
+					</div>
+					{attributes.length > 0 ? (
+						<>
+							<div className="text-sm font-medium text-gray-900">{("No attribute selected")}</div>
+							<p className="max-w-sm text-xs text-gray-500">{("Pick an attribute such as Size or Color above to see, add and edit its values.")}</p>
+						</>
+					) : (
+						<>
+							<div className="text-sm font-medium text-gray-900">{("No attributes yet")}</div>
+							<p className="max-w-sm text-xs text-gray-500">{("Create product attributes in Settings → Product Attributes first, then manage their values here.")}</p>
+							<Link href="/settings"className="text-sm font-medium text-[#634FE5] hover:underline">{("Go to Settings")}</Link>
+						</>
+					)}
+				</div>
+			) : (
+				<EntriesTable
+					queryPrams={queryPrams}
+					columns={columns}
+					entries={productsData}
+					itemPath={""}
+					onChange={onChangeQueryPrams}
+					loading={loading}
+					selectedRows={selectedRows}
+					onSelectRows={onSelectRows}
+					onRefreshRequest={onRefreshRequest}
+				/>
+			)}
 		</div>
-
-
-
 
 	);
 };

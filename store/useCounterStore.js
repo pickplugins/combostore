@@ -781,7 +781,8 @@ export const useCounterStore = create((set) => ({
   cartToggle: false,
   setcartToggle: (value) =>
     set((state) => ({
-      cartToggle: value ? value : !state.cartToggle,
+      // true/false set the drawer explicitly; anything else toggles it.
+      cartToggle: typeof value === 'boolean' ? value : !state.cartToggle,
     })),
 
 

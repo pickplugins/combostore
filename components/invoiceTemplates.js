@@ -263,7 +263,12 @@ export function normalizeInvoice(invoice, settings) {
 
 	const items = (invoice?.items ?? []).map((item, index) => ({
 		id: item?.id ?? index,
-		name: item?.product_name ?? item?.title ?? item?.name ?? "",
+		/* Callers pass the name as `product_name`, `title`, `name` or `desc`,
+			 and an order's line items can carry an empty `title` next to the
+			 real `product_name` - so take the first one that has text, not the
+			 first one that merely exists. */
+		name: [item?.product_name, item?.title, item?.name, item?.desc]
+			.find(value => typeof value === "string" ? value.trim() !== "" : value != null) ?? "",
 		qty: Number(item?.qty ?? item?.quantity ?? 0),
 		price: Number(item?.price ?? 0),
 	}));
