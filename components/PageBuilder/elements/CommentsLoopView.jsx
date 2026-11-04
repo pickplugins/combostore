@@ -76,7 +76,6 @@ const CommentsLoopView = (props) => {
 						var total = res?.total;
 						var max_pages = res?.max_pages;
 
-						console.log(comments);
 
 
 						setcomments(comments ?? [])

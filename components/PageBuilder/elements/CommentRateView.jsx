@@ -40,7 +40,7 @@ const CommentRateView = (props) => {
 		{ label: "Poor", value: 2 },
 		{ label: "Normal", value: 3 },
 		{ label: "Good", value: 4 },
-		{ label: "Supper", value: 5 },
+		{ label: "Excellent", value: 5 },
 	]
 
 
@@ -54,7 +54,9 @@ const CommentRateView = (props) => {
 		<div id={id} index={index} type={type} className={`${cssSelectors['*']?.classes ?? ''}  `}
 		>
 
-			<div className={`${cssSelectors['star-loop']?.classes}`}>
+			{/* One label for the whole row, so a screen reader says "Rated 4 out of 5"
+			   instead of reading five unlabelled icons. */}
+			<div role="img" aria-label={`Rated ${rate} out of 5`} className={`${cssSelectors['star-loop']?.classes || 'flex items-center gap-0.5 text-amber-400'}`}>
 
 				{stars.map((item, indexZ) => {
 
@@ -73,7 +75,7 @@ const CommentRateView = (props) => {
 				})}
 			</div>
 
-			<div className={`${cssSelectors['avg-rating']?.classes}`}>{rate}/5</div>
+			<div aria-hidden="true" className={`${cssSelectors['avg-rating']?.classes ?? ''}`}>{rate}/5</div>
 
 
 		</div>

@@ -374,7 +374,10 @@ const AddToCart = (props) => {
 
 					{!hideQuanity && (
 						<div className={`${cssSelectors['quantity-wrapper']?.classes}`} >
-							<div className={`${cssSelectors['quantity-plus']?.classes}`}
+							{/* Buttons, not divs, so the stepper works from the keyboard and
+							   is announced by screen readers. (The class names are swapped:
+							   'quantity-plus' styles the minus button; kept as saved.) */}
+							<button type="button" aria-label="Decrease quantity" className={`${cssSelectors['quantity-plus']?.classes}`}
 								onClick={(ev) => {
 
 
@@ -458,9 +461,10 @@ const AddToCart = (props) => {
 
 							>
 								<IconSquareRoundedMinusFilled />
-							</div>
-							<input type="text" name="addToCart" className={`${cssSelectors['quantity-input']?.classes}`} value={quantity} onChange={ev => {
-								var quantity = parseInt(ev.target.value);
+							</button>
+							<input type="text" inputMode="numeric" aria-label="Quantity" name="addToCart" className={`${cssSelectors['quantity-input']?.classes}`} value={quantity} onChange={ev => {
+								/* An emptied box used to store NaN as the quantity. */
+								var quantity = Math.max(0, parseInt(String(ev.target.value).replace(/D/g, '')) || 0);
 								setquantity(quantity)
 
 								if (onChangeCartBtn) {
@@ -469,7 +473,7 @@ const AddToCart = (props) => {
 								}
 
 							}} />
-							<div className={`${cssSelectors['quantity-minus']?.classes}`}
+							<button type="button" aria-label="Increase quantity" className={`${cssSelectors['quantity-minus']?.classes}`}
 
 								onClick={() => {
 
@@ -543,14 +547,21 @@ const AddToCart = (props) => {
 								}}
 							>
 								<IconSquareRoundedPlusFilled />
-							</div>
+							</button>
 						</div>
 					)}
 
 
 					{!hideButton && (
 						<div className={`${cssSelectors['button-wrapper']?.classes}`}
+							role="button"
+							tabIndex={0}
 							onClick={() => addToCart()}
+							onKeyDown={ev => {
+								if (ev.key !== 'Enter' && ev.key !== ' ') return;
+								ev.preventDefault();
+								addToCart();
+							}}
 						>
 
 							{IconX && (

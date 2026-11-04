@@ -18,7 +18,7 @@ const TermTitle = (props) => {
 
 	var index = props?.index
 	var name = props?.name
-	var cssSelectors = props?.cssSelectors
+	var cssSelectors = props?.cssSelectors ?? {}
 
 
 	var id = props?.id;
@@ -30,12 +30,16 @@ const TermTitle = (props) => {
 	var iconSize = options?.iconSize;
 	const product = usePost();
 
-	var sku = product?.sku ?? 'CUSTOMSKU';
+	/* Shoppers used to see a bare "SKU:" for products without one, and the
+	   builder's placeholder "CUSTOMSKU" when the field was missing. */
+	var sku = String(product?.sku ?? '').trim();
 
 
 	const IconX = TablerIcons[icon];
 
 
+
+	if (!sku) return null;
 
 	return (
 

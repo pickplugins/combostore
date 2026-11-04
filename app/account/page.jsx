@@ -77,6 +77,7 @@ export default async function page({ params, searchParams }) {
 	return (
 
 		<>
+
 			<PageBuilderContent blocks={pageTemplatecontent} />
 
 			<style>

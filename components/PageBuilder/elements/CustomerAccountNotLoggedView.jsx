@@ -5,7 +5,7 @@ import React from "react";
 import { useState } from "react";
 import { IconColumns, IconPlus } from "@tabler/icons-react";
 import BlockRender from '../BlockRender';
-import { useCounterStore } from '../../../store/useCounterStore';
+import { useSavedToken } from './useSavedToken';
 
 const ColumnsView = (props) => {
 	const {
@@ -23,7 +23,8 @@ const ColumnsView = (props) => {
 	var cssSelectors = props?.cssSelectors ?? {};
 
 
-	const token = localStorage.getItem("token");
+	/* undefined until the browser has been checked - see useSavedToken. */
+	const token = useSavedToken();
 
 
 	return (
@@ -36,7 +37,7 @@ const ColumnsView = (props) => {
 
 		>
 
-			{!token && (
+			{token === null && (
 
 				<>
 

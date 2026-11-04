@@ -180,6 +180,8 @@ const Suppliers = () => {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
+				/* The server only lets staff choose a role other than customer. */
+				Authorization: `Bearer ${token}`,
 			},
 			body: JSON.stringify(newSupplier),
 		})

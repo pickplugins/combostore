@@ -392,6 +392,13 @@ const ProductVariablePricesView = (props) => {
 			? isVariationAvailable(selectedVariation)
 			: false;
 
+	/* A class saved in the page builder wins; a block without one gets a
+	   built-in look instead of options that read as plain text. */
+	const cssSelectorClass = (key, fallback) => {
+		const value = cssSelectors?.[key]?.classes;
+		return typeof value === 'string' && value.trim() !== '' ? value : fallback;
+	};
+
 	return (
 		<>
 
@@ -426,7 +433,7 @@ const ProductVariablePricesView = (props) => {
 										{attrTitle}
 									</div>
 
-									<div className={`${cssSelectors?.["attr-items-wrap"]?.classes ?? ""}`}							>
+									<div role="radiogroup" aria-label={typeof attrTitle === 'string' ? attrTitle : undefined} className={`${cssSelectorClass("attr-items-wrap", "flex flex-wrap gap-2")}`}							>
 										{/* {attrItems.map((item, itemIndex) => {
 											const selected = selectedAttributes?.[attrSlug] === item?.slug;
 
@@ -472,18 +479,27 @@ const ProductVariablePricesView = (props) => {
 												<div
 													key={`${attrSlug}-${itemSlug}-${itemIndex}`}
 													className={`
-                ${cssSelectors?.["variation-item"]?.classes ?? ""}
+                ${cssSelectorClass("variation-item", "rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-800 transition-colors hover:border-gray-400")}
                 ${selected
-															? cssSelectors?.["variation-selected"]?.classes ?? ""
+															? cssSelectorClass("variation-selected", "!border-[#1b0e9f] bg-[#1b0e9f]/5 !text-[#1b0e9f] ring-1 ring-[#1b0e9f]")
 															: ""
 														}
                 ${!available
-															? cssSelectors?.["variation-disabled"]?.classes ?? ""
+															? cssSelectorClass("variation-disabled", "cursor-not-allowed opacity-40 line-through")
 															: "cursor-pointer"
 														}
             `}
-													aria-selected={selected}
+													/* A radio in a radio group: reachable with Tab, picked
+													   with Enter or Space, and read out as selected or not. */
+													role="radio"
+													aria-checked={selected}
 													aria-disabled={!available}
+													tabIndex={available ? 0 : -1}
+													onKeyDown={(ev) => {
+														if (ev.key !== 'Enter' && ev.key !== ' ') return;
+														ev.preventDefault();
+														if (available) handleAttributeClick(attrSlug, itemSlug);
+													}}
 													onClick={() => {
 														if (!available) {
 															return;

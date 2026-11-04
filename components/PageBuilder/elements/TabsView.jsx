@@ -19,12 +19,17 @@ const Grid = (props) => {
 		handleMoveBlock // New prop for recursive drops
 	} = props;
 
-	const cssSelectors = props?.cssSelectors;
+	const cssSelectors = props?.cssSelectors ?? {};
 	const children = props?.children || [];
 
 	var options = props?.options;
 	var orientation = options?.orientation;
-	var tabsItems = options?.tabsItems;
+	/* A tabs block saved without its tab list used to crash the whole page on
+	   `.map` of undefined. Each tab's content block carries its own label, so
+	   the list falls back to those. */
+	var tabsItems = Array.isArray(options?.tabsItems) && options.tabsItems.length > 0
+		? options.tabsItems
+		: children.map((child, idx) => ({ label: child?.options?.label || `Tab ${idx + 1}`, icon: child?.options?.icon }));
 
 	const [activeTab, setActiveTab] = useState(props?.activeTab ?? 0);
 
@@ -51,63 +56,61 @@ const Grid = (props) => {
 
 
 
+	/* Built-in look for tabs whose block has no classes of its own; any class
+	   set in the page builder replaces the matching default. */
+	const classesFor = (key, fallback) => {
+		const value = cssSelectors?.[key]?.classes;
+		return typeof value === 'string' && value.trim() !== '' ? value : fallback;
+	};
+
+	const vertical = orientation == 'vertical';
+
 	return (
 		<div
-
 			id={id}
-			className={`p-4 ${cssSelectors['*']?.classes}    
-			`}
-
+			className={`p-4 ${classesFor('*', 'w-full')}`}
 		>
 
+			<div
+				role="tablist"
+				aria-orientation={vertical ? 'vertical' : 'horizontal'}
+				className={`${classesFor('navs-items', 'mb-5 flex gap-1 border-b border-gray-200')} overflow-x-auto overflow-y-hidden scrollbar-hide ${vertical ? " lg:flex-col mb-4 lg:flex-nowrap flex-wrap" : ""}`}
+			>
+				{tabsItems.map((tab, tabIndex) => {
 
-			<div className={`${cssSelectors['navs-items']?.classes} flex overflow-x-auto scrollbar-hide ${orientation == 'vertical' ? " lg:flex-col mb-4 lg:flex-nowrap flex-wrap" : ""} `}>
-				{tabsItems.map((tab, index) => {
-
-					var isActive = activeTab === index;
+					var isActive = activeTab === tabIndex;
 					const IconX = TablerIcons[tab.icon];
 
 					return (
-
-
-						<div
-							key={index}
-							className={`${cssSelectors['nav-item']?.classes}  ${isActive
-								? cssSelectors['nav-item-active']?.classes
-								: ""
-								}`}
-							onClick={() => setActiveTab(index)}
+						<button
+							type="button"
+							role="tab"
+							aria-selected={isActive}
+							key={tabIndex}
+							className={`${classesFor('nav-item', '-mb-px flex shrink-0 cursor-pointer items-center gap-2 whitespace-nowrap border-b-2 border-transparent px-3 py-2.5 text-sm font-medium text-gray-500 transition-colors hover:text-gray-900')} ${isActive ? classesFor('nav-item-active', '!border-[#1b0e9f] !text-[#1b0e9f]') : ""}`}
+							onClick={() => setActiveTab(tabIndex)}
 						>
-							{/* <div>{tab.icon}</div> */}
-
-							<div className={`${cssSelectors['nav-item-icon']?.classes}`}>
-								{IconX ? <IconX /> : null}
-							</div>
-							<div className={`${cssSelectors['nav-item-label']?.classes}`}>{tab.label}</div>
-						</div>
+							{IconX && (
+								<span className={`${classesFor('nav-item-icon', 'flex')}`}>
+									<IconX size={18} />
+								</span>
+							)}
+							<span className={`${classesFor('nav-item-label', '')}`}>{tab.label}</span>
+						</button>
 					)
 				})}
 			</div>
 
-			{
-				children.map((child, idx) => (
-					<>
-						{idx == activeTab && (
-
-							<div className={`${cssSelectors['nav-item-content']?.classes}`}>
-								<BlockRender
-									key={child.id}
-									index={`${index}-${idx}`}
-									block={child}
-
-								/>
-							</div>
-
-						)}
-
-					</>
-				))
-			}
+			{/* Only the open tab's content is rendered, as before; keyed on the
+			   wrapper so React stops warning about the unkeyed fragments. */}
+			{children[activeTab] && (
+				<div role="tabpanel" key={children[activeTab].id} className={`${classesFor('nav-item-content', '')}`}>
+					<BlockRender
+						index={`${index}-${activeTab}`}
+						block={children[activeTab]}
+					/>
+				</div>
+			)}
 		</div>
 	);
 };

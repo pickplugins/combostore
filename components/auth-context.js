@@ -118,7 +118,10 @@ export function AuthProvider({ children }) {
 
 
 
-  const handleLogin = (username, password) => {
+  /* `redirectTo` is where to go once signed in. The dashboard's login page
+     relies on the default; a storefront login block passes null to stay on
+     the page it is on (the account page swaps to the logged-in view). */
+  const handleLogin = (username, password, redirectTo = "/dashboard") => {
 
 
     // 📝 Fake login (replace with API call)
@@ -162,7 +165,7 @@ export function AuthProvider({ children }) {
 
             setTimeout(() => {
               fetchUser()
-              router.push("/dashboard");
+              if (redirectTo) router.push(redirectTo);
 
             }, 500);
           });

@@ -5,7 +5,7 @@ import React from "react";
 import { useState } from "react";
 import { IconColumns, IconPlus } from "@tabler/icons-react";
 import BlockRender from '../BlockRender';
-import { useCounterStore } from '../../../store/useCounterStore';
+import { useSavedToken } from './useSavedToken';
 
 const CustomerAccountLoggedView = (props) => {
 	const {
@@ -24,7 +24,8 @@ const CustomerAccountLoggedView = (props) => {
 
 	// const { token, appData, notifications, addNotification, cartItems, addCartItems, removeCartItems, resetCartItems, updateCartItems, userDataX, setUserDataX, settings } = useCounterStore()
 
-	const token = localStorage.getItem("token");
+	/* undefined until the browser has been checked - see useSavedToken. */
+	const token = useSavedToken();
 
 
 

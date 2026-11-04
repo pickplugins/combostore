@@ -30,14 +30,15 @@ const ProductGalleryView = (props) => {
 
 	var index = props?.index
 	var name = props?.name
-	var cssSelectors = props?.cssSelectors
+	var cssSelectors = props?.cssSelectors ?? {}
 
 
 	var id = props?.id;
 	var type = props?.type;
 
-	var options = props?.options;
-	var sliderOptions = options?.sliderOptions ?? {}
+	var options = props?.options ?? {};
+	/* A copy: this used to write into the block's own saved options on every render. */
+	var sliderOptions = { ...(options?.sliderOptions ?? {}) }
 
 	sliderOptions.isNavigation = true
 
@@ -102,14 +103,12 @@ const ProductGalleryView = (props) => {
 
 	useEffect(() => {
 
-		if (activeVariation) {
-			console.log(activeVariation);
-			var thumbnail = activeVariation.thumbnail;
+		/* A variation without its own image used to crash the page here. */
+		var thumbnail = activeVariation?.thumbnail;
 
-			const index = gallery.findIndex(item => item.id === thumbnail.id);
-
-			goToSlide(index)
-			console.log(thumbnail);
+		if (thumbnail?.id != null) {
+			const index = gallery.findIndex(item => item?.id === thumbnail.id);
+			if (index >= 0) goToSlide(index)
 		}
 
 
@@ -118,18 +117,16 @@ const ProductGalleryView = (props) => {
 	}, [activeVariation]);
 	useEffect(() => {
 
-		console.log('variations', variations);
-
 		var variationgallery = []
 
 		if (variations.length > 0) {
 			variations.map(variation => {
 
-				var thumbnail = variation.thumbnail;
-				variationgallery.push(thumbnail)
+				var thumbnail = variation?.thumbnail;
+				if (thumbnail) variationgallery.push(thumbnail)
 			})
 
-			setgallery(variationgallery)
+			if (variationgallery.length > 0) setgallery(variationgallery)
 		}
 
 
@@ -166,11 +163,11 @@ const ProductGalleryView = (props) => {
 
 
 							{!item.src && (
-								<Image unoptimized className={`${cssSelectors['image']?.classes} w-full h-auto`} src={`/thumb.png`} alt="" width={500} height={500} />
+								<Image unoptimized className={`${cssSelectors['image']?.classes} w-full h-auto`} src={`/thumb.png`} alt={product?.title ?? ""} width={500} height={500} />
 
 							)}
 							{item.src && (
-								<Image unoptimized className={`${cssSelectors['image']?.classes} w-full h-auto`} src={item?.src} alt="" width={500} height={500} />
+								<Image unoptimized className={`${cssSelectors['image']?.classes} w-full h-auto`} src={item?.src} alt={item?.alt || product?.title || ""} width={500} height={500} />
 
 							)}
 
@@ -181,7 +178,7 @@ const ProductGalleryView = (props) => {
 			)}
 
 
-			{(options.thumbnails && gallery.length > 1) && (
+			{(options?.thumbnails && gallery.length > 1) && (
 
 				<Splide
 					ref={thumbsRef}
@@ -214,11 +211,11 @@ const ProductGalleryView = (props) => {
 
 
 							{!item.src && (
-								<Image unoptimized className="w-full h-auto" src={`/thumb.png`} alt="" width={500} height={500} />
+								<Image unoptimized className="w-full h-auto" src={`/thumb.png`} alt={product?.title ?? ""} width={500} height={500} />
 
 							)}
 							{item.src && (
-								<Image unoptimized className="w-full h-auto" src={item?.src} alt="" width={500} height={500} />
+								<Image unoptimized className="w-full h-auto" src={item?.src} alt={item?.alt || product?.title || ""} width={500} height={500} />
 
 							)}
 

@@ -1,7 +1,7 @@
 "use client"
 import React from "react";
 import { useState } from "react";
-import { IconExclamationCircle, IconStar, IconStarFilled } from "@tabler/icons-react";
+import { IconExclamationCircle, IconStar, IconStarFilled, IconCircleCheck } from "@tabler/icons-react";
 import { usePost } from "../context/PostContext";
 import { useComment } from "../context/CommentContext";
 import { useCommentsGrid } from "../context/CommentsGridContext";
@@ -52,14 +52,14 @@ const CommentsFormView = (props) => {
 	var defaults = {
 		'form': 'flex flex-col gap-4',
 		'field': 'flex flex-col gap-2',
-		'label': 'text-sm',
+		'label': 'text-sm font-medium text-gray-700',
 		'rate-wrap': '',
-		'stars': 'flex gap-1 items-center',
-		'star': 'cursor-pointer',
-		'textarea': 'w-full h-32 px-3 py-2 rounded-sm border border-gray-400 shadow-none!',
-		'submit': 'px-4 py-2 rounded-sm text-center text-white bg-blue-600 cursor-pointer',
-		'notice': 'text-sm',
-		'errors': 'flex flex-col gap-1 text-sm text-red-500',
+		'stars': 'flex gap-1 items-center text-amber-400',
+		'star': 'cursor-pointer rounded-md p-0.5 transition-transform hover:scale-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50',
+		'textarea': 'w-full h-32 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 placeholder:text-gray-400 shadow-xs transition-colors hover:border-gray-400 focus:border-[#1b0e9f] focus:outline-none focus:ring-2 focus:ring-[#1b0e9f]/15',
+		'submit': 'inline-flex items-center justify-center gap-2 self-start rounded-lg bg-[#1b0e9f] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#150b7d] cursor-pointer disabled:cursor-not-allowed disabled:opacity-60',
+		'notice': 'flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700',
+		'errors': 'flex flex-col gap-1 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700',
 		'error': 'flex items-center gap-2',
 	};
 
@@ -95,6 +95,8 @@ const CommentsFormView = (props) => {
 	var [errors, seterrors] = useState([]);
 	var [loading, setloading] = useState(false);
 	var [success, setsuccess] = useState(false);
+	/* The star under the pointer, so the row previews the rating before the click. */
+	var [hoverRate, sethoverRate] = useState(null);
 
 
 	var stars = [
@@ -102,11 +104,14 @@ const CommentsFormView = (props) => {
 		{ label: "Poor", value: 2 },
 		{ label: "Normal", value: 3 },
 		{ label: "Good", value: 4 },
-		{ label: "Supper", value: 5 },
+		{ label: "Excellent", value: 5 },
 	]
 
 
 	function submit_comment() {
+
+		/* A second click while the first is still sending posted the comment twice. */
+		if (loading) return;
 
 
 		if (!token) {
@@ -196,6 +201,8 @@ const CommentsFormView = (props) => {
 				}
 			})
 			.catch((_error) => {
+				/* This used to stop the spinner and say nothing. */
+				seterrors(["Your comment couldn't be sent. Please try again."]);
 				setloading(false);
 			});
 	}
@@ -214,31 +221,43 @@ const CommentsFormView = (props) => {
 
 						<label className={`${cls('label')}`}>{rateLabel}</label>
 
-						<div className={`${cls('stars')}`}>
+						<div className="flex flex-wrap items-center gap-3">
+							<div role="radiogroup" aria-label={rateLabel} className={`${cls('stars')}`} onMouseLeave={() => sethoverRate(null)}>
 
-							{stars.map((item, indexZ) => {
+								{stars.map((item, indexZ) => {
 
-								return (
-									<div
-										key={indexZ}
-										title={item?.label}
-										className={`${cls('star')}`}
-										onClick={ev => {
-											setcomment({ ...comment, rate: item.value });
-										}}
-									>
+									var shown = hoverRate ?? comment.rate;
 
-										{comment.rate <= indexZ || !comment.rate ? (
-											<><IconStar /></>
-										) : (
-											<><IconStarFilled /></>
-										)}
+									return (
+										<button
+											type="button"
+											role="radio"
+											aria-checked={comment.rate === item.value}
+											aria-label={`${item.value} - ${item?.label}`}
+											key={indexZ}
+											title={item?.label}
+											className={`${cls('star')}`}
+											onMouseEnter={() => sethoverRate(item.value)}
+											onClick={ev => {
+												setcomment({ ...comment, rate: item.value });
+											}}
+										>
 
-									</div>
-								)
+											{!shown || shown <= indexZ ? (
+												<><IconStar /></>
+											) : (
+												<><IconStarFilled /></>
+											)}
 
-							})}
+										</button>
+									)
 
+								})}
+
+							</div>
+							{(hoverRate ?? comment.rate) && (
+								<span className="text-sm text-gray-500">{stars[(hoverRate ?? comment.rate) - 1]?.label}</span>
+							)}
 						</div>
 
 					</div>
@@ -263,7 +282,9 @@ const CommentsFormView = (props) => {
 				</div>
 
 
-				<div
+				<button
+					type="button"
+					disabled={loading}
 					className={`${cls('submit')}`}
 					onClick={ev => {
 						submit_comment()
@@ -277,16 +298,16 @@ const CommentsFormView = (props) => {
 						<>{loadingLabel}</>
 					)}
 
-				</div>
+				</button>
 
 
 				{success && (
-					<div className={`${cls('notice')}`}>{successText}</div>
+					<div role="status" className={`${cls('notice')}`}><IconCircleCheck size={16} className="shrink-0" /> {successText}</div>
 				)}
 
 
 				{errors?.length > 0 && (
-					<div className={`${cls('errors')}`}>
+					<div role="alert" className={`${cls('errors')}`}>
 
 						{errors?.map((item, indexZ) => {
 

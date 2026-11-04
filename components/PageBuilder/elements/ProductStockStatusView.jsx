@@ -78,7 +78,7 @@ const TermTitle = (props) => {
 				<div className={`${cssSelectors['stock-status']?.classes} ${cssSelectors['in-stock']?.classes} `}>
 					{InStockIconX && (
 						<div className={`${cssSelectors['icon']?.classes}`}>
-							{InStockIconX ? <InStockIconX Iize={iconSize} /> : null}
+							{InStockIconX ? <InStockIconX size={iconSize} /> : null}
 						</div>
 					)}
 

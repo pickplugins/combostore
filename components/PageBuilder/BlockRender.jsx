@@ -102,6 +102,7 @@ import CustomerAccountView from './elements/CustomerAccountView';
 import CustomerProfileEditView from './elements/CustomerProfileEditView';
 import CustomerProfileView from './elements/CustomerProfileView';
 import CustomerSubscriptionsView from './elements/CustomerSubscriptionsView';
+import CustomerTicketsView from './elements/CustomerTicketsView';
 
 import LoginByPhoneView from './elements/LoginByPhoneView';
 import LoginView from './elements/LoginView';

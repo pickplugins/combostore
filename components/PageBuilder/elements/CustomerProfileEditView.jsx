@@ -3,101 +3,76 @@
 import PropTypes from "prop-types";
 import React from "react";
 import { useState, useEffect } from "react";
-import { IconColumns, IconPlus } from "@tabler/icons-react";
-import BlockRender from '../BlockRender';
-import WidgetWrapper from "../../../components/WidgetWrapper";
+import { IconUser, IconMapPin, IconHome, IconDeviceFloppy } from "@tabler/icons-react";
+import Spinner from "../../../components/Spinner";
+import LocationPicker from "../../../components/LocationPicker";
+import { useCounterStore } from '../../../store/useCounterStore';
+import { useSavedToken } from './useSavedToken';
+import { accountInputClass, accountPrimaryButtonClass, accountSecondaryButtonClass, AccountNotice } from './accountUi';
 
-const ColumnsView = (props) => {
-	const {
-		block,
+const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
-		index,
-		id,
-		type,
-		prams,
-		handleMoveBlock // New prop for recursive drops
-	} = props;
+function ProfileCard({ icon: Icon, title, description, children, footer }) {
+	return (
+		<section className="rounded-xl border border-gray-200 bg-white shadow-xs">
+			<div className="flex items-start gap-3 border-b border-gray-100 p-4">
+				<span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#1b0e9f]/10 text-[#1b0e9f]">
+					<Icon size={18} />
+				</span>
+				<div>
+					<h3 className="text-base font-semibold text-gray-900">{title}</h3>
+					{description && <p className="text-sm text-gray-500">{description}</p>}
+				</div>
+			</div>
+			<div className="p-4">{children}</div>
+			{footer && (
+				<div className="flex flex-wrap items-center justify-end gap-2 rounded-b-xl border-t border-gray-100 bg-gray-50 px-4 py-3">{footer}</div>
+			)}
+		</section>
+	);
+}
 
-	const children = props?.children || [];
+function ProfileField({ label, htmlFor, hint, children }) {
+	return (
+		<div className="flex flex-col gap-1.5">
+			<label htmlFor={htmlFor} className="text-sm font-medium text-gray-700">{label}</label>
+			{children}
+			{hint && <p className="text-xs text-gray-500">{hint}</p>}
+		</div>
+	);
+}
+
+/*
+	The customer's profile editor.
+
+	The old block could not run: it called setloading, token, serverUrl,
+	addNotification, Spinner and LocationPicker without defining or importing
+	any of them, and it loaded and saved the profile of user 1 rather than
+	the customer who is logged in. Its "City" field wrote a key the server
+	never saves, and its "Change password" form posted to an endpoint the
+	server does not have - both are left out rather than shown not working.
+*/
+const CustomerProfileEditView = (props) => {
+	const { id, type } = props;
 
 	var cssSelectors = props?.cssSelectors ?? {};
 
-
-
+	const { userDataX, setUserDataX, addNotification } = useCounterStore();
+	const token = useSavedToken();
 
 	var [editUserData, seteditUserData] = useState(null);
-	var [passwordData, setpasswordData] = useState({ currentPass: "", newPass1: "", newPass2: "", passMatched: false, passUpdate: false, loading: false });
+	var [loadError, setloadError] = useState(null);
+	/* Which card is saving: 'details', 'address' or 'location'. */
+	var [saving, setsaving] = useState(null);
 
+	useEffect(() => {
 
+		/* The endpoint looks the customer up by the id in the request, so it
+		   waits for the logged-in customer's id as well as their token. */
+		if (!token || !userDataX?.id) return;
 
-	var userid = 1;
-
-
-	function updateUserProfile() {
-		setloading(true);
-
-
-
-		if (!token) {
-
-		}
-		var postData = {
-			id: userid,
-			userData: editUserData,
-
-		};
-
-
-		postData = JSON.stringify(postData);
-
-		fetch(serverUrl + "wp-json/combo-store/v2/update_user_profile", {
-			method: "POST",
-			headers: {
-				'Content-Type': 'application/json',
-				'Authorization': `Bearer ${token}`
-			},
-			body: postData,
-		})
-			.then((response) => {
-
-				if (!response.ok) {
-					throw new Error('Token validation failed');
-				}
-
-				if (response.ok && response.status < 400) {
-					response.json().then((res) => {
-
-						addNotification({ type: 'success', title: 'Profile Updated', content: "Your information updated successful." })
-
-						setTimeout(() => {
-							setloading(false);
-						}, 500);
-					});
-				}
-			})
-			.catch((_error) => {
-				//this.saveAsStatus = 'error';
-				// handle the error
-			});
-
-	}
-
-	function getUserProfile() {
-
-
-		if (!token) {
-
-		}
-
-		setloading(true);
-
-
-		var postData = {
-			id: userid,
-
-		};
-
-		postData = JSON.stringify(postData);
+		var cancelled = false;
+		setloadError(null);
 
 		fetch(serverUrl + "wp-json/combo-store/v2/get_customer", {
 			method: "POST",
@@ -105,550 +80,201 @@ const ColumnsView = (props) => {
 				'Content-Type': 'application/json',
 				'Authorization': `Bearer ${token}`
 			},
-			body: postData,
+			body: JSON.stringify({ id: userDataX.id }),
 		})
 			.then((response) => {
-				if (response.ok && response.status < 400) {
-					response.json().then((res) => {
-
-
-						seteditUserData({ ...res.customer })
-
-
-						setTimeout(() => {
-							setloading(false);
-
-						}, 500);
-					});
-				}
+				if (!response.ok) throw new Error('request failed');
+				return response.json();
 			})
-			.catch((_error) => {
-				//this.saveAsStatus = 'error';
-				// handle the error
+			.then((res) => {
+				if (cancelled) return;
+				if (!res?.customer) throw new Error(res?.errors || 'no customer');
+				seteditUserData({ ...res.customer });
+			})
+			.catch(() => {
+				if (!cancelled) setloadError("We couldn't load your profile. Please refresh the page to try again.");
 			});
 
+		return () => { cancelled = true; };
+
+	}, [token, userDataX?.id]);
+
+	function setField(ev) {
+		const { name, value } = ev.target;
+		seteditUserData(prev => ({ ...prev, [name]: value }));
 	}
-	function updateUserPassword() {
 
+	/* The whole profile is sent each time: the server blanks any field that
+	   is missing from the request. */
+	function saveProfile(section, overrides = {}) {
 
-		if (!token) {
-			throw new Error("No token found");
-		}
-		if (passwordData.newPass1 !== passwordData.newPass2) {
-			setpasswordData({ ...passwordData, passMatched: false, errors: ("Password doesn't match."), passUpdate: false, });
+		if (!token || !editUserData) return;
 
-			addNotification({ type: 'error', title: 'Password update failed', content: "Password doesn't match." })
+		var userData = { ...editUserData, ...overrides };
 
-			return;
-		}
+		setsaving(section);
 
-
-		setpasswordData({ ...passwordData, loading: true, });
-
-		setloading(true);
-
-
-		var postData = {
-			id: userDataX.id,
-			old_password: passwordData.currentPass,
-			new_password: passwordData.newPass1,
-
-
-		};
-
-		postData = JSON.stringify(postData);
-
-		fetch(serverUrl + "wp-json/combo-store/v2/update_user_password", {
+		fetch(serverUrl + "wp-json/combo-store/v2/update_user_profile", {
 			method: "POST",
 			headers: {
 				'Content-Type': 'application/json',
 				'Authorization': `Bearer ${token}`
 			},
-			body: postData,
+			/* The logged-in customer's own id - this used to be a hard-coded 1. */
+			body: JSON.stringify({ id: editUserData.id ?? userDataX?.id, userData: userData }),
 		})
 			.then((response) => {
-				if (response.ok && response.status < 400) {
-					response.json().then((res) => {
+				if (!response.ok) throw new Error('request failed');
+				return response.json();
+			})
+			.then(() => {
+				seteditUserData(userData);
 
-
-
-						var success = res?.success
-						var errors = res?.errors
-
-
-						if (errors?.length > 0) {
-							setpasswordData({ ...passwordData, passUpdate: false, loading: false, });
-							addNotification({ type: 'error', title: 'Update failed', content: errors })
-						}
-						if (success?.length > 0) {
-							setpasswordData({ ...passwordData, passUpdate: true, loading: false, });
-							addNotification({ type: 'success', title: 'Password updated', content: success })
-						}
-
-
-
-
-
-
-
-
-						setTimeout(() => {
-							setloading(false);
-
-						}, 500);
+				/* Checkout pre-fills from the store, so keep it in step. */
+				if (userDataX) {
+					setUserDataX({
+						...userDataX,
+						name: userData.name,
+						phone: userData.phone,
+						billing_address1: userData.billing_address1,
+						billing_address2: userData.billing_address2,
+						delivery_location: userData.delivery_location,
 					});
 				}
-			})
-			.catch((_error) => {
-				//this.saveAsStatus = 'error';
-				// handle the error
-			});
 
+				addNotification({ type: 'success', title: 'Profile updated', content: "Your changes have been saved." });
+			})
+			.catch(() => {
+				addNotification({ type: 'error', title: 'Could not save', content: "Your changes were not saved. Please try again." });
+			})
+			.finally(() => setsaving(null));
 	}
 
+	function SaveButton({ section, label = "Save changes" }) {
+		return (
+			<button type="submit" className={accountPrimaryButtonClass} disabled={saving !== null}>
+				{saving === section ? <Spinner /> : <IconDeviceFloppy size={16} />}
+				{label}
+			</button>
+		);
+	}
 
-	useEffect(() => {
-		getUserProfile();
-	}, []);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	var location = editUserData?.delivery_location;
+	var hasLocation = Boolean(location && location.lat && location.lng);
 
 	return (
-		<div
+		<div id={id} type={type} className={`${cssSelectors['*']?.classes ?? ''}`}>
 
-			id={id}
-			type={type}
-			className={`${cssSelectors['*']?.classes}   
-			`}
+			{loadError && <AccountNotice>{loadError}</AccountNotice>}
 
-		>
+			{!loadError && !editUserData && (
+				<div className="flex flex-col gap-4" aria-hidden="true">
+					{[0, 1].map(card => (
+						<div key={card} className="animate-pulse rounded-xl border border-gray-200 bg-white p-4">
+							<div className="h-4 w-40 rounded bg-gray-200" />
+							<div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-2">
+								<div className="h-9 rounded-lg bg-gray-100" />
+								<div className="h-9 rounded-lg bg-gray-100" />
+							</div>
+						</div>
+					))}
+				</div>
+			)}
 
-			<div className="flex flex-col gap-5">
+			{editUserData && (
+				<div className="flex flex-col gap-5">
 
-
-
-
-
-				<WidgetWrapper collapsible={true} title="General Information">
-
-					<div className=" flex items-center justify-end gap-2">
-
-						{loading && (
-
-							<div className="bg-[#1b0e9f] px-2 py-2 rounded-sm"><Spinner /></div>
-
-						)}
-
-						<div
-
-							onClick={(ev) => {
-								ev.preventDefault();
-
-								updateUserProfile();
-							}}
-							className="p-2 inline hover:bg-[#1b0e9f] rounded-sm cursor-pointer px-4 bg-[#1b0e9f] text-white"
+					<form onSubmit={ev => { ev.preventDefault(); saveProfile('details'); }}>
+						<ProfileCard
+							icon={IconUser}
+							title="Personal details"
+							description="Used to fill in your details at checkout."
+							footer={<SaveButton section="details" />}
 						>
-							{("Update Profile")}
-
-						</div>
-
-					</div>
-
-
-
-
-					<form action="" className="p-5">
-
-						<div className="flex flex-col gap-10">
-
-							<div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-
-
-
-								<div className="">
-									<label htmlFor="" className=" ">
-										{("User Name")}
-									</label>
-									<input
-										type="text"
-										name="name"
-										className=" px-2 py-1 rounded-sm w-full !border-2 border-solid border-gray-400 !shadow-none !outline-none focus:border-0"
-										value={editUserData?.name}
-										onChange={(ev) => {
-											const { name, value } = ev.target;
-											seteditUserData(prev => ({
-												...prev,
-												[name]: value
-											}));
-
-										}}
-									/>
-								</div>
-								{/* <div className="">
-									<label htmlFor="" className=" ">
-										{("First Name")}
-									</label>
-									<input
-										type="text"
-											name="first_name"
-
-										className=" px-2 py-1 rounded-sm w-full !border-2 border-solid border-gray-400 !shadow-none !outline-none focus:border-0"
-										value={editUserData?.first_name}
-										onChange={(ev) => {
-											const { name, value } = ev.target;
-												seteditUserData(prev => ({
-													...prev,
-													[name]: value
-												}));
-										}}
-									/>
-								</div>
-
-								<div className="">
-									<label htmlFor="" className=" text-lg">
-										{("Last Name")}
-									</label>
-									<input
-										type="text"
-											name="last_name"
-
-										className=" px-2 py-1 rounded-sm w-full !border-2 border-solid border-gray-400 !shadow-none !outline-none focus:border-0"
-										value={editUserData?.last_name}
-										onChange={(ev) => {
-										const { name, value } = ev.target;
-												seteditUserData(prev => ({
-													...prev,
-													[name]: value
-												}));
-										}}
-									/>
-								</div> */}
-								<div className="">
-									<label htmlFor="" className=" ">
-										{("Email")}
-									</label>
-									<input
-										type="text"
-										name="email"
-
-										disabled
-										className=" px-2 py-1 rounded-sm w-full  !border-2 border-solid border-gray-400 !shadow-none !outline-none focus:border-0"
-										value={editUserData?.email}
-										onChange={(ev) => {
-											const { name, value } = ev.target;
-											seteditUserData(prev => ({
-												...prev,
-												[name]: value
-											}));
-										}}
-									/>
-								</div>
-
-
+							<div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+								<ProfileField label="Full name" htmlFor="profile-name">
+									<input id="profile-name" type="text" name="name" autoComplete="name" className={accountInputClass} value={editUserData?.name ?? ''} onChange={setField} />
+								</ProfileField>
+								<ProfileField label="Phone" htmlFor="profile-phone">
+									<input id="profile-phone" type="tel" name="phone" autoComplete="tel" className={accountInputClass} value={editUserData?.phone ?? ''} onChange={setField} />
+								</ProfileField>
+								<ProfileField label="Email" htmlFor="profile-email" hint="Your email is your login and can't be changed here.">
+									<input id="profile-email" type="email" name="email" disabled className={accountInputClass} value={editUserData?.email ?? ''} readOnly />
+								</ProfileField>
 							</div>
-
-
-							<div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-								<div className="">
-									<label htmlFor="" className=" ">
-										{("Address 1")}
-									</label>
-									<input
-										type="text"
-										name="billing_address1"
-
-										className=" px-2 py-1 rounded-sm w-full !border-2 border-solid border-gray-400 !shadow-none !outline-none focus:border-0"
-										value={editUserData?.billing_address1}
-										onChange={(ev) => {
-											const { name, value } = ev.target;
-											seteditUserData(prev => ({
-												...prev,
-												[name]: value
-											}));
-										}}
-									/>
-								</div>
-								<div className="">
-									<label htmlFor="" className=" ">
-										{("Address 2")}
-									</label>
-									<input
-										type="text"
-										name="billing_address2"
-
-										className=" px-2 py-1 rounded-sm w-full !border-2 border-solid border-gray-400 !shadow-none !outline-none focus:border-0"
-										value={editUserData?.billing_address2}
-										onChange={(ev) => {
-											const { name, value } = ev.target;
-											seteditUserData(prev => ({
-												...prev,
-												[name]: value
-											}));
-										}}
-									/>
-								</div>
-
-								{/* <div className="">
-									<label htmlFor="" className=" ">
-										{("Zip Code")}
-									</label>
-									<input
-										type="text"
-											name="zip_code"
-
-										className=" px-2 py-1 rounded-sm w-full !border-2 border-solid border-gray-400 !shadow-none !outline-none focus:border-0"
-										value={editUserData?.zip_code}
-										onChange={(ev) => {
-									const { name, value } = ev.target;
-												seteditUserData(prev => ({
-													...prev,
-													[name]: value
-												}));
-										}}
-									/>
-								</div> */}
-								<div className="">
-									<label htmlFor="" className=" ">
-										{("City")}
-									</label>
-									<input
-										type="text"
-										name="city"
-
-										className=" px-2 py-1 rounded-sm w-full !border-2 border-solid border-gray-400 !shadow-none !outline-none focus:border-0"
-										value={editUserData?.city}
-										onChange={(ev) => {
-											const { name, value } = ev.target;
-											seteditUserData(prev => ({
-												...prev,
-												[name]: value
-											}));
-										}}
-									/>
-								</div>
-								{/* <div className="">
-									<label htmlFor="" className=" ">
-										{("Country")}
-									</label>
-									<input
-										type="text"
-											name="country"
-
-										className=" px-2 py-1 rounded-sm w-full !border-2 border-solid border-gray-400 !shadow-none !outline-none focus:border-0"
-										value={editUserData?.country}
-										onChange={(ev) => {
-											const { name, value } = ev.target;
-												seteditUserData(prev => ({
-													...prev,
-													[name]: value
-												}));
-										}}
-									/>
-								</div> */}
-
-								<div className="">
-									<label htmlFor="" className=" ">
-										{("Phone")}
-									</label>
-									<input
-										type="text"
-										name="phone"
-
-										className=" px-2 py-1 rounded-sm w-full !border-2 border-solid border-gray-400 !shadow-none !outline-none focus:border-0"
-										value={editUserData?.phone}
-										onChange={(ev) => {
-											const { name, value } = ev.target;
-											seteditUserData(prev => ({
-												...prev,
-												[name]: value
-											}));
-										}}
-									/>
-								</div>
-							</div>
-						</div>
-
-
+						</ProfileCard>
 					</form>
 
-				</WidgetWrapper>
-
-
-				<WidgetWrapper collapsible={true} title="Delivery Location">
-
-
-
-
-					<div className="flex flex-col gap-4">
-
-						<div className="flex-col 2xl:flex-row 2xl:flex gap-3 justify-between">
-
-							<div className="flex justify-between items-center gap-4 ">
-
-								<div className="text-red-400 cursor-pointer" onClick={ev => {
-									seteditUserData({ ...editUserData, delivery_location: null });
-
-								}}>Reset</div>
-
-								<div
-
-									onClick={(ev) => {
-										ev.preventDefault();
-
-										updateUserProfile();
-									}}
-									className="p-2 inline hover:bg-[#1b0e9f] rounded-sm cursor-pointer px-4 bg-[#1b0e9f] text-white"
-								>
-									{("Update")}
-
-								</div>
-
-
+					<form onSubmit={ev => { ev.preventDefault(); saveProfile('address'); }}>
+						<ProfileCard
+							icon={IconHome}
+							title="Address"
+							description="Where we deliver your orders."
+							footer={<SaveButton section="address" />}
+						>
+							<div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+								<ProfileField label="Address line 1" htmlFor="profile-address1">
+									<input id="profile-address1" type="text" name="billing_address1" autoComplete="address-line1" placeholder="House, road, area" className={accountInputClass} value={editUserData?.billing_address1 ?? ''} onChange={setField} />
+								</ProfileField>
+								<ProfileField label="Address line 2" htmlFor="profile-address2">
+									<input id="profile-address2" type="text" name="billing_address2" autoComplete="address-line2" placeholder="Apartment, landmark (optional)" className={accountInputClass} value={editUserData?.billing_address2 ?? ''} onChange={setField} />
+								</ProfileField>
 							</div>
-						</div>
-
-
-
-						{editUserData?.delivery_location && (
-							<div className=" bg-[#9a90ff]  rounded-sm p-3">
-								<p>You haven't set any delivery location.</p>
-							</div>
-						)}
-
-
-
-						<LocationPicker markerDraggable={true} latlng={editUserData?.delivery_location} onLocationSelect={(coords) => {
-
-
-
-
-							seteditUserData(prev => ({ ...prev, delivery_location: coords }));
-
-
-
-						}} />
-					</div>
-
-
-				</WidgetWrapper>
-
-				<WidgetWrapper collapsible={true} title="Change Password">
-					<form className="grid grid-cols-1 gap-8">
-						<div>
-							<label htmlFor="" className="block  ">
-								{("Current Password")}
-							</label>
-							<input
-								type="password"
-								className=" px-2 py-1 rounded-sm w-full !border-2 border-solid border-gray-400 !shadow-none !outline-none focus:border-0"
-								onChange={(ev) => {
-									var value = ev.target.value;
-									setpasswordData({ ...passwordData, currentPass: value });
-								}}
-							/>
-						</div>
-						<div>
-							<label htmlFor="" className="block ">
-								{("New Password")}
-							</label>
-							<input
-								type="password"
-								className=" px-2 py-1 rounded-sm w-full !border-2 border-solid border-gray-400 !shadow-none !outline-none focus:border-0"
-								onChange={(ev) => {
-									var value = ev.target.value;
-									setpasswordData({ ...passwordData, newPass1: value });
-								}}
-							/>
-						</div>
-						<div>
-							<label htmlFor="" className="block ">
-								{("Confirm Password")}
-							</label>
-							<input
-								type="password"
-								className=" px-2 py-1 rounded-sm w-full !border-2 border-solid border-gray-400 !shadow-none !outline-none focus:border-0"
-								onChange={(ev) => {
-									var value = ev.target.value;
-
-
-
-
-									if (passwordData.newPass1 == value) {
-										setpasswordData({ ...passwordData, newPass2: value, passMatched: true });
-
-									} else {
-										setpasswordData({ ...passwordData, newPass2: value, passMatched: false, errors: ("Password doesn't match.") });
-
-									}
-
-
-								}}
-							/>
-
-
-						</div>
-
-
-
-
-
-						<div className="flex items-center gap-2">
-
-							<input
-								disabled={!passwordData?.passMatched}
-								type="submit"
-								value={("Update")}
-								className={`${!passwordData?.passMatched ? "opacity-30 !cursor-not-allowed" : ""}`}
-								onClick={(ev) => {
-									ev.preventDefault();
-
-									updateUserPassword();
-								}}
-							/>
-							{passwordData?.loading && (
-								<Spinner />
-							)}
-						</div>
-
-
-
+						</ProfileCard>
 					</form>
-				</WidgetWrapper>
 
-				{/* <WidgetWrapper collapsible={true} title="General Information">
-					</WidgetWrapper> */}
+					<form onSubmit={ev => { ev.preventDefault(); saveProfile('location'); }}>
+						<ProfileCard
+							icon={IconMapPin}
+							title="Delivery location"
+							description="Pin your exact spot on the map so the rider can find you."
+							footer={
+								<>
+									{hasLocation && (
+										<button
+											type="button"
+											className={accountSecondaryButtonClass}
+											disabled={saving !== null}
+											onClick={() => saveProfile('location', { delivery_location: null })}
+										>
+											Clear location
+										</button>
+									)}
+									<SaveButton section="location" label="Save location" />
+								</>
+							}
+						>
+							<div className="flex flex-col gap-3">
+								{/* This message used to show only when a location WAS set. */}
+								<p className="text-sm text-gray-600">
+									{hasLocation
+										? "Your saved location is marked on the map. Drag the pin to change it."
+										: "You haven't saved a delivery location yet. Click the map to drop a pin."}
+								</p>
+								<div className="overflow-hidden rounded-lg border border-gray-200">
+									<LocationPicker
+										markerDraggable={true}
+										latlng={location}
+										onLocationSelect={(coords) => {
+											seteditUserData(prev => ({ ...prev, delivery_location: coords }));
+										}}
+									/>
+								</div>
+							</div>
+						</ProfileCard>
+					</form>
 
-
-
-
-
-
-			</div>
+				</div>
+			)}
 
 		</div>
 	);
 };
 
-ColumnsView.propTypes = {
-	block: PropTypes.object,
-
-	index: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+CustomerProfileEditView.propTypes = {
 	id: PropTypes.string,
 	type: PropTypes.string,
-	prams: PropTypes.object,
-	handleDropInto: PropTypes.func,
+	cssSelectors: PropTypes.object,
 };
 
-export default ColumnsView;
+export default CustomerProfileEditView;

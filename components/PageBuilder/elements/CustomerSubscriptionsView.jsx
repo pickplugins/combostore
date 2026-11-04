@@ -3,325 +3,155 @@
 import PropTypes from "prop-types";
 import React from "react";
 import { useState, useEffect } from "react";
-import { IconColumns, IconPlus } from "@tabler/icons-react";
-import BlockRender from '../BlockRender';
-import EntriesTable from "../../../components/EntriesTable";
-import { useCounterStore } from '../../../store/useCounterStore';
+import { IconRepeat, IconCalendarEvent } from "@tabler/icons-react";
+import { useUtilsStore } from '../../../store/useUtilsStore';
+import { useSavedToken } from './useSavedToken';
+import { StatusBadge, AccountEmptyState, AccountListSkeleton, AccountPager, AccountNotice, formatAccountDate } from './accountUi';
 
-/* Both were used below but never defined, so the block threw on load. */
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
-const ColumnsView = (props) => {
-	const { token } = useCounterStore();
-	const {
-		block,
+/* "month" + 1 -> "Every month", "week" + 2 -> "Every 2 weeks". */
+function describeInterval(interval, count) {
+	var unit = String(interval || "month").toLowerCase();
+	var n = parseInt(count) || 1;
+	return n === 1 ? `Every ${unit}` : `Every ${n} ${unit}s`;
+}
 
-		index,
-		id,
-		type,
-		prams,
-		handleMoveBlock // New prop for recursive drops
-	} = props;
+/*
+	The customer's repeat orders, as cards.
 
-	const children = props?.children || [];
+	This used the dashboard's admin table and linked to /subscriptions/{id}
+	and /orders/{id}, which the storefront does not have. `Link` was never
+	imported either, so the block crashed as soon as there was a
+	subscription to show.
+*/
+const CustomerSubscriptionsView = (props) => {
+	const { id, type } = props;
 
 	var cssSelectors = props?.cssSelectors ?? {};
 
+	const { wrapCurrency } = useUtilsStore();
+	const token = useSavedToken();
 
 	var [subscriptionsData, setsubscriptionsData] = useState(null);
-	var [queryPrams, setqueryPrams] = useState({
-		keyword: "",
-		page: 1,
-		order: "DESC",
-		per_page: 10,
-		first_date: "",
-		last_date: "",
-	});
-
-
+	var [page, setpage] = useState(1);
 	var [loading, setloading] = useState(false);
+	var [error, seterror] = useState(null);
 
-	var [selectedRows, setselectedRows] = useState([]);
+	useEffect(() => {
 
-	function onSelectRows(rows) {
-		setselectedRows(rows);
-	}
-	function onRefreshRequest(rows) {
-		get_subscriptions();
-	}
+		if (!token) return;
 
-	function delete_subscriptions() {
-
-
-
-
-		if (queryPrams.page < 0) {
-			return;
-		}
-
-		var postData = {
-			ids: selectedRows,
-		};
-		postData = JSON.stringify(postData);
-		setloading(true);
-		fetch(
-			serverUrl + "wp-json/combo-store/v2/delete_subscriptions",
-			{
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-					Authorization: `Bearer ${token}`,
-				},
-				body: postData,
-			}
-		)
-			.then((response) => {
-				if (!response.ok) {
-					throw new Error("Token validation failed");
-				}
-
-				if (response.ok && response.status < 400) {
-					response.json().then((res) => {
-						var errors = res?.errors;
-						var success = res?.success;
-
-						setloading(false);
-
-						get_subscriptions();
-
-
-					});
-				}
-			})
-			.catch((_error) => {
-				//this.saveAsStatus = 'error';
-				// handle the error
-			});
-	}
-
-	function get_subscriptions() {
-
-		if (!token) {
-			return null;
-		}
-
-		var postData = JSON.stringify(queryPrams);
+		var cancelled = false;
 
 		setloading(true);
+		seterror(null);
 
-		/* The endpoint now requires the customer's token and returns only
-		   their own subscriptions. */
+		/* The endpoint requires the customer's token and returns only their
+		   own subscriptions. */
 		fetch(serverUrl + "wp-json/combo-store/v2/get_subscriptions", {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
 				Authorization: `Bearer ${token}`,
 			},
-			body: postData,
+			body: JSON.stringify({ keyword: "", page: page, order: "DESC", per_page: 10, first_date: "", last_date: "" }),
 		})
 			.then((response) => {
-				if (!response.ok) {
-					throw new Error("Token validation failed");
-				}
-
-				if (response.ok && response.status < 400) {
-					response.json().then((res) => {
-
-
-
-
-						var posts = res?.posts;
-						var total = res?.total;
-						var max_pages = res?.max_pages;
-
-						setsubscriptionsData({
-							posts: posts,
-							total: total,
-							maxPages: max_pages,
-						});
-						setloading(false);
-
-						setTimeout(() => { }, 500);
-					});
-				}
+				if (!response.ok) throw new Error("request failed");
+				return response.json();
 			})
-			.catch((_error) => {
-				//this.saveAsStatus = 'error';
-				// handle the error
+			.then((res) => {
+				if (cancelled) return;
+				setsubscriptionsData({ posts: res?.posts ?? [], total: res?.total ?? 0, maxPages: res?.max_pages ?? 0 });
+			})
+			.catch(() => {
+				if (!cancelled) seterror("We couldn't load your subscriptions. Please refresh the page to try again.");
+			})
+			.finally(() => {
+				if (!cancelled) setloading(false);
 			});
-	}
 
+		return () => { cancelled = true; };
 
+	}, [token, page]);
 
-	/* `token` too: after a reload it arrives from an effect after first render. */
-	useEffect(() => {
-		get_subscriptions();
-	}, [queryPrams, token]);
-
-	var columns = {
-		// check: { label: ("Check") },
-		id: { label: ("ID"), callback: callbackTitleLinkTo, classes: "w-30" },
-		order_id: { label: "Order id", callback: callbackOrder, },
-		status: { label: ("Status"), callback: callbackStatus, },
-		total_amount: { label: ("Total"), callback: callbackTotal, },
-		subtotal_amount: { label: ("Sub Total"), callback: callbackSubTotal, },
-		renewal_interval: { label: ("Interval"), callback: callbackInterval, },
-		interval_count: { label: "Interval Count", callback: callbackIntervalCount, },
-		start_date: { label: ("Start Date"), callback: callbackStartDate, },
-		next_billing_date: { label: ("Next Billing Date"), callback: callbackNextBillingDate, },
-		// total: { label: ("Total") },
-
-		// datetime: { label: ("Datetime"), callback: callbackFormatDate },
-	};
-
-	function onChangeQueryPrams(queryPrams) {
-		if (queryPrams) {
-			setqueryPrams(queryPrams);
-			get_subscriptions();
-		}
-	}
-
-	function callbackTitleLinkTo(entry, columnIndex) {
-
-		return (
-			<td data-label="ID" className="text-center pl-5 py-3"
-				key={columnIndex}>
-				<Link className="  font-bold" href={`/subscriptions/${entry.id}`}>
-					{"#" + entry.id}
-				</Link>
-			</td>
-
-		);
-	}
-
-
-
-	function callbackOrder(entry, columnIndex) {
-
-		return (
-			<td data-label="Order ID" className="text-center pl-5"
-				key={columnIndex}>
-				<Link className="  font-bold" href={`/orders/${entry.order_id}`}>
-					{"#" + entry.order_id}
-				</Link>
-			</td>
-
-		);
-	}
-
-
-	function callbackStatus(entry, columnIndex) {
-
-		return (
-			<td data-label="Status" className="text-center pl-5"
-				key={columnIndex}>
-				{entry.status}
-			</td>
-
-		);
-	}
-	function callbackTotal(entry, columnIndex) {
-
-		return (
-			<td data-label="Total" className="text-center pl-5"
-				key={columnIndex}>
-				{entry.total_amount}Tk
-			</td>
-
-		);
-	}
-	function callbackSubTotal(entry, columnIndex) {
-
-		return (
-			<td data-label="Sub Total" className="text-center pl-5"
-				key={columnIndex}>
-				{entry.subtotal_amount}TK
-			</td>
-
-		);
-	}
-	function callbackInterval(entry, columnIndex) {
-
-		return (
-			<td data-label="Interval" className="text-center pl-5"
-				key={columnIndex}>
-				{entry.renewal_interval}
-			</td>
-
-		);
-	}
-	function callbackIntervalCount(entry, columnIndex) {
-
-		return (
-			<td data-label="Interval Count" className="text-center pl-5"
-				key={columnIndex}>
-				{entry.interval_count}
-			</td>
-
-		);
-	}
-	function callbackStartDate(entry, columnIndex) {
-
-		return (
-			<td data-label="Start Date" className="text-center pl-5"
-				key={columnIndex}>
-				{entry.start_date}
-			</td>
-
-		);
-	}
-	function callbackNextBillingDate(entry, columnIndex) {
-
-		return (
-			<td data-label="Next Billing Date" className="text-center pl-5"
-				key={columnIndex}>
-				{entry.next_billing_date}
-			</td>
-
-		);
-	}
-	function onRefreshRequest(entry) {
-
-
-	}
-
-
-
+	var subscriptions = subscriptionsData?.posts ?? [];
 
 	return (
-		<div
+		<div id={id} type={type} className={`${cssSelectors['*']?.classes ?? ''}`}>
 
-			id={id}
-			type={type}
-			className={`${cssSelectors['*']?.classes}   
-			`}
+			<div className="flex flex-col gap-4">
 
-		>
+				<div className="flex items-baseline justify-between gap-3">
+					<h3 className="text-lg font-semibold text-gray-900">Subscriptions</h3>
+					{subscriptionsData?.total > 0 && (
+						<span className="text-sm text-gray-500">{subscriptionsData.total} {subscriptionsData.total == 1 ? "subscription" : "subscriptions"}</span>
+					)}
+				</div>
 
-			<EntriesTable
-				queryPrams={queryPrams}
-				columns={columns}
-				entries={subscriptionsData}
-				itemPath={"subscriptions"}
-				onChange={onChangeQueryPrams}
-				loading={loading}
-				selectedRows={selectedRows}
-				onSelectRows={onSelectRows}
-				onRefreshRequest={onRefreshRequest}
-			/>
+				{error && <AccountNotice>{error}</AccountNotice>}
 
+				{!error && (token === undefined || (loading && !subscriptionsData)) && <AccountListSkeleton rows={2} />}
+
+				{!error && subscriptionsData && subscriptions.length == 0 && (
+					<AccountEmptyState icon={IconRepeat} title="No subscriptions">
+						Tick “Subscribe &amp; repeat this order” at checkout to get the same order delivered on a schedule.
+					</AccountEmptyState>
+				)}
+
+				{subscriptions.length > 0 && (
+					<ul className={`flex flex-col gap-3 transition-opacity ${loading ? 'opacity-60' : ''}`}>
+						{subscriptions.map(subscription => (
+							<li key={subscription.id} className="rounded-xl border border-gray-200 bg-white p-4 shadow-xs">
+
+								<div className="flex flex-wrap items-start justify-between gap-3">
+									<div className="flex items-center gap-3">
+										<span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#1b0e9f]/10 text-[#1b0e9f]">
+											<IconRepeat size={20} />
+										</span>
+										<div>
+											<div className="text-sm font-semibold text-gray-900">Subscription #{subscription.id}</div>
+											<div className="text-xs text-gray-500">
+												{describeInterval(subscription.renewal_interval, subscription.interval_count)}
+												{subscription.order_id ? ` · from order #${subscription.order_id}` : ''}
+											</div>
+										</div>
+									</div>
+									<StatusBadge value={subscription.status} />
+								</div>
+
+								<dl className="mt-3 grid grid-cols-2 gap-3 border-t border-gray-100 pt-3 text-sm sm:grid-cols-3">
+									<div>
+										<dt className="text-xs text-gray-500">Started</dt>
+										<dd className="font-medium text-gray-800">{formatAccountDate(subscription.start_date) || '—'}</dd>
+									</div>
+									<div>
+										<dt className="flex items-center gap-1 text-xs text-gray-500"><IconCalendarEvent size={12} /> Next delivery</dt>
+										<dd className="font-medium text-gray-800">{formatAccountDate(subscription.next_billing_date) || '—'}</dd>
+									</div>
+									<div className="col-span-2 sm:col-span-1 sm:text-right">
+										<dt className="text-xs text-gray-500">Each delivery</dt>
+										<dd className="text-base font-semibold text-gray-900">{wrapCurrency(subscription.total_amount)}</dd>
+									</div>
+								</dl>
+
+							</li>
+						))}
+					</ul>
+				)}
+
+				<AccountPager page={page} maxPages={subscriptionsData?.maxPages} loading={loading} onChange={setpage} />
+
+			</div>
 		</div>
 	);
 };
 
-ColumnsView.propTypes = {
-	block: PropTypes.object,
-
-	index: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+CustomerSubscriptionsView.propTypes = {
 	id: PropTypes.string,
 	type: PropTypes.string,
-	prams: PropTypes.object,
-	handleDropInto: PropTypes.func,
+	cssSelectors: PropTypes.object,
 };
 
-export default ColumnsView;
+export default CustomerSubscriptionsView;
