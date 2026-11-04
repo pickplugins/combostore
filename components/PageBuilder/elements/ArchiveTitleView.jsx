@@ -120,7 +120,7 @@ const ArchiveTitle = (props) => {
 		};
 
 
-		const result = prefix.replace(
+		const result = prefix?.replace(
 			/%(\w+)%/g,
 			(_, key) => replacements[key] ?? `%${key}%`
 		);

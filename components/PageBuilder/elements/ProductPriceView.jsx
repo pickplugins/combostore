@@ -16,7 +16,7 @@ const ProductPrice = (props) => {
 
 
 
-	var activeVariation = useProductStore(
+	var storeActiveVariation = useProductStore(
 		(state) => state.activeVariation
 	);
 
@@ -39,6 +39,19 @@ const ProductPrice = (props) => {
 
 
 	const productData = usePost();
+
+	/*
+		activeVariation lives in a global store, so on an archive it would be
+		whatever was last picked on some product page. Only honour it when it
+		belongs to the product this price is for. Variations key on the WP post
+		id, which is `product_id` here (get_product overwrites `id` with the
+		cstore row id).
+	*/
+	var activeVariation =
+		storeActiveVariation &&
+		String(storeActiveVariation?.product_id) === String(productData?.product_id ?? productData?.id)
+			? storeActiveVariation
+			: null;
 
 
 	const Tag = tag;

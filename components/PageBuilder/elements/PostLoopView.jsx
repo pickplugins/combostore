@@ -139,8 +139,8 @@ const PostLoopView = (props) => {
 
 
 						return (
-							<SplideSlide key={index}>
-								<div className={`${cssSelectors['loop-item']?.classes} `} key={index}>
+							<SplideSlide key={item?.id ?? index}>
+								<div className={`${cssSelectors['loop-item']?.classes} `} key={item?.id ?? index}>
 
 									<PostProvider value={item}>
 
@@ -183,7 +183,7 @@ const PostLoopView = (props) => {
 					{posts?.map((item, index) => {
 
 
-						return (<div className={`${cssSelectors['loop-item']?.classes} `} key={index}>
+						return (<div className={`${cssSelectors['loop-item']?.classes} `} key={item?.id ?? index}>
 
 							<PostProvider value={item}>
 
