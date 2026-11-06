@@ -1,4 +1,24 @@
 import { generateTailwindCSS, normalizeClasses } from "../../../lib/generateTailwindCSS";
+import { templateFontTokens } from "../../../lib/templateTheme";
+
+/*
+	The active site template's custom font classes (font-<name>, set in
+	Template Settings > Your fonts) as @theme tokens, so a page saved with
+	them gets their rules. Read fresh on every compile; with no settings, or
+	the server unreachable, it is "" and those classes are simply not emitted.
+*/
+async function activeTemplateFontTokens() {
+  const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
+  if (!serverUrl) return "";
+  try {
+    const res = await fetch(`${serverUrl}wp-json/combo-store/v2/get_template_settings`, { cache: "no-store" });
+    if (!res.ok) return "";
+    const settings = await res.json();
+    return templateFontTokens(settings?.meta ?? {});
+  } catch {
+    return "";
+  }
+}
 
 /**
  * Compile a set of Tailwind class names into a stylesheet.
@@ -61,6 +81,7 @@ export async function POST(request) {
     const css = await generateTailwindCSS(classes, {
       preflight: Boolean(preflight),
       minify: Boolean(minify),
+      theme: await activeTemplateFontTokens(),
     });
 
     return Response.json({

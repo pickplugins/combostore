@@ -30,7 +30,7 @@
  *
  * Choices worth knowing, all forced by the renderers the presets document:
  *
- *   - Shades use the "Large Button Grid" productVariablePrices preset, the only
+ *   - Shades use the "Large Button Grid" productVariations preset, the only
  *     one wide enough to read as swatches.
  *   - postGrid queries live under `queryPrams` (PostGrid.jsx ignores the
  *     `queryParams` the definition declares), with `loop-items`/`loop-item`
@@ -2893,7 +2893,7 @@ var template = [
                           },
                           {
                             "id": "bc-pd-var-1",
-                            "type": "productVariablePrices",
+                            "type": "productVariations",
                             "options": { "separator": "", "variablePriceViewType": "inline" },
                             "cssSelectors": {
                               "*": { "classes": "" },

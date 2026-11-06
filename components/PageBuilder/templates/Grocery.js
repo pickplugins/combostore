@@ -3098,7 +3098,7 @@ var template = [
                           },
                           {
                             "id": "gr-pd-var-1",
-                            "type": "productVariablePrices",
+                            "type": "productVariations",
                             "options": { "separator": "", "variablePriceViewType": "inline" },
                             "cssSelectors": {
                               "*": { "classes": "" },

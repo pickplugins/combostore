@@ -1,97 +1,49 @@
-import PropTypes from "prop-types";
 import React from "react";
 import { usePost } from "../context/PostContext";
-import Link from "next/link";
-import * as TablerIcons from '@tabler/icons-react';
+import { ProductSkuMarkup, skuFor } from "./ProductSkuView";
+import { elementCssClasses } from "../ElementsDefinition";
 
+/*
+	Builder (canvas) preview of the SKU: ProductSkuView's own markup and
+	classes. With a real SKU it shows it; with none - outside a product loop,
+	or a product without a SKU, where the shop shows nothing - it shows a
+	dimmed sample "SKU-12345", so the block stays visible and styleable.
+*/
+const ProductSku = (props) => {
 
-const TermTitle = (props) => {
-
-
-	var draggingBlock = props?.draggingBlock
 	var setDraggingBlock = props?.setDraggingBlock
-
 	var dragOverIndex = props?.dragOverIndex
 	var setDragOverIndex = props?.setDragOverIndex
-
 	var setSelectedId = props?.setSelectedId
 	var selectedId = props?.selectedId
 	var index = props?.index
-	var name = props?.name
-	var cssSelectors = props?.cssSelectors
-
-
 	var id = props?.id;
-	var type = props?.type;
 
-	var options = props?.options;
-	var label = options?.label;
-	var icon = options?.icon;
-	var iconSize = options?.iconSize;
+	var cls = elementCssClasses('productSku', props?.cssSelectors);
+
 	const product = usePost();
-
-	var sku = product?.sku ?? 'CUSTOMSKU';
-
-
-	const IconX = TablerIcons[icon];
-
-
+	var real = skuFor(product, null);
 
 	return (
-
-
-		<div draggable id={id} index={index} type={type} className={`${cssSelectors['*']?.classes ?? ''} hover:outline-orange-200 hover:outline-solid hover:outline-1 ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200 ' : ''} ${selectedId == id ? 'outline-1 outline-solid outline-orange-400 relative' : ''} `}
-			onClick={e => {
-				e.preventDefault();
-
-				e.stopPropagation();
-
-
-				setSelectedId(selectedId != id ? id : null);
+		<ProductSkuMarkup
+			cls={cls}
+			id={id}
+			index={index}
+			type={props?.type}
+			options={props?.options}
+			sku={real || 'SKU-12345'}
+			rootClassName={`${real ? '' : 'opacity-60'} hover:outline-orange-200 hover:outline-solid hover:outline-1 ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200 ' : ''} ${selectedId == id ? 'outline-1 outline-solid outline-orange-400 relative' : ''}`}
+			rootProps={{
+				draggable: true,
+				title: real ? undefined : 'Sample: shows only on products that have a SKU',
+				onClick: e => { e.preventDefault(); e.stopPropagation(); setSelectedId(selectedId != id ? id : null); },
+				onDragStart: e => { e.stopPropagation(); e.dataTransfer.setData("canvasBlock", id); setDraggingBlock?.(id); },
+				onDragEnd: () => { setDraggingBlock?.(null); setDragOverIndex?.(null); },
+				onDragOver: e => { e.preventDefault(); setDragOverIndex?.(index); },
+				onDragLeave: () => setDragOverIndex?.(null),
 			}}
-			onDragStart={e => {
-				e.stopPropagation();
-				e.dataTransfer.setData("canvasBlock", id);
-				setDraggingBlock(id);
-			}}
-			onDragEnd={() => {
-				setDraggingBlock(null);
-				setDragOverIndex(null);
-			}}
-
-			onDragOver={e => { e.preventDefault(); setDragOverIndex(index); }}
-			onDragLeave={() => setDragOverIndex(null)} >
-
-			{IconX && (
-				<div className={`${cssSelectors['icon']?.classes}`}>
-					{IconX ? <IconX size={iconSize} /> : null}
-				</div>
-			)}
-			<div className={`${cssSelectors['label']?.classes} `}>{label}</div>
-			<div className={`${cssSelectors['sku']?.classes} `}>{sku}</div>
-
-
-
-
-		</div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+		/>
 	);
 };
 
-
-
-export default TermTitle;
+export default ProductSku;

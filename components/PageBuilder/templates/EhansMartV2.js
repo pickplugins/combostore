@@ -7120,7 +7120,7 @@ var template = [
                       },
                       {
                         "id": "em2-p-pd-var",
-                        "type": "productVariablePrices",
+                        "type": "productVariations",
                         "options": {},
                         "cssSelectors": {
                           "*": {

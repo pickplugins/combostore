@@ -8,6 +8,7 @@ import CssSelectors from "../CssSelectors";
 import IconPicker from "../../../components/IconPicker";
 
 
+import { withElementCssDefaults } from "../ElementsDefinition";
 const ButtonOptions = (props) => {
 
 	var updateBlock = props?.updateBlock;
@@ -77,7 +78,7 @@ const ButtonOptions = (props) => {
 				</div>
 
 
-				<CssSelectors cssSelectors={cssSelectors} updateBlock={updateBlock} />
+				<CssSelectors cssSelectors={withElementCssDefaults('quickSearch', cssSelectors)} updateBlock={updateBlock} />
 
 
 			</div>

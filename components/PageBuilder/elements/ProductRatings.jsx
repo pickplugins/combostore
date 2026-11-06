@@ -1,137 +1,52 @@
-import PropTypes from "prop-types";
 import React from "react";
-import { useState, useEffect } from "react";
-
 import { usePost } from "../context/PostContext";
-import Link from "next/link";
-import { IconStar, IconStarFilled } from "@tabler/icons-react";
-import * as TablerIcons from '@tabler/icons-react';
+import { ProductRatingsMarkup, productRating } from "./ProductRatingsView";
+import { elementCssClasses } from "../ElementsDefinition";
 
+/* Shown outside a product loop, or for a product with no reviews yet, so every part can be styled. */
+const sampleRating = { average: 4.3, filled: 4, total: 120 };
 
-const TermTitle = (props) => {
+/*
+	Builder (canvas) preview of the rating: ProductRatingsView's own markup
+	and classes. Inside a product loop it shows that product's real rating;
+	with no product, or one nobody has reviewed, a sample 4.3 from 120
+	reviews. (It used to show a hardcoded 3.5 and "(120 reviews)" whatever the
+	product, and logged the product to the console on every render.)
+*/
+const ProductRatings = (props) => {
 
-
-	var draggingBlock = props?.draggingBlock
 	var setDraggingBlock = props?.setDraggingBlock
-
 	var dragOverIndex = props?.dragOverIndex
 	var setDragOverIndex = props?.setDragOverIndex
-
 	var setSelectedId = props?.setSelectedId
 	var selectedId = props?.selectedId
 	var index = props?.index
-	var name = props?.name
-	var cssSelectors = props?.cssSelectors
-
-
 	var id = props?.id;
-	var type = props?.type;
 
-	var options = props?.options;
-	var rate = props?.rate ?? 4;
-
+	var cls = elementCssClasses('productRatings', props?.cssSelectors);
 
 	const post = usePost();
-
-
-
-	var postTitle = post?.content ?? 'Post content';
-
-
-
-	var stars = [
-		{ label: "Very Poor", value: 1 },
-		{ label: "Poor", value: 2 },
-		{ label: "Normal", value: 3 },
-		{ label: "Good", value: 4 },
-		{ label: "Supper", value: 5 },
-	]
-
-
-	const [starIndex, setstarIndex] = useState(rate);
-
-
-	console.log(post);
-
-
-
+	var real = productRating(post);
 
 	return (
-
-
-
-
-		<div draggable id={id} index={index} type={type} className={`${cssSelectors['*']?.classes ?? ''} hover:outline-orange-200 hover:outline-solid hover:outline-1 ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200 ' : ''} ${selectedId == id ? 'outline-1 outline-solid outline-orange-400 relative' : ''} `}
-			onClick={e => {
-				e.preventDefault();
-
-				e.stopPropagation();
-
-
-				setSelectedId(selectedId != id ? id : null);
+		<ProductRatingsMarkup
+			cls={cls}
+			id={id}
+			index={index}
+			type={props?.type}
+			rating={post && real.total > 0 ? real : sampleRating}
+			hideIfEmpty={false}
+			rootClassName={`hover:outline-orange-200 hover:outline-solid hover:outline-1 ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200 ' : ''} ${selectedId == id ? 'outline-1 outline-solid outline-orange-400 relative' : ''}`}
+			rootProps={{
+				draggable: true,
+				onClick: e => { e.preventDefault(); e.stopPropagation(); setSelectedId(selectedId != id ? id : null); },
+				onDragStart: e => { e.stopPropagation(); e.dataTransfer.setData("canvasBlock", id); setDraggingBlock?.(id); },
+				onDragEnd: () => { setDraggingBlock?.(null); setDragOverIndex?.(null); },
+				onDragOver: e => { e.preventDefault(); setDragOverIndex?.(index); },
+				onDragLeave: () => setDragOverIndex?.(null),
 			}}
-			onDragStart={e => {
-				e.stopPropagation();
-				e.dataTransfer.setData("canvasBlock", id);
-				setDraggingBlock(id);
-			}}
-			onDragEnd={() => {
-				setDraggingBlock(null);
-				setDragOverIndex(null);
-			}}
-
-			onDragOver={e => { e.preventDefault(); setDragOverIndex(index); }}
-			onDragLeave={() => setDragOverIndex(null)}
-		>
-
-
-
-			<div className={`${cssSelectors['star-rate']?.classes}`} >
-
-
-				{stars.map((item, index) => {
-
-					return (
-
-						<div
-							className={`${cssSelectors['rate-count']?.classes}`}
-							key={index}
-
-							title={item?.label} >
-
-
-							{starIndex <= index && (
-								<><IconStar /></>
-							)}
-							{starIndex > index && (
-								<><IconStarFilled /></>
-							)}
-
-
-
-						</div>
-					)
-
-				})}
-
-			</div>
-
-
-			<div className={`${cssSelectors['avg-rating']?.classes}`}>3.5/5</div>
-			<div className={`${cssSelectors['total-reviews']?.classes}`}>{`(120 reviews)`}</div>
-
-
-
-
-
-		</div>
-
-
-
-
+		/>
 	);
 };
 
-
-
-export default TermTitle;
+export default ProductRatings;

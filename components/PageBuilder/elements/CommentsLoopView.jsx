@@ -1,153 +1,110 @@
 "use client"
-import React from "react";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import BlockRender from '../BlockRender';
 import { CommentProvider } from "../context/CommentContext";
 import { useCommentsGrid } from "../context/CommentsGridContext";
-import { usePost } from "../context/PostContext";
+import { postLoopClasses } from "./PostLoopView";
 
+const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
 /*
-	Storefront twin of CommentsLoop.jsx, built the way PostLoopView is built:
-	the query params and the `loop-items` / `loop-item` selectors come from the
-	grid above it, and each comment is wrapped in a CommentProvider so
-	commentAvatar, commentAuthor, commentRate and commentContent can read it.
-
-	Unlike the editor version it does not hard-code a post id -- the grid puts
-	the current post's id into queryPrams -- and it refetches when the grid's
-	`refresh` counter moves, which is how a comment posted through commentsForm
-	appears without a reload.
+	The loop's classes: `loop-items` (the list) and `loop-item` (each card),
+	the loop's own when set, else the comments grid's, else the commentsLoop
+	defaults - Post Loop's rule (postLoopClasses). They used to come from the
+	grid only, so editing a selected loop changed nothing; no template or
+	preset sets them differently on the two.
 */
-const CommentsLoopView = (props) => {
+export function commentsLoopClasses(ownSelectors, parentSelectors) {
+	return postLoopClasses(ownSelectors, parentSelectors, 'commentsLoop');
+}
 
-	const CommentsGridAttr = useCommentsGrid();
+/*
+	Fetches the grid's comments from combo-store/v2/get_comments, again when
+	the query's content changes (pagination) or the grid's `refresh` moves (a
+	comment was posted). A reply to an older query is dropped. { comments,
+	loading, maxPages }: get_comments sends no totals, so a short page (fewer
+	than per_page) tells the pagination it is the last; until then maxPages
+	is 0, unknown.
+*/
+export function useCommentsLoopComments(query, refresh) {
+	var queryKey = query ? JSON.stringify(query) : '';
+	var [state, setState] = useState({ comments: [], loading: !!queryKey });
 
-	var queryPrams = CommentsGridAttr?.queryPrams;
-	var cssSelectors = CommentsGridAttr?.cssSelectors ?? {};
-	var refresh = CommentsGridAttr?.refresh;
-
-
-	const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
-
-
-	var type = props?.type
-	var children = props?.children;
-	var id = props?.id;
-
-	var index = props?.index
-
-	const post = usePost();
-	var postId = post?.product_id ?? null;
-
-	var [comments, setcomments] = useState([]);
-
-
-	function fetchComments() {
-
-
-
-		if (!postId) {
-			return;
-		}
-
-
-		var postData = JSON.stringify(queryPrams);
-
+	useEffect(() => {
+		if (!queryKey) { setState({ comments: [], loading: false }); return; }
+		var current = true;
+		setState(s => ({ ...s, loading: true }));
 		fetch(serverUrl + "wp-json/combo-store/v2/get_comments", {
 			cache: "no-store",
 			method: "POST",
-			headers: {
-				'Content-Type': 'application/json',
-
-			},
-			body: postData,
+			headers: { 'Content-Type': 'application/json' },
+			body: queryKey,
 		})
-			.then((response) => {
-
-				if (!response.ok) {
-					throw new Error('Token validation failed');
-				}
-
-				if (response.ok && response.status < 400) {
-					response.json().then((res) => {
-
-
-						var comments = res?.comments;
-						var total = res?.total;
-						var max_pages = res?.max_pages;
-
-
-
-						setcomments(comments ?? [])
-
-
-						setTimeout(() => {
-						}, 500);
-					});
-				}
+			.then(response => response.ok ? response.json() : Promise.reject(response.status))
+			.then(res => {
+				if (!current) return;
+				var comments = Array.isArray(res?.comments) ? res.comments : (res?.comments ? Object.values(res.comments) : []);
+				var perPage = parseInt(query?.per_page) || 20;
+				var paged = parseInt(query?.paged) || 1;
+				var maxPages = Number(res?.max_pages) || (comments.length < perPage ? paged : 0);
+				setState({ comments, loading: false, total: Number(res?.total) || null, maxPages });
 			})
-			.catch((_error) => {
-				//this.saveAsStatus = 'error';
-				// handle the error
-			});
+			.catch(() => { if (current) setState({ comments: [], loading: false }); });
+		return () => { current = false; };
+	}, [queryKey, refresh]);
 
-	}
+	return state;
+}
 
+/*
+	The loop's markup, shared with the builder preview (CommentsLoop.jsx): a
+	`loop-items` list of `loop-item` cards, each card's blocks reading the
+	comment through CommentProvider. (The builder put `*` on the list where
+	the shop put `loop-items`.)
+*/
+export function CommentsLoopMarkup({ cls, id, index, type, items, renderItem, itemKey, rootClassName = '', rootProps = {} }) {
+	return (
+		<div id={id} index={index} type={type} className={`${cls('loop-items')} ${rootClassName}`} {...rootProps}>
+			{items.map((item, i) => (
+				<div key={itemKey(item, i)} className={cls('loop-item')}>
+					<CommentProvider value={item}>{renderItem(item, i)}</CommentProvider>
+				</div>
+			))}
+		</div>
+	);
+}
 
-	/*
-		queryPrams is rebuilt on every render of the grid above, so it is
-		compared by value here -- depending on the object itself would refetch
-		in a loop.
-	*/
-	useEffect(() => {
+/*
+	The comments of the grid it sits in. It fetched only when the page had a
+	product_id, so on blog posts - and on a site-wide testimonials grid - it
+	never fetched; the grid now decides the post.
+*/
+const CommentsLoopView = (props) => {
 
-		fetchComments();
+	const grid = useCommentsGrid();
 
-	}, [queryPrams, refresh]);
+	var cls = commentsLoopClasses(props?.cssSelectors, grid?.cssSelectors);
 
+	var { comments, total, maxPages } = useCommentsLoopComments(grid?.queryPrams ?? null, grid?.refresh);
+	var onResults = grid?.onResults;
+	useEffect(() => { if (onResults && maxPages != null) onResults({ total, maxPages }); }, [onResults, total, maxPages]);
 
-	if (CommentsGridAttr == null) {
-		return null;
-	}
+	if (!grid) return null;
 
+	var children = props?.children;
 
 	return (
-
-		<div
-			id={id}
-			type={type}
-			className={` ${cssSelectors['loop-items']?.classes ?? ''}  `}
-		>
-
-
-			{comments?.map((item, indexZ) => {
-
-
-				return (<div className={`${cssSelectors['loop-item']?.classes ?? ''} `} key={indexZ}>
-
-					<CommentProvider value={item}>
-
-
-						{children != undefined && children.map((child, indexY) => {
-
-
-							return (
-
-								<BlockRender index={`${indexZ}${indexY}`} key={child.id} block={child} />
-
-							)
-
-						})}
-
-					</CommentProvider>
-
-
-				</div>)
-			})}
-
-
-		</div>
-
+		<CommentsLoopMarkup
+			cls={cls}
+			id={props?.id}
+			index={props?.index}
+			type={props?.type}
+			items={comments}
+			itemKey={(item, i) => item?.comment_ID ?? item?.comment_id ?? item?.id ?? i}
+			renderItem={(item, i) => Array.isArray(children) && children.map((child, indexY) => (
+				<BlockRender index={`${i}${indexY}`} key={child.id} block={child} />
+			))}
+		/>
 	);
 };
 

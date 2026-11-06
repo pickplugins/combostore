@@ -25,7 +25,7 @@ import SiteHeader from './element-layouts/SiteHeader'
 import LinkList from './element-layouts/LinkList'
 import CommentsGrid from './element-layouts/CommentsGrid'
 import RelatedProducts from './element-layouts/RelatedProducts'
-import ProductVariablePrices from './element-layouts/ProductVariablePrices'
+import ProductVariations from './element-layouts/ProductVariations'
 import ProductSku from './element-layouts/ProductSku'
 import ProductPrice from './element-layouts/ProductPrice'
 import ProductDiscount from './element-layouts/ProductDiscount'
@@ -44,11 +44,25 @@ import Icon from './element-layouts/Icon'
 import Logo from './element-layouts/Logo'
 import PostThumbnail from './element-layouts/PostThumbnail'
 import PostExcerpt from './element-layouts/PostExcerpt'
+import PostContent from './element-layouts/PostContent'
+import PostDate from './element-layouts/PostDate'
+import PostAuthor from './element-layouts/PostAuthor'
+import Video from './element-layouts/Video'
 import CustomerAccount from './element-layouts/CustomerAccount'
+import CustomerOrders from './element-layouts/CustomerOrders'
+import CustomerProfile from './element-layouts/CustomerProfile'
+import CustomerProfileEdit from './element-layouts/CustomerProfileEdit'
+import CustomerSubscriptions from './element-layouts/CustomerSubscriptions'
+import CustomerTickets from './element-layouts/CustomerTickets'
 import AddToCart from './element-layouts/AddToCart'
 import MessengerButton from './element-layouts/MessengerButton'
 import Menu from './element-layouts/Menu'
 import Grid from './element-layouts/Grid'
+import Columns from './element-layouts/Columns'
+import Container from './element-layouts/Container'
+import Section from './element-layouts/Section'
+import AccordionMenu from './element-layouts/AccordionMenu'
+import PostTitle from './element-layouts/PostTitle'
 import ProductBrands from './element-layouts/ProductBrands'
 import Register from './element-layouts/Register'
 import WhatsappButton from './element-layouts/WhatsappButton'
@@ -134,8 +148,8 @@ const Templates = (props) => {
 		else if (type == 'linkList') {
 			setlayouts(LinkList)
 		}
-		else if (type == 'productVariablePrices') {
-			setlayouts(ProductVariablePrices)
+		else if (type == 'productVariations' || type == 'productVariablePrices') {
+			setlayouts(ProductVariations)
 		}
 		else if (type == 'productSku') {
 			setlayouts(ProductSku)
@@ -191,8 +205,35 @@ const Templates = (props) => {
 		else if (type == 'postExcerpt') {
 			setlayouts(PostExcerpt)
 		}
+		else if (type == 'postContent') {
+			setlayouts(PostContent)
+		}
+		else if (type == 'postDate') {
+			setlayouts(PostDate)
+		}
+		else if (type == 'postAuthor') {
+			setlayouts(PostAuthor)
+		}
+		else if (type == 'video') {
+			setlayouts(Video)
+		}
 		else if (type == 'customerAccount') {
 			setlayouts(CustomerAccount)
+		}
+		else if (type == 'customerOrders') {
+			setlayouts(CustomerOrders)
+		}
+		else if (type == 'customerProfile') {
+			setlayouts(CustomerProfile)
+		}
+		else if (type == 'customerProfileEdit') {
+			setlayouts(CustomerProfileEdit)
+		}
+		else if (type == 'customerSubscriptions') {
+			setlayouts(CustomerSubscriptions)
+		}
+		else if (type == 'customerTickets') {
+			setlayouts(CustomerTickets)
 		}
 		else if (type == 'addToCart') {
 			setlayouts(AddToCart)
@@ -205,6 +246,21 @@ const Templates = (props) => {
 		}
 		else if (type == 'grid') {
 			setlayouts(Grid)
+		}
+		else if (type == 'columns') {
+			setlayouts(Columns)
+		}
+		else if (type == 'container') {
+			setlayouts(Container)
+		}
+		else if (type == 'section') {
+			setlayouts(Section)
+		}
+		else if (type == 'accordionMenu') {
+			setlayouts(AccordionMenu)
+		}
+		else if (type == 'postTitle') {
+			setlayouts(PostTitle)
 		}
 		else if (type == 'productBrands') {
 			setlayouts(ProductBrands)

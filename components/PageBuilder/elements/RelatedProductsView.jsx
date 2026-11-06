@@ -4,6 +4,30 @@ import BlockRender from '../BlockRender';
 import { PostGridProvider } from "../context/PostGridContext";
 import { usePost } from "../context/PostContext";
 
+import { elementCssClasses } from "../ElementsDefinition";
+/*
+	The products query for "related products": the block's own query, limited
+	to the current product's post type and to products sharing one of its
+	categories. It builds a new object. It used to write post_type and
+	taxQuery into the saved options.queryPrams (an array by default) on every
+	render, and crashed on a product with no categories (categories.map of
+	undefined). With no product - the builder - it is just the block's query
+	for products.
+*/
+export function relatedProductsQuery(queryPrams, product) {
+	var base = queryPrams && typeof queryPrams === 'object' && !Array.isArray(queryPrams) ? queryPrams : {};
+	var query = { ...base, post_type: [product?.post_type || 'product'] };
+	var slugs = (Array.isArray(product?.categories) ? product.categories : []).map(item => item?.slug).filter(Boolean);
+	if (slugs.length > 0) {
+		query.taxQuery = [{
+			"title": "",
+			"collections": [{ "taxonomy": "product_cat", "field": "slug", "terms": slugs, "operator": "IN" }],
+			"relation": "OR"
+		}];
+	}
+	return query;
+}
+
 const RelatedProductsView = (props) => {
 
 	const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
@@ -17,6 +41,8 @@ const RelatedProductsView = (props) => {
 
 	var index = props?.index
 	var cssSelectors = props?.cssSelectors ?? {};
+	/* A key the block lacks falls back to the relatedProducts defaults in ElementsDefinition.js. */
+	var cls = elementCssClasses('relatedProducts', cssSelectors);
 
 
 
@@ -25,47 +51,19 @@ const RelatedProductsView = (props) => {
 
 
 	const product = usePost();
-
-	var postId = product?.id;
-	var postType = product?.post_type;
-	var categories = product?.categories;
-	var tags = product?.tags;
-	const categoriesSlugs = categories.map(item => item.slug);
-
-	queryPrams.post_type = [postType];
-	if (categoriesSlugs) {
-		queryPrams.taxQuery = [
-			{
-				"title": "",
-				"collections": [
-					{
-						"taxonomy": "product_cat",
-						"field": "slug",
-						"terms": categoriesSlugs,
-						"operator": "IN"
-					}
-				],
-				"relation": "OR"
-			}
-		]
-	}
-
-
-
-
-
+	var query = relatedProductsQuery(options?.queryPrams, product);
 
 	return (
 		<div
 			id={id}
 			type={type}
-			className={`${cssSelectors['*']?.classes}  `}
+			className={`${cls('*')}  `}
 
 		>
 
 
 
-			<PostGridProvider value={{ queryPrams: queryPrams, cssSelectors: cssSelectors }}>
+			<PostGridProvider value={{ queryPrams: query, cssSelectors: cssSelectors }}>
 
 				{children != undefined && children.map((child, indexZ) => {
 

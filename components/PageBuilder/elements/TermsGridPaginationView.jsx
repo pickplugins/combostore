@@ -1,113 +1,55 @@
 "use client"
 import PropTypes from "prop-types";
 import React from "react";
-import { useState, useEffect } from "react";
 import { useTermsGrid } from "../context/TermsGridContext";
+import { PaginationMarkup, paginationSettings } from "./PostGridPaginationView";
+import { elementCssClasses } from "../ElementsDefinition";
 
-import {
-	IconCheckbox,
-	IconSquare,
-	IconArrowNarrowLeftDashed,
-	IconArrowNarrowRightDashed,
-	IconRefresh,
-	IconLink,
-	IconSortDescending,
-	IconSortAscending,
-} from "@tabler/icons-react";
-
-
+/*
+	Pages through the terms grid it sits in - the same markup, settings and
+	behaviour as the post grid's pagination (PaginationMarkup): it reads the
+	grid's query and page count from TermsGridContext, changes the page
+	through the grid's onChangeQuery, then scrolls the grid into view, and
+	hides when there is a single page. It was a copy of the old post
+	pagination: Next paged on past the last page, clearing the box sent
+	paged: NaN, the arrows were divs, and it kept its own copy of the query.
+*/
 const TermsGridPaginationView = (props) => {
 
+	const grid = useTermsGrid();
 
+	/* A key the block lacks falls back to the termsGridPagination defaults in ElementsDefinition.js. */
+	var cls = elementCssClasses('termsGridPagination', props?.cssSelectors);
 
-	var index = props?.index
+	var paged = parseInt(grid?.queryPrams?.paged) || 1;
+	var maxPages = Number(grid?.results?.maxPages) || 0;
 
-	var id = props?.id;
-	var type = props?.type;
-
-
-	const termsGridAttr = useTermsGrid();
-
-	var [queryPrams, setqueryPrams] = useState(termsGridAttr?.queryPrams);
-	var onChangeQuery = termsGridAttr?.onChangeQuery;
-
-
-
-	var index = props?.index
-	var cssSelectors = props?.cssSelectors ?? {};
-
-
-	var id = props?.id;
-	var type = props?.type;
-
-	var options = props?.options;
-	var paged = queryPrams?.paged ? parseInt(queryPrams?.paged) : 1;
-
-
-
-
-	useEffect(() => {
-
-		if (termsGridAttr?.queryPrams) {
-			setqueryPrams(termsGridAttr?.queryPrams)
-		}
-
-	}, [termsGridAttr?.queryPrams]);
-
-
-	useEffect(() => {
-
-		onChangeQuery(queryPrams);
-
-
-	}, [queryPrams]);
-
-
-
-
+	if (!grid?.onChangeQuery) return null;
+	if (grid?.results && maxPages <= 1 && paged <= 1) return null;
 
 	return (
-		<div draggable id={id} type={type} className={`${cssSelectors['*']?.classes}  `}
-
-
-		>
-
-			<div
-				className={`${cssSelectors['previous']?.classes}  `}
-				onClick={(ev) => {
-
-					if (paged == 1) return;
-					setqueryPrams({ ...queryPrams, paged: paged - 1 });
-				}}>
-				<IconArrowNarrowLeftDashed />
-			</div>
-
-			<div>
-				<input name="paged" className={`${cssSelectors['current']?.classes}  `} type="number" value={paged} onChange={ev => {
-					var value = parseInt(ev.target.value)
-					var paged = value;
-
-					setqueryPrams({ ...queryPrams, paged: paged });
-
-				}} />
-			</div>
-
-			<div
-				className={`${cssSelectors['next']?.classes}  `}
-				onClick={(ev) => {
-
-					setqueryPrams({ ...queryPrams, paged: paged + 1 });
-				}}>
-				<IconArrowNarrowRightDashed />
-			</div>
-
-
-
-
-		</div>
+		<PaginationMarkup
+			cls={cls}
+			id={props?.id}
+			index={props?.index}
+			type={props?.type}
+			settings={paginationSettings(props?.options, props?.cssSelectors)}
+			paged={paged}
+			maxPages={maxPages}
+			onPage={(p) => {
+				grid.onChangeQuery({ ...grid.queryPrams, paged: p });
+				if (typeof document !== 'undefined') document.getElementById(props?.id)?.closest('[type="termsGrid"]')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+			}}
+		/>
 	);
 };
 
-
+TermsGridPaginationView.propTypes = {
+	index: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+	id: PropTypes.string,
+	type: PropTypes.string,
+	options: PropTypes.object,
+	cssSelectors: PropTypes.object,
+};
 
 export default TermsGridPaginationView;

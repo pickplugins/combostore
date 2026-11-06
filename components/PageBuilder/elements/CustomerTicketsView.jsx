@@ -6,6 +6,7 @@ import { useEffect } from "react";
 import { IconLifebuoy, IconMail, IconPhone, IconBrandWhatsapp } from "@tabler/icons-react";
 import { useCounterStore } from '../../../store/useCounterStore';
 import { AccountEmptyState } from './accountUi';
+import { elementCssClasses } from "../ElementsDefinition";
 
 /*
 	The account page's Support tab.
@@ -18,6 +19,8 @@ const CustomerTicketsView = (props) => {
 	const { id, type } = props;
 
 	var cssSelectors = props?.cssSelectors ?? {};
+	/* Each part's classes; a key the block lacks falls back to the customerTickets defaults in ElementsDefinition.js. */
+	var cls = elementCssClasses('customerTickets', cssSelectors);
 
 	const { settings, fetchSettings } = useCounterStore();
 
@@ -57,33 +60,36 @@ const CustomerTicketsView = (props) => {
 	].filter(Boolean);
 
 	return (
-		<div id={id} type={type} className={`${cssSelectors['*']?.classes ?? ''}`}>
+		<div id={id} type={type} className={cls('*')}>
 
-			<div className="flex flex-col gap-4">
+			<div className={cls('panel')}>
 
-				<div>
-					<h3 className="text-lg font-semibold text-gray-900">Need help?</h3>
-					<p className="text-sm text-gray-500">Questions about an order, a delivery or a payment? Get in touch and mention your order number.</p>
-				</div>
+				{/* Pages or tabs that already label this panel set hideTitle. */}
+				{!props?.options?.hideTitle && (
+					<div className={cls('header')}>
+						<h3 className={cls('title')}>Need help?</h3>
+						<p className={cls('subtitle')}>Questions about an order, a delivery or a payment? Get in touch and mention your order number.</p>
+					</div>
+				)}
 
 				{contacts.length > 0 ? (
-					<ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+					<ul className={cls('contacts')}>
 						{contacts.map(contact => {
 							var Icon = contact.icon;
 							return (
-								<li key={contact.key}>
+								<li key={contact.key} className={cls('contact')}>
 									<a
 										href={contact.href}
 										target={contact.external ? '_blank' : undefined}
 										rel={contact.external ? 'noopener noreferrer' : undefined}
-										className="flex h-full items-center gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-xs transition-colors hover:border-[#1b0e9f]/40 hover:bg-[#1b0e9f]/5"
+										className={cls('contact-link')}
 									>
-										<span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#1b0e9f]/10 text-[#1b0e9f]">
+										<span className={cls('contact-icon')}>
 											<Icon size={20} />
 										</span>
-										<span className="min-w-0">
-											<span className="block text-sm font-semibold text-gray-900">{contact.label}</span>
-											<span className="block truncate text-sm text-gray-500">{contact.value}</span>
+										<span className={cls('contact-text')}>
+											<span className={cls('contact-label')}>{contact.label}</span>
+											<span className={cls('contact-value')}>{contact.value}</span>
 										</span>
 									</a>
 								</li>
@@ -104,6 +110,7 @@ const CustomerTicketsView = (props) => {
 CustomerTicketsView.propTypes = {
 	id: PropTypes.string,
 	type: PropTypes.string,
+	options: PropTypes.object,
 	cssSelectors: PropTypes.object,
 };
 

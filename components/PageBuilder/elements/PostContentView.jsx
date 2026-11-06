@@ -1,45 +1,52 @@
 import PropTypes from "prop-types";
 import React from "react";
 import { usePost } from "../context/PostContext";
-import Link from "next/link";
+import { elementCssClasses } from "../ElementsDefinition";
 
+/*
+	The post's body as HTML: post_content_html, which the API sends for blog
+	posts and products alike (the Markdown body converted to HTML). The
+	builder used to read `content` instead, which most endpoints send as raw
+	Markdown, or not at all.
+*/
+export function postContentHtml(post) {
+	return String(post?.post_content_html ?? '');
+}
 
-const PostTitleView = (props) => {
+/*
+	The content's markup, shared with the builder preview (PostContent.jsx): an
+	<article> carrying the `*` classes, holding the HTML. Style what is inside
+	it with arbitrary variants on `*`, such as [&_p]:mb-4 or [&_a]:underline.
+*/
+export function PostContentMarkup({ cls, id, index, type, html, rootClassName = '', rootProps = {} }) {
+	return (
+		<article id={id} index={index} type={type} className={`${cls('*')} ${rootClassName}`} {...rootProps}
+			dangerouslySetInnerHTML={{ __html: html }}
+		/>
+	);
+}
 
+/*
+	The body of the post or product it sits in. A post with no content now
+	renders nothing; it used to print the words "Post Content" on the shop.
+*/
+const PostContentView = (props) => {
 
-
-
-	var index = props?.index
-	var name = props?.name
-	var cssSelectors = props?.cssSelectors
-
-
-	var id = props?.id;
-	var type = props?.type;
-
-	var options = props?.options;
-	var tag = options?.tag ?? 'h1';
-	var linkTo = options?.linkTo ?? 'postUrl';
-
+	/* A key the block lacks falls back to the postContent defaults in ElementsDefinition.js. */
+	var cls = elementCssClasses('postContent', props?.cssSelectors);
 
 	const post = usePost();
+	var html = postContentHtml(post);
+	if (!html.trim()) return null;
 
-
-	const Tag = tag;
-
-
-	var postTitle = post?.post_content_html ?? 'Post Content';
-
-
-	return (
-		<article id={id} type={type} className={`${cssSelectors['*']?.classes}  `}
-
-			dangerouslySetInnerHTML={{ __html: postTitle }}
-		>
-		</article>
-	);
+	return <PostContentMarkup cls={cls} id={props?.id} index={props?.index} type={props?.type} html={html} />;
 };
 
+PostContentView.propTypes = {
+	index: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+	id: PropTypes.string,
+	type: PropTypes.string,
+	cssSelectors: PropTypes.object,
+};
 
-
-export default PostTitleView;
+export default PostContentView;

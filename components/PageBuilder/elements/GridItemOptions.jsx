@@ -1,46 +1,30 @@
-import PropTypes from "prop-types";
 import React from "react";
-import { useState, useEffect } from "react";
-import { IconLibraryPhoto, IconCheckbox, IconSquare, IconFidgetSpinner, IconTrash, IconStarFilled, IconStar, IconX } from "@tabler/icons-react";
-import { useDraggable } from '@dnd-kit/react';
-import CssClassPicker from "../CssClassPicker";
 import CssSelectors from "../CssSelectors";
+import { withElementCssDefaults } from "../ElementsDefinition";
 
-
-const GridOptions = (props) => {
+/*
+	Settings panel for the `gridItem` block: its own `*` classes, which add to
+	the parent grid's `grid-item` classes. Spans (col-span-*, row-span-*) go here.
+*/
+const GridItemOptions = (props) => {
 
 	var updateBlock = props?.updateBlock;
 
-	var options = props?.options;
-	var cssSelectors = props?.cssSelectors ?? {};
-
-
-	const [loading, setloading] = useState(false);
-
-
-	// useEffect(() => {
-
-	// 	fetchPosts();
-	// }, []);
-
+	/* Every current key, filled from defaults where the block lacks it. */
+	var cssSelectors = withElementCssDefaults('gridItem', props?.cssSelectors);
 
 	return (
 		<div className="p-3" >
-			{/* {JSON.stringify(prams)} */}
-
 			<div className="flex flex-col gap-3">
 
+				<p className="text-xs text-gray-500">
+					These classes add to the grid's <code>grid-item</code> classes. Put this cell's spans here.
+				</p>
 
 				<CssSelectors cssSelectors={cssSelectors} updateBlock={updateBlock} />
-
-
 			</div>
-
-
 		</div>
 	);
 };
 
-
-
-export default GridOptions;
+export default GridItemOptions;

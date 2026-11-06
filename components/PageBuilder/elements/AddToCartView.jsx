@@ -14,7 +14,22 @@ import { trackTikTokEvent } from '@/lib/tiktok';
 import { trackFacebookEvent } from '@/lib/facebook/pixel';
 import { generateFacebookEventId } from '@/lib/facebook/event-id';
 import { sendFacebookServerEvent } from '@/lib/facebook/capi';
+import { elementCssClasses } from "../ElementsDefinition";
 
+
+/*
+	The stepper keys used to be quantity-plus (which styled the MINUS button)
+	and quantity-minus (which styled the PLUS button). A block saved before the
+	rename keeps its classes: each old key is read as the new key for the
+	button it actually styled, unless the block already has the new key.
+*/
+export function withLegacyStepperKeys(cssSelectors) {
+	var source = cssSelectors ?? {};
+	var result = { ...source };
+	if (!('quantity-decrease' in source) && source['quantity-plus']) result['quantity-decrease'] = source['quantity-plus'];
+	if (!('quantity-increase' in source) && source['quantity-minus']) result['quantity-increase'] = source['quantity-minus'];
+	return result;
+}
 
 const AddToCart = (props) => {
 
@@ -32,7 +47,9 @@ const AddToCart = (props) => {
 
 
 	var index = props?.index
-	var cssSelectors = props?.cssSelectors ?? {};
+	var cssSelectors = withLegacyStepperKeys(props?.cssSelectors);
+	/* Each part's classes; a key the block lacks falls back to the addToCart defaults in ElementsDefinition.js. */
+	var cls = elementCssClasses('addToCart', cssSelectors);
 
 
 	var id = props?.id;
@@ -46,9 +63,11 @@ const AddToCart = (props) => {
 	var url = options?.url;
 
 	var icon = options?.icon;
-	var iconSize = options?.iconSize;
 	var buttonText = options?.buttonText;
-	var hideQuanity = options?.hideQuanity ?? false;
+	/* The definition, panel and AI prompt write hideQuantity; older pages saved the misspelled
+		 hideQuanity, sometimes beside a hideQuantity: false from the definition, so either one
+		 being true hides it. The panel drops the misspelled key when it saves. */
+	var hideQuantity = options?.hideQuantity === true || options?.hideQuanity === true;
 	var hideButton = options?.hideButton ?? false;
 
 
@@ -56,6 +75,7 @@ const AddToCart = (props) => {
 	var productData = usePost();
 
 
+	console.log(productData);
 
 
 
@@ -74,6 +94,7 @@ const AddToCart = (props) => {
 	var productId = productData?.id
 
 
+
 	const IconX = TablerIcons[icon];
 
 	const trackPageVisit = useUtilsStore((state) => state.trackPageVisit);
@@ -81,7 +102,7 @@ const AddToCart = (props) => {
 	const { cartToggle, setcartToggle, notifications, addNotification, setcartStep, cartItems, addCartItems, removeCartItems, resetCartItems, updateCartItems, userDataX, setUserDataX, navToggle, setnavToggle, lang, coupons, setCoupons, cartTotalPay, setcartTotalPay, cartTotal, setcartTotal, shippingCost, setshippingCost } = useCounterStore()
 	var [quantity, setquantity] = useState(0);
 	var [cartItem, setcartItem] = useState(null);
-	var [canAddToCart, setcanAddToCart] = useState(!addons?.includes('variations') ? true : false);
+	var [canAddToCart, setcanAddToCart] = useState(!productData?.addons?.includes('variations'));
 
 	/*
 		An extension may say this product is not sold here and now - see
@@ -131,6 +152,7 @@ const AddToCart = (props) => {
 
 			cartProduct.product_id = activeVariation?.product_id
 			cartProduct.variation_id = activeVariation?.id
+			cartProduct.crosssells = activeVariation?.crosssells
 			cartProduct.title = `${productData?.title} - ${activeVariation?.title}`
 			// cartProduct.price = activeVariation?.price
 			cartProduct.sale_price = activeVariation?.sale_price
@@ -146,12 +168,13 @@ const AddToCart = (props) => {
 
 			var price_type = productData?.price_type
 
-			console.log(price_type);
+			console.log(productData);
 
 
 
 			if (price_type == 'simple') {
 				cartProduct.product_id = productData?.id
+				cartProduct.crosssells = productData?.crosssells
 
 				cartProduct.price = productData?.sale_price ? productData?.sale_price : productData?.regular_price
 				cartProduct.sale_price = productData?.sale_price
@@ -168,6 +191,7 @@ const AddToCart = (props) => {
 
 			if (price_type == 'bargain') {
 				cartProduct.product_id = productData?.id
+				cartProduct.crosssells = productData?.crosssells
 				cartProduct.price = productData?.bargainPrice
 				cartProduct.sale_price = productData?.bargainPrice
 				cartProduct.regular_price = productData?.bargain_default_price
@@ -200,7 +224,9 @@ const AddToCart = (props) => {
 
 		addCartItems({
 			id: cartProduct?.product_id,
+			product_id: cartProduct?.product_id,
 			variation_id: cartProduct?.variation_id,
+			crosssells: cartProduct?.crosssells,
 			title: cartProduct?.title,
 			quantity: quantity,
 			price: cartProduct?.price,
@@ -214,6 +240,8 @@ const AddToCart = (props) => {
 			attributes: cartProduct?.attributes
 		})
 
+
+		console.log(cartProduct);
 		setcartToggle(true)
 
 		var trackPrams = { productId: productId, userid: userDataX?.id, event: "addToCart", source: "cartButton" }
@@ -366,18 +394,17 @@ const AddToCart = (props) => {
 
 			{canAddToCart && !purchaseBlocked && (
 
-				<div id={id} type={type} className={`${cssSelectors['*']?.classes}  `}
+				<div id={id} type={type} className={cls('*')}
 				>
 
 
 
 
-					{!hideQuanity && (
-						<div className={`${cssSelectors['quantity-wrapper']?.classes}`} >
+					{!hideQuantity && (
+						<div className={cls('quantity-wrapper')} >
 							{/* Buttons, not divs, so the stepper works from the keyboard and
-							   is announced by screen readers. (The class names are swapped:
-							   'quantity-plus' styles the minus button; kept as saved.) */}
-							<button type="button" aria-label="Decrease quantity" className={`${cssSelectors['quantity-plus']?.classes}`}
+							   is announced by screen readers. */}
+							<button type="button" aria-label="Decrease quantity" className={cls('quantity-decrease')}
 								onClick={(ev) => {
 
 
@@ -462,9 +489,9 @@ const AddToCart = (props) => {
 							>
 								<IconSquareRoundedMinusFilled />
 							</button>
-							<input type="text" inputMode="numeric" aria-label="Quantity" name="addToCart" className={`${cssSelectors['quantity-input']?.classes}`} value={quantity} onChange={ev => {
+							<input type="text" inputMode="numeric" aria-label="Quantity" name="addToCart" className={cls('quantity-input')} value={quantity} onChange={ev => {
 								/* An emptied box used to store NaN as the quantity. */
-								var quantity = Math.max(0, parseInt(String(ev.target.value).replace(/D/g, '')) || 0);
+								var quantity = Math.max(0, parseInt(String(ev.target.value).replace(/\D/g, '')) || 0);
 								setquantity(quantity)
 
 								if (onChangeCartBtn) {
@@ -473,7 +500,7 @@ const AddToCart = (props) => {
 								}
 
 							}} />
-							<button type="button" aria-label="Increase quantity" className={`${cssSelectors['quantity-minus']?.classes}`}
+							<button type="button" aria-label="Increase quantity" className={cls('quantity-increase')}
 
 								onClick={() => {
 
@@ -493,7 +520,6 @@ const AddToCart = (props) => {
 
 									}
 
-									sendMetaEvent()
 
 
 									if (addons?.includes('variations')) {
@@ -553,7 +579,7 @@ const AddToCart = (props) => {
 
 
 					{!hideButton && (
-						<div className={`${cssSelectors['button-wrapper']?.classes}`}
+						<div className={cls('button-wrapper')}
 							role="button"
 							tabIndex={0}
 							onClick={() => addToCart()}
@@ -565,12 +591,12 @@ const AddToCart = (props) => {
 						>
 
 							{IconX && (
-								<div className={`${cssSelectors['button-icon']?.classes}`}>
+								<div className={cls('button-icon')}>
 									{IconX ? <IconX size={iconSize} /> : null}
 								</div>
 							)}
 
-							<div className={`${cssSelectors['button-label']?.classes}`}>{buttonText}</div>
+							<div className={cls('button-label')}>{buttonText}</div>
 
 
 						</div>

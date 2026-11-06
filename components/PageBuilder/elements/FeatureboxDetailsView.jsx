@@ -1,42 +1,28 @@
 import PropTypes from "prop-types";
 import React from "react";
 import { useLoop } from "../context/LoopContext";
-import { useFeatuerbox } from "../context/FeatuerboxContext";
+import { FeatureboxTextMarkup } from "./FeatureboxTitleView";
+import { elementCssClasses } from "../ElementsDefinition";
 
-const Text = (props) => {
+/* The description of the featurebox item it sits in, in a p by default (it was h1); nothing outside a featurebox or for an item without one. */
+const FeatureboxDetailsView = (props) => {
 
-	const loop = useLoop();
-	const featuerboxAttr = useFeatuerbox();
-	var FeatuerboxCssSelectors = featuerboxAttr?.cssSelectors ?? {}
+	/* A key the block lacks falls back to the featureboxDetails defaults in ElementsDefinition.js. */
+	var cls = elementCssClasses('featureboxDetails', props?.cssSelectors);
 
-	var loopText = loop?.description;
+	const item = useLoop();
+	var text = String(item?.description ?? '').trim();
+	if (!text) return null;
 
-
-	var id = props?.id;
-	var type = props?.type;
-
-	var options = props?.options;
-	var tag = options?.tag ?? 'h1';
-
-
-
-
-	const Tag = tag;
-
-
-
-
-	return (
-		<Tag id={id} type={type} className={`${FeatuerboxCssSelectors['description']?.classes}  `}
-
-		>
-
-			{loopText}
-
-		</Tag>
-	);
+	return <FeatureboxTextMarkup cls={cls} parentKey="description" id={props?.id} index={props?.index} type={props?.type} options={props?.options} fallbackTag="p" text={text} />;
 };
 
+FeatureboxDetailsView.propTypes = {
+	index: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+	id: PropTypes.string,
+	type: PropTypes.string,
+	options: PropTypes.object,
+	cssSelectors: PropTypes.object,
+};
 
-
-export default Text;
+export default FeatureboxDetailsView;

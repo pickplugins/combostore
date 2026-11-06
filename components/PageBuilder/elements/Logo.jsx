@@ -1,122 +1,49 @@
-import PropTypes from "prop-types";
 import React from "react";
-import NextImage from "next/image";
-import Link from "next/link";
+import { LogoMarkup } from "./LogoView";
+import { elementCssClasses } from "../ElementsDefinition";
 
+/*
+	Builder (canvas) preview of the logo: LogoView's own markup and classes.
+	The whole block is now selectable and draggable from its wrapper - only
+	the image had the handlers, and the link stopped clicks from reaching the
+	wrapper, so a text logo could not be selected at all. Links never leave
+	the builder. A logo with neither text nor an image shows "Logo", dimmed.
+	(It was named Image.)
+*/
+const Logo = (props) => {
 
-const Image = (props) => {
-
-
-	var draggingBlock = props?.draggingBlock
 	var setDraggingBlock = props?.setDraggingBlock
-
 	var dragOverIndex = props?.dragOverIndex
 	var setDragOverIndex = props?.setDragOverIndex
-
 	var setSelectedId = props?.setSelectedId
 	var selectedId = props?.selectedId
 	var index = props?.index
-
-	var cssSelectors = props?.cssSelectors ?? {};
-
 	var id = props?.id;
 
+	var cls = elementCssClasses('logo', props?.cssSelectors);
+
 	var options = props?.options;
-	var src = options?.src ?? '';
-
-	var link = options?.link;
-
-	var logoType = options?.logoType ?? 'text';
-	var logoText = options?.logoText ?? '';
+	var empty = !String(options?.logoText ?? '').trim() && !String(options?.src ?? '').trim();
 
 	return (
-		<div className={`${cssSelectors['*']?.classes ?? ''}  cursor-pointer ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200' : ''} ${selectedId == id ? 'outline-1 outline-solid outline-orange-400' : ''} `}>
-
-
-			{(logoType == 'text') && (
-				<Link className={`${cssSelectors['link']?.classes}`} href={`/`} onClick={ev => {
-
-					ev.preventDefault()
-					ev.stopPropagation()
-
-				}}>
-					<span className={`${cssSelectors['text']?.classes}`}>{logoText}</span>
-				</Link>
-
-			)}
-
-
-			{(logoType == 'image') && (
-				<>
-					<Link className={`${cssSelectors['link']?.classes}`} href={`#`} onClick={ev => {
-
-						ev.preventDefault()
-						ev.stopPropagation()
-
-					}}>
-
-						<NextImage draggable id={id} src={src} width={500} height={500} alt={``} className={`${cssSelectors['img']?.classes}  `}
-							unoptimized
-							onClick={e => {
-								e.stopPropagation();
-
-
-								setSelectedId(selectedId != id ? id : null);
-							}}
-							onDragStart={e => {
-								e.stopPropagation(); e.dataTransfer.setData("canvasBlock", id); setDraggingBlock(id);
-							}}
-							onDragEnd={() => { setDraggingBlock(null); setDragOverIndex(null); }}
-
-							onDragOver={e => { e.preventDefault(); setDragOverIndex(index); }}
-							onDragLeave={() => setDragOverIndex(null)}
-						/>
-					</Link>
-				</>
-			)}
-			{(logoType == 'both') && (
-				<>
-					<Link className={`${cssSelectors['link']?.classes}`} href={`#`} onClick={ev => {
-
-						ev.preventDefault()
-						ev.stopPropagation()
-
-					}}>
-
-						<NextImage draggable id={id} src={src} width={500} height={500} alt={``} className={`${cssSelectors['img']?.classes}  `}
-							unoptimized
-							onClick={e => {
-								e.stopPropagation();
-
-
-								setSelectedId(selectedId != id ? id : null);
-							}}
-							onDragStart={e => {
-								e.stopPropagation(); e.dataTransfer.setData("canvasBlock", id); setDraggingBlock(id);
-							}}
-							onDragEnd={() => { setDraggingBlock(null); setDragOverIndex(null); }}
-
-							onDragOver={e => { e.preventDefault(); setDragOverIndex(index); }}
-							onDragLeave={() => setDragOverIndex(null)}
-						/>
-						<div className={`${cssSelectors['text']?.classes}`}>{logoText}</div>
-
-					</Link>
-				</>
-			)}
-
-
-
-
-
-		</div>
-
-
-
-
+		<LogoMarkup
+			cls={cls}
+			id={id}
+			index={index}
+			type={props?.type}
+			options={empty ? { ...options, logoType: 'text', logoText: 'Logo' } : options}
+			onLinkClick={ev => ev.preventDefault()}
+			rootClassName={`${empty ? 'opacity-60' : ''} cursor-pointer hover:outline-orange-200 hover:outline-solid hover:outline-1 ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200' : ''} ${selectedId == id ? 'outline-1 outline-solid outline-orange-400' : ''}`}
+			rootProps={{
+				draggable: true,
+				onClick: e => { e.preventDefault(); e.stopPropagation(); setSelectedId(selectedId != id ? id : null); },
+				onDragStart: e => { e.stopPropagation(); e.dataTransfer.setData("canvasBlock", id); setDraggingBlock?.(id); },
+				onDragEnd: () => { setDraggingBlock?.(null); setDragOverIndex?.(null); },
+				onDragOver: e => { e.preventDefault(); setDragOverIndex?.(index); },
+				onDragLeave: () => setDragOverIndex?.(null),
+			}}
+		/>
 	);
 };
 
-
-
-export default Image;
+export default Logo;

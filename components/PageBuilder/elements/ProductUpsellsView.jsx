@@ -1,61 +1,13 @@
-import PropTypes from "prop-types";
+"use client"
 import React from "react";
-import { usePost } from "../context/PostContext";
-import Link from "next/link";
+import { LinkedProductsView } from "./linkedProducts";
 
+/*
+	A product's upsells - the products picked under Upsells on the product
+	being viewed - through the post loop inside it. Renders nothing for a
+	product without upsells, or with no product. The shared logic is in
+	linkedProducts.jsx (productCrosssells uses it too).
+*/
+const ProductUpsellsView = (props) => <LinkedProductsView {...props} blockType="productUpsells" field="upsells" />;
 
-const TermTitle = (props) => {
-
-
-
-
-
-
-
-
-
-
-	var index = props?.index
-	var name = props?.name
-	var cssSelectors = props?.cssSelectors
-
-
-	var id = props?.id;
-	var type = props?.type;
-
-	var options = props?.options;
-	var tag = options?.tag ?? 'h1';
-	var linkTo = options?.linkTo ?? 'postUrl';
-
-
-	const post = usePost();
-
-
-	const Tag = tag;
-
-
-
-
-	return (
-		<>
-			{linkTo == 'postUrl' && (
-				<Link href={`#`} dangerouslySetInnerHTML={{ __html: post?.title }} id={id} index={index} type={type} className={`${cssSelectors['*']?.classes}  `}
-				/>
-			)}
-
-			{linkTo != 'postUrl' && (
-				<div id={id} index={index} type={type} className={`${cssSelectors['*']?.classes} `}
-
-					dangerouslySetInnerHTML={{ __html: post?.title }}
-				>
-				</div>
-			)}
-
-
-		</>
-	);
-};
-
-
-
-export default TermTitle;
+export default ProductUpsellsView;

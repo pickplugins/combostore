@@ -74,7 +74,7 @@ returns, support).`,
 		type: 'product', title: 'Product',
 		brief: `The single product page. A two-column top: productGallery on one side and
 the buy column on the other, holding productCategories, postTitle,
-productRatings, productPrice, productDiscount, productVariablePrices,
+productRatings, productPrice, productDiscount, productVariations,
 productStockStatus, addToCart, a delivery list and productSku/productTags.
 Then a tabs block whose panels are postContent, a details list, a delivery list
 and a commentsGrid. Then a relatedProducts row.`,

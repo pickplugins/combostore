@@ -8,36 +8,38 @@ import Spinner from "../../../components/Spinner";
 import LocationPicker from "../../../components/LocationPicker";
 import { useCounterStore } from '../../../store/useCounterStore';
 import { useSavedToken } from './useSavedToken';
-import { accountInputClass, accountPrimaryButtonClass, accountSecondaryButtonClass, AccountNotice } from './accountUi';
+import { AccountNotice } from './accountUi';
+import { elementCssClasses } from "../ElementsDefinition";
 
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
-function ProfileCard({ icon: Icon, title, description, children, footer }) {
+/* One card of the editor. `cls` is the block's class lookup; Profile Edit's builder preview uses these too. */
+export function ProfileCard({ cls, icon: Icon, title, description, children, footer }) {
 	return (
-		<section className="rounded-xl border border-gray-200 bg-white shadow-xs">
-			<div className="flex items-start gap-3 border-b border-gray-100 p-4">
-				<span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#1b0e9f]/10 text-[#1b0e9f]">
+		<section className={cls('card')}>
+			<div className={cls('card-header')}>
+				<span className={cls('card-icon')}>
 					<Icon size={18} />
 				</span>
 				<div>
-					<h3 className="text-base font-semibold text-gray-900">{title}</h3>
-					{description && <p className="text-sm text-gray-500">{description}</p>}
+					<h3 className={cls('card-title')}>{title}</h3>
+					{description && <p className={cls('card-description')}>{description}</p>}
 				</div>
 			</div>
-			<div className="p-4">{children}</div>
+			<div className={cls('card-body')}>{children}</div>
 			{footer && (
-				<div className="flex flex-wrap items-center justify-end gap-2 rounded-b-xl border-t border-gray-100 bg-gray-50 px-4 py-3">{footer}</div>
+				<div className={cls('card-footer')}>{footer}</div>
 			)}
 		</section>
 	);
 }
 
-function ProfileField({ label, htmlFor, hint, children }) {
+export function ProfileField({ cls, label, htmlFor, hint, children }) {
 	return (
-		<div className="flex flex-col gap-1.5">
-			<label htmlFor={htmlFor} className="text-sm font-medium text-gray-700">{label}</label>
+		<div className={cls('field')}>
+			<label htmlFor={htmlFor} className={cls('field-label')}>{label}</label>
 			{children}
-			{hint && <p className="text-xs text-gray-500">{hint}</p>}
+			{hint && <p className={cls('field-hint')}>{hint}</p>}
 		</div>
 	);
 }
@@ -56,6 +58,8 @@ const CustomerProfileEditView = (props) => {
 	const { id, type } = props;
 
 	var cssSelectors = props?.cssSelectors ?? {};
+	/* Each part's classes; a key the block lacks falls back to the customerProfileEdit defaults in ElementsDefinition.js. */
+	var cls = elementCssClasses('customerProfileEdit', cssSelectors);
 
 	const { userDataX, setUserDataX, addNotification } = useCounterStore();
 	const token = useSavedToken();
@@ -152,7 +156,7 @@ const CustomerProfileEditView = (props) => {
 
 	function SaveButton({ section, label = "Save changes" }) {
 		return (
-			<button type="submit" className={accountPrimaryButtonClass} disabled={saving !== null}>
+			<button type="submit" className={cls('save-button')} disabled={saving !== null}>
 				{saving === section ? <Spinner /> : <IconDeviceFloppy size={16} />}
 				{label}
 			</button>
@@ -162,15 +166,18 @@ const CustomerProfileEditView = (props) => {
 	var location = editUserData?.delivery_location;
 	var hasLocation = Boolean(location && location.lat && location.lng);
 
+	/* Signed out: nothing to edit. */
+	if (token === null) return null;
+
 	return (
-		<div id={id} type={type} className={`${cssSelectors['*']?.classes ?? ''}`}>
+		<div id={id} type={type} className={cls('*')}>
 
 			{loadError && <AccountNotice>{loadError}</AccountNotice>}
 
 			{!loadError && !editUserData && (
-				<div className="flex flex-col gap-4" aria-hidden="true">
+				<div className={cls('skeleton')} aria-hidden="true">
 					{[0, 1].map(card => (
-						<div key={card} className="animate-pulse rounded-xl border border-gray-200 bg-white p-4">
+						<div key={card} className={cls('skeleton-card')}>
 							<div className="h-4 w-40 rounded bg-gray-200" />
 							<div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-2">
 								<div className="h-9 rounded-lg bg-gray-100" />
@@ -182,24 +189,25 @@ const CustomerProfileEditView = (props) => {
 			)}
 
 			{editUserData && (
-				<div className="flex flex-col gap-5">
+				<div className={cls('panel')}>
 
 					<form onSubmit={ev => { ev.preventDefault(); saveProfile('details'); }}>
 						<ProfileCard
+							cls={cls}
 							icon={IconUser}
 							title="Personal details"
 							description="Used to fill in your details at checkout."
 							footer={<SaveButton section="details" />}
 						>
-							<div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-								<ProfileField label="Full name" htmlFor="profile-name">
-									<input id="profile-name" type="text" name="name" autoComplete="name" className={accountInputClass} value={editUserData?.name ?? ''} onChange={setField} />
+							<div className={cls('fields')}>
+								<ProfileField cls={cls} label="Full name" htmlFor="profile-name">
+									<input id="profile-name" type="text" name="name" autoComplete="name" className={cls('field-input')} value={editUserData?.name ?? ''} onChange={setField} />
 								</ProfileField>
-								<ProfileField label="Phone" htmlFor="profile-phone">
-									<input id="profile-phone" type="tel" name="phone" autoComplete="tel" className={accountInputClass} value={editUserData?.phone ?? ''} onChange={setField} />
+								<ProfileField cls={cls} label="Phone" htmlFor="profile-phone">
+									<input id="profile-phone" type="tel" name="phone" autoComplete="tel" className={cls('field-input')} value={editUserData?.phone ?? ''} onChange={setField} />
 								</ProfileField>
-								<ProfileField label="Email" htmlFor="profile-email" hint="Your email is your login and can't be changed here.">
-									<input id="profile-email" type="email" name="email" disabled className={accountInputClass} value={editUserData?.email ?? ''} readOnly />
+								<ProfileField cls={cls} label="Email" htmlFor="profile-email" hint="Your email is your login and can't be changed here.">
+									<input id="profile-email" type="email" name="email" disabled className={cls('field-input')} value={editUserData?.email ?? ''} readOnly />
 								</ProfileField>
 							</div>
 						</ProfileCard>
@@ -207,17 +215,18 @@ const CustomerProfileEditView = (props) => {
 
 					<form onSubmit={ev => { ev.preventDefault(); saveProfile('address'); }}>
 						<ProfileCard
+							cls={cls}
 							icon={IconHome}
 							title="Address"
 							description="Where we deliver your orders."
 							footer={<SaveButton section="address" />}
 						>
-							<div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-								<ProfileField label="Address line 1" htmlFor="profile-address1">
-									<input id="profile-address1" type="text" name="billing_address1" autoComplete="address-line1" placeholder="House, road, area" className={accountInputClass} value={editUserData?.billing_address1 ?? ''} onChange={setField} />
+							<div className={cls('fields')}>
+								<ProfileField cls={cls} label="Address line 1" htmlFor="profile-address1">
+									<input id="profile-address1" type="text" name="billing_address1" autoComplete="address-line1" placeholder="House, road, area" className={cls('field-input')} value={editUserData?.billing_address1 ?? ''} onChange={setField} />
 								</ProfileField>
-								<ProfileField label="Address line 2" htmlFor="profile-address2">
-									<input id="profile-address2" type="text" name="billing_address2" autoComplete="address-line2" placeholder="Apartment, landmark (optional)" className={accountInputClass} value={editUserData?.billing_address2 ?? ''} onChange={setField} />
+								<ProfileField cls={cls} label="Address line 2" htmlFor="profile-address2">
+									<input id="profile-address2" type="text" name="billing_address2" autoComplete="address-line2" placeholder="Apartment, landmark (optional)" className={cls('field-input')} value={editUserData?.billing_address2 ?? ''} onChange={setField} />
 								</ProfileField>
 							</div>
 						</ProfileCard>
@@ -225,6 +234,7 @@ const CustomerProfileEditView = (props) => {
 
 					<form onSubmit={ev => { ev.preventDefault(); saveProfile('location'); }}>
 						<ProfileCard
+							cls={cls}
 							icon={IconMapPin}
 							title="Delivery location"
 							description="Pin your exact spot on the map so the rider can find you."
@@ -233,7 +243,7 @@ const CustomerProfileEditView = (props) => {
 									{hasLocation && (
 										<button
 											type="button"
-											className={accountSecondaryButtonClass}
+											className={cls('secondary-button')}
 											disabled={saving !== null}
 											onClick={() => saveProfile('location', { delivery_location: null })}
 										>
@@ -244,14 +254,14 @@ const CustomerProfileEditView = (props) => {
 								</>
 							}
 						>
-							<div className="flex flex-col gap-3">
+							<div className={cls('location-body')}>
 								{/* This message used to show only when a location WAS set. */}
-								<p className="text-sm text-gray-600">
+								<p className={cls('location-note')}>
 									{hasLocation
 										? "Your saved location is marked on the map. Drag the pin to change it."
 										: "You haven't saved a delivery location yet. Click the map to drop a pin."}
 								</p>
-								<div className="overflow-hidden rounded-lg border border-gray-200">
+								<div className={cls('map')}>
 									<LocationPicker
 										markerDraggable={true}
 										latlng={location}

@@ -6,6 +6,7 @@ import { LoopProvider } from "../context/LoopContext";
 import { CollectionsProvider } from "../context/CollectionsContext";
 
 
+import { elementCssClasses } from "../ElementsDefinition";
 const Collections = (props) => {
 
 
@@ -28,6 +29,8 @@ const Collections = (props) => {
 
 	var options = props?.options;
 	var cssSelectors = props?.cssSelectors ?? {};
+	/* A key the block lacks falls back to the collections defaults in ElementsDefinition.js. */
+	var cls = elementCssClasses('collections', cssSelectors);
 	var items = options?.items ?? [];
 	var tag = options?.tag ?? 'ul';
 
@@ -56,7 +59,7 @@ const Collections = (props) => {
 
 
 	return (
-		<Tag draggable id={id} type={type} className={`${cssSelectors['*']?.classes ?? ''} cursor-pointer ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200' : ''} ${selectedId == id ? 'outline-1 outline-solid outline-orange-400' : ''} `}
+		<Tag draggable id={id} type={type} className={`${cls('*')} cursor-pointer ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200' : ''} ${selectedId == id ? 'outline-1 outline-solid outline-orange-400' : ''} `}
 			onClick={e => {
 				e.stopPropagation();
 
@@ -76,7 +79,7 @@ const Collections = (props) => {
 
 				{items?.map((item, index) => {
 
-					return (<div className={`${cssSelectors['loop-item']?.classes} `} key={index}>
+					return (<div className={`${cls('loop-item')} `} key={index}>
 
 						<LoopProvider value={item} >
 
@@ -120,21 +123,21 @@ const Collections = (props) => {
 
 					</div>)
 					// return (
-					// 	<li key={index} className={`${cssSelectors['li']?.classes} `}>
+					// 	<li key={index} className={`${cls('li')} `}>
 
 					// 		{ItemIcon && (
-					// 			<div className={`${cssSelectors['icon']?.classes}`}>
+					// 			<div className={`${cls('icon')}`}>
 					// 				{ItemIcon ? <ItemIcon size={iconSize} /> : null}
 					// 			</div>
 					// 		)}
 					// 		{!ItemIcon && (
-					// 			<div className={`${cssSelectors['icon']?.classes}`}>
+					// 			<div className={`${cls('icon')}`}>
 					// 				{IconX ? <IconX size={iconSize} /> : null}
 					// 			</div>
 					// 		)}
 
 
-					// 		<span className={cssSelectors['title']?.classes}>{item.title}</span>
+					// 		<span className={cls('title')}>{item.title}</span>
 
 					// 	</li>
 					// )

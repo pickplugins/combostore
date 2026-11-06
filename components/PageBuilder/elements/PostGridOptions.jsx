@@ -1,85 +1,40 @@
-import PropTypes from "prop-types";
 import React from "react";
-import { useState, useEffect } from "react";
-import { IconLibraryPhoto, IconCheckbox, IconSquare, IconFidgetSpinner, IconTrash, IconStarFilled, IconStar, IconX } from "@tabler/icons-react";
-import { useDraggable } from '@dnd-kit/react';
-import ToggleContent from '../../../components/ToggleContent';
-import CssClassPicker from "../CssClassPicker";
-import GalleryPicker from '../../shop-elements/GalleryPicker';
-import NextImage from "next/image";
-import DropDown from '../../../components/DropDown';
 import CssSelectors from "../CssSelectors";
 import PostQueryPrams from "../PostQueryPrams";
+import { postGridQuery } from "./PostGridView";
+import { withElementCssDefaults } from "../ElementsDefinition";
 
-
+/*
+	Settings panel for the `postGrid` block: the query (saved as
+	options.queryPrams), then its cssSelectors keys. The editor starts from
+	the query the grid actually shows - the default one for a grid saved
+	without a query - so what is listed matches the canvas.
+*/
 const PostGridOptions = (props) => {
 
 	var updateBlock = props?.updateBlock;
+	var options = props?.options ?? {};
 
-	var options = props?.options;
+	/* Every current key, filled from defaults where the block lacks it. */
+	var cssSelectors = withElementCssDefaults('postGrid', props?.cssSelectors);
 
-
-
-
-	var queryPrams = options?.queryPrams ?? [];
-	var cssSelectors = props?.cssSelectors ?? {};
-
-
-	const [loading, setloading] = useState(false);
-
-
-
-
-
-	// useEffect(() => {
-
-	// 	fetchPosts();
-	// }, []);
-
-
-
-
-
-	function onChangeQuery(queryPramsX) {
-
-
-		var optionsX = { ...options }
-		optionsX.queryPrams = queryPramsX
-		updateBlock('options', optionsX)
+	function onChangeQuery(queryPrams) {
+		var optionsX = { ...options, queryPrams: queryPrams };
+		delete optionsX.queryParams; /* the definition's old misspelt key, never read */
+		updateBlock('options', optionsX);
 	}
-
-
-
-
-
-
-
 
 	return (
 		<div className="px-3" >
-			{/* {JSON.stringify(prams)} */}
-
 			<div className="flex flex-col gap-3">
-
-
-				<PostQueryPrams queryPrams={queryPrams} onChangeQuery={onChangeQuery} />
-
-
-
+				<PostQueryPrams key={props?.id} queryPrams={postGridQuery(options)} onChangeQuery={onChangeQuery} />
+				<p className="text-xs text-gray-500">
+					<code>*</code> is the grid's wrapper; <code>loop-items</code> is the list of cards (set its columns here, e.g. <code>grid grid-cols-2 md:grid-cols-4 gap-5</code>) and <code>loop-item</code> each card. The cards' contents are the blocks inside the Post Loop.
+				</p>
 				<CssSelectors cssSelectors={cssSelectors} updateBlock={updateBlock} />
-
-
-
-
-
-
 			</div>
-
-
 		</div>
 	);
 };
-
-
 
 export default PostGridOptions;

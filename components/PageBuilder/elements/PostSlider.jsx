@@ -1,178 +1,65 @@
 "use client"
-import { useState, useEffect } from "react";
-import { Splide, SplideTrack, SplideSlide } from '@splidejs/react-splide';
-import '@splidejs/react-splide/css';
-import Image from "next/image";
+import { useMemo } from "react";
 import BlockPreview from '../BlockPreview';
-import { PostProvider } from "../context/PostContext";
 import { PostSliderProvider } from "../context/PostSliderContext";
+import { PostSliderMarkup, postSliderQuery, postSliderSplideOptions, usePostSliderContextValue } from "./PostSliderView";
+import { elementCssClasses } from "../ElementsDefinition";
 
+/*
+	Builder (canvas) preview of the post slider: PostSliderView's own markup,
+	Splide settings, query and context, with its children rendered by
+	BlockPreview (which now get the drag and select props - they got none,
+	so the loop and its blocks could not be selected or moved). The slider
+	itself is now draggable, shows when it is selected, and takes drops.
+*/
 const PostSlider = (props) => {
 
-	const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
-
-
+	var handleMoveBlock = props?.handleMoveBlock
 	var draggingBlock = props?.draggingBlock
 	var setDraggingBlock = props?.setDraggingBlock
-
 	var dragOverIndex = props?.dragOverIndex
 	var setDragOverIndex = props?.setDragOverIndex
-	var cssSelectors = props?.cssSelectors ?? {};
-
-
-
-
-
-
-	var type = props?.type
-	var children = props?.children;
-	var options = props?.options;
-	var id = props?.id;
-
-	var index = props?.index
-
 	var setSelectedId = props?.setSelectedId
 	var selectedId = props?.selectedId
+	var children = props?.children;
+	var id = props?.id;
+	var index = props?.index
 
-	var sliderOptions = options?.sliderOptions
-	var queryPrams = options?.queryPrams ?? [];
+	var cls = elementCssClasses('postSlider', props?.cssSelectors);
 
-	sliderOptions.classes = {
-		arrows: 'splide__arrows arrows-wrap',
-		arrow: `splide__arrow arrow-item`,
-		prev: 'splide__arrow--prev arrow-prev',
-		next: 'splide__arrow--next arrow-next',
-		pagination: 'splide__pagination pagination',
-		page: 'splide__pagination__page page-item',
-	}
-
-
-	var [queryTerms, setqueryTerms] = useState({ taxonomy: 'product_cat', order: "DESC", per_page: 10, });
-	var [terms, setterms] = useState([]);
-
-
-
-	function fetchPosts() {
-
-
-
-		var postData = {
-			taxonomy: queryTerms.taxonomy,
-			per_page: queryTerms.per_page,
-			paged: queryTerms.paged,
-			order: queryTerms.order,
-			hierarchical: true,
-		};
-		postData = JSON.stringify(postData);
-
-		fetch(serverUrl + "wp-json/combo-store/v2/get_products", {
-			method: "POST",
-			headers: {
-				'Content-Type': 'application/json',
-				// 'Authorization': `Bearer ${token}`
-			},
-			body: postData,
-		})
-			.then((response) => {
-
-				if (!response.ok) {
-					throw new Error('Token validation failed');
-				}
-
-				if (response.ok && response.status < 400) {
-					response.json().then((res) => {
-
-
-						var posts = res?.posts;
-						var total = res?.total;
-						var max_pages = res?.max_pages;
-
-
-
-
-
-						// var termsX = [];
-
-						// Object.entries(terms).map(args => {
-						// 	var index = args[0]
-						// 	var item = args[1]
-						// 	termsX.push(item)
-						// })
-
-
-						setterms(posts)
-
-
-						setTimeout(() => {
-						}, 500);
-					});
-				}
-			})
-			.catch((_error) => {
-				//this.saveAsStatus = 'error';
-				// handle the error
-			});
-
-	}
-
-
-
-	useEffect(() => {
-		fetchPosts();
-	}, []);
-
-
-
-
-
-
-
-
-
+	var queryKey = JSON.stringify(postSliderQuery(props?.options));
+	var query = useMemo(() => JSON.parse(queryKey), [queryKey]);
+	var contextValue = usePostSliderContextValue(props?.cssSelectors, query);
 
 	return (
-		<div
+		<PostSliderMarkup
+			cls={cls}
 			id={id}
-			type={type}
-			className={`${cssSelectors['*']?.classes ?? ''}  `}
-
-			onClick={e => {
-				e.preventDefault();
-
-				e.stopPropagation();
-
-
-				setSelectedId(selectedId != id ? id : null);
-			}}>
-
-
-
-			<Splide aria-label="" options={sliderOptions}>
-
-				<PostSliderProvider value={{ queryPrams: queryPrams, cssSelectors: cssSelectors }}>
-
-					{children != undefined && children.map((child, indexZ) => {
-
-
-						return (
-
-							<BlockPreview index={`${index}${indexZ}`} key={child.id} block={child} />
-
-						)
-
-					})}
-
-				</PostSliderProvider>
-
-
-			</Splide>
-
-
-
-
-
-
-		</div>
+			index={index}
+			type={props?.type}
+			splideOptions={postSliderSplideOptions(props?.options, cls)}
+			rootClassName={`${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200 bg-orange-200' : ''} ${selectedId == id ? 'outline-1 outline-solid outline-orange-400 relative ' : ''}`}
+			rootProps={{
+				draggable: true,
+				onClick: (e) => { e.preventDefault(); e.stopPropagation(); setSelectedId(selectedId !== id ? id : null); },
+				onDragStart: (e) => { e.stopPropagation(); e.dataTransfer.setData("canvasBlock", id); setDraggingBlock?.(id); },
+				onDragEnd: () => { setDraggingBlock?.(null); setDragOverIndex?.(null); },
+				onDragOver: (e) => { e.preventDefault(); e.stopPropagation(); },
+				onDrop: (e) => {
+					e.preventDefault();
+					e.stopPropagation();
+					const paletteType = e.dataTransfer.getData("paletteType");
+					const canvasBlockId = e.dataTransfer.getData("canvasBlock");
+					handleMoveBlock?.({ paletteType, canvasBlockId }, id, 'inside');
+				},
+			}}
+		>
+			<PostSliderProvider value={contextValue}>
+				{Array.isArray(children) && children.map((child, indexZ) => (
+					<BlockPreview index={`${index}${indexZ}`} key={child.id} block={child} draggingBlock={draggingBlock} dragOverIndex={dragOverIndex} setDragOverIndex={setDragOverIndex} setDraggingBlock={setDraggingBlock} setSelectedId={setSelectedId} selectedId={selectedId} handleMoveBlock={handleMoveBlock} />
+				))}
+			</PostSliderProvider>
+		</PostSliderMarkup>
 	);
 };
 

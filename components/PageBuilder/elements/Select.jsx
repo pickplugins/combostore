@@ -7,6 +7,7 @@ import * as TablerIcons from '@tabler/icons-react';
 import Link from "next/link";
 
 
+import { elementCssClasses } from "../ElementsDefinition";
 const Button = (props) => {
 
 	const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
@@ -21,6 +22,8 @@ const Button = (props) => {
 	var selectedId = props?.selectedId
 	var index = props?.index
 	var cssSelectors = props?.cssSelectors ?? {};
+	/* A key the block lacks falls back to the select defaults in ElementsDefinition.js. */
+	var cls = elementCssClasses('select', cssSelectors);
 
 
 	var id = props?.id;
@@ -115,7 +118,7 @@ const Button = (props) => {
 
 
 
-		<div draggable id={id} type={type} className={`${cssSelectors['*']?.classes ?? ''} hover:outline-orange-200 hover:outline-solid hover:outline-1 ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200' : ''} ${selectedId == id ? 'outline-1 outline-solid outline-orange-400' : ''} `}
+		<div draggable id={id} type={type} className={`${cls('*')} hover:outline-orange-200 hover:outline-solid hover:outline-1 ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200' : ''} ${selectedId == id ? 'outline-1 outline-solid outline-orange-400' : ''} `}
 
 			onClick={e => {
 				e.stopPropagation();
@@ -132,16 +135,16 @@ const Button = (props) => {
 			onDragLeave={() => setDragOverIndex(null)}
 		>
 
-			<label htmlFor="" className={`${cssSelectors['label']?.classes}  `}>{label}</label>
+			<label htmlFor="" className={`${cls('label')}  `}>{label}</label>
 
-			<select name="" id="" className={`${cssSelectors['select']?.classes}  `}
+			<select name="" id="" className={`${cls('select')}  `}
 				multiple={multiple}
 
 				onChange={ev => {
 
 					var value = ev.target.value;
 
-					onChangeInput(value)
+					onChangeInput?.(value)
 
 				}}
 			>

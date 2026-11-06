@@ -7,53 +7,30 @@
  * paste/replace, so the readable ids below are safe.)
  *
  * address is a leaf: a <ul> with up to three <li> rows -- phone, email,
- * location, in that order -- so a preset is the three option objects plus the
- * six selector keys.
+ * location, in that order. AddressView (the shop) and the builder's Address.jsx
+ * render the same AddressMarkup.
  *
- * Renderer notes that shaped these presets:
+ * Notes that shaped these presets:
  *
- * 1. Never drop phone, email or location from options. Each row renders when its
- *    OBJECT is truthy (Address.jsx:64, :82, :93), not when its value is
- *    non-empty, so blanking a value leaves an empty row -- and removing the key
- *    is worse: AddressOptions.jsx:17-19 reads them with optional chaining and
- *    then uses `phone.value` unguarded at :35, so a missing key throws
- *    "Cannot read properties of undefined (reading 'value')" the moment the
- *    block is selected and the options panel renders. Every preset below keeps
- *    all three keys, and the ones that want fewer rows hide them in CSS instead
- *    with an `nth-child` variant on `*` -- `[&>li:nth-child(3)]:hidden` and
- *    friends. The row order is fixed, so nth-child 1 is phone, 2 is email,
- *    3 is location.
+ * 1. A row is drawn only when its value is non-empty, and the panel no longer
+ *    breaks on a missing row. The presets still set all three values and hide
+ *    rows in CSS with an `nth-child` variant on `*` (`[&>li:nth-child(3)]:hidden`)
+ *    -- that relies on the fixed order: 1 is phone, 2 is email, 3 is location.
  *
- * 2. The icon wrapper div renders in every row whether or not an icon resolves
- *    (:68, :85, :95) -- only the icon inside it is conditional -- so an unset
- *    icon leaves an empty box that still eats the row's gap. Every preset puts
- *    `empty:hidden` on the `icon` key, which is what lets Compact No Icons drop
- *    the icons cleanly.
+ * 2. The `icon` span is drawn only when an icon is set, so the `empty:hidden`
+ *    the presets carry on it is now redundant but harmless.
  *
- * 3. Each row's value is a bare text node inside the link or li (:73, :88, :98),
- *    with no selector key of its own. Text styling therefore goes on `link` for
- *    the phone and email rows and on `item` for all three; there is nothing to
- *    target the value alone.
+ * 3. The value is a `text` span, and with `showLabels` a `label` span comes
+ *    before it, so the value can be styled on its own.
  *
- * 4. `link` is combined with `phone-link` on the phone anchor (:66) and with
- *    `email-link` on the email anchor (:84), so `link` is the shared base and
- *    the two specific keys add to it -- these presets keep them
- *    non-overlapping so nothing depends on stylesheet order. The location row is
- *    not a link at all, so there is no location-link key and no hover state to
- *    style there.
+ * 4. `link` is combined with `phone-link`, `email-link` or `location-link`
+ *    (the last only with `location.mapLink`, which links to Google Maps in a
+ *    new tab), so `link` is the shared base -- these presets keep them
+ *    non-overlapping so nothing depends on stylesheet order.
  *
- * 5. These links actually work, unlike linkList and productTags: there is no
- *    preventDefault, so `tel:` and `mailto:` fire normally. The catch is the
- *    value doubles as the display text and the href (`tel:${phone.value}`), so a
- *    nicely formatted number ends up in the URI. Browsers strip the spaces and
- *    punctuation, but keep that in mind before adding anything exotic.
- *
- * 6. Each option object declares a `label` that is never rendered -- the
- *    renderer prints only `.value`, and AddressOptions.jsx has no control for
- *    the label either. The labels are kept below to match the definition.
- *    `target`, `scheme` and `url` are also read (:27-29) and unused, left over
- *    from the Button element this file was copied from -- its component is still
- *    named `Button`.
+ * 5. The links work on the shop and do nothing in the builder. The phone's
+ *    href is the number's digits only (tel:+15551234567), so the shown value
+ *    can be formatted freely.
  */
 
 var layouts = [

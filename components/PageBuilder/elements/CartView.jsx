@@ -4,11 +4,13 @@ import { IconTrash, IconBasketCheck, IconX, IconShoppingCart, IconMinus, IconPlu
 import Image from "next/image";
 import crypto from "crypto";
 import CheckoutView from "./CheckoutView";
+import CartCrossSells, { defaultCartCrossSellsTitle, defaultCartCrossSellsLimit } from "./CartCrossSellsView";
 import { useCounterStore } from '../../../store/useCounterStore'
 import { useUtilsStore } from '../../../store/useUtilsStore'
 import { useAuthStore } from '../../../store/authStore';
 import Spinner from "../../../components/Spinner";
 import 'animate.css';
+import { elementCssClasses } from "../ElementsDefinition";
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 const CartView = (props) => {
 
@@ -16,6 +18,8 @@ const CartView = (props) => {
 
 	var index = props?.index
 	var cssSelectors = props?.cssSelectors ?? {};
+	/* Each part's classes; a key the block lacks falls back to the cart defaults in ElementsDefinition.js. */
+	var cls = elementCssClasses('cart', cssSelectors);
 
 
 	var id = props?.id;
@@ -305,140 +309,215 @@ const CartView = (props) => {
 
 
 
-	const primaryButtonClass = "w-full inline-flex items-center justify-center gap-2 rounded-lg bg-[#1b0e9f] px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#150b7d] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1b0e9f]/40 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60";
-	const iconButtonClass = "flex h-9 w-9 items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1b0e9f]/30";
-
 	const couponAmount = coupons?.applied ? (parseFloat(coupons?.discountAmount) || 0) : 0;
 	const discountLines = (cartDiscount?.lines ?? []).filter(line => (parseFloat(line?.amount) || 0) > 0);
 	const autoDiscount = parseFloat(cartDiscount?.amount) || 0;
 	const payableShipping = cartDiscount?.freeShipping ? 0 : (parseFloat(shippingCost) || 0);
 
 	return (
-		<div className="relative">
+		<CartMarkup
+			cls={cls}
+			id={id}
+			type={type}
+			iconTrigger={iconTrigger}
+			cartOpen={cartToggle}
+			cartStep={cartStep}
+			cartItems={cartItems}
+			cartTotalQuantity={cartTotalQuantity}
+			cartTotal={cartTotal}
+			cartTotalPay={cartTotalPay}
+			wrapCurrency={wrapCurrency}
+			coupons={coupons}
+			couponAmount={couponAmount}
+			discountLines={discountLines}
+			autoDiscount={autoDiscount}
+			payableShipping={payableShipping}
+			freeShipping={Boolean(cartDiscount?.freeShipping)}
+			onToggle={() => setcartToggle(!cartToggle)}
+			onClose={closeCart}
+			onBack={() => setcartStep(0)}
+			onRemoveItem={(item, index) => {
+				removeCartItems(index)
+				addNotification({ type: 'success', title: 'Item removed', content: `<span class="font-bold">${item.title}</span> removed from cart.` })
+			}}
+			onChangeQuantity={changeQuantity}
+			onCouponCode={value => setCoupons({ ...coupons, couponCode: value })}
+			onApplyCoupon={applyCoupon}
+			onRemoveCoupon={removeCoupon}
+			onCheckout={goToCheckout}
+			onClear={() => {
+				resetCartItems()
+				addNotification({ type: 'success', title: 'Cart reset', content: "Cart items reset success" })
+			}}
+			crossSells={
+				/* "Frequently bought together": the cart products' cross-sells (CartCrossSellsView). On unless the block switches it off. */
+				(options?.crossSells ?? true) ? (
+					<CartCrossSells cls={cls} cartItems={cartItems}
+						title={options?.crossSellsTitle ?? defaultCartCrossSellsTitle}
+						limit={options?.crossSellsLimit ?? defaultCartCrossSellsLimit} />
+				) : null
+			}
+			checkout={
+				/* The cart block's checkout toggles (shipping methods,
+					 shipping address, delivery location, subscription) live
+					 in its options. Blocks saved before a toggle existed have
+					 no key for it, so missing keys fall back to the element's
+					 defaults; a toggle switched off in the builder stays off. */
+				<CheckoutView cartOptions={{ ...checkoutOptionDefaults, ...options }} />
+			}
+		/>
+	);
+};
+
+
+/*
+	The cart's markup, shared with the builder preview (Cart.jsx) so the two
+	cannot drift apart. It holds no state: everything it shows and every
+	action comes in as props, and every class comes from `cls`, the block's
+	cssSelectors lookup.
+
+	The trigger is either a pill with the cart total (shown once the cart has
+	something in it) or, with options.triggerStyle 'icon', a cart icon with a
+	count badge that is always shown. The drawer only ever fades in: closing
+	unmounts it, so the animate.css classes stay in code rather than in a
+	selector a preset could break.
+*/
+export function CartMarkup(props) {
+	const {
+		cls, id, type, iconTrigger, cartOpen, cartStep, cartItems, cartTotalQuantity, cartTotal, cartTotalPay, wrapCurrency,
+		coupons, couponAmount, discountLines, autoDiscount, payableShipping, freeShipping,
+		onToggle, onClose, onBack, onRemoveItem, onChangeQuantity, onCouponCode, onApplyCoupon, onRemoveCoupon, onCheckout, onClear,
+		checkout, crossSells,
+	} = props;
+
+	var items = cartItems ?? [];
+
+	return (
+		<div id={id} type={type} className={cls('*')}>
 
 			{iconTrigger && (
-				<button type="button" aria-label="Cart" className={cssSelectors['button']?.classes} onClick={() => setcartToggle(!cartToggle)}>
-					<span className={cssSelectors['button-icon']?.classes}><IconShoppingCart size={20} /></span>
-					<span className={cssSelectors['button-quantity']?.classes}>{cartItems.length}</span>
+				<button type="button" aria-label="Cart" className={cls('trigger-icon')} onClick={onToggle}>
+					<IconShoppingCart size={22} />
+					{items.length > 0 && (
+						<span className={cls('trigger-badge')}>{items.length}</span>
+					)}
 				</button>
 			)}
 
-			{!iconTrigger && cartItems.length > 0 && (
-				<button type="button" className="flex items-center gap-2 rounded-lg bg-[#1b0e9f] px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-[#150b7d]" onClick={() => setcartToggle(!cartToggle)}>
+			{!iconTrigger && items.length > 0 && (
+				<button type="button" className={cls('trigger')} onClick={onToggle}>
 					<IconBasketCheck size={18} />
 					{wrapCurrency(cartTotalPay)}
 				</button>
 			)}
 
-			{cartToggle && (
+			{cartOpen && (
 				<>
 					{/* Backdrop: dims the page and closes the drawer on click. */}
-					<div className="fixed inset-0 z-40 bg-black/40 animate__animated animate__fadeIn animate__faster" onClick={closeCart} aria-hidden="true" />
+					<div className={`${cls('backdrop')} animate__animated animate__fadeIn animate__faster`} onClick={onClose} aria-hidden="true" />
 
-					<div role="dialog" aria-modal="true" aria-label={cartStep == 1 ? 'Checkout' : 'Shopping cart'} className={`fixed right-0 top-0 z-50 flex h-full w-full max-w-[460px] flex-col bg-white shadow-2xl animate__animated animate__faster animate__fadeInRight`}>
+					<div role="dialog" aria-modal="true" aria-label={cartStep == 1 ? 'Checkout' : 'Shopping cart'} className={`${cls('drawer')} animate__animated animate__faster animate__fadeInRight`}>
 
 						{/* ---------- Header ---------- */}
-						<div className="flex shrink-0 items-center justify-between gap-2 border-b border-gray-200 px-4 py-3">
+						<div className={cls('header')}>
 							{cartStep == 1 ? (
-								<button type="button" className="-ml-2 flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900" onClick={() => setcartStep(0)}>
+								<button type="button" className={cls('back-button')} onClick={onBack}>
 									<IconArrowLeft size={18} />
 									Back to cart
 								</button>
 							) : (
-								<h2 className="flex items-center gap-2 text-lg font-semibold text-gray-900">
-									<IconShoppingBag size={22} className="text-[#1b0e9f]" />
+								<h2 className={cls('title')}>
+									<IconShoppingBag size={22} className={cls('title-icon')} />
 									Your cart
 									{cartTotalQuantity > 0 && (
-										<span className="rounded-full bg-[#1b0e9f]/10 px-2 py-0.5 text-xs font-semibold text-[#1b0e9f]">{cartTotalQuantity}</span>
+										<span className={cls('count-badge')}>{cartTotalQuantity}</span>
 									)}
 								</h2>
 							)}
 
 							{cartStep == 1 && (
-								<h2 className="text-lg font-semibold text-gray-900">Checkout</h2>
+								<h2 className={cls('title')}>Checkout</h2>
 							)}
 
-							<button type="button" aria-label="Close cart" className={iconButtonClass} onClick={closeCart}>
+							<button type="button" aria-label="Close cart" className={cls('close-button')} onClick={onClose}>
 								<IconX size={20} />
 							</button>
 						</div>
 
 
+
 						{/* ---------- Cart step ---------- */}
-						{cartStep == 0 && cartItems.length == 0 && (
-							<div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
-								<div className="flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 text-gray-400">
+						{cartStep == 0 && items.length == 0 && (
+							<div className={cls('empty')}>
+								<div className={cls('empty-icon')}>
 									<IconShoppingCart size={32} />
 								</div>
-								<div className="text-base font-semibold text-gray-900">Your cart is empty</div>
-								<p className="text-sm text-gray-500">Looks like you haven't added anything yet.</p>
-								<button type="button" className="mt-2 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50" onClick={closeCart}>
+								<div className={cls('empty-title')}>Your cart is empty</div>
+								<p className={cls('empty-text')}>Looks like you haven't added anything yet.</p>
+								<button type="button" className={cls('continue-button')} onClick={onClose}>
 									Continue shopping
 								</button>
 							</div>
 						)}
 
-						{cartStep == 0 && cartItems.length > 0 && (
+						{cartStep == 0 && items.length > 0 && (
 							<>
-								<div className="flex-1 overflow-y-auto">
+								<div className={cls('body')}>
 
-									<ul className="divide-y divide-gray-100 px-4">
-										{cartItems.map((item, index) => {
+									<ul className={cls('items')}>
+										{items.map((item, index) => {
 
 											var lineTotal = (parseFloat(item.price) || 0) * (parseInt(item.quantity) || 0);
 
 											return (
-												<li key={`${item?.id ?? 'item'}-${index}`} className="flex gap-3 py-4">
+												<li key={`${item?.id ?? 'item'}-${index}`} className={cls('item')}>
 
-													<div className="h-20 w-20 shrink-0 overflow-hidden rounded-lg border border-gray-200 bg-gray-50">
-														<Image className="h-full w-full object-cover" src={item.thumbnail || `/thumb.png`} width={160} height={160} alt={item?.title ?? ''} />
+													<div className={cls('item-thumb')}>
+														<Image className={cls('item-image')} src={item.thumbnail || `/thumb.png`} width={160} height={160} alt={item?.title ?? ''} />
 													</div>
 
-													<div className="flex min-w-0 flex-1 flex-col gap-1">
+													<div className={cls('item-details')}>
 
-														<div className="flex items-start justify-between gap-2">
-															<div className="line-clamp-2 text-sm font-medium leading-snug text-gray-900">{item.title}</div>
-															<button type="button" aria-label={`Remove ${item.title}`} className="-mr-1 -mt-1 shrink-0 rounded-md p-1 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500" onClick={() => {
-																removeCartItems(index)
-																addNotification({ type: 'success', title: 'Item removed', content: `<span class="font-bold">${item.title}</span> removed from cart.` })
-															}}>
+														<div className={cls('item-top')}>
+															<div className={cls('item-title')}>{item.title}</div>
+															<button type="button" aria-label={`Remove ${item.title}`} className={cls('item-remove')} onClick={() => onRemoveItem(item, index)}>
 																<IconTrash size={16} />
 															</button>
 														</div>
 
 														{(item?.attributes || item?.metaData) && (
-															<div className="flex flex-wrap gap-1">
+															<div className={cls('item-tags')}>
 																{item?.attributes && Object.entries(item.attributes).map(([attrId, attr]) => (
-																	<span key={`attr-${attrId}`} className="rounded bg-gray-100 px-1.5 py-0.5 text-[11px] text-gray-600">
+																	<span key={`attr-${attrId}`} className={cls('item-tag')}>
 																		<span className="capitalize">{attrId}</span>: {attr?.name}
 																	</span>
 																))}
 																{item?.metaData && Object.entries(item.metaData).map(([key, value]) => (
-																	<span key={`meta-${key}`} className="rounded bg-gray-100 px-1.5 py-0.5 text-[11px] text-gray-600">
+																	<span key={`meta-${key}`} className={cls('item-tag')}>
 																		{key}: {String(value)}
 																	</span>
 																))}
 															</div>
 														)}
 
-														<div className="flex items-baseline gap-2 text-xs">
-															<span className="font-medium text-gray-700">{wrapCurrency(item.price)}</span>
+														<div className={cls('item-prices')}>
+															<span className={cls('item-price')}>{wrapCurrency(item.price)}</span>
 															{item?.sale_price && item?.regular_price && (
-																<span className="text-gray-400 line-through">{wrapCurrency(item.regular_price)}</span>
+																<span className={cls('item-regular-price')}>{wrapCurrency(item.regular_price)}</span>
 															)}
 														</div>
 
-														<div className="mt-auto flex items-center justify-between gap-2 pt-1">
-															<div className="flex items-center rounded-lg border border-gray-300">
-																<button type="button" aria-label="Decrease quantity" disabled={item.quantity <= 1} className="flex h-8 w-8 items-center justify-center rounded-l-lg text-gray-600 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40" onClick={() => changeQuantity(item, item.quantity - 1)}>
+														<div className={cls('item-bottom')}>
+															<div className={cls('stepper')}>
+																<button type="button" aria-label="Decrease quantity" disabled={item.quantity <= 1} className={cls('stepper-decrease')} onClick={() => onChangeQuantity(item, item.quantity - 1)}>
 																	<IconMinus size={14} />
 																</button>
-																<span className="min-w-8 text-center text-sm font-medium tabular-nums text-gray-900" aria-live="polite">{item.quantity}</span>
-																<button type="button" aria-label="Increase quantity" className="flex h-8 w-8 items-center justify-center rounded-r-lg text-gray-600 transition-colors hover:bg-gray-100" onClick={() => changeQuantity(item, item.quantity + 1)}>
+																<span className={cls('stepper-value')} aria-live="polite">{item.quantity}</span>
+																<button type="button" aria-label="Increase quantity" className={cls('stepper-increase')} onClick={() => onChangeQuantity(item, item.quantity + 1)}>
 																	<IconPlus size={14} />
 																</button>
 															</div>
-															<div className="text-sm font-semibold text-gray-900">{wrapCurrency(lineTotal)}</div>
+															<div className={cls('item-total')}>{wrapCurrency(lineTotal)}</div>
 														</div>
 
 													</div>
@@ -448,36 +527,39 @@ const CartView = (props) => {
 									</ul>
 
 
+
+									{/* ---------- Frequently bought together (the shop's CartCrossSells, the builder's placeholder) ---------- */}
+									{crossSells}
+
+
 									{/* ---------- Coupon ---------- */}
-									<div className="border-t border-gray-100 px-4 py-4">
+									<div className={cls('coupon')}>
 										{!coupons?.applied ? (
-											<form className="flex gap-2" onSubmit={ev => {
+											<form className={cls('coupon-form')} onSubmit={ev => {
 												ev.preventDefault();
-												applyCoupon();
+												onApplyCoupon();
 											}}>
-												<div className="relative flex-1">
-													<IconTicket size={18} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-													<input type="text" aria-label="Coupon code" placeholder="Coupon code" className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-9 pr-3 text-sm uppercase text-gray-800 placeholder:normal-case placeholder:text-gray-400 focus:border-[#1b0e9f] focus:outline-none focus:ring-2 focus:ring-[#1b0e9f]/15" value={coupons.couponCode ?? ''} onChange={ev => {
-														setCoupons({ ...coupons, couponCode: ev.target.value })
-													}} />
+												<div className={cls('coupon-field')}>
+													<IconTicket size={18} className={cls('coupon-icon')} />
+													<input type="text" aria-label="Coupon code" placeholder="Coupon code" className={cls('coupon-code-input')} value={coupons?.couponCode ?? ''} onChange={ev => onCouponCode(ev.target.value)} />
 												</div>
-												<button type="submit" disabled={coupons.loading} className="inline-flex shrink-0 items-center gap-2 rounded-lg border border-[#1b0e9f] px-4 py-2 text-sm font-medium text-[#1b0e9f] transition-colors hover:bg-[#1b0e9f] hover:text-white disabled:opacity-60">
-													{coupons.loading && <Spinner />}
+												<button type="submit" disabled={coupons?.loading} className={cls('coupon-apply')}>
+													{coupons?.loading && <Spinner />}
 													Apply
 												</button>
 											</form>
 										) : (
-											<div className="flex items-center justify-between gap-3 rounded-lg border border-dashed border-green-600 bg-green-50 px-3 py-2">
-												<div className="flex min-w-0 items-center gap-2">
-													<IconTicket size={18} className="shrink-0 text-green-700" />
+											<div className={cls('coupon-applied')}>
+												<div className={cls('coupon-applied-info')}>
+													<IconTicket size={18} className={cls('coupon-applied-icon')} />
 													<div className="min-w-0">
-														<div className="truncate font-mono text-sm font-semibold uppercase text-green-800">{coupons.couponCode}</div>
-														<div className="text-xs text-green-700">
+														<div className={cls('coupon-applied-code')}>{coupons.couponCode}</div>
+														<div className={cls('coupon-applied-text')}>
 															{coupons.couponType == 'percent' ? `${coupons.amount}% off applied` : `${wrapCurrency(coupons.amount)} off applied`}
 														</div>
 													</div>
 												</div>
-												<button type="button" className="shrink-0 rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-white hover:text-red-600" onClick={removeCoupon}>
+												<button type="button" className={cls('coupon-remove')} onClick={onRemoveCoupon}>
 													Remove
 												</button>
 											</div>
@@ -488,63 +570,60 @@ const CartView = (props) => {
 
 
 								{/* ---------- Totals + checkout ---------- */}
-								<div className="shrink-0 border-t border-gray-200 bg-gray-50 px-4 pb-4 pt-3">
-									<dl className="flex flex-col gap-1.5 text-sm">
-										<div className="flex justify-between gap-3">
-											<dt className="text-gray-600">Subtotal</dt>
-											<dd className="font-medium text-gray-900">{wrapCurrency(cartTotal)}</dd>
+								<div className={cls('summary')}>
+									<dl className={cls('totals')}>
+										<div className={cls('total-row')}>
+											<dt className={cls('total-label')}>Subtotal</dt>
+											<dd className={cls('total-value')}>{wrapCurrency(cartTotal)}</dd>
 										</div>
 
 										{couponAmount > 0 && (
-											<div className="flex justify-between gap-3">
-												<dt className="text-gray-600">Coupon</dt>
-												<dd className="font-medium text-green-600">−{wrapCurrency(couponAmount)}</dd>
+											<div className={cls('total-row')}>
+												<dt className={cls('total-label')}>Coupon</dt>
+												<dd className={cls('discount-value')}>−{wrapCurrency(couponAmount)}</dd>
 											</div>
 										)}
 
 										{discountLines.length > 0 ? (
 											discountLines.map((line, i) => (
-												<div key={line?.ruleId ?? i} className="flex justify-between gap-3">
-													<dt className="text-gray-600">{line?.label || 'Discount'}</dt>
-													<dd className="font-medium text-green-600">−{wrapCurrency(line.amount)}</dd>
+												<div key={line?.ruleId ?? i} className={cls('total-row')}>
+													<dt className={cls('total-label')}>{line?.label || 'Discount'}</dt>
+													<dd className={cls('discount-value')}>−{wrapCurrency(line.amount)}</dd>
 												</div>
 											))
 										) : autoDiscount > 0 && (
-											<div className="flex justify-between gap-3">
-												<dt className="text-gray-600">Discount</dt>
-												<dd className="font-medium text-green-600">−{wrapCurrency(autoDiscount)}</dd>
+											<div className={cls('total-row')}>
+												<dt className={cls('total-label')}>Discount</dt>
+												<dd className={cls('discount-value')}>−{wrapCurrency(autoDiscount)}</dd>
 											</div>
 										)}
 
 										{payableShipping > 0 && (
-											<div className="flex justify-between gap-3">
-												<dt className="text-gray-600">Shipping</dt>
-												<dd className="font-medium text-gray-900">{wrapCurrency(payableShipping)}</dd>
+											<div className={cls('total-row')}>
+												<dt className={cls('total-label')}>Shipping</dt>
+												<dd className={cls('total-value')}>{wrapCurrency(payableShipping)}</dd>
 											</div>
 										)}
 
-										<div className="mt-1 flex items-baseline justify-between gap-3 border-t border-gray-200 pt-2">
-											<dt className="text-base font-semibold text-gray-900">Total</dt>
-											<dd className="text-lg font-bold text-gray-900">{wrapCurrency(cartTotalPay)}</dd>
+										<div className={cls('grand-total-row')}>
+											<dt className={cls('grand-total-label')}>Total</dt>
+											<dd className={cls('grand-total-value')}>{wrapCurrency(cartTotalPay)}</dd>
 										</div>
 									</dl>
 
 									{payableShipping == 0 && (
-										<p className="mt-1 flex items-center gap-1.5 text-xs text-gray-500">
+										<p className={cls('shipping-note')}>
 											<IconTruckDelivery size={14} />
-											{cartDiscount?.freeShipping ? 'Free shipping on this order.' : 'Shipping is calculated at checkout.'}
+											{freeShipping ? 'Free shipping on this order.' : 'Shipping is calculated at checkout.'}
 										</p>
 									)}
 
-									<button type="button" className={`${primaryButtonClass} mt-3`} onClick={goToCheckout}>
+									<button type="button" className={cls('checkout-button')} onClick={onCheckout}>
 										Checkout
 										<IconArrowRight size={18} />
 									</button>
 
-									<button type="button" className="mt-2 w-full rounded-lg py-1.5 text-xs font-medium text-gray-500 transition-colors hover:text-red-600" onClick={() => {
-										resetCartItems()
-										addNotification({ type: 'success', title: 'Cart reset', content: "Cart items reset success" })
-									}}>
+									<button type="button" className={cls('clear-button')} onClick={onClear}>
 										Clear cart
 									</button>
 								</div>
@@ -554,13 +633,8 @@ const CartView = (props) => {
 
 						{/* ---------- Checkout step ---------- */}
 						{cartStep == 1 && (
-							<div className="min-h-0 flex-1 overflow-y-auto">
-								{/* The cart block's checkout toggles (shipping methods,
-									  shipping address, delivery location, subscription) live
-									  in its options. Blocks saved before a toggle existed have
-									  no key for it, so missing keys fall back to the element's
-									  defaults; a toggle switched off in the builder stays off. */}
-								<CheckoutView cartOptions={{ ...checkoutOptionDefaults, ...options }} />
+							<div className={cls('checkout-body')}>
+								{checkout}
 							</div>
 						)}
 
@@ -570,7 +644,7 @@ const CartView = (props) => {
 
 		</div>
 	);
-};
+}
 
 
 

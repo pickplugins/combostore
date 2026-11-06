@@ -6,9 +6,74 @@ import { usePost } from "../context/PostContext";
 import { useUtilsStore } from "../../../store/useUtilsStore";
 import { IconLibraryPhoto, IconCheckbox, IconSquare, IconFidgetSpinner, IconTrash, IconStarFilled, IconStar, IconX } from "@tabler/icons-react";
 import { useProductStore } from "../../../store/productStore";
+import { elementCssClasses } from "../ElementsDefinition";
 
 
-const ProductVariablePricesView = (props) => {
+const NO_ITEMS = [];
+
+/*
+	The attribute tiles, shared with the builder preview
+	(ProductVariations.jsx): for each attribute its title and a radio group
+	of options. `cls` is the block's class lookup; `tileCls` is the lookup for
+	the option tiles, which keep "blank means the default look". Nothing
+	renders for a product without attributes - it used to draw an empty box
+	with the block's `*` classes on every simple product.
+*/
+export function VariationsMarkup({ cls, tileCls, id, index, type, attributes, isSelected, isAvailable, onPick, rootClassName = '', rootProps = {} }) {
+	if (!Array.isArray(attributes) || attributes.length === 0) return null;
+
+	return (
+		<div id={id} index={index} type={type} className={`${cls("*")} ${rootClassName}`} {...rootProps}>
+			<div className={cls("attr-wrap")}>
+				{attributes.map((attribute, attributeIndex) => {
+					const attrTitle = attribute?.title;
+					const attrSlug = attribute?.attr;
+					const attrItems = Array.isArray(attribute?.items) ? attribute.items : [];
+
+					return (
+						<div key={`${attrSlug}-${attributeIndex}`} className={cls("attr-item")}>
+							<div className={cls("attr-title")}>{attrTitle}</div>
+
+							<div role="radiogroup" aria-label={typeof attrTitle === 'string' ? attrTitle : undefined} className={tileCls("attr-items-wrap")}>
+								{attrItems.map((item, itemIndex) => {
+									const itemSlug = item?.slug;
+									const selected = isSelected(attrSlug, itemSlug);
+									const available = isAvailable(attrSlug, itemSlug);
+
+									return (
+										<div
+											key={`${attrSlug}-${itemSlug}-${itemIndex}`}
+											className={`${tileCls("variation-item")} ${selected ? tileCls("variation-selected") : ""} ${!available ? tileCls("variation-disabled") : "cursor-pointer"}`}
+											/* A radio in a radio group: reachable with Tab, picked
+											   with Enter or Space, and read out as selected or not. */
+											role="radio"
+											aria-checked={selected}
+											aria-disabled={!available}
+											tabIndex={available ? 0 : -1}
+											onKeyDown={(ev) => {
+												if (ev.key !== 'Enter' && ev.key !== ' ') return;
+												ev.preventDefault();
+												if (available) onPick(attrSlug, itemSlug);
+											}}
+											onClick={(ev) => {
+												ev.stopPropagation();
+												if (available) onPick(attrSlug, itemSlug);
+											}}
+										>
+											{item?.name}
+										</div>
+									);
+								})}
+							</div>
+						</div>
+					);
+				})}
+			</div>
+		</div>
+	);
+}
+
+const ProductVariationsView = (props) => {
 	const {
 		id,
 		type,
@@ -41,8 +106,9 @@ const ProductVariablePricesView = (props) => {
 
 	const { wrapCurrency } = useUtilsStore();
 
-	const attributes = productData?.attributes ?? [];
-	const variations = productData?.variations ?? [];
+	/* One shared empty list, so the effects below do not see a new [] - and re-run - on every render. */
+	const attributes = Array.isArray(productData?.attributes) ? productData.attributes : NO_ITEMS;
+	const variations = Array.isArray(productData?.variations) ? productData.variations : NO_ITEMS;
 
 	const [selectedAttributes, setSelectedAttributes] = useState({});
 	const [selectedVariation, setSelectedVariation] = useState(null);
@@ -355,18 +421,16 @@ const ProductVariablePricesView = (props) => {
 
 		const initialSelection = {};
 
+		/*
+			Keyed by each attribute's `attr`, as clicks, matching and the
+			highlighted tile all are. It was keyed by `title`, so whenever the
+			two differed the selection matched nothing and no tile lit up.
+		*/
 		attributes.forEach((attribute) => {
-			const attributeTitle = attribute?.title;
-
-			const matchedKey = Object.keys(variationAttributes).find(
-				(key) =>
-					normalizeAttributeName(key) ===
-					normalizeAttributeName(attributeTitle)
-			);
-
-			if (matchedKey) {
-				initialSelection[attributeTitle] =
-					variationAttributes[matchedKey];
+			const attrKey = attribute?.attr;
+			const value = variationAttributes[normalizeAttributeName(attrKey)];
+			if (attrKey && value) {
+				initialSelection[attrKey] = value;
 			}
 		});
 
@@ -392,146 +456,32 @@ const ProductVariablePricesView = (props) => {
 			? isVariationAvailable(selectedVariation)
 			: false;
 
-	/* A class saved in the page builder wins; a block without one gets a
-	   built-in look instead of options that read as plain text. */
-	const cssSelectorClass = (key, fallback) => {
+	/* Each part's classes; a key the block lacks falls back to the productVariations defaults in ElementsDefinition.js. */
+	const cls = elementCssClasses('productVariations', cssSelectors);
+	/* The option tiles keep "blank means the default look": blocks made from the old definition saved
+	   them as " ", and an empty selected or disabled style would hide which option is chosen. */
+	const defaultCls = elementCssClasses('productVariations', {});
+	const cssSelectorClass = (key) => {
 		const value = cssSelectors?.[key]?.classes;
-		return typeof value === 'string' && value.trim() !== '' ? value : fallback;
+		return typeof value === 'string' && value.trim() !== '' ? value : defaultCls(key);
 	};
 
 	return (
-		<>
-
-
-
-
-			{attributes && (
-
-				<div
-					id={id}
-					index={index}
-					type={type}
-					className={`${cssSelectors?.["*"]?.classes ?? ""}`}
-				>
-
-
-
-					<div
-						className={`${cssSelectors?.["attr-wrap"]?.classes ?? ""}`}
-					>
-						{attributes.map((attribute, attributeIndex) => {
-							const attrTitle = attribute?.title;
-							const attrSlug = attribute?.attr;
-							const attrItems = attribute?.items ?? [];
-
-
-
-							return (
-								<div key={`${attrSlug}-${attributeIndex}`} className={`${cssSelectors?.["attr-item"]?.classes ?? ""}`}
-								>
-									<div className={`${cssSelectors?.["attr-title"]?.classes ?? ""}`}							>
-										{attrTitle}
-									</div>
-
-									<div role="radiogroup" aria-label={typeof attrTitle === 'string' ? attrTitle : undefined} className={`${cssSelectorClass("attr-items-wrap", "flex flex-wrap gap-2")}`}							>
-										{/* {attrItems.map((item, itemIndex) => {
-											const selected = selectedAttributes?.[attrSlug] === item?.slug;
-
-											const available = isOptionAvailable(attrSlug, item);
-
-
-
-
-											return (
-												<div key={`${attrSlug}-${item?.slug}-${itemIndex}`} className={`${cssSelectors?.["variation-item"]?.classes ?? ""} ${selected ? cssSelectors?.["variation-selected"]?.classes : ""}   ${!available ? cssSelectors?.["variation-disabled"]?.classes : "cursor-pointer"
-													}
-                                            `}
-													aria-selected={selected}
-													aria-disabled={!available}
-													onClick={() => {
-														if (!available) {
-															return;
-														}
-
-
-														handleAttributeClick(attrSlug, item?.slug);
-													}}
-												>
-
-													{JSON.stringify(item)}
-
-
-													{item?.name}
-												</div>
-											);
-										})} */}
-
-										{attrItems.map((item, itemIndex) => {
-											const itemSlug = item?.slug;
-
-											const selected =
-												selectedAttributes?.[attrSlug] === itemSlug;
-
-											const available =
-												isOptionAvailable(attrSlug, itemSlug);
-
-											return (
-												<div
-													key={`${attrSlug}-${itemSlug}-${itemIndex}`}
-													className={`
-                ${cssSelectorClass("variation-item", "rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-800 transition-colors hover:border-gray-400")}
-                ${selected
-															? cssSelectorClass("variation-selected", "!border-[#1b0e9f] bg-[#1b0e9f]/5 !text-[#1b0e9f] ring-1 ring-[#1b0e9f]")
-															: ""
-														}
-                ${!available
-															? cssSelectorClass("variation-disabled", "cursor-not-allowed opacity-40 line-through")
-															: "cursor-pointer"
-														}
-            `}
-													/* A radio in a radio group: reachable with Tab, picked
-													   with Enter or Space, and read out as selected or not. */
-													role="radio"
-													aria-checked={selected}
-													aria-disabled={!available}
-													tabIndex={available ? 0 : -1}
-													onKeyDown={(ev) => {
-														if (ev.key !== 'Enter' && ev.key !== ' ') return;
-														ev.preventDefault();
-														if (available) handleAttributeClick(attrSlug, itemSlug);
-													}}
-													onClick={() => {
-														if (!available) {
-															return;
-														}
-
-														handleAttributeClick(
-															attrSlug,
-															itemSlug
-														);
-													}}
-												>
-													{item?.name}
-												</div>
-											);
-										})}
-									</div>
-								</div>
-							);
-						})}
-
-
-
-					</div>
-
-
-				</div>
-			)}
-		</>
+		<VariationsMarkup
+			cls={cls}
+			tileCls={cssSelectorClass}
+			id={id}
+			index={index}
+			type={type}
+			attributes={attributes}
+			isSelected={(attrSlug, itemSlug) => selectedAttributes?.[attrSlug] === itemSlug}
+			isAvailable={isOptionAvailable}
+			onPick={handleAttributeClick}
+		/>
 	);
 };
 
-ProductVariablePricesView.propTypes = {
+ProductVariationsView.propTypes = {
 	id: PropTypes.string,
 	type: PropTypes.string,
 	index: PropTypes.number,
@@ -542,4 +492,4 @@ ProductVariablePricesView.propTypes = {
 	viewType: PropTypes.string,
 };
 
-export default ProductVariablePricesView;
+export default ProductVariationsView;

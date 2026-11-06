@@ -23,13 +23,11 @@
  *    Mixing them gives either a bullet fighting an icon or a silently missing
  *    bullet.
  *
- * 2. `empty:hidden` on the `icon` key is required in marker mode, not
- *    cosmetic. List.jsx:62-71 renders the icon wrapper in both branches -- with
- *    the item's icon, or with the `options.icon` fallback, or empty if neither
- *    resolves -- and that wrapper is a <div>, so an empty one still occupies a
- *    block and pushes the text span onto the next line. `empty:hidden` collapses
- *    it so marker-mode items stay on one line beside their bullet. Every preset
- *    carries it.
+ * 2. The `icon` span is drawn only when an item's icon (or the `options.icon`
+ *    fallback) resolves, so marker-mode items stay on one line beside their
+ *    bullet without help. (It used to be an empty <div> on every item, which is
+ *    why every preset carries `empty:hidden` on `icon` -- now redundant but
+ *    harmless.)
  *
  * 3. `options.icon` is a fallback applied to any item whose own `icon` is empty
  *    (:57, :68), which is what makes the checklist presets work: one tick

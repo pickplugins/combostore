@@ -1,155 +1,67 @@
-import PropTypes from "prop-types";
 import React from "react";
-import { useState, useEffect } from "react";
-import { IconLibraryPhoto, IconCheckbox, IconSquare, IconFidgetSpinner, IconTrash, IconStarFilled, IconStar, IconX } from "@tabler/icons-react";
-import { useDraggable } from '@dnd-kit/react';
-import ToggleContent from '../../../components/ToggleContent';
-import CssClassPicker from "../CssClassPicker";
-import CssSelectors from "../CssSelectors";
 import IconPicker from "../../../components/IconPicker";
+import CssSelectors from "../CssSelectors";
+import { withElementCssDefaults } from "../ElementsDefinition";
 
+const inputClass = "w-full !rounded-lg !border !border-gray-300 !bg-white !px-2.5 !py-1.5 !text-xs !text-gray-700 !shadow-none !outline-none transition-colors focus:!border-brand focus:!ring-4 focus:!ring-brand/10";
+const smallButton = 'inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2 py-1 text-xs font-medium text-gray-600 cursor-pointer transition-colors hover:border-brand/40 hover:bg-brand/5 hover:text-brand-700 w-fit';
 
-const ListOptions = (props) => {
+/*
+	Settings panel for the `menuItem` block: add an item to its sub-menu, the
+	label and URL, an icon and its size, then its cssSelectors keys. (Its
+	Classes field saved options.classes, which nothing reads; it was named
+	ListOptions.)
+*/
+const MenuItemOptions = (props) => {
 
 	var updateBlock = props?.updateBlock;
 	var handleMoveBlock = props?.handleMoveBlock;
-
-	var cssSelectors = props?.cssSelectors ?? {};
+	var options = props?.options ?? {};
 	var id = props?.id;
-	var options = props?.options;
-	var items = options?.items ?? [];
-	var icon = options?.icon;
-	var iconSize = options?.iconSize;
+	var hasChildren = Array.isArray(props?.children) && props.children.length > 0;
 
-	const [loading, setloading] = useState(false);
+	/* Every current key, filled from defaults where the block lacks it. */
+	var cssSelectors = withElementCssDefaults('menuItem', props?.cssSelectors);
 
-
-
-
-
-
-	// useEffect(() => {
-
-	// 	fetchPosts();
-	// }, []);
-
-
-
-
-
-
+	const setOption = (key, value) => updateBlock('options', { ...options, [key]: value });
 
 	return (
 		<div className="px-3" >
-			{/* {JSON.stringify(prams)} */}
-
 			<div className="flex flex-col gap-3">
 
-				<div className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2 py-1 text-xs font-medium text-gray-600 cursor-pointer transition-colors hover:border-brand/40 hover:bg-brand/5 hover:text-brand-700 w-fit" onClick={ev => {
-
-					console.log(props);
-
-					handleMoveBlock({ paletteType: 'menuItem' }, id, 'inside')
-
-				}}>Add Item</div>
+				<button type="button" className={smallButton} onClick={() => handleMoveBlock?.({ paletteType: 'menuItem' }, id, 'inside')}>Add a sub-menu item</button>
 
 				<div className="flex flex-col gap-2">
 					<label htmlFor="" className="text-xs font-medium text-gray-600">Label</label>
-					<div>
-						<input type="text" className="w-full !rounded-lg !border !border-gray-300 !bg-white !px-2.5 !py-1.5 !text-xs !text-gray-700 !shadow-none !outline-none transition-colors focus:!border-brand focus:!ring-4 focus:!ring-brand/10" value={options?.label} onChange={ev => {
-
-							var value = ev.target.value;
-
-							var optionsX = { ...options }
-							optionsX.label = value
-							updateBlock('options', optionsX)
-
-						}} >
-
-
-						</input>
-					</div>
+					<input type="text" className={inputClass} value={options?.label ?? ''} onChange={ev => setOption('label', ev.target.value)} />
 				</div>
+
 				<div className="flex flex-col gap-2">
 					<label htmlFor="" className="text-xs font-medium text-gray-600">URL</label>
-					<div>
-						<input type="text" className="w-full !rounded-lg !border !border-gray-300 !bg-white !px-2.5 !py-1.5 !text-xs !text-gray-700 !shadow-none !outline-none transition-colors focus:!border-brand focus:!ring-4 focus:!ring-brand/10" placeholder="/slug" value={options?.url} onChange={ev => {
-
-							var value = ev.target.value;
-
-							var optionsX = { ...options }
-							optionsX.url = value
-							updateBlock('options', optionsX)
-
-						}} >
-
-
-						</input>
-					</div>
+					<input type="text" placeholder="/shop or https://…" className={inputClass} value={options?.url ?? ''} onChange={ev => setOption('url', ev.target.value)} />
+					<p className="text-xs text-gray-500">
+						{hasChildren
+							? 'With a URL the label goes to that page and the arrow opens the sub-menu; leave it empty (or #) for a label that only opens the sub-menu.'
+							: 'Leave it empty for plain text.'}
+					</p>
 				</div>
 
-
-				{/* <CssClassPicker type="text" className="w-full !rounded-lg !border !border-gray-300 !bg-white !px-2.5 !py-1.5 !text-xs !text-gray-700 !shadow-none !outline-none transition-colors focus:!border-brand focus:!ring-4 focus:!ring-brand/10" value={options?.classes} onChange={(value) => {
-
-
-					var optionsX = { ...options }
-					optionsX.classes = value
-					updateBlock('options', optionsX)
-
-				}} /> */}
-
-
-
-				<div className="flex flex-col gap-2">
-					<label htmlFor="" className="text-xs font-medium text-gray-600">Icon</label>
-					<div>
-
-
-
-						<IconPicker allowReset={true} value={''} position={`right`} label={`Choose`} labelClass={'inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-2 py-1 text-xs font-medium text-gray-600 cursor-pointer transition-colors hover:border-brand/40 hover:bg-brand/5 hover:text-brand-700 w-fit'} onOptionsChoose={(args) => {
-
-
-
-
-
-							var optionsX = { ...options }
-							optionsX.icon = args
-							updateBlock('options', optionsX)
-
-						}} />
-					</div>
+				<div className="flex items-center justify-between gap-2">
+					<label className="text-xs font-medium text-gray-600">Icon{options?.icon ? `: ${options.icon}` : ''}</label>
+					<IconPicker allowReset={true} value={''} position={`right`} label={`Choose`} labelClass={smallButton} onOptionsChoose={(args) => setOption('icon', args)} />
 				</div>
 
 				<div className="flex flex-col gap-2">
-					<label htmlFor="" className="text-xs font-medium text-gray-600">Icon Size</label>
-					<div>
-						<input type="number" className="w-full !rounded-lg !border !border-gray-300 !bg-white !px-2.5 !py-1.5 !text-xs !text-gray-700 !shadow-none !outline-none transition-colors focus:!border-brand focus:!ring-4 focus:!ring-brand/10" value={iconSize} onChange={ev => {
-
-							var value = ev.target.value;
-
-							var optionsX = { ...options }
-							optionsX.iconSize = value
-							updateBlock('options', optionsX)
-
-						}} />
-					</div>
+					<label htmlFor="" className="text-xs font-medium text-gray-600">Icon size</label>
+					<input type="number" placeholder="24" className={inputClass} value={options?.iconSize ?? ''} onChange={ev => setOption('iconSize', ev.target.value === '' ? undefined : Number(ev.target.value))} />
 				</div>
+
+				<p className="text-xs text-gray-500">Sub-menus open on hover and keyboard focus, and from the arrow on touch screens. The menu's own menu-item, menu-link, link-label, icon and sub-menu classes apply too.</p>
 
 				<CssSelectors cssSelectors={cssSelectors} updateBlock={updateBlock} />
-
-
-
-
-
-
-
 			</div>
-
-
 		</div>
 	);
 };
 
-
-
-export default ListOptions;
+export default MenuItemOptions;

@@ -6,46 +6,30 @@
  * root here MUST be `"type": "productCategories"`. (PageBuilder.jsx regenerates
  * all ids on paste/replace, so the readable ids below are safe.)
  *
- * productCategories is a leaf: an optional label, then one link per category.
- * Its renderer is the same shape as ProductTags.jsx, differing only in the data
- * it reads (`product.categories`), the mock values and the /categories/ href --
- * so the same two constraints apply here, and the presets below are built for
- * where categories actually get used: as an eyebrow above a product title, as a
- * breadcrumb-ish trail, or as badges.
+ * productCategories is a leaf: an optional label, then one link per category
+ * of the product, each to its /categories/<slug>/ page. ProductCategoriesView
+ * (the shop) and the builder's ProductCategories.jsx render the same
+ * ProductTermLinksMarkup. The presets are built for where categories get
+ * used: as an eyebrow above a product title, as a breadcrumb-ish trail, or as
+ * badges.
  *
- * Renderer notes that shaped these presets:
+ * Notes that shaped these presets:
  *
- * 1. The separator span lives INSIDE each category's <Link>
- *    (ProductCategories.jsx:84-87), not between the links. So anything that
- *    gives `item` a background, padding and a radius puts the comma inside the
- *    badge. The badge presets therefore set `separator` to `hidden` and space
- *    the items with a gap on `items`; the inline presets keep the comma and
+ * 1. The separator span lives INSIDE each category's link, after its name.
+ *    So anything that gives `item` a background, padding and a radius puts the
+ *    separator inside the badge. The badge presets set `separator` to `hidden`
+ *    and space the items with a gap on `items`; the inline presets keep it and
  *    leave `item` unboxed.
  *
- * 2. The separator text is hardcoded to ", " (:86) and the declared `separator`
- *    option is never read, so the key can style or hide that comma but cannot
- *    change the glyph. To get a different divider -- a slash for the breadcrumb
- *    preset -- hide the span and generate the glyph off `item` instead:
- *    `after:content-['/'] last:after:content-none`. The `last:` variant stops it
- *    after the final link, since the Links are direct children of `items`. Both
- *    utilities were confirmed to compile against this project's Tailwind v4
- *    (`content: '/'` and `content: none` both appear in the generated CSS).
+ * 2. `options.separator` sets the text between categories (", " by default;
+ *    "" leaves it out). The breadcrumb preset predates that and generates a
+ *    slash off `item` instead -- `after:content-['/'] last:after:content-none`
+ *    with the span hidden -- which still works, since the links are direct
+ *    children of `items`.
  *
- * 3. Categories fall back to two mock entries when there is no product context
- *    (:36), so the canvas shows "Category Name" and "Category Name 2" and the
- *    block stays visible and selectable.
- *
- * 4. Clicks are swallowed: :82 calls `ev.preventDefault()` on every link with
- *    nothing gating it, so the href (`${NEXT_PUBLIC_STORE_URL}categories/<slug>`)
- *    never navigates, on the front end as much as in the canvas. Same pattern as
- *    ProductTags.jsx:82 and LinkList.jsx:73.
- *
- * 5. Options are nearly all dead. `label` works and is guarded (:67), so an
- *    empty label leaves no stray box. `separator` is declared and never read.
- *    Lines 28-31 also read `tag`, `readmore` and `maxWord` and use none of them.
- *    ProductCategoriesOptions.jsx adds `classes`, `icon` and `iconSize`
- *    controls the renderer never reads, so Label is the only control in that
- *    panel that does anything.
+ * 3. On the shop a product without categories shows nothing; the builder then
+ *    shows a dimmed sample "Groceries, Organic" so the block stays visible and
+ *    selectable. Links work on the shop and never navigate in the builder.
  */
 
 var layouts = [

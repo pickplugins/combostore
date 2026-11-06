@@ -6,59 +6,39 @@
  * MUST be `"type": "productPrice"`. (PageBuilder.jsx regenerates all ids on
  * paste/replace, so the readable ids below are safe.)
  *
- * productPrice is a leaf and styling-only: no children, and every option it
- * declares is inert. Only four of its seven selector keys do anything.
+ * productPrice is a leaf and styling-only: no children and no options; the
+ * price comes from the product. ProductPriceView (the shop) and the builder's
+ * ProductPrice.jsx render the same ProductPriceMarkup from the same
+ * productPriceDisplay, so a preset looks the same in both.
  *
- * Renderer notes that shaped these presets:
+ * Notes that shaped these presets:
  *
- * 1. Only the simple-price branch is reachable in the builder.
- *    `price_type` comes from `productData?.price_type ?? 'simple'`
- *    (ProductPrice.jsx:53), and the mock product the renderer falls back to when
- *    there is no product context (:46) has no `price_type` key -- so the canvas
- *    always shows the simple branch with price 100, sale_price 80 and
- *    regular_price 150. That is what these presets are designed against.
+ * 1. Outside a product loop the builder shows a sample on-sale product (80,
+ *    struck-through 150), so every simple-price key is visible. That is what
+ *    these presets are designed against.
  *
- * 2. The live keys are `*`, `simple-price-wrap`, `simple-price-sale` and
- *    `simple-price-regular`. `variable-price-wrap`, `variable-price-min` and
- *    `variable-price-max` are declared but never read: the variable branch
- *    (:144-337) hardcodes its own colours (text-[#1b0e9f], text-[#e63946]) and
- *    never touches cssSelectors. They are filled in below so they are right if
- *    that branch is ever wired to them, but nothing shows them today.
+ * 2. Which keys show depends on the product. A simple product uses
+ *    `simple-price-wrap` / `simple-price-sale` / `simple-price-regular`; a
+ *    product with variations shows `variable-price-*` (a min - max range)
+ *    until a variation is picked, then the simple keys; a pay-what-you-want
+ *    product shows the `pwyw-*` controls. These presets style all of them so a
+ *    card looks right whatever product it holds.
  *
- * 3. There is a hardcoded `<span> - </span>` between the two prices
- *    (ProductPrice.jsx:125) with no selector key of its own, so a sale reads
- *    "100Tk - 150Tk" rather than the usual price-then-struck-original pair.
- *    Two consequences. It cannot be styled through a key -- the Sale Pair
- *    preset suppresses it with an arbitrary variant on the wrap instead,
- *    `[&>span:nth-child(2)]:hidden`, which targets that separator only when a
- *    sale price exists and matches nothing when it does not. And stacking the
- *    two prices is off the table: `flex-col` on the wrap would put that lone
- *    dash on its own line between them, so every preset here keeps the pair on
- *    one row.
+ * 3. `simple-price-sale` holds the price the customer pays and
+ *    `simple-price-regular` the original, shown only on sale -- style the first
+ *    as the live price and the second as the crossed-out one.
  *
- * 4. `simple-price-sale` holds `productData.price`, not `sale_price` (:124), and
- *    `simple-price-regular` holds `regular_price` (:126) -- so the key names
- *    read backwards from what they contain. Style `simple-price-sale` as the
- *    live price and `simple-price-regular` as the crossed-out one.
+ * 4. The " - " between the two prices is its own span, `price-separator`,
+ *    second inside `simple-price-wrap`. Set it to `hidden` to drop it. The Sale
+ *    Pair preset predates the key and hides it with
+ *    `[&>span:nth-child(2)]:hidden` on the wrap, which still works because the
+ *    span is in the same place.
  *
- * 5. Prices run through `wrapCurrency` (useUtilsStore.js:10), which reads
- *    `currencySymbole` and `currencyPosition` from the counter store --
- *    "Tk" and "after" by default, so "100Tk". Note it returns an empty string
- *    if `currencyPosition` is ever set to anything other than before/after.
+ * 5. Prices run through `wrapCurrency`, which reads the shop's currency symbol
+ *    and position ("Tk", "after" by default, so "80Tk"). It returns an empty
+ *    string if the position is anything other than before/after.
  *
- * 6. Every option is inert. The definition declares `separator` and
- *    `variablePriceViewType`; the renderer reads neither. It reads
- *    `options.tag` and `options.linkTo` and uses neither. ProductPriceOptions.jsx
- *    only writes `linkTo` (:43) and `classes` (:61), and `options.classes` is
- *    never read either -- so that panel's two controls currently do nothing and
- *    all styling has to come through the selector keys. The two declared options
- *    are kept below to match the definition.
- *
- * 7. Two latent crashes in branches the canvas cannot reach, worth knowing
- *    before enabling them on a product page: the variable branch calls
- *    `onChangePrice(...)` on click (:164, :221) from a prop BlockPreview never
- *    passes, and the pwyw branch calls `addNotification(...)` (:380), which is
- *    not imported or defined anywhere in the file.
+ * 6. A price of 0 shows nothing rather than "0Tk".
  */
 
 var layouts = [

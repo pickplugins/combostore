@@ -53,12 +53,24 @@ const ElementsList = (props) => {
 
 
 
+	/*
+		The palette's groups, in order. Each element's `group` in
+		ElementsDefinition.js (which is laid out in this same order) must be one
+		of these ids - an element in an unlisted group is not shown. `content`
+		and `shop` are also used by extensions (countdown timer, currency
+		switcher, discount rules), so keep those ids. A group with no placeable
+		element (Invoice, today) is hidden.
+	*/
 	var groups = [
-		{ id: 'text', label: 'Text' },
+		{ id: 'basic', label: 'Basic' },
 		{ id: 'layout', label: 'Layout' },
-		{ id: 'content', label: 'Content' },
+		{ id: 'blocks', label: 'Content Blocks' },
+		{ id: 'site', label: 'Header & Navigation' },
+		{ id: 'content', label: 'Posts & Content' },
+		{ id: 'archive', label: 'Categories & Archives' },
 		{ id: 'product', label: 'Product' },
-		{ id: 'shop', label: 'Shop' },
+		{ id: 'suggestions', label: 'Recommendations' },
+		{ id: 'shop', label: 'Shop & Account' },
 		{ id: 'invoice', label: 'Invoice' },
 	]
 

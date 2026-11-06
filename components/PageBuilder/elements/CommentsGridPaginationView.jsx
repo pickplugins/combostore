@@ -1,120 +1,58 @@
 "use client"
+import PropTypes from "prop-types";
 import React from "react";
-import { useState, useEffect } from "react";
-import BlockRender from '../BlockRender';
-import { CommentsGridProvider } from "../context/CommentsGridContext";
-import { usePostGrid } from "../context/PostGridContext";
-
-import {
-	IconCheckbox,
-	IconSquare,
-	IconArrowNarrowLeftDashed,
-	IconArrowNarrowRightDashed,
-	IconRefresh,
-	IconLink,
-	IconSortDescending,
-	IconSortAscending,
-} from "@tabler/icons-react";
+import { useCommentsGrid } from "../context/CommentsGridContext";
+import { PaginationMarkup, paginationSettings } from "./PostGridPaginationView";
+import { elementCssClasses } from "../ElementsDefinition";
 
 /*
-	Storefront twin of CommentsGrid.jsx: the same wrapper and the same provider,
-	minus the editor's drag and drop handling.
+	Pages through the comments grid it sits in - the post grid pagination's
+	markup and settings (PaginationMarkup), reading the grid's query and
+	changing the page through its onChangeQuery, then scrolling the grid into
+	view. It read the *post* grid's context (usePostGrid), so inside a
+	comments grid it had no query and paged nothing.
 
-	Two things it does that the editor version does not, both because the
-	editor only has to look right on a canvas:
-
-		- The post id comes from PostContext, which app/product/[slug] and
-			app/blog/[slug] both provide. CommentsLoop.jsx hard-codes
-			`queryPrams.post_id = 10018` so the canvas has something to draw; on a
-			live page that would show one fixed post's comments everywhere.
-		- It hands the loop a `refresh` counter and the form an
-			`onCommentSubmitted` callback, so a comment posted through
-			commentsForm reloads the list beside it. The two blocks are siblings
-			under this one and have no other way to reach each other.
-
-	The query params carry the shape the rest of the app uses for this endpoint
-	(see components/PageBuilder/elements/Comments.jsx), and anything set on the
-	block's own options wins.
+	get_comments sends no page count, so the last page is known only once the
+	loop gets a page shorter than per_page: until then Next stays enabled,
+	and the numbers style shows the page box (it cannot number pages it does
+	not know of). It hides when the first page is also the last.
 */
 const CommentsGridPaginationView = (props) => {
 
-	var type = props?.type
-	var children = props?.children;
-	var options = props?.options;
-	var id = props?.id;
+	const grid = useCommentsGrid();
 
-	var index = props?.index
-	var cssSelectors = props?.cssSelectors ?? {};
+	/* A key the block lacks falls back to the commentsGridPagination defaults in ElementsDefinition.js. */
+	var cls = elementCssClasses('commentsGridPagination', props?.cssSelectors);
 
-	const postGridAttr = usePostGrid();
+	var paged = parseInt(grid?.queryPrams?.paged) || 1;
+	var maxPages = Number(grid?.results?.maxPages) || 0;
 
-	var [queryPrams, setqueryPrams] = useState(postGridAttr?.queryPrams);
-
-
-	var [refresh, setrefresh] = useState(0);
-
-
-	useEffect(() => {
-
-
-
-		if (postGridAttr?.queryPrams) {
-			setqueryPrams(postGridAttr?.queryPrams)
-		}
-
-
-
-
-	}, [postGridAttr?.queryPrams]);
-
+	if (!grid?.onChangeQuery) return null;
+	if (maxPages === 1 && paged <= 1) return null;
 
 	return (
-		<div
-			id={id}
-			type={type}
-			className={`  ${cssSelectors['*']?.classes ?? ''}  `}
-
-		>
-
-
-
-			<div
-				className={`${cssSelectors['previous']?.classes}  `}
-				onClick={(ev) => {
-					var paged = queryPrams?.paged;
-
-
-					if (paged == 1) return;
-					setqueryPrams({ ...queryPrams, paged: queryPrams?.paged - 1 });
-				}}>
-				<IconArrowNarrowLeftDashed />
-			</div>
-
-			<div>
-				<input name="paged" className={`${cssSelectors['current']?.classes}  `} type="number" value={queryPrams?.paged} onChange={ev => {
-					var value = parseInt(ev.target.value)
-					var paged = value;
-
-					setqueryPrams({ ...queryPrams, paged: paged });
-
-				}} />
-			</div>
-
-			<div
-				className={`${cssSelectors['next']?.classes}  `}
-				onClick={(ev) => {
-					var paged = queryPrams?.paged + 1;
-
-					setqueryPrams({ ...queryPrams, paged: paged });
-				}}>
-				<IconArrowNarrowRightDashed />
-			</div>
-
-
-
-
-		</div>
+		<PaginationMarkup
+			cls={cls}
+			id={props?.id}
+			index={props?.index}
+			type={props?.type}
+			settings={paginationSettings(props?.options, props?.cssSelectors)}
+			paged={paged}
+			maxPages={maxPages}
+			onPage={(p) => {
+				grid.onChangeQuery({ ...grid.queryPrams, paged: p });
+				if (typeof document !== 'undefined') document.getElementById(props?.id)?.closest('[type="commentsGrid"]')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+			}}
+		/>
 	);
+};
+
+CommentsGridPaginationView.propTypes = {
+	index: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+	id: PropTypes.string,
+	type: PropTypes.string,
+	options: PropTypes.object,
+	cssSelectors: PropTypes.object,
 };
 
 export default CommentsGridPaginationView;

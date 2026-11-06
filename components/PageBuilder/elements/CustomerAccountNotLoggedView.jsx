@@ -2,74 +2,55 @@
 
 import PropTypes from "prop-types";
 import React from "react";
-import { useState } from "react";
-import { IconColumns, IconPlus } from "@tabler/icons-react";
 import BlockRender from '../BlockRender';
 import { useSavedToken } from './useSavedToken';
+import { elementCssClasses } from "../ElementsDefinition";
 
-const ColumnsView = (props) => {
-	const {
-		block,
+/*
+	The signed-out half of the account area: its child blocks (usually the
+	register and login forms) render only once the browser has been checked
+	and holds no login token, so a signed-in customer never sees the forms
+	flash up first.
 
-		index,
-		id,
-		type,
-		prams,
-		handleMoveBlock // New prop for recursive drops
-	} = props;
+	The whole block renders nothing otherwise - including its wrapper, so the
+	classes on '*' (padding, a card, a background) never show as an empty box
+	to a signed-in customer.
+*/
+const CustomerAccountNotLoggedView = (props) => {
+	const { index, id, type } = props;
 
 	const children = props?.children || [];
 
 	var cssSelectors = props?.cssSelectors ?? {};
+	/* A key the block lacks falls back to the customerAccountNotLogged defaults in ElementsDefinition.js. */
+	var cls = elementCssClasses('customerAccountNotLogged', cssSelectors);
 
-
-	/* undefined until the browser has been checked - see useSavedToken. */
+	/* undefined until the browser has been checked, then the token or null - see useSavedToken. */
 	const token = useSavedToken();
 
+	if (token !== null) return null;
 
 	return (
-		<div
-
-			id={id}
-			type={type}
-			className={`${cssSelectors['*']?.classes}   
-			`}
-
-		>
-
-			{token === null && (
-
-				<>
-
-					{
-						children.map((child, idx) => (
-							<BlockRender
-								key={child.id}
-								index={`${index}-${idx}`}
-								block={child}
-
-							/>
-						))
-					}
-
-				</>
-
-			)}
-
-
-
+		<div id={id} type={type} className={cls('*')}>
+			{
+				children.map((child, idx) => (
+					<BlockRender
+						key={child.id}
+						index={`${index}-${idx}`}
+						block={child}
+					/>
+				))
+			}
 		</div>
 	);
 };
 
-ColumnsView.propTypes = {
-	block: PropTypes.object,
-
+CustomerAccountNotLoggedView.propTypes = {
 	index: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
 	id: PropTypes.string,
 	type: PropTypes.string,
-	prams: PropTypes.object,
-	handleDropInto: PropTypes.func,
+	cssSelectors: PropTypes.object,
+	children: PropTypes.array,
 };
 
-export default ColumnsView;
+export default CustomerAccountNotLoggedView;

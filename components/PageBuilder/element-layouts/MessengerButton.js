@@ -7,21 +7,21 @@
  * on paste/replace, so the readable ids below are safe.)
  *
  * messengerButton is a leaf and an unusually well-behaved one: a wrapper <div>,
- * a <Link> to m.me, an optional icon div and a label div. All five declared
- * options are read (MessengerButton.jsx:37-41) and all four selector keys are
- * applied (:104,:128,:132,:137), so there is no dead surface to work around --
+ * an <a> to m.me, an optional icon div and a label div. All five declared
+ * options are read and all four selector keys are
+ * applied (ChatButtonMarkup in elements/chatButton.jsx), so there is no dead surface to work around --
  * only a few things worth knowing.
  *
  * Renderer notes that shaped these presets:
  *
- * 1. `username` is the one field a preset cannot fill, and the link is broken
- *    until it is. The href is built as `https://m.me/${username}?text=...`
- *    (:50), so an empty username yields `https://m.me/?text=...`. It is
+ * 1. `username` is the one field a preset cannot fill, and the shop hides the
+ *    button until it is (the href is `https://m.me/${username}?text=...`).
+ *    It is
  *    store-specific -- there is no sensible default to ship -- so every preset
  *    leaves it `""`, matching the definition, and that is the field to set in
  *    the options panel after dropping one. Everything else here is layout.
  *
- * 2. Put the button on the `link` key, not on `*`. The <a> at :128 is the
+ * 2. Put the button on the `link` key, not on `*`. The <a> is the
  *    clickable area and `*` is just the box around it, so padding or a
  *    background on `*` produces a button-looking shape whose edges do nothing.
  *    These presets keep `link` as the whole button -- padding, radius, colour,
@@ -30,29 +30,28 @@
  *
  * 3. `message` supports six placeholders, substituted before the URL is
  *    encoded: `{product_id}`, `{product_title}`, `{product_price}`,
- *    `{product_description}`, `{product_image}` and `{product_url}` (:78-83).
+ *    `{product_description}`, `{product_image}` and `{product_url}`.
  *    They are safe to use in a preset -- the whole message goes through
- *    `encodeURIComponent` (:49) -- and they preview sensibly, because
- *    `productData` falls back to a dummy product (:9-16) when nothing supplies
+ *    `encodeURIComponent` -- and they preview sensibly, because
+ *    the canvas falls back to a sample product when no PostContext supplies
  *    one, which in the builder is always. Keep `{product_url}` in the message:
  *    it is the only thing telling the shop which product the chat is about.
  *
- * 4. Set `iconSize` explicitly. :40 reads it with no fallback, so a block
- *    missing the key renders at tabler's own default rather than the 20 the
- *    definition suggests. The icon div is conditional on the name resolving
- *    (:131), so an unknown or empty `icon` emits no wrapper at all -- no
+ * 4. `iconSize` falls back to 20 when missing (ChatButtonMarkup in
+ *    elements/chatButton.jsx). The icon div is conditional on the name
+ *    resolving, so an unknown or empty `icon` emits no wrapper at all -- no
  *    `empty:hidden` needed, unlike the `list` and `tabs` elements.
  *
- * 5. The label div is NOT conditional (:137), so an icon-only button needs both
+ * 5. The label div is NOT conditional, so an icon-only button needs both
  *    `label: ""` and `empty:hidden` on the `label` key -- otherwise an empty div
  *    keeps the `gap-3` from the link and the button sits visibly off-centre.
  *    The round floating preset does exactly that.
  *
- * 6. The link cannot be clicked in the canvas and cannot open in a new tab. The
- *    wrapper's onClick calls `preventDefault()` (:106) so selecting the block
- *    never navigates -- which is right for editing, but it means the href has to
- *    be checked on the published page. There is also no `target` option and the
- *    renderer sets none, so Messenger opens in the same tab.
+ * 6. The link cannot be clicked in the canvas: the wrapper's onClick calls
+ *    `preventDefault()` so selecting the block never navigates, so check the
+ *    href on the published page. There it opens Messenger in a new tab. With
+ *    no `username` the shop renders nothing, and the canvas shows the button
+ *    with a <span> in place of the link.
  */
 
 var layouts = [

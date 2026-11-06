@@ -12,39 +12,28 @@
  *
  * Renderer notes that shaped these presets:
  *
- * 1. Link clicks are swallowed. LinkList.jsx:71-75 calls `ev.preventDefault()`
- *    in the Link's own onClick with nothing gating it, so `item.slug` lands in
- *    the href but never navigates -- sensible inside the canvas, except the
- *    renderer is the same one the front end uses. Gating that call on an editor
- *    flag is the fix. The slugs below are realistic placeholders, matching the
- *    paths used in SiteFooter.js.
+ * 1. Links navigate on the shop (they called preventDefault everywhere until
+ *    now); LinkListMarkup is shared with the builder, which alone blocks the
+ *    click. `item.slug` is the URL -- relative links use client-side
+ *    navigation, http(s) / mailto / tel ones a plain <a>, `item.newTab` opens
+ *    a new tab, and an item without one is plain text. The slugs below are
+ *    realistic placeholders, matching the paths used in SiteFooter.js.
  *
- * 2. `item.slug` is the href (LinkList.jsx:71), and the renderer also reads
- *    `options.icon` as a fallback icon and `options.iconSize` for both the
- *    per-item and fallback icons. LinkListOptions.jsx supports all three
- *    (slug :162, icon :230, iconSize :245), yet the definition declares none of
- *    them -- its options list only `headerText`, `items: [{text, icon}]` and
- *    `tag`. The presets set them anyway because they work and the panel edits
- *    them; adding them to the definition would be the tidier fix.
+ * 2. `options.icon` is the fallback icon and `options.iconSize` (24 when
+ *    unset) sizes every icon; the definition now declares both.
  *
- * 3. Two wrappers render unconditionally: the `header-text` div (LinkList.jsx:59)
- *    appears even with no headerText, and the `icon` div (LinkList.jsx:80-89)
- *    appears even when neither the item icon nor the fallback resolves. Each
- *    leaves an empty box that still eats the surrounding gap, so both keys carry
- *    `empty:hidden` in every preset -- they collapse when unused and come back
- *    as soon as a header or an icon is set.
+ * 3. The `header-text` div is drawn only with a headerText, and the `icon`
+ *    span only when an icon resolves, so neither leaves an empty box eating
+ *    the gap any more. The `empty:hidden` the presets carry on both keys is
+ *    now redundant but harmless.
  *
  * 4. The definition's default `li: 'list-disc flex'` can never show a bullet:
  *    `flex` replaces the `list-item` display that `list-disc` needs. So each
  *    preset picks one -- flex rows with no marker, or a real marker with the
  *    link as an inline-flex child, which is what the numbered preset does.
  *
- * 5. `<li>` is hardcoded regardless of `tag` (LinkList.jsx:69), so `tag` should
- *    stay `ul` or `ol`; those are also the only two the panel offers.
- *
- * 6. `options.text` is rendered after the list items (LinkList.jsx:107). It is
- *    undeclared, has no panel control and sits outside every selector key, so it
- *    is left unset here.
+ * 5. `tag` is `ul` or `ol` (anything else renders a <ul>); the items are
+ *    always <li>.
  */
 
 var layouts = [

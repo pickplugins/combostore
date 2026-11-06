@@ -1,57 +1,30 @@
-import PropTypes from "prop-types";
 import React from "react";
-import { useState, useEffect } from "react";
-import { IconLibraryPhoto, IconCheckbox, IconSquare, IconFidgetSpinner, IconTrash, IconStarFilled, IconStar, IconX } from "@tabler/icons-react";
-import { useDraggable } from '@dnd-kit/react';
-
-import DropDown from "../../../components/DropDown";
-import CssClassPicker from "../CssClassPicker";
 import CssSelectors from "../CssSelectors";
+import { withElementCssDefaults } from "../ElementsDefinition";
 
-
-const HeadingOptions = (props) => {
+/*
+	Settings panel for the `postContent` block. It has no options (its Classes
+	field saved options.classes, which nothing read), so just a note and its
+	`*` classes.
+*/
+const PostContentOptions = (props) => {
 
 	var updateBlock = props?.updateBlock;
-	var options = props?.options;
-	var cssSelectors = props?.cssSelectors ?? {};
 
-
-	const [loading, setloading] = useState(false);
-
-
-
-	// useEffect(() => {
-
-	// 	fetchPosts();
-	// }, []);
-
+	/* Every current key, filled from defaults where the block lacks it. */
+	var cssSelectors = withElementCssDefaults('postContent', props?.cssSelectors);
 
 	return (
 		<div className="px-3" >
-
 			<div className="flex flex-col gap-3">
-
-
-
-
-
-
-
-
-
+				<p className="text-xs text-gray-500">
+					Shows the content of the post or product it sits in. Style what is inside it from <code>*</code> with
+					variants such as <code>[&amp;_p]:mb-4</code>, <code>[&amp;_h2]:text-xl</code> or <code>[&amp;_a]:underline</code>.
+				</p>
 				<CssSelectors cssSelectors={cssSelectors} updateBlock={updateBlock} />
-
-
-
-
-
 			</div>
-
-
 		</div>
 	);
 };
 
-
-
-export default HeadingOptions;
+export default PostContentOptions;

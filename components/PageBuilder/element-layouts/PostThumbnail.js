@@ -14,13 +14,10 @@
  *
  * Renderer notes that shaped these presets:
  *
- * 1. `linkTo` is the only option, and it is undeclared. The definition has
- *    `options: {}`, so a block from the palette has no options at all, but :27
- *    reads `options.linkTo` and :65 wraps the image in a <Link> when it is
- *    exactly `'postUrl'`. That is also the only case where the `link` selector
- *    key applies, so the two go together -- `linkTo: 'postUrl'` plus `block` on
- *    `link`, or neither. (The href is hardcoded to `#`; the link is structural,
- *    and the real post URL is not wired up yet.)
+ * 1. `linkTo` is the only option: 'postUrl' (the default) wraps the image in
+ *    a link to the post's page, styled by the `link` key; '' leaves it bare.
+ *    PostThumbnailView and the builder share the same markup and default.
+ *    These presets that link set `block` on `link` so it wraps the image box.
  *
  * 2. Size with classes on `image`; there is nothing else. `width={400}
  *    height={400}` is hardcoded on all four next/image calls, so those are
@@ -43,7 +40,7 @@
  *    the zoom preset puts `overflow-hidden` on `*` and the transform on
  *    `image` -- the wrapper is what stops the scaled image bleeding out.
  *
- * There is no alt text: `alt={``}` is hardcoded on every branch.
+ * The image's alt text is its own alt, or the post title.
  */
 
 var layouts = [

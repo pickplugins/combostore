@@ -226,6 +226,117 @@ async function requestCss(classes, signal) {
 }
 
 
+const SEO_FIELD = "w-full !rounded-lg !border !border-gray-300 !bg-white !px-2.5 !py-1.5 !text-xs !text-gray-700 !shadow-none !outline-none transition-colors focus:!border-brand focus:!ring-4 focus:!ring-brand/10";
+
+/* Lengths search engines usually show before cutting off. */
+const SEO_TITLE_LIMIT = 60;
+const SEO_DESCRIPTION_LIMIT = 160;
+
+/*
+	Template types that are a storefront page of their own, with the title the
+	page gets when none is set. Listing types use the settings as they are;
+	single types (one product, post or term) keep each item's own title,
+	description and image unless the template sets a pattern with {title},
+	{description} and {site} - see lib/templateSeo.js, which the routes'
+	generateMetadata use.
+*/
+const SEO_LISTING_TYPES = { home: 'The store name', shop: 'Shop', account: 'My Account', blog: 'Blog', brands: 'All Brands', categories: 'All Categories', tags: 'All Tags' };
+const SEO_SINGLE_TYPES = { product: 'product', blog_single: 'post', brands_single: 'brand', categories_single: 'category', tags_single: 'tag' };
+
+/*
+	The SEO settings, in Template Part Settings: saved as pageData.meta.seo.
+	For a page, update_page stores it as the page's `page_meta` and
+	app/[...slug]/page.jsx reads it; empty fields fall back to the page's title
+	and excerpt. For a template part it is saved in the part's meta and the
+	template's route reads it (lib/templateSeo.js).
+
+	A part that is not a page of its own (a sidebar, the thank-you page, which
+	cannot set metadata yet) says so instead.
+*/
+function SeoSettings({ pageData, setpageData }) {
+
+	var partType = pageData?.type;
+	var mode = pageData?.isPage ? 'page' : SEO_LISTING_TYPES[partType] ? 'listing' : SEO_SINGLE_TYPES[partType] ? 'single' : null;
+
+	if (!mode) {
+		return (
+			<div className="flex flex-col gap-1 rounded-lg border border-dashed border-gray-200 bg-gray-50 px-2.5 py-2 text-[11px] text-gray-500">
+				<span className="font-semibold uppercase tracking-wide text-gray-500">SEO</span>
+				This template part is shown inside other pages, so their SEO settings apply.
+			</div>
+		);
+	}
+
+	var itemName = SEO_SINGLE_TYPES[partType];
+	var titlePlaceholder = mode === 'page' ? (pageData?.title ?? '') : mode === 'listing' ? SEO_LISTING_TYPES[partType] : `{title} | {site}`;
+	var descriptionPlaceholder = mode === 'page'
+		? (pageData?.excerpt || 'A short summary shown under the title in search results.')
+		: mode === 'listing' ? 'A short summary shown under the title in search results.' : `Empty: each ${itemName}'s own description`;
+
+	var seo = pageData?.meta?.seo ?? {};
+
+	function setSeo(key, value) {
+		var meta = { ...(pageData?.meta ?? {}) };
+		meta.seo = { ...(meta.seo ?? {}), [key]: value };
+		setpageData({ ...pageData, meta: meta });
+	}
+
+	var titleLength = String(seo.title ?? '').length;
+	var descriptionLength = String(seo.description ?? '').length;
+
+	return (
+		<div className="mt-1 flex flex-col gap-3 border-t border-gray-200  p-5">
+			<div className="text-xs font-semibold uppercase tracking-wide text-gray-500">SEO</div>
+
+			{mode === 'single' && (
+				<p className="text-[11px] text-gray-500">
+					Used on every {itemName} page. Leave a field empty to use each {itemName}&apos;s own. <code>{'{title}'}</code> is the {itemName}&apos;s name, <code>{'{description}'}</code> its description, <code>{'{site}'}</code> the store name.
+				</p>
+			)}
+
+			<div className="flex flex-col gap-1">
+				<div className="flex items-center justify-between">
+					<label htmlFor="seo-title" className="text-xs font-medium text-gray-600">Title</label>
+					{mode !== 'single' && <span className={`text-[10px] ${titleLength > SEO_TITLE_LIMIT ? 'text-amber-600' : 'text-gray-400'}`}>{titleLength}/{SEO_TITLE_LIMIT}</span>}
+				</div>
+				<input id="seo-title" type="text" className={SEO_FIELD} placeholder={titlePlaceholder} value={seo.title ?? ''} onChange={ev => setSeo('title', ev.target.value)} />
+			</div>
+
+			<div className="flex flex-col gap-1">
+				<div className="flex items-center justify-between">
+					<label htmlFor="seo-description" className="text-xs font-medium text-gray-600">Description</label>
+					{mode !== 'single' && <span className={`text-[10px] ${descriptionLength > SEO_DESCRIPTION_LIMIT ? 'text-amber-600' : 'text-gray-400'}`}>{descriptionLength}/{SEO_DESCRIPTION_LIMIT}</span>}
+				</div>
+				<textarea id="seo-description" rows={3} className={SEO_FIELD} placeholder={descriptionPlaceholder} value={seo.description ?? ''} onChange={ev => setSeo('description', ev.target.value)} />
+			</div>
+
+			<div className="flex flex-col gap-1">
+				<label htmlFor="seo-image" className="text-xs font-medium text-gray-600">Social share image (URL)</label>
+				<input id="seo-image" type="url" className={SEO_FIELD} placeholder="https://..." value={seo.image ?? ''} onChange={ev => setSeo('image', ev.target.value)} />
+				<span className="text-[10px] text-gray-400">
+					{mode === 'single' ? `Replaces each ${itemName}'s own image when set; leave empty to use theirs.` : 'Shown when the page is shared, e.g. on Facebook. About 1200 x 630.'}
+				</span>
+			</div>
+
+			{/* One canonical URL for every product or category would point them all at one page, so single templates have none. */}
+			{mode !== 'single' && (
+				<div className="flex flex-col gap-1">
+					<label htmlFor="seo-canonical" className="text-xs font-medium text-gray-600">Canonical URL</label>
+					<input id="seo-canonical" type="text" className={SEO_FIELD} placeholder="Leave empty unless this page copies another" value={seo.canonical ?? ''} onChange={ev => setSeo('canonical', ev.target.value)} />
+				</div>
+			)}
+
+			<label className="flex cursor-pointer items-center gap-2 text-xs text-gray-700">
+				<input type="checkbox" checked={!!seo.noindex} onChange={ev => setSeo('noindex', ev.target.checked)} />
+				{mode === 'single' ? `Hide every ${itemName} page from search engines (noindex)` : 'Hide this page from search engines (noindex)'}
+			</label>
+
+			<span className="text-[10px] text-gray-400">Saved when you press Save.</span>
+		</div>
+	);
+}
+
+
 const EditorActions = (props) => {
 
 	var pageData = props?.pageData;
@@ -732,11 +843,6 @@ const EditorActions = (props) => {
 							<div className="flex items-center gap-2 cursor-pointer text-xs text-gray-700 rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-2 transition-colors hover:bg-gray-100">
 								<div className="flex gap-3" onClick={ev => {
 
-									var { checked, name } = ev.target;
-
-									console.log(pageData?.disableHeader);
-
-
 									var metaX = (pageData?.meta);
 									var meta = { ...metaX, disableHeader: !pageData?.meta?.disableHeader }
 									setpageData({ ...pageData, meta: meta })
@@ -781,7 +887,7 @@ const EditorActions = (props) => {
 
 							</div>
 
-							{JSON.stringify(pageData?.meta)}
+							<SeoSettings pageData={pageData} setpageData={setpageData} />
 
 
 

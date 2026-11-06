@@ -2,60 +2,40 @@
 
 import PropTypes from "prop-types";
 import React from "react";
-import { useState } from "react";
-import { IconColumns, IconPlus } from "@tabler/icons-react";
 import BlockRender from '../BlockRender';
+import { elementCssClasses } from "../ElementsDefinition";
 
+/*
+	A container: a <div> with the `*` classes (width, padding, layout) around
+	its child blocks.
+*/
 const ContainerView = (props) => {
-	const {
-		block,
-
-		index,
-		id,
-		type,
-		handleMoveBlock // New prop for recursive drops
-	} = props;
+	const { index, id, type } = props;
 
 	const children = props?.children || [];
-	var cssSelectors = props?.cssSelectors ?? {};
 
-
-
+	/* A key the block lacks falls back to the container defaults in ElementsDefinition.js. */
+	var cls = elementCssClasses('container', props?.cssSelectors);
 
 	return (
-		<div
-
-			id={id}
-			type={type}
-			className={`    ${cssSelectors['*']?.classes} 
-			`}
-
-
-		>
-
-
-			{
-				children.map((child, idx) => (
-					<BlockRender
-						key={child.id}
-						index={`${index}-${idx}`}
-						block={child}
-
-					/>
-				))
-			}
+		<div id={id} type={type} className={cls('*')}>
+			{children.map((child, idx) => (
+				<BlockRender
+					key={child.id}
+					index={`${index}-${idx}`}
+					block={child}
+				/>
+			))}
 		</div>
 	);
 };
 
 ContainerView.propTypes = {
-	block: PropTypes.object,
-
 	index: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
 	id: PropTypes.string,
 	type: PropTypes.string,
-	prams: PropTypes.object,
-	handleDropInto: PropTypes.func,
+	cssSelectors: PropTypes.object,
+	children: PropTypes.array,
 };
 
 export default ContainerView;

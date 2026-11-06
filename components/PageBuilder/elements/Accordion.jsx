@@ -3,14 +3,21 @@
 import PropTypes from "prop-types";
 import React from "react";
 import { useState } from "react";
-import { IconColumns, IconPlus } from "@tabler/icons-react";
 import BlockPreview from '../BlockPreview';
-import { MenuProvider } from "../context/MenuContext";
-import { IconChevronDown, IconChevronUp, IconSquare, IconFidgetSpinner, IconTrash, IconStarFilled, IconStar, IconX } from "@tabler/icons-react";
+import { AccordionMarkup, accordionItemsFor, toggleOpenItem } from './AccordionView';
+import { elementCssClasses } from "../ElementsDefinition";
 
-const Grid = (props) => {
+/*
+	Builder (canvas) preview of an accordion.
+
+	It renders AccordionView's own AccordionMarkup, reading the same
+	cssSelectors keys with the same defaults from ElementsDefinition.js, so the
+	canvas shows the accordion exactly as the shop does. Clicking a header
+	opens it here too, so each item's content can be edited; open panels are
+	drawn with BlockPreview so they stay droppable.
+*/
+const Accordion = (props) => {
 	const {
-		block,
 		draggingBlock,
 		setDraggingBlock,
 		dragOverIndex,
@@ -19,20 +26,16 @@ const Grid = (props) => {
 		selectedId,
 		index,
 		id,
-		type,
-		prams,
-		handleMoveBlock // New prop for recursive drops
+		handleMoveBlock
 	} = props;
 
-	const cssSelectors = props?.cssSelectors;
 	const children = props?.children || [];
-
 	var options = props?.options;
-	var orientation = options?.orientation;
-	var items = options?.items;
+	var items = accordionItemsFor(options, children);
 
-	const [activeIndex, setactiveIndex] = useState([]);
+	var cls = elementCssClasses('accordion', props?.cssSelectors);
 
+	const [openItems, setOpenItems] = useState([]);
 
 	const onDrop = (e) => {
 		e.preventDefault();
@@ -40,10 +43,6 @@ const Grid = (props) => {
 
 		const paletteType = e.dataTransfer.getData("paletteType");
 		const canvasBlockId = e.dataTransfer.getData("canvasBlock");
-
-
-
-
 
 		if (handleMoveBlock) {
 			handleMoveBlock({ paletteType, canvasBlockId }, id, 'inside');
@@ -55,110 +54,52 @@ const Grid = (props) => {
 		e.stopPropagation();
 	};
 
-
-	// const childrenArray = React?.Children?.toArray(children);
-
-
-	// console.log(childrenArray);
-
-
 	return (
-		<div
-			draggable
+		<AccordionMarkup
+			cls={cls}
 			id={id}
-			className={`p-4 ${cssSelectors['*']?.classes ?? ''}    hover:outline-orange-200 hover:outline-solid hover:outline-1 relative   ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200 bg-orange-200' : ''}
-				${selectedId === id ? 'outline-1 outline-solid outline-orange-400 relative' : ''}
-			`}
-			onClick={(e) => {
-				e.preventDefault();
-				e.stopPropagation();
-				setSelectedId(selectedId !== id ? id : null);
+			items={items}
+			children={children}
+			openItems={openItems}
+			onToggle={idx => setOpenItems(current => toggleOpenItem(current, idx, options?.multiple))}
+			rootClassName={`hover:outline-orange-200 hover:outline-solid hover:outline-1 relative ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200 bg-orange-200' : ''} ${selectedId === id ? 'outline-1 outline-solid outline-orange-400' : ''}`}
+			rootProps={{
+				draggable: true,
+				onClick: (e) => {
+					e.preventDefault();
+					e.stopPropagation();
+					setSelectedId(selectedId !== id ? id : null);
+				},
+				onDragStart: (e) => {
+					e.stopPropagation();
+					e.dataTransfer.setData("canvasBlock", id);
+					setDraggingBlock(id);
+				},
+				onDragEnd: () => {
+					setDraggingBlock(null);
+					setDragOverIndex(null);
+				},
+				onDragOver: onDragOver,
+				onDrop: onDrop,
 			}}
-			onDragStart={(e) => {
-				e.stopPropagation();
-				e.dataTransfer.setData("canvasBlock", id);
-				setDraggingBlock(id);
-			}}
-			onDragEnd={() => {
-				setDraggingBlock(null);
-				setDragOverIndex(null);
-			}}
-			onDragOver={onDragOver}
-			onDrop={onDrop}
-		>
-
-			<div className={`${cssSelectors['accordion-items']?.classes}`}>
-				{
-					children.map((child, idx) => (
-						<>
-
-							<div className={`${cssSelectors['accordion-header']?.classes} ${items[idx]?.classes}`} onClick={() => {
-
-								var activeIndexX = [...activeIndex]
-
-								const index = activeIndex.indexOf(idx);
-
-								if (index === -1) {
-									activeIndexX.push(idx);
-								} else {
-									activeIndexX.splice(index, 1);
-								}
-
-								console.log(activeIndexX);
-
-
-								setactiveIndex(activeIndexX)
-							}}>
-
-								<div className={`${cssSelectors['header-label']?.classes}`}>{items[idx]?.label}</div>
-								<div className={`${cssSelectors['header-icon']?.classes}`}>
-
-									{/* {items[idx]?.icon} */}
-									{activeIndex.includes(idx) && (
-										<IconChevronDown />
-									)}
-									{!activeIndex.includes(idx) && (
-										<IconChevronUp />
-									)}
-
-
-
-								</div>
-
-							</div>
-
-							<div className={`${cssSelectors['accordion-content']?.classes} ${activeIndex.includes(idx) ? 'block' : 'hidden'}`}>
-								<BlockPreview
-									key={child.id}
-									index={`${index}-${idx}`}
-									block={child}
-									draggingBlock={draggingBlock}
-									dragOverIndex={dragOverIndex}
-									setDragOverIndex={setDragOverIndex}
-									setDraggingBlock={setDraggingBlock}
-									setSelectedId={setSelectedId}
-									selectedId={selectedId}
-									handleMoveBlock={handleMoveBlock}
-								/>
-							</div>
-
-
-
-
-
-
-						</>
-					))
-				}
-			</div>
-
-
-		</div>
+			renderPanel={(child, idx) => (
+				<BlockPreview
+					index={`${index}-${idx}`}
+					block={child}
+					draggingBlock={draggingBlock}
+					dragOverIndex={dragOverIndex}
+					setDragOverIndex={setDragOverIndex}
+					setDraggingBlock={setDraggingBlock}
+					setSelectedId={setSelectedId}
+					selectedId={selectedId}
+					handleMoveBlock={handleMoveBlock}
+				/>
+			)}
+		/>
 	);
 };
 
-Grid.propTypes = {
-	block: PropTypes.object,
+Accordion.propTypes = {
 	draggingBlock: PropTypes.string,
 	setDraggingBlock: PropTypes.func,
 	dragOverIndex: PropTypes.string,
@@ -168,7 +109,8 @@ Grid.propTypes = {
 	index: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
 	id: PropTypes.string,
 	type: PropTypes.string,
-	handleDropInto: PropTypes.func,
+	options: PropTypes.object,
+	cssSelectors: PropTypes.object,
 };
 
-export default Grid;
+export default Accordion;

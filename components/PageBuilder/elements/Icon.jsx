@@ -1,70 +1,52 @@
-import PropTypes from "prop-types";
 import React from "react";
-import * as TablerIcons from '@tabler/icons-react';
+import { IconIcons } from "@tabler/icons-react";
 import { useLoop } from "../context/LoopContext";
-import { useFeatuerbox } from "../context/FeatuerboxContext";
+import { IconMarkup, iconSettings } from "./IconView";
+import { elementCssClasses } from "../ElementsDefinition";
 
+/*
+	Builder (canvas) preview of the icon: IconView's own markup, icon and
+	classes. An icon with no (or an unknown) name shows a dimmed placeholder,
+	so the block can still be selected - it was an empty, unclickable box.
+*/
 const Icon = (props) => {
 
-	const loop = useLoop();
-	var loopIcon = loop?.icon;
-	var loopIconSize = loop?.iconSize;
-	const featuerboxAttr = useFeatuerbox();
-	var FeatuerboxCssSelectors = featuerboxAttr?.cssSelectors ?? {}
-
-	var draggingBlock = props?.draggingBlock
 	var setDraggingBlock = props?.setDraggingBlock
-
 	var dragOverIndex = props?.dragOverIndex
 	var setDragOverIndex = props?.setDragOverIndex
-
 	var setSelectedId = props?.setSelectedId
 	var selectedId = props?.selectedId
 	var index = props?.index
-	var cssSelectors = props?.cssSelectors ?? {};
-
-
 	var id = props?.id;
-	var type = props?.type;
 
-	var options = props?.options;
-	var iconName = options?.iconName ?? null;
-	var size = options?.size ?? 20;
+	var cls = elementCssClasses('icon', props?.cssSelectors);
 
-
-
-	iconName = loopIcon ?? iconName;
-
-
-
-	const IconX = TablerIcons[iconName];
-
+	const loop = useLoop();
+	var { Icon: TheIcon, size } = iconSettings(props?.options, loop);
 
 	return (
-		<div draggable id={id} type={type} className={`${cssSelectors['*']?.classes ?? ''} ${FeatuerboxCssSelectors['icon']?.classes} hover:outline-orange-200 hover:outline-solid hover:outline-1 ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200' : ''} ${selectedId == id ? 'outline-1 outline-solid outline-orange-400' : ''} `}
-			onClick={e => {
-				e.stopPropagation();
-
-
-				setSelectedId(selectedId != id ? id : null);
+		<IconMarkup
+			cls={cls}
+			id={id}
+			index={index}
+			type={props?.type}
+			options={props?.options}
+			Icon={TheIcon}
+			size={size}
+			rootClassName={`${TheIcon ? '' : 'opacity-40'} hover:outline-orange-200 hover:outline-solid hover:outline-1 ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200' : ''} ${selectedId == id ? 'outline-1 outline-solid outline-orange-400' : ''}`}
+			rootProps={{
+				draggable: true,
+				title: TheIcon ? undefined : 'Choose an icon in the panel',
+				onClick: e => { e.preventDefault(); e.stopPropagation(); setSelectedId(selectedId != id ? id : null); },
+				onDragStart: e => { e.stopPropagation(); e.dataTransfer.setData("canvasBlock", id); setDraggingBlock?.(id); },
+				onDragEnd: () => { setDraggingBlock?.(null); setDragOverIndex?.(null); },
+				onDragOver: e => { e.preventDefault(); setDragOverIndex?.(index); },
+				onDragLeave: () => setDragOverIndex?.(null),
 			}}
-			onDragStart={e => {
-				e.stopPropagation(); e.dataTransfer.setData("canvasBlock", id); setDraggingBlock(id);
-			}}
-			onDragEnd={() => { setDraggingBlock(null); setDragOverIndex(null); }}
-
-			onDragOver={e => { e.preventDefault(); setDragOverIndex(index); }}
-			onDragLeave={() => setDragOverIndex(null)}
 		>
-
-			{IconX ? <IconX size={size} /> : null}
-
-
-
-		</div>
+			<IconIcons size={size} />
+		</IconMarkup>
 	);
 };
-
-
 
 export default Icon;

@@ -1,167 +1,59 @@
-import PropTypes from "prop-types";
 import React from "react";
-import { useState, useEffect } from "react";
-import { IconLibraryPhoto, IconCheckbox, IconSquare, IconFidgetSpinner, IconTrash, IconStarFilled, IconStar, IconX } from "@tabler/icons-react";
-import { useDraggable } from '@dnd-kit/react';
-import CssClassPicker from "../CssClassPicker";
 import CssSelectors from "../CssSelectors";
-import IconPicker from "../../IconPicker";
+import { notifyDefaults, notifyPositions } from "./NotifyView";
+import { withElementCssDefaults } from "../ElementsDefinition";
 
+const inputClass = "w-full !rounded-lg !border !border-gray-300 !bg-white !px-2.5 !py-1.5 !text-xs !text-gray-700 !shadow-none !outline-none transition-colors focus:!border-brand focus:!ring-4 focus:!ring-brand/10";
 
-const ButtonOptions = (props) => {
+/*
+	Settings panel for the `notify` block: where the toasts show, for how
+	long, how many at once, then its cssSelectors keys. It used to be a copy
+	of the button panel (label, link, icon), none of which the block read.
+*/
+const NotifyOptions = (props) => {
 
 	var updateBlock = props?.updateBlock;
+	var options = props?.options ?? {};
 
-	var options = props?.options;
-	var icon = options?.icon;
-	var iconSize = options?.iconSize;
-	var cssSelectors = props?.cssSelectors ?? {};
+	/* Every current key, filled from defaults where the block lacks it; the old input/button keys are dropped. */
+	var cssSelectors = withElementCssDefaults('notify', props?.cssSelectors);
 
+	const setOption = (key, value) => updateBlock('options', { ...options, [key]: value });
 
 	return (
 		<div className="px-3" >
-
 			<div className="flex flex-col gap-3">
 
-				<div className="flex flex-col gap-2">
-					<label htmlFor="" className="text-xs font-medium text-gray-600">Label</label>
-					<div>
-						<input type="text" className="w-full !rounded-lg !border !border-gray-300 !bg-white !px-2.5 !py-1.5 !text-xs !text-gray-700 !shadow-none !outline-none transition-colors focus:!border-brand focus:!ring-4 focus:!ring-brand/10" value={options?.text} onChange={ev => {
-
-							var value = ev.target.value;
-
-							var optionsX = { ...options }
-							optionsX.text = value
-							updateBlock('options', optionsX)
-
-						}} />
-					</div>
-				</div>
-
+				<p className="text-xs text-gray-500">
+					Shows the shop&apos;s messages (added to cart, coupon applied, errors) as toasts. Put one on every page that needs them, e.g. in the site footer.
+				</p>
 
 				<div className="flex flex-col gap-2">
-					<label htmlFor="" className="text-xs font-medium text-gray-600">Link To</label>
-					<div>
-						<select className="w-full !rounded-lg !border !border-gray-300 !bg-white !px-2.5 !py-1.5 !text-xs !text-gray-700 !shadow-none !outline-none transition-colors focus:!border-brand focus:!ring-4 focus:!ring-brand/10" value={options?.linkTo} onChange={ev => {
-
-							var value = ev.target.value;
-
-							var optionsX = { ...options }
-							optionsX.linkTo = value
-							updateBlock('options', optionsX)
-
-						}} >
-							<option value="">None</option>
-
-							<option value="custom">Custom URL</option>
-
-						</select>
-					</div>
-				</div>
-
-
-
-
-
-				{options?.linkTo == 'custom' && (
-
-					<>
-
-						<div className="flex flex-col gap-2">
-							<label htmlFor="" className="text-xs font-medium text-gray-600">Custom URL</label>
-							<div>
-								<input type="text" className="w-full !rounded-lg !border !border-gray-300 !bg-white !px-2.5 !py-1.5 !text-xs !text-gray-700 !shadow-none !outline-none transition-colors focus:!border-brand focus:!ring-4 focus:!ring-brand/10" value={options?.url} onChange={ev => {
-
-									var value = ev.target.value;
-
-									var optionsX = { ...options }
-									optionsX.url = value
-									updateBlock('options', optionsX)
-
-								}} />
-
-							</div>
-						</div>
-						{/* 
-						<div className="flex flex-col gap-2">
-							<label htmlFor="" className="text-xs font-medium text-gray-600">Scheme</label>
-							<div>
-								<select className="w-full !rounded-lg !border !border-gray-300 !bg-white !px-2.5 !py-1.5 !text-xs !text-gray-700 !shadow-none !outline-none transition-colors focus:!border-brand focus:!ring-4 focus:!ring-brand/10" value={options?.scheme} onChange={ev => {
-
-									var value = ev.target.value;
-
-									var optionsX = { ...options }
-									optionsX.scheme = value
-									updateBlock('options', optionsX)
-
-								}} >
-									<option value="">Choose</option>
-
-									<option value="mailto">mailto</option>
-									<option value="tel">tel</option>
-									<option value="sms">sms</option>
-									<option value="file">file</option>
-									<option value="ssh">ssh</option>
-									<option value="geo">geo</option>
-									<option value="webcal">webcal</option>
-									<option value="magnet">magnet</option>
-
-
-								</select>
-							</div>
-						</div> */}
-					</>
-				)}
-
-
-
-
-				<div className="flex flex-col gap-2">
-					<label htmlFor="" className="text-xs font-medium text-gray-600">Icon</label>
-					<div>
-
-
-
-						<IconPicker allowReset={true} value={''} position={`right`} label={`Choose`} labelClass={'inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-2 py-1 text-xs font-medium text-gray-600 cursor-pointer transition-colors hover:border-brand/40 hover:bg-brand/5 hover:text-brand-700 w-fit'} onOptionsChoose={(args) => {
-
-
-
-
-
-							var optionsX = { ...options }
-							optionsX.icon = args
-							updateBlock('options', optionsX)
-
-						}} />
-					</div>
+					<label htmlFor="" className="text-xs font-medium text-gray-600">Position</label>
+					<select className={inputClass} value={options?.position ?? notifyDefaults.position} onChange={ev => setOption('position', ev.target.value)}>
+						{Object.entries(notifyPositions).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+					</select>
+					<p className="text-xs text-gray-500">On the right, toasts move to the left while the cart drawer is open.</p>
 				</div>
 
 				<div className="flex flex-col gap-2">
-					<label htmlFor="" className="text-xs font-medium text-gray-600">Icon Size</label>
-					<div>
-						<input type="number" className="w-full !rounded-lg !border !border-gray-300 !bg-white !px-2.5 !py-1.5 !text-xs !text-gray-700 !shadow-none !outline-none transition-colors focus:!border-brand focus:!ring-4 focus:!ring-brand/10" value={iconSize} onChange={ev => {
-
-							var value = ev.target.value;
-
-							var optionsX = { ...options }
-							optionsX.iconSize = value
-							updateBlock('options', optionsX)
-
-						}} />
-					</div>
+					<label htmlFor="" className="text-xs font-medium text-gray-600">Show each for (seconds)</label>
+					<input type="number" min={1} placeholder={String(notifyDefaults.duration)} className={inputClass} value={options?.duration ?? ''} onChange={ev => setOption('duration', ev.target.value)} />
 				</div>
 
+				<div className="flex flex-col gap-2">
+					<label htmlFor="" className="text-xs font-medium text-gray-600">Most shown at once</label>
+					<input type="number" min={1} placeholder={String(notifyDefaults.max)} className={inputClass} value={options?.max ?? ''} onChange={ev => setOption('max', ev.target.value)} />
+				</div>
+
+				<p className="text-xs text-gray-500">
+					<code>*</code> is the stack, <code>item</code> each toast; <code>success</code>, <code>error</code>, <code>warning</code> and <code>info</code> are added to an item of that kind.
+				</p>
 
 				<CssSelectors cssSelectors={cssSelectors} updateBlock={updateBlock} />
-
-
 			</div>
-
-
 		</div>
 	);
 };
 
-
-
-export default ButtonOptions;
+export default NotifyOptions;

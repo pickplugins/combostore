@@ -6,44 +6,28 @@
  * here MUST be `"type": "productRatings"`. (PageBuilder.jsx regenerates all ids
  * on paste/replace, so the readable ids below are safe.)
  *
- * productRatings is a leaf, and everything it shows is hardcoded, so a preset
- * can only change how the row looks -- never what it says.
+ * productRatings is a leaf: five stars, the average and the review count of
+ * the product. ProductRatingsView (the shop) and the builder's
+ * ProductRatings.jsx render the same ProductRatingsMarkup; outside a product
+ * loop, or for a product nobody has reviewed, the builder shows a sample 4.3
+ * from 120 reviews.
  *
- * Renderer notes that shaped these presets:
+ * Notes that shaped these presets:
  *
- * 1. None of the numbers come from the product. ProductRatings.jsx:118 prints
- *    the literal "3.5/5" and :119 the literal "(120 reviews)", and the filled
- *    star count is `props.rate ?? 4` (:31) from a prop BlockPreview never
- *    passes -- so it is always four filled stars and one empty, next to a 3.5
- *    average, which do not even agree with each other. `usePost()` is called at
- *    :34 and its only use is a `postTitle` variable that is never rendered.
- *    Expect the same row on every product until the renderer is wired to real
- *    review data.
+ * 1. The numbers come from the product: `avg_rating` (shown to one decimal,
+ *    with that many stars filled after rounding) and `total_rate`. The review
+ *    count only shows when there are reviews; `options.hideIfEmpty` hides the
+ *    whole block for an unreviewed product.
  *
- * 2. Because the content is fixed, the only levers a preset has are styling,
- *    hiding and reordering. Two of these use `hidden` on `avg-rating` or
- *    `total-reviews` to drop a part that is wrong or unwanted, and Score First
- *    uses `order-first` on `avg-rating` to put the number before the stars --
- *    DOM order is stars, average, review count, and the root is a flex row, so
- *    `order-*` is the way to rearrange it.
+ * 2. DOM order is stars, average, review count, and the root is a flex row,
+ *    so `order-*` rearranges it -- Score First uses `order-first` on
+ *    `avg-rating`. Two presets use `hidden` on `avg-rating` or
+ *    `total-reviews` to drop a part.
  *
- * 3. The star icons take no className and no size prop (:102, :105), so they
- *    render at Tabler's default 24px and text utilities cannot shrink them --
- *    `text-sm` on the wrapper does nothing to an SVG sized by width/height
- *    attributes. Every preset therefore sets the size with an arbitrary variant
- *    on `star-rate`, e.g. `[&_svg]:size-4`, since CSS beats the attributes. The
- *    star colour does inherit, so `text-amber-500` on that wrapper works
- *    normally.
- *
- * 4. The selector keys are swapped relative to the definition: `rate-count` is
- *    read (:95, the wrapper around one star) but not declared, while `icon` is
- *    declared but never read. Both are present below -- `rate-count` because it
- *    works, `icon` to match the definition. Adding `rate-count` at
- *    ElementsDefinition.js:2857 would make it editable from the panel.
- *
- * 5. Both declared options are dead: the renderer reads neither `label` nor
- *    `separator`, and there is no label element in the output at all despite
- *    `label` being declared. They are kept below to match the definition.
+ * 3. Each star is a `rate-count` wrapper holding the svg, which gets the
+ *    `icon` classes. These presets size the stars with an arbitrary variant on
+ *    `star-rate` (`[&_svg]:size-4`), which works as well as a size on `icon`;
+ *    the colour inherits, so `text-amber-500` on `star-rate` colours them.
  */
 
 var layouts = [

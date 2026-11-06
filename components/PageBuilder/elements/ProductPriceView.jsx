@@ -1,42 +1,144 @@
 "use client"
-import { useState, useEffect } from "react";
 import React from "react";
+import { useState } from "react";
 import { usePost } from "../context/PostContext";
-import Link from "next/link";
 import { useUtilsStore } from '../../../store/useUtilsStore';
 import { useCounterStore } from '../../../store/useCounterStore';
-import ProductVariablePricesView from './ProductVariablePricesView';
 import { useProductStore } from "../../../store/productStore";
+import { elementCssClasses } from "../ElementsDefinition";
 
+const toNumber = (value) => {
+	var n = parseFloat(value);
+	return Number.isFinite(n) ? n : 0;
+};
 
-const ProductPrice = (props) => {
+/*
+	What a product's price block shows, worked out once for the shop and the
+	builder:
 
-	const { wrapCurrency } = useUtilsStore()
+	  { mode: 'range', min, max }          a product with variations, none picked yet
+	  { mode: 'pwyw', price, min }         pay what you want
+	  { mode: 'simple', price, regular }   everything else; regular is set only on sale
 
+	It is computed from the data on every render. The old view copied the
+	prices into state once, so data that arrived later never showed, and
+	picking a variation without a sale price kept the previous sale price on
+	screen. The price type is read from `price_type`, the field the product
+	editor saves - the view read `priceType`, which never exists, so pay what
+	you want products always showed as simple prices.
+*/
+export function productPriceDisplay(product, activeVariation) {
+	var hasVariations = Array.isArray(product?.addons) && product.addons.includes('variations');
 
+	if (hasVariations && !activeVariation) {
+		var prices = (Array.isArray(product?.variations) ? product.variations : [])
+			.filter(v => v?.enable === 'yes')
+			.map(v => toNumber(v?.sale_price) > 0 ? toNumber(v?.sale_price) : toNumber(v?.regular_price))
+			.filter(p => p > 0);
+		return { mode: 'range', min: prices.length ? Math.min(...prices) : 0, max: prices.length ? Math.max(...prices) : 0 };
+	}
 
+	var priceType = product?.price_type ?? product?.priceType ?? 'simple';
+	if (!hasVariations && priceType === 'pwyw') {
+		return { mode: 'pwyw', price: toNumber(product?.pwyw_default_price), min: toNumber(product?.pwyw_min_price) };
+	}
 
-	var storeActiveVariation = useProductStore(
-		(state) => state.activeVariation
+	var source = hasVariations ? activeVariation : product;
+	var sale = toNumber(source?.sale_price);
+	var regular = toNumber(source?.regular_price);
+	var price = sale > 0 ? sale : (regular > 0 ? regular : toNumber(product?.price));
+	return { mode: 'simple', price, regular: sale > 0 && regular > 0 ? regular : null };
+}
+
+/*
+	Pay what you want: the suggested price, and "Set your price" opening a
+	field. A price below the minimum is refused with a notice; the minimum
+	itself is accepted (it used to be refused, and the refusal crashed on an
+	undefined addNotification). A valid price is passed to onChangePrice when
+	a parent supplies one - nothing does yet, so the chosen price does not
+	reach the cart.
+*/
+function PayWhatYouWant({ cls, display, wrapCurrency, onChangePrice, notify }) {
+	var [editing, setediting] = useState(false);
+	var [value, setvalue] = useState(display.price);
+
+	return (
+		<div className={cls('pwyw')}>
+			<div className={cls('pwyw-price')}>{wrapCurrency(display.price)}</div>
+			{!editing && (
+				<div className={cls('pwyw-edit')} onClick={() => setediting(true)}>Set your price</div>
+			)}
+			{editing && (
+				<div className={cls('pwyw-form')}>
+					<input className={cls('pwyw-input')} type="number" min={display.min || undefined} value={value} onChange={ev => setvalue(parseFloat(ev.target.value))} />
+					<div className={cls('pwyw-set')} onClick={() => {
+						if (!(value >= display.min)) {
+							notify?.({ type: 'error', title: "Price can't be set", content: `The price can't be less than ${wrapCurrency(display.min)}.` });
+							return;
+						}
+						onChangePrice?.({ pwyw_default_price: value });
+						setediting(false);
+					}}>Set</div>
+					<div className={cls('pwyw-cancel')} onClick={() => setediting(false)}>Cancel</div>
+				</div>
+			)}
+		</div>
+	);
+}
+
+/*
+	The price markup, shared with the builder preview (ProductPrice.jsx).
+	The " - " between a sale price and the struck-through regular price, and
+	between the two ends of a range, is a span of its own (`price-separator`),
+	in the same place as before so presets that target it keep working.
+*/
+export function ProductPriceMarkup({ cls, id, index, type, display, wrapCurrency, gateText, onChangePrice, notify, rootClassName = '', rootProps = {} }) {
+
+	var root = (children) => (
+		<div id={id} index={index} type={type} className={`${cls('*')} ${rootClassName}`} {...rootProps}>{children}</div>
 	);
 
+	/* An extension (e.g. request-quote) may hide the price; it supplies the wording. */
+	if (gateText != null) {
+		return root(<span className={cls('simple-price-sale')}>{gateText || "Price on request"}</span>);
+	}
 
+	if (display.mode === 'range') {
+		return root(
+			<div className={cls('variable-price-wrap')}>
+				<div className={cls('variable-price-min')}>{wrapCurrency(display.min)}</div>
+				<div className={cls('price-separator')}> - </div>
+				<div className={cls('variable-price-max')}>{wrapCurrency(display.max)}</div>
+			</div>
+		);
+	}
 
+	if (display.mode === 'pwyw') {
+		return root(<PayWhatYouWant cls={cls} display={display} wrapCurrency={wrapCurrency} onChangePrice={onChangePrice} notify={notify} />);
+	}
 
+	return root(
+		<div className={cls('simple-price-wrap')}>
+			{display.price > 0 && <span className={cls('simple-price-sale')}>{wrapCurrency(display.price)}</span>}
+			{display.regular != null && (
+				<>
+					<span className={cls('price-separator')}> - </span>
+					<span className={cls('simple-price-regular')}>{wrapCurrency(display.regular)}</span>
+				</>
+			)}
+		</div>
+	);
+}
 
+const ProductPriceView = (props) => {
 
-	var index = props?.index
-	var name = props?.name
-	var cssSelectors = props?.cssSelectors
+	const { wrapCurrency } = useUtilsStore();
+	const addNotification = useCounterStore((state) => state.addNotification);
+	const purchaseGate = useCounterStore((state) => state.purchaseGate);
+	const storeActiveVariation = useProductStore((state) => state.activeVariation);
 
-
-	var id = props?.id;
-	var type = props?.type;
-
-	var options = props?.options;
-	var tag = options?.tag ?? 'h1';
-	var linkTo = options?.linkTo ?? 'postUrl';
-
+	/* A key the block lacks falls back to the productPrice defaults in ElementsDefinition.js. */
+	var cls = elementCssClasses('productPrice', props?.cssSelectors);
 
 	const productData = usePost();
 
@@ -49,289 +151,26 @@ const ProductPrice = (props) => {
 	*/
 	var activeVariation =
 		storeActiveVariation &&
-		String(storeActiveVariation?.product_id) === String(productData?.product_id ?? productData?.id)
+			String(storeActiveVariation?.product_id) === String(productData?.product_id ?? productData?.id)
 			? storeActiveVariation
 			: null;
 
-
-	const Tag = tag;
-
-
-
-
-	// var productData = props?.productData
-	var onChangePrice = props?.onChangePrice
-	var viewType = props?.viewType ? props?.viewType : "list"
-
-
-
-	var productId = productData?.id
-	var priceType = productData?.priceType ?? 'simple'
-
-	var discountRequest = productData?.discountRequest
-	var variablePrices = productData?.variablePrices
-	var pwyw_min_price = productData?.pwyw_min_price
-	var pwyw_default_price = productData?.pwyw_default_price
-
-	var [variablePricesIndex, setvariablePricesIndex] = useState(0);
-	var [pwywSetPrice, setpwywSetPrice] = useState(false);
-	var [pwywPrice, setpwywPrice] = useState(productData?.pwyw_default_price);
-
-	var [bargainSetPrice, setbargainSetPrice] = useState(false);
-
-	var [bargainPrice, setbargainPrice] = useState(productData?.bargain_default_price);
-	var [seeBargainPrice, setseeBargainPrice] = useState(false);
-
-	var [quantity, setquantity] = useState(props?.quantity);
-	var [addons, setaddons] = useState(productData?.addons);
-	var [variations, setvariations] = useState(productData?.variations ?? []);
-	var [tradePrice, settradePrice] = useState(productData?.trade_price);
-	var [salePrice, setsalePrice] = useState(productData?.sale_price);
-	var [regularPrice, setregularPrice] = useState(productData?.regular_price);
-	var [price, setprice] = useState(productData?.price);
-
-
-	useEffect(() => {
-
-		var priceX = (salePrice) ? salePrice : regularPrice;
-		setprice(priceX);
-	}, [salePrice]);
-
-
-	useEffect(() => {
-
-
-		if (activeVariation) {
-
-			var sale_price = activeVariation?.sale_price
-			var regular_price = activeVariation?.regular_price
-
-			if (sale_price) {
-				setregularPrice(regular_price)
-				setsalePrice(sale_price)
-				setprice(sale_price)
-			} else {
-				setregularPrice(regular_price)
-				setprice(regular_price)
-			}
-		}
-
-
-
-
-
-	}, [activeVariation]);
-
-
-
-
-
-
-
-	const getVariationPriceRange = (variations = []) => {
-		const list = Array.isArray(variations) ? variations : [];
-
-		const prices = list
-			.filter(v => v?.enable === 'yes')
-			.map(v => {
-				const sale = parseFloat(v?.sale_price);
-				const regular = parseFloat(v?.regular_price);
-
-				return sale > 0 ? sale : regular;
-			})
-			.filter(Number.isFinite);
-
-		return {
-			min: prices.length ? Math.min(...prices) : 0,
-			max: prices.length ? Math.max(...prices) : 0,
-		};
-	};
-
-	const { min, max } = getVariationPriceRange(variations);
-
-
-
-	/*
-		An extension may say this product's price is not to be shown - see
-		`purchaseGate` in store/useCounterStore.js. extensions/request-quote
-		uses it for products sold only by quote. The wording comes back with
-		the gate, because core has no opinion about what replaces a price it
-		is not allowed to print.
-
-		Returned early rather than blanked branch by branch: everything below
-		prints some combination of regular, sale, variation and
-		pay-what-you-want prices, and guarding them one at a time would leave
-		the next one added unguarded.
-	*/
-	const purchaseGate = useCounterStore((state) => state.purchaseGate);
+	/* An extension may say this product's price is not to be shown - see `purchaseGate` in store/useCounterStore.js. */
 	const priceGate = purchaseGate ? purchaseGate(productData) : null;
 
-	if (priceGate?.hidePrice) {
-		return (
-			<div id={id} index={index} type={type} className={`${cssSelectors['*']?.classes}  `}>
-				<span className={`${cssSelectors['simple-price-sale']?.classes}`}>
-					{priceGate.priceText || "Price on request"}
-				</span>
-			</div>
-		);
-	}
-
 	return (
-		<div id={id} index={index} type={type} className={`${cssSelectors['*']?.classes}  `}
-
-		>
-
-
-
-			{!addons?.includes('variations') && (
-
-				<>
-					{(priceType == 'simple') && (
-						<div className={`${cssSelectors['simple-price-wrap']?.classes}`}>
-
-
-
-							{!salePrice && (
-								<>
-									{price && (
-										<span className={`${cssSelectors['simple-price-sale']?.classes}`}>{wrapCurrency(price)}</span>
-									)}
-								</>
-							)}
-							{salePrice && (
-								<>
-									<span className={`${cssSelectors['simple-price-sale']?.classes}`}>{wrapCurrency(price)}</span>
-									<span> - </span>
-									<span className={`${cssSelectors['simple-price-regular']?.classes}`}>{wrapCurrency(regularPrice)}</span>
-								</>
-							)}
-
-						</div>
-					)}
-					{priceType == 'pwyw' && (
-						<div className="mb-4 flex gap-5 items-center">
-							<div className="text-2xl text-[#1b0e9f]">{wrapCurrency(productData?.pwyw_default_price)}</div>
-
-							{!pwywSetPrice && (
-								<div className="text-xl text-[#1b0e9f] cursor-pointer" onClick={ev => {
-
-									setpwywSetPrice(!pwywSetPrice);
-
-								}}>Set your price</div>
-
-							)}
-							{pwywSetPrice && (
-								<div className="flex gap-2 items-center">
-
-									<input className="w-[80px]" type="number" value={pwywPrice} onChange={ev => {
-
-										var value = parseFloat(ev.target.value);
-										setpwywPrice(value);
-
-
-
-
-
-
-
-
-									}} />
-
-									<div className=" cursor-pointer" onClick={ev => {
-
-										if (parseFloat(productData?.pwyw_min_price) >= parseFloat(pwywPrice)) {
-											addNotification({ type: 'error', title: "Price can't set", content: `Price should not less than ${productData?.pwyw_min_price}` })
-
-											return;
-										}
-
-										onChangePrice({ pwyw_default_price: pwywPrice })
-
-									}}>Set</div>
-									<div className="text-red-400 cursor-pointer" onClick={ev => {
-
-										setpwywSetPrice(!pwywSetPrice);
-
-									}}>Cancel</div>
-
-								</div>
-							)}
-
-						</div>
-					)}
-					{/* {priceType == 'bargain' && (
-				<div className="mb-4 flex gap-5 items-center">
-					<div className="text-2xl text-[#1b0e9f]">{wrapCurrency(bargainPrice)}</div>
-					<PopoverButton buttonLabel={("দামাদামি করুন")} buttonIcon={<IconPencilDollar />} title={""} wrapperClass="" position={"bottomRight"}>
-						<ProductPriceBargain productData={productData} onChangePrice={onChangeBargainPrice} />
-					</PopoverButton>
-				</div>
-			)} */}
-
-				</>
-			)}
-
-
-
-
-			{addons?.includes('variations') && (
-
-				<>
-					{!activeVariation && (
-						<div className={`${cssSelectors['variable-price-wrap']?.classes}`}>
-							<div className={`${cssSelectors['variable-price-min']?.classes}`}>{wrapCurrency(min)}</div>
-							<div> - </div>
-							<div className={`${cssSelectors['variable-price-max']?.classes}`}>{wrapCurrency(max)}</div>
-						</div>
-					)}
-					{activeVariation && (
-						<div className={`${cssSelectors['simple-price-wrap']?.classes}`}>
-
-
-
-							{!salePrice && (
-								<>
-									{price && (
-										<span className={`${cssSelectors['simple-price-sale']?.classes}`}>{wrapCurrency(price)}</span>
-									)}
-								</>
-							)}
-							{salePrice && (
-								<>
-									<span className={`${cssSelectors['simple-price-sale']?.classes}`}>{wrapCurrency(price)}</span>
-									<span> - </span>
-									<span className={`${cssSelectors['simple-price-regular']?.classes}`}>{wrapCurrency(regularPrice)}</span>
-								</>
-							)}
-
-						</div>
-					)}
-
-				</>
-
-
-
-
-
-
-
-			)}
-
-
-
-
-
-			{/* {JSON.stringify(productData)} */}
-
-
-
-
-
-
-		</div>
+		<ProductPriceMarkup
+			cls={cls}
+			id={props?.id}
+			index={props?.index}
+			type={props?.type}
+			display={productPriceDisplay(productData, activeVariation)}
+			wrapCurrency={wrapCurrency}
+			gateText={priceGate?.hidePrice ? (priceGate.priceText ?? '') : null}
+			onChangePrice={props?.onChangePrice}
+			notify={addNotification}
+		/>
 	);
 };
 
-
-
-export default ProductPrice;
+export default ProductPriceView;

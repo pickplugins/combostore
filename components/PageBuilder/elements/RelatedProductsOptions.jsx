@@ -12,6 +12,7 @@ import CssSelectors from "../CssSelectors";
 import PostQueryPrams from "../PostQueryPrams";
 
 
+import { withElementCssDefaults } from "../ElementsDefinition";
 const RelatedProductsOptions = (props) => {
 
 	var updateBlock = props?.updateBlock;
@@ -64,7 +65,7 @@ const RelatedProductsOptions = (props) => {
 
 
 
-				<CssSelectors cssSelectors={cssSelectors} updateBlock={updateBlock} />
+				<CssSelectors cssSelectors={withElementCssDefaults('relatedProducts', cssSelectors)} updateBlock={updateBlock} />
 
 
 

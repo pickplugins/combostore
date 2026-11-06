@@ -1,119 +1,49 @@
-import PropTypes from "prop-types";
 import React from "react";
-import * as TablerIcons from '@tabler/icons-react';
-import Link from "next/link";
+import { AddressMarkup, addressItems } from "./AddressView";
+import { elementCssClasses } from "../ElementsDefinition";
 
+/*
+	Builder (canvas) preview of the address: AddressView's own markup and
+	classes. Its phone and email links used to be live, so clicking one in
+	the canvas opened the dialer or the mail app; links never leave the
+	builder now. With nothing filled in it shows a dimmed note so it can
+	still be selected. (It was named Button.)
+*/
+const Address = (props) => {
 
-const Button = (props) => {
-
-
-	var draggingBlock = props?.draggingBlock
 	var setDraggingBlock = props?.setDraggingBlock
-
 	var dragOverIndex = props?.dragOverIndex
 	var setDragOverIndex = props?.setDragOverIndex
-
 	var setSelectedId = props?.setSelectedId
 	var selectedId = props?.selectedId
 	var index = props?.index
-	var cssSelectors = props?.cssSelectors ?? {};
-
-
 	var id = props?.id;
-	var type = props?.type;
 
-	var options = props?.options;
-	var iconSize = options?.iconSize ?? 20;
-	var target = options?.target;
-	var scheme = options?.scheme;
-	var url = options?.url;
+	var cls = elementCssClasses('address', props?.cssSelectors);
 
-	var phone = options?.phone;
-	var email = options?.email;
-	var location = options?.location;
-
-
-
-	const IconPhone = TablerIcons[phone?.icon];
-	const IconEmail = TablerIcons[email?.icon];
-	const IconLocation = TablerIcons[location?.icon];
-
-
+	var items = addressItems(props?.options);
+	var empty = items.length === 0;
 
 	return (
-		<>
-
-			<ul draggable id={id} type={type} className={`${cssSelectors['*']?.classes ?? ''} hover:outline-orange-200 hover:outline-solid hover:outline-1 ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200' : ''} ${selectedId == id ? 'outline-1 outline-solid outline-orange-400' : ''} `}
-
-
-
-				onClick={e => {
-					e.stopPropagation();
-
-
-					setSelectedId(selectedId != id ? id : null);
-				}}
-				onDragStart={e => {
-					e.stopPropagation(); e.dataTransfer.setData("canvasBlock", id); setDraggingBlock(id);
-				}}
-				onDragEnd={() => { setDraggingBlock(null); setDragOverIndex(null); }}
-
-				onDragOver={e => { e.preventDefault(); setDragOverIndex(index); }}
-				onDragLeave={() => setDragOverIndex(null)}>
-
-				{phone && (
-					<li className={`${cssSelectors['item']?.classes}`}>
-						<Link href={`tel:${phone.value}`} className={`${cssSelectors['link']?.classes} ${cssSelectors['phone-link']?.classes}`}>
-
-							<div className={`${cssSelectors['icon']?.classes}`}>
-								{IconPhone ? <IconPhone size={iconSize} /> : null}
-							</div>
-
-
-							{phone.value}
-
-
-
-
-						</Link>
-
-					</li>
-				)}
-				{email && (
-					<li className={`${cssSelectors['item']?.classes}`}>
-						<Link href={`mailto:${email.value}`} className={`${cssSelectors['link']?.classes} ${cssSelectors['email-link']?.classes}`}>
-							<div className={`${cssSelectors['icon']?.classes}`}>
-								{IconEmail ? <IconEmail size={iconSize} /> : null}
-							</div>
-							{email.value}
-						</Link>
-
-					</li>
-				)}
-				{location && (
-					<li className={`${cssSelectors['item']?.classes}`}>
-						<div className={`${cssSelectors['icon']?.classes}`}>
-							{IconLocation ? <IconLocation size={iconSize} /> : null}
-						</div>
-						{location.value}
-					</li>
-				)}
-
-			</ul>
-
-
-
-
-
-
-
-
-
-
-		</>
+		<AddressMarkup
+			cls={cls}
+			id={id}
+			index={index}
+			type={props?.type}
+			options={props?.options}
+			items={empty ? [{ kind: 'location', value: 'Add a phone, email or location in the panel' }] : items}
+			onLinkClick={ev => ev.preventDefault()}
+			rootClassName={`${empty ? 'opacity-60' : ''} hover:outline-orange-200 hover:outline-solid hover:outline-1 ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200' : ''} ${selectedId == id ? 'outline-1 outline-solid outline-orange-400' : ''}`}
+			rootProps={{
+				draggable: true,
+				onClick: e => { e.preventDefault(); e.stopPropagation(); setSelectedId(selectedId != id ? id : null); },
+				onDragStart: e => { e.stopPropagation(); e.dataTransfer.setData("canvasBlock", id); setDraggingBlock?.(id); },
+				onDragEnd: () => { setDraggingBlock?.(null); setDragOverIndex?.(null); },
+				onDragOver: e => { e.preventDefault(); setDragOverIndex?.(index); },
+				onDragLeave: () => setDragOverIndex?.(null),
+			}}
+		/>
 	);
 };
 
-
-
-export default Button;
+export default Address;

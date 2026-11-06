@@ -6,46 +6,38 @@
  * MUST be `"type": "postExcerpt"`. (PageBuilder.jsx regenerates all ids on
  * paste/replace, so the readable ids below are safe.)
  *
- * postExcerpt is a <p> of post copy plus an optional read-more link. The text
- * comes from `usePost()` (PostExcerpt.jsx:37), so a preset decides the typography
- * and what the read-more looks like -- not the words. All five selector keys are
- * applied; of the four declared options only two do anything.
+ * postExcerpt is the post's excerpt plus an optional read-more link to the
+ * post's page. The text comes from the post (or, on a product page with a
+ * variation picked, that variation's description), so a preset decides the
+ * typography and what the read-more looks like -- not the words.
+ * PostExcerptView (the shop) and the builder's PostExcerpt.jsx render the
+ * same PostExcerptMarkup.
  *
- * Renderer notes that shaped these presets:
+ * Notes that shaped these presets:
  *
- * 1. Clamp the copy with CSS, because `maxWord` does not truncate. It is read
- *    at :31 and then never used -- the excerpt is rendered whole at :69, and the
- *    panel does not even offer the field. So `line-clamp-*` on the `excerpt`
- *    key is the only way to keep cards the same height, and every card preset
- *    below carries one. `maxWord` is still set to the definition's 20 so the
- *    block round-trips unchanged.
+ * 1. `maxWord` cuts the excerpt to that many words (as plain text); 0 keeps
+ *    it whole and formatted. The card presets also carry a `line-clamp-*` on
+ *    `excerpt`, which keeps cards the same height whatever the word lengths.
  *
- * 2. `readMoreText: ''` removes the read-more entirely. :71 gates the whole
- *    <Link> on the string being truthy, so blanking it is the supported way to
- *    get a bare summary -- that is what the plain and compact presets do, and
- *    their read-more keys are left empty to match.
+ * 2. `readMoreText: ''` removes the read-more entirely -- that is what the
+ *    plain and compact presets do, and their read-more keys are left empty to
+ *    match.
  *
- * 3. The read-more <a> needs its own display. Both its children are <div>s
- *    (:74, :79), so without a flex on `read-more` the icon and the label stack.
- *    The definition ships `flex gap-2 items-center` for exactly this reason;
- *    these presets use `inline-flex w-fit` instead, so the link is only as wide
- *    as its text and the underline and pill backgrounds do not run the full
- *    column. (The href is hardcoded to `#` -- `linkTo` is read at :29 and never
- *    used, like `tag` at :28, which is why the excerpt is always a <p>.)
+ * 3. The read-more link needs its own display. Both its children are <div>s,
+ *    so without a flex on `read-more` the icon and the label stack. The
+ *    definition ships `flex gap-2 items-center`; these presets use
+ *    `inline-flex w-fit` instead, so the link is only as wide as its text.
  *
- * 4. No empty icon wrapper to hide. Unlike the `list` element, :73 gates the
- *    icon <div> on the icon actually resolving, so a preset with
- *    `readMoreIcon: ''` emits no wrapper at all and needs no `empty:hidden`.
+ * 4. The icon <div> is only drawn when the icon resolves, so a preset with
+ *    `readMoreIcon: ''` emits no wrapper and needs no `empty:hidden`.
  *
- * 5. `readMoreIconSize` is the icon's only size control (:75, as a width/height
- *    attribute), so text utilities on `read-more-icon` will not resize it --
- *    that key is for color and spacing. Icon names must be exact
- *    @tabler/icons-react exports (:41, an unknown name silently renders
- *    nothing); the ones used here were checked against the installed package.
+ * 5. `readMoreIconSize` is the icon's only size control, so text utilities on
+ *    `read-more-icon` will not resize it -- that key is for colour and
+ *    spacing. Icon names must be exact @tabler/icons-react exports.
  *
- * The renderer falls back to a baby-essentials placeholder sentence when the
- * post has no excerpt (:37), so these presets preview at a realistic length in
- * the canvas even on an empty post.
+ * Outside a loop, or for a post without an excerpt, the builder shows a
+ * sample sentence at a realistic length; on the shop such a post shows
+ * nothing.
  */
 
 var layouts = [

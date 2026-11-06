@@ -1,67 +1,56 @@
 import PropTypes from "prop-types";
 import React from "react";
-import { useComment } from "../context/CommentContext";
 import Image from "next/image";
+import { useComment } from "../context/CommentContext";
+import { commentText } from "./CommentAuthorView";
+import { elementCssClasses } from "../ElementsDefinition";
 
+/* The commenter's website, when they gave one and it is a web address. */
+export function commentAuthorUrl(comment) {
+	var url = String(comment?.comment_author_url ?? '').trim();
+	return /^https?:\/\//i.test(url) ? url : null;
+}
 
 /*
-	Storefront twin of CommentAvatar.jsx, minus the editor's drag and select
-	chrome, with two differences:
-
-	  - next/image throws on an undefined src, and a commenter without a
-	    gravatar has none, so the block renders nothing rather than taking the
-	    page down with it.
-	  - It honours the `image` selector that ElementsDefinition declares. The
-	    editor version hard-codes "w-full h-full object-cover" and ignores it.
+	The avatar's markup, shared with the builder preview (CommentAvatar.jsx):
+	a `*` wrapper holding the `image` - inside a `link` to the commenter's
+	website with options.linkToAuthor, when they gave one (the declared
+	`link` key was never used). Unoptimized, as the shop had it: WordPress
+	serves gravatars from hosts next.config does not list (on a plain-http
+	site, 0.gravatar.com), and an optimized next/image throws on those - the
+	builder's did, and it also ignored the `image` classes.
 */
-const CommentAvatarView = (props) => {
+export function CommentAvatarMarkup({ cls, id, index, type, options, src, name, href, onLinkClick, rootClassName = '', rootProps = {} }) {
 
-	var index = props?.index
-	var name = props?.name
-	var cssSelectors = props?.cssSelectors ?? {};
-
-
-	var id = props?.id;
-	var type = props?.type;
-
-
-	const comment = useComment();
-
-	var avatar = comment?.avatar;
-	var author = comment?.comment_author ?? '';
-
-
-	if (!avatar) {
-		return null;
-	}
-
+	var image = <Image className={cls('image')} src={src} alt={name ? `${name}'s avatar` : ''} width={80} height={80} unoptimized />;
+	var linked = options?.linkToAuthor && href;
 
 	return (
-
-		<div id={id} index={index} type={type} className={`${cssSelectors['*']?.classes ?? ''}  `}
-		>
-
-			<Image
-				className={`${cssSelectors['image']?.classes ?? ''}  `}
-				src={avatar}
-				alt={author}
-				width={80}
-				height={80}
-				unoptimized
-			/>
-
+		<div id={id} index={index} type={type} className={`${cls('*')} ${rootClassName}`} {...rootProps}>
+			{linked ? <a href={href} onClick={onLinkClick} className={cls('link')} target="_blank" rel="nofollow ugc noopener noreferrer">{image}</a> : image}
 		</div>
-
 	);
-};
+}
 
+/* The avatar of whoever wrote the comment it sits in; nothing without one (next/image throws on an empty src). */
+const CommentAvatarView = (props) => {
+
+	/* A key the block lacks falls back to the commentAvatar defaults in ElementsDefinition.js. */
+	var cls = elementCssClasses('commentAvatar', props?.cssSelectors);
+
+	const comment = useComment();
+	var src = String(comment?.avatar ?? '').trim();
+	if (!src) return null;
+
+	return <CommentAvatarMarkup cls={cls} id={props?.id} index={props?.index} type={props?.type} options={props?.options} src={src} name={commentText(comment?.comment_author)} href={commentAuthorUrl(comment)} />;
+};
 
 CommentAvatarView.propTypes = {
 	index: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
 	id: PropTypes.string,
 	type: PropTypes.string,
+	options: PropTypes.object,
 	cssSelectors: PropTypes.object,
 };
-
 
 export default CommentAvatarView;

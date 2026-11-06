@@ -20,8 +20,9 @@
  *    mirrored onto the termsLoop below to match repo convention, but the mirror
  *    is never read.
  *
- * 3. The query lives in `options.queryPrams` and TermsGridOptions.jsx:40 writes
- *    the same key, so the options panel really can edit it. Keys the panel knows
+ * 3. The query lives in `options.queryPrams` and TermsGridOptions.jsx writes
+ *    the same key, so the options panel really can edit it (termsGridQuery in
+ *    TermsGridView.jsx falls back to eight product categories without one). Keys the panel knows
  *    (TermsQueryPrams.jsx:189): taxonomy, order, orderby, slug, hide_empty,
  *    parent, top_lavel (sic), search, number, hierarchical. `slug` pins an
  *    explicit ordered list of terms, which is what the old version of this file
@@ -30,36 +31,32 @@
  *    <select> only offers date|rand, so re-picking it would overwrite the
  *    name/count values used here.
  *
- * 4. `number` vs `per_page`: the page-builder panel writes `number`, while the
- *    other get_terms callers (QuickSearch.jsx:63, TermsPicker.jsx:23,
- *    TaxTermsQuery.jsx:67) send `per_page`. Which one combo-store/v2/get_terms
- *    honours is not visible from this repo, so both are set to the same value.
- *    Editing the count in the panel only updates `number`.
+ * 4. `number` vs `per_page`: combo-store/v2/get_terms (ComboStoreRest.php
+ *    get_terms) takes the count from `number` when it is sent; `per_page` only
+ *    counts together with `paged`, and with neither every term comes back.
+ *    The panel writes `number`. Both are set to the same value here so the
+ *    presets read the same either way.
  *
- * 5. Pagination is decorative right now. TermsGridPagination.jsx:35 copies
- *    `queryPrams` out of the grid context into its own state and its three
- *    handlers only ever call its local `setqueryPrams` (:102, :112, :122),
- *    so nothing reaches TermsLoop, which is reading the grid's unchanged
- *    options. The page number input moves; the terms do not.
- *    PostGridPagination.jsx has the identical dead end. It is included in the
- *    two presets where a paged archive is the point, with `paged: 1` in the
- *    query so the input does not start empty and turn into NaN on the first
- *    click, and left out of the other four.
+ * 5. Pagination pages the grid: termsGridPagination changes `paged` through the
+ *    grid's onChangeQuery, the loop refetches, and the loop reports get_terms'
+ *    max_pages so Next stops at the last page (on the shop it hides with a
+ *    single page). get_terms offsets by `number`, so a paged preset needs
+ *    `number`. It is included in the two presets where a paged archive is the
+ *    point, with `paged: 1` in the query, and left out of the other four.
  *
- * 6. termsGridPagination quirks: its `previous-icon`/`next-icon` selector keys
- *    are never read -- the arrows are hardcoded IconArrowNarrowLeftDashed and
- *    IconArrowNarrowRightDashed with no wrapper div -- and its declared
- *    `options.sliderOptions` block (prevText/prevIcon/nextText/nextIcon) is a
- *    copy-paste artifact the renderer ignores entirely. `options.tag` is read
- *    into a variable but the root is a literal <div>, so that is inert too.
+ * 6. termsGridPagination shares postGridPagination's markup and panel:
+ *    `previous-icon` / `next-icon` wrap the arrows, prevText / nextText label
+ *    the buttons, and `style: "numbers"` draws page buttons
+ *    (`pagination-item`, `pagination-item-active`, `ellipsis`) instead of the
+ *    page box (`current`, `total`).
  *
  * 7. Child element quirks: termTitle's `text` option is inert (the renderer
  *    prints category.name) and the `link` key some inline definitions give it
- *    is never read by TermTitle.jsx; termThumbnail with `linkTo: "termUrl"`
- *    renders href="#" and loses the /thumb.png fallback for terms with no
- *    image, so it is omitted here; termCount ignores its declared
- *    `label`/`suffix` and reads an undeclared `tag`, so it renders a bare
- *    number -- styled as a badge rather than captioned.
+ *    is never read by TermTitle.jsx; termThumbnail with `linkTo: "termUrl"` now links to the
+ *    term's archive page and keeps the /thumb.png fallback (presets still
+ *    leave it unlinked, as the title is the link); termCount shows `label` + the
+ *    count + `suffix` (e.g. "12 items"; `singularSuffix` for 1) in its `tag`
+ *    (a span by default).
  */
 
 var layouts = [

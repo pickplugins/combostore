@@ -1,332 +1,198 @@
 "use client"
-import React from "react";
-import { useState } from "react";
+import React, { useState } from "react";
 import { IconExclamationCircle, IconStar, IconStarFilled, IconCircleCheck } from "@tabler/icons-react";
 import { usePost } from "../context/PostContext";
 import { useComment } from "../context/CommentContext";
 import { useCommentsGrid } from "../context/CommentsGridContext";
 import { useCounterStore } from '../../../store/useCounterStore';
+import { elementCssClasses } from "../ElementsDefinition";
 
+const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
+
+/* The five ratings, low to high. */
+export const commentStars = [
+	{ label: "Very Poor", value: 1 },
+	{ label: "Poor", value: 2 },
+	{ label: "Normal", value: 3 },
+	{ label: "Good", value: 4 },
+	{ label: "Excellent", value: 5 },
+];
+
+/* The form's texts, from the options with their defaults. */
+export function commentsFormTexts(options) {
+	return {
+		showRate: options?.showRate ?? true,
+		rateLabel: options?.rateLabel ?? 'Your rating',
+		commentLabel: options?.commentLabel ?? 'Write a comment',
+		placeholder: options?.placeholder ?? '',
+		submitLabel: options?.submitLabel ?? 'Submit',
+		loadingLabel: options?.loadingLabel ?? 'Please wait.',
+		loginRequiredText: options?.loginRequiredText ?? 'Please log in to leave a comment.',
+		successText: options?.successText ?? 'Thank you, your comment has been received.',
+	};
+}
 
 /*
-	The comment form, posting to combo-store/v2/submit_comment.
+	The post a comment is about: post_id, else product_id, else id. It read
+	product_id only, so on a blog post the comment was sent with no post
+	(submit_comment turns that into post 0).
+*/
+export const commentPostId = (post) => post?.post_id ?? post?.product_id ?? post?.id ?? null;
 
-	This one is NOT a copy of its editor twin. CommentsForm.jsx references
-	`token`, `serverUrl`, `addNotification`, `userDataX`, `setUserDataX`,
-	`StarRating` and `IconExclamationCircle` without importing or destructuring
-	any of them, so its submit handler throws a ReferenceError the moment it is
-	clicked. It also posts `postId: id` -- the BLOCK's id, not the post's -- and
-	wires none of its markup to cssSelectors.
+/*
+	The form's markup, shared with the builder preview (CommentsForm.jsx): a
+	`*` wrapper holding a <form> (`form`, which now submits on Enter in a
+	field and with its button) with, in `field` rows with a `label` each,
+	the star rating (`rate-wrap`, `stars`, `star`; with options.showRate)
+	and the `textarea`, then the `submit` button, the success `notice` and
+	the `errors` list (one `error` each).
 
-	So this is built from the form that does work,
-	components/shop-elements/CommentsForm.jsx, with three changes for the
-	builder: the post id comes from PostContext, every element is driven by a
-	selector so a template can theme it, and on success it calls the grid's
-	onCommentSubmitted so the list beside it reloads.
+	`state` is { content, rate, hoverRate, loading, success, errors } and
+	`actions` { setContent, setRate, setHoverRate, submit }.
+*/
+export function CommentsFormMarkup({ cls, id, index, type, options, state, actions, rootClassName = '', rootProps = {} }) {
 
-	Dropped inside a commentsLoop it reads the comment in context and posts as
-	a reply to it; anywhere else it posts a top-level comment.
+	var t = commentsFormTexts(options);
+	var shown = state.hoverRate ?? state.rate;
 
-	The stars are inline rather than shop-elements/StarRating, which sets the
-	rating on mouseover with no click and takes no selectors.
+	return (
+		<div id={id} index={index} type={type} className={`${cls('*')} ${rootClassName}`} {...rootProps}>
+			<form className={cls('form')} noValidate onSubmit={ev => { ev.preventDefault(); actions.submit(); }}>
+				{t.showRate && (
+					<div className={`${cls('field')} ${cls('rate-wrap')}`}>
+						{/* A <label> (not tied to an input) so templates' [&_label]: styles still reach it. */}
+						<label className={cls('label')} id={`${id}-rate-label`}>{t.rateLabel}</label>
+						<div className="flex flex-wrap items-center gap-3">
+							<div role="radiogroup" aria-labelledby={`${id}-rate-label`} className={cls('stars')} onMouseLeave={() => actions.setHoverRate(null)}>
+								{commentStars.map((item, i) => (
+									<button type="button" role="radio" key={item.value} aria-checked={state.rate === item.value} aria-label={`${item.value} - ${item.label}`} title={item.label} className={cls('star')}
+										onMouseEnter={() => actions.setHoverRate(item.value)} onClick={() => actions.setRate(item.value)}>
+										{!shown || shown <= i ? <IconStar /> : <IconStarFilled />}
+									</button>
+								))}
+							</div>
+							{shown && <span className="text-sm text-gray-500">{commentStars[shown - 1]?.label}</span>}
+						</div>
+					</div>
+				)}
+
+				<div className={cls('field')}>
+					<label htmlFor={`${id}-content`} className={cls('label')}>{t.commentLabel}</label>
+					<textarea id={`${id}-content`} className={cls('textarea')} placeholder={t.placeholder} value={state.content} onChange={ev => actions.setContent(ev.target.value)} />
+				</div>
+
+				<button type="submit" disabled={state.loading} className={cls('submit')}>
+					{state.loading ? t.loadingLabel : t.submitLabel}
+				</button>
+
+				{state.success && (
+					<div role="status" className={cls('notice')}><IconCircleCheck size={16} className="shrink-0" /> {t.successText}</div>
+				)}
+				{state.errors?.length > 0 && (
+					<div role="alert" className={cls('errors')}>
+						{state.errors.map((item, i) => (
+							<div key={i} className={cls('error')}><IconExclamationCircle size={16} className="shrink-0" /> {item}</div>
+						))}
+					</div>
+				)}
+			</form>
+		</div>
+	);
+}
+
+/*
+	The form's state and its submit to combo-store/v2/submit_comment, as
+	{ state, actions } for CommentsFormMarkup. The post id is read at submit
+	time (PostContext can fill in after mount). Inside a commentsLoop the
+	comment in context is the parent, so it posts a reply. On success the
+	text and rating reset, the comments grid reloads its list, and the
+	success notice shows until the visitor types again (it stayed up).
+*/
+export function useCommentsForm(options) {
+
+	const { token, addNotification, userDataX, setUserDataX } = useCounterStore();
+	const post = usePost();
+	const parentComment = useComment();
+	const grid = useCommentsGrid();
+	var t = commentsFormTexts(options);
+
+	var [content, setContentRaw] = useState('');
+	var [rate, setRate] = useState(null);
+	var [hoverRate, setHoverRate] = useState(null);
+	var [loading, setLoading] = useState(false);
+	var [success, setSuccess] = useState(false);
+	var [errors, setErrors] = useState([]);
+
+	var setContent = (value) => { setContentRaw(value); if (success) setSuccess(false); if (errors.length) setErrors([]); };
+
+	function submit() {
+		/* A second click while the first is still sending posted the comment twice. */
+		if (loading) return;
+		if (!token) {
+			setErrors([t.loginRequiredText]);
+			addNotification?.({ type: 'error', title: 'Login Required', content: t.loginRequiredText });
+			return;
+		}
+		if (!content.trim()) {
+			setErrors(["Comment should not be empty."]);
+			return;
+		}
+		var postId = commentPostId(post);
+		if (!postId) {
+			setErrors(["There is nothing on this page to comment on."]);
+			return;
+		}
+
+		setLoading(true);
+		fetch(serverUrl + "wp-json/combo-store/v2/submit_comment", {
+			method: "POST",
+			headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+			body: JSON.stringify({ content, rate, postId, postType: post?.post_type ?? null, parentId: parentComment?.comment_ID ?? null }),
+		})
+			.then(response => response.ok ? response.json() : Promise.reject(response.status))
+			.then(res => {
+				if (res?.errors) {
+					setErrors(Array.isArray(res.errors) ? res.errors : [res?.message || 'There is an error.']);
+					addNotification?.({ type: 'error', title: 'There is an error.', content: res?.message });
+					return;
+				}
+				if (res?.success) {
+					setErrors([]);
+					setSuccess(true);
+					setContentRaw('');
+					setRate(null);
+					addNotification?.({ type: 'success', title: 'Thank you for your comment', content: t.successText });
+					grid?.onCommentSubmitted?.();
+					if (userDataX && setUserDataX) {
+						setUserDataX({ ...userDataX, total_credit: (parseInt(userDataX.total_credit) || 0) + 5 });
+					}
+				}
+			})
+			/* This used to stop the spinner and say nothing. */
+			.catch(() => setErrors(["Your comment couldn't be sent. Please try again."]))
+			.finally(() => setLoading(false));
+	}
+
+	return { state: { content, rate, hoverRate, loading, success, errors }, actions: { setContent, setRate, setHoverRate, submit } };
+}
+
+/*
+	The comment form: posts a comment (or, inside a commentsLoop, a reply)
+	on the page's post or product, with an optional star rating. Hidden on a
+	page with no post - a site-wide testimonials grid - where there is
+	nothing to comment on.
 */
 const CommentsFormView = (props) => {
 
-	const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
-	const { token, addNotification, userDataX, setUserDataX } = useCounterStore()
-
-
-	var index = props?.index
-	var id = props?.id;
-	var type = props?.type;
-	var cssSelectors = props?.cssSelectors ?? {};
-
-
-	/*
-		Templates written before this block had a renderer style only `*` --
-		everything else comes back undefined, which would both strip the layout
-		and print the string "undefined" into the class list. So a missing key
-		falls back to the default in ElementsDefinition rather than to nothing.
-		A key the template HAS set wins, even when set to an empty string.
-	*/
-	var defaults = {
-		'form': 'flex flex-col gap-4',
-		'field': 'flex flex-col gap-2',
-		'label': 'text-sm font-medium text-gray-700',
-		'rate-wrap': '',
-		'stars': 'flex gap-1 items-center text-amber-400',
-		'star': 'cursor-pointer rounded-md p-0.5 transition-transform hover:scale-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50',
-		'textarea': 'w-full h-32 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 placeholder:text-gray-400 shadow-xs transition-colors hover:border-gray-400 focus:border-[#1b0e9f] focus:outline-none focus:ring-2 focus:ring-[#1b0e9f]/15',
-		'submit': 'inline-flex items-center justify-center gap-2 self-start rounded-lg bg-[#1b0e9f] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#150b7d] cursor-pointer disabled:cursor-not-allowed disabled:opacity-60',
-		'notice': 'flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700',
-		'errors': 'flex flex-col gap-1 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700',
-		'error': 'flex items-center gap-2',
-	};
-
-	function cls(key) {
-		if (cssSelectors[key] && cssSelectors[key].classes != null) {
-			return cssSelectors[key].classes;
-		}
-		return defaults[key] ?? '';
-	}
-
-	var options = props?.options;
-	var showRate = options?.showRate ?? true;
-	var rateLabel = options?.rateLabel ?? 'Your rating';
-	var commentLabel = options?.commentLabel ?? 'Write a comment';
-	var placeholder = options?.placeholder ?? '';
-	var submitLabel = options?.submitLabel ?? 'Submit';
-	var loadingLabel = options?.loadingLabel ?? 'Please wait.';
-	var loginRequiredText = options?.loginRequiredText ?? 'Please log in to leave a comment.';
-	var successText = options?.successText ?? 'Thank you, your comment has been received.';
-
+	/* A key the block lacks falls back to the commentsForm defaults in ElementsDefinition.js. */
+	var cls = elementCssClasses('commentsForm', props?.cssSelectors);
 
 	const post = usePost();
-	const parentComment = useComment();
-	const CommentsGridAttr = useCommentsGrid();
+	var { state, actions } = useCommentsForm(props?.options);
 
+	if (!commentPostId(post)) return null;
 
-	var postId = post?.product_id ?? null;
-	var post_type = post?.post_type ?? null;
-	var parentId = parentComment?.comment_ID ?? null;
-
-
-	const [comment, setcomment] = useState({ content: "", postId: postId, postType: post_type, parentId: parentId, rate: null });
-	var [errors, seterrors] = useState([]);
-	var [loading, setloading] = useState(false);
-	var [success, setsuccess] = useState(false);
-	/* The star under the pointer, so the row previews the rating before the click. */
-	var [hoverRate, sethoverRate] = useState(null);
-
-
-	var stars = [
-		{ label: "Very Poor", value: 1 },
-		{ label: "Poor", value: 2 },
-		{ label: "Normal", value: 3 },
-		{ label: "Good", value: 4 },
-		{ label: "Excellent", value: 5 },
-	]
-
-
-	function submit_comment() {
-
-		/* A second click while the first is still sending posted the comment twice. */
-		if (loading) return;
-
-
-		if (!token) {
-			seterrors([loginRequiredText])
-
-			if (addNotification) {
-				addNotification({ type: 'error', title: 'Login Required', content: loginRequiredText })
-			}
-
-			return;
-		}
-
-
-		if (comment.content.length == 0) {
-			seterrors(["Comment should not be empty."])
-			return;
-		}
-
-
-		/*
-			postId is read at submit time rather than from the initial state:
-			PostContext fills in after mount on a client-rendered page, so the
-			state captured on the first render can still be null.
-		*/
-		var bodyData = JSON.stringify({ ...comment, postId: postId, parentId: parentId });
-
-
-		setloading(true);
-
-		fetch(
-			serverUrl + "wp-json/combo-store/v2/submit_comment",
-			{
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-					Authorization: `Bearer ${token}`,
-				},
-				body: bodyData,
-			}
-		)
-			.then((response) => {
-				if (!response.ok) {
-					throw new Error("Token validation failed");
-				}
-
-				if (response.ok && response.status < 400) {
-					response.json().then((res) => {
-						var errors = res?.errors;
-						var successX = res?.success;
-						var message = res?.message;
-
-
-						if (errors) {
-							seterrors(Array.isArray(errors) ? errors : [message])
-
-							if (addNotification) {
-								addNotification({ type: 'error', title: 'There is an error.', content: message })
-							}
-
-							setloading(false);
-							return;
-						}
-
-						if (successX) {
-							seterrors([])
-							setsuccess(true)
-							setcomment({ ...comment, content: "", rate: null });
-
-							if (addNotification) {
-								addNotification({ type: 'success', title: 'Thank you for your comment', content: successText })
-							}
-
-							if (CommentsGridAttr?.onCommentSubmitted) {
-								CommentsGridAttr.onCommentSubmitted();
-							}
-
-							if (userDataX && setUserDataX) {
-								var total_credit = parseInt(userDataX.total_credit) + 5
-								setUserDataX({ ...userDataX, total_credit: total_credit });
-							}
-						}
-
-
-						setloading(false);
-
-					});
-				}
-			})
-			.catch((_error) => {
-				/* This used to stop the spinner and say nothing. */
-				seterrors(["Your comment couldn't be sent. Please try again."]);
-				setloading(false);
-			});
-	}
-
-
-	return (
-
-		<div id={id} index={index} type={type} className={`${cssSelectors['*']?.classes ?? ''}  `}
-		>
-
-			<div className={`${cls('form')}`}>
-
-
-				{showRate && (
-					<div className={`${cls('field')} ${cls('rate-wrap')}`}>
-
-						<label className={`${cls('label')}`}>{rateLabel}</label>
-
-						<div className="flex flex-wrap items-center gap-3">
-							<div role="radiogroup" aria-label={rateLabel} className={`${cls('stars')}`} onMouseLeave={() => sethoverRate(null)}>
-
-								{stars.map((item, indexZ) => {
-
-									var shown = hoverRate ?? comment.rate;
-
-									return (
-										<button
-											type="button"
-											role="radio"
-											aria-checked={comment.rate === item.value}
-											aria-label={`${item.value} - ${item?.label}`}
-											key={indexZ}
-											title={item?.label}
-											className={`${cls('star')}`}
-											onMouseEnter={() => sethoverRate(item.value)}
-											onClick={ev => {
-												setcomment({ ...comment, rate: item.value });
-											}}
-										>
-
-											{!shown || shown <= indexZ ? (
-												<><IconStar /></>
-											) : (
-												<><IconStarFilled /></>
-											)}
-
-										</button>
-									)
-
-								})}
-
-							</div>
-							{(hoverRate ?? comment.rate) && (
-								<span className="text-sm text-gray-500">{stars[(hoverRate ?? comment.rate) - 1]?.label}</span>
-							)}
-						</div>
-
-					</div>
-				)}
-
-
-				<div className={`${cls('field')}`}>
-
-					<label htmlFor={`${id}-content`} className={`${cls('label')}`}>{commentLabel}</label>
-
-					<textarea
-						id={`${id}-content`}
-						className={`${cls('textarea')}`}
-						placeholder={placeholder}
-						value={comment?.content}
-						onChange={(ev) => {
-							var value = ev.target.value;
-							setcomment({ ...comment, content: value });
-						}}
-					/>
-
-				</div>
-
-
-				<button
-					type="button"
-					disabled={loading}
-					className={`${cls('submit')}`}
-					onClick={ev => {
-						submit_comment()
-					}}
-				>
-
-					{!loading && (
-						<>{submitLabel}</>
-					)}
-					{loading && (
-						<>{loadingLabel}</>
-					)}
-
-				</button>
-
-
-				{success && (
-					<div role="status" className={`${cls('notice')}`}><IconCircleCheck size={16} className="shrink-0" /> {successText}</div>
-				)}
-
-
-				{errors?.length > 0 && (
-					<div role="alert" className={`${cls('errors')}`}>
-
-						{errors?.map((item, indexZ) => {
-
-							return (
-								<div key={indexZ} className={`${cls('error')}`}>
-									<IconExclamationCircle size={16} /> {item}
-								</div>
-							)
-						})}
-
-					</div>
-				)}
-
-
-			</div>
-
-		</div>
-
-	);
+	return <CommentsFormMarkup cls={cls} id={props?.id} index={props?.index} type={props?.type} options={props?.options} state={state} actions={actions} />;
 };
 
 export default CommentsFormView;

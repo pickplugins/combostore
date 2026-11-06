@@ -1,108 +1,51 @@
 "use client"
-import { useState, useEffect, useContext } from "react";
-import { IconStar, IconStarFilled } from "@tabler/icons-react";
+import React from "react";
 import { usePost } from "../context/PostContext";
+import { ProductDiscountMarkup, discountPercent } from "./ProductDiscountView";
+import { elementCssClasses } from "../ElementsDefinition";
 
+/*
+	Builder (canvas) preview of the discount badge: ProductDiscountView's own
+	markup and classes. When there is no real discount to show - outside a
+	product loop, or a product that is not on sale - it shows a dimmed sample
+	"20%" instead of nothing, so the block stays visible, selectable and
+	styleable. (It used to vanish, and showed Infinity% or NaN% for a regular
+	price of 0.)
+*/
 const ProductDiscount = (props) => {
 
-
-	var draggingBlock = props?.draggingBlock
 	var setDraggingBlock = props?.setDraggingBlock
-
 	var dragOverIndex = props?.dragOverIndex
 	var setDragOverIndex = props?.setDragOverIndex
-
 	var setSelectedId = props?.setSelectedId
 	var selectedId = props?.selectedId
 	var index = props?.index
-	var name = props?.name
-	var cssSelectors = props?.cssSelectors
-
-
 	var id = props?.id;
-	var type = props?.type;
 
-	var options = props?.options;
-	var label = options?.label;
-	var labelIcon = options?.labelIcon;
-	var outOfStockIcon = options?.outOfStockIcon;
-	var inStockIcon = options?.inStockIcon;
-	var iconSize = options?.iconSize;
-	var outOfStockText = options?.outOfStockText ?? 'Out of stock';
-	var inStockText = options?.inStockText ?? 'In stock';
-	var stock_status = options?.stock_status ?? 'instock';
-
-
-
+	var cls = elementCssClasses('productDiscount', props?.cssSelectors);
 
 	const product = usePost();
-
-	var regular_price = product?.regular_price;
-	var sale_price = product?.sale_price;
-
-	if (!sale_price) {
-		return null;
-	}
-
-
-	//const [starIndex, setstarIndex] = useState(rate);
-
-
-	function calculateDiscountPercentage(regular_price, sale_price) {
-		const discount = regular_price - sale_price;
-		return Math.round((discount / regular_price) * 100);
-	}
-
-
-
-
-	// useEffect(() => {
-	// 	onChange(starIndex)
-	// }, [starIndex]);
-
-
+	var real = discountPercent(product);
 
 	return (
-
-
-		<div draggable id={id} index={index} type={type} className={`${cssSelectors['*']?.classes ?? ''} hover:outline-orange-200 hover:outline-solid hover:outline-1 ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200 ' : ''} ${selectedId == id ? 'outline-1 outline-solid outline-orange-400 relative' : ''} `}
-			onClick={e => {
-				e.preventDefault();
-
-				e.stopPropagation();
-
-
-				setSelectedId(selectedId != id ? id : null);
+		<ProductDiscountMarkup
+			cls={cls}
+			id={id}
+			index={index}
+			type={props?.type}
+			percent={real ?? 20}
+			label={props?.options?.label}
+			rootClassName={`${real == null ? 'opacity-60' : ''} hover:outline-orange-200 hover:outline-solid hover:outline-1 ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200 ' : ''} ${selectedId == id ? 'outline-1 outline-solid outline-orange-400 relative' : ''}`}
+			rootProps={{
+				draggable: true,
+				title: real == null ? 'Sample: shows on discounted products only' : undefined,
+				onClick: e => { e.preventDefault(); e.stopPropagation(); setSelectedId(selectedId != id ? id : null); },
+				onDragStart: e => { e.stopPropagation(); e.dataTransfer.setData("canvasBlock", id); setDraggingBlock(id); },
+				onDragEnd: () => { setDraggingBlock(null); setDragOverIndex(null); },
+				onDragOver: e => { e.preventDefault(); setDragOverIndex(index); },
+				onDragLeave: () => setDragOverIndex(null),
 			}}
-			onDragStart={e => {
-				e.stopPropagation();
-				e.dataTransfer.setData("canvasBlock", id);
-				setDraggingBlock(id);
-			}}
-			onDragEnd={() => {
-				setDraggingBlock(null);
-				setDragOverIndex(null);
-			}}
-
-			onDragOver={e => { e.preventDefault(); setDragOverIndex(index); }}
-			onDragLeave={() => setDragOverIndex(null)} >
-
-
-
-			<div className={`${cssSelectors['discount']?.classes}`}>{calculateDiscountPercentage(regular_price, sale_price)}%</div>
-			{label && (
-				<span className={`${cssSelectors['label']?.classes}`}>{label}</span>
-			)}
-
-
-		</div>
-
-
-
-
-
-
-
+		/>
 	);
 };
 

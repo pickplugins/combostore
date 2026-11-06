@@ -5,6 +5,7 @@ import React from "react";
 import { useState } from "react";
 import { IconColumns, IconPlus } from "@tabler/icons-react";
 import BlockPreview from '../BlockPreview';
+import { elementCssClasses } from "../ElementsDefinition";
 
 const Columns = (props) => {
 	const {
@@ -26,6 +27,8 @@ const Columns = (props) => {
 	const children = props?.children || [];
 
 	var cssSelectors = props?.cssSelectors ?? {};
+	/* Same lookup as ColumnsView: a missing key falls back to the columns defaults in ElementsDefinition.js. */
+	var cls = elementCssClasses('columns', cssSelectors);
 
 	const onDrop = (e) => {
 		e.preventDefault();
@@ -52,7 +55,7 @@ const Columns = (props) => {
 			draggable
 			id={id}
 			type={type}
-			className={`${cssSelectors['*']?.classes ?? ''}   hover:outline-orange-200 hover:outline-solid hover:outline-1 relative   ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200 bg-orange-200' : ''}
+			className={`${cls('*')}   hover:outline-orange-200 hover:outline-solid hover:outline-1 relative   ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200 bg-orange-200' : ''}
 				${selectedId === id ? 'outline-1 outline-solid outline-orange-400 relative' : ''}
 			`}
 			onClick={(e) => {
@@ -87,7 +90,7 @@ const Columns = (props) => {
 						setSelectedId={setSelectedId}
 						selectedId={selectedId}
 						handleMoveBlock={handleMoveBlock}
-						parentCssSelectors={cssSelectors}
+						ParentCssSelectors={cssSelectors}
 					/>
 				))
 			) : (

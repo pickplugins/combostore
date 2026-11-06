@@ -1,76 +1,31 @@
-import PropTypes from "prop-types";
 import React from "react";
-import { useState, useEffect } from "react";
-import { IconLibraryPhoto, IconCheckbox, IconSquare, IconFidgetSpinner, IconTrash, IconStarFilled, IconStar, IconX } from "@tabler/icons-react";
-import { useDraggable } from '@dnd-kit/react';
-import ToggleContent from '../../../components/ToggleContent';
-import CssClassPicker from "../CssClassPicker";
 import CssSelectors from "../CssSelectors";
+import { withElementCssDefaults } from "../ElementsDefinition";
 
-
-const ListOptions = (props) => {
+/*
+	Settings panel for the `accordionItem` block: one item's content. Its `*`
+	classes wrap the blocks inside it, within the parent accordion's
+	`accordion-content`. The item's header label is set on the accordion.
+*/
+const AccordionItemOptions = (props) => {
 
 	var updateBlock = props?.updateBlock;
-	var handleMoveBlock = props?.handleMoveBlock;
 
-	var cssSelectors = props?.cssSelectors ?? {};
-	var id = props?.id;
-	var options = props?.options;
-	var items = options?.items ?? [];
-
-
-	const [loading, setloading] = useState(false);
-
-
-
-
-
-
-	// useEffect(() => {
-
-	// 	fetchPosts();
-	// }, []);
-
-
-
-
-
-
+	/* Every current key, filled from defaults where the block lacks it. */
+	var cssSelectors = withElementCssDefaults('accordionItem', props?.cssSelectors);
 
 	return (
 		<div className="px-3" >
-			{/* {JSON.stringify(prams)} */}
-
 			<div className="flex flex-col gap-3">
 
-
-
-
-
-				{/* <CssClassPicker type="text" className="w-full !rounded-lg !border !border-gray-300 !bg-white !px-2.5 !py-1.5 !text-xs !text-gray-700 !shadow-none !outline-none transition-colors focus:!border-brand focus:!ring-4 focus:!ring-brand/10" value={options?.classes} onChange={(value) => {
-
-
-					var optionsX = { ...options }
-					optionsX.classes = value
-					updateBlock('options', optionsX)
-
-				}} /> */}
+				<p className="text-xs text-gray-500">
+					This is one item's content. Its header label is set on the Accordion block.
+				</p>
 
 				<CssSelectors cssSelectors={cssSelectors} updateBlock={updateBlock} />
-
-
-
-
-
-
-
 			</div>
-
-
 		</div>
 	);
 };
 
-
-
-export default ListOptions;
+export default AccordionItemOptions;

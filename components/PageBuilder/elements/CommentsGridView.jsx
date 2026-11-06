@@ -1,87 +1,94 @@
 "use client"
-import React from "react";
-import { useState } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import BlockRender from '../BlockRender';
 import { CommentsGridProvider } from "../context/CommentsGridContext";
 import { usePost } from "../context/PostContext";
+import { PostGridMarkup } from "./PostGridView";
+import { elementCssClasses, withElementCssDefaults } from "../ElementsDefinition";
 
+/* The query keys get_comments reads; anything else saved on the block is left out. */
+const commentQueryKeys = ['per_page', 'paged', 'order', 'orderby', 'hierarchical'];
 
 /*
-	Storefront twin of CommentsGrid.jsx: the same wrapper and the same provider,
-	minus the editor's drag and drop handling.
+	The get_comments query: the page's post, 20 a page, oldest first, with
+	the block's own per_page / order / orderby / hierarchical on top.
 
-	Two things it does that the editor version does not, both because the
-	editor only has to look right on a canvas:
+	The post id is post_id, else product_id, else id: blog pages provide the
+	post as `id`, so the grid sent post_id null there - and get_comments with
+	no post_id returns every approved comment on the site. A grid on a page
+	with no post (a home-page testimonials strip) still shows the site's
+	comments, as before. The panel used to be the posts query editor, so a
+	saved query could hold post_type, taxQuery and the like; only the keys
+	get_comments reads are taken.
+*/
+export function commentsGridQuery(options, post) {
+	var saved = options?.queryPrams && typeof options.queryPrams === 'object' && !Array.isArray(options.queryPrams) ? options.queryPrams : {};
+	var query = { post_id: post?.post_id ?? post?.product_id ?? post?.id ?? null, paged: 1, order: 'ASC', per_page: 20 };
+	for (const key of commentQueryKeys) if (saved[key] !== undefined && saved[key] !== '') query[key] = saved[key];
+	return query;
+}
 
-		- The post id comes from PostContext, which app/product/[slug] and
-			app/blog/[slug] both provide. CommentsLoop.jsx hard-codes
-			`queryPrams.post_id = 10018` so the canvas has something to draw; on a
-			live page that would show one fixed post's comments everywhere.
-		- It hands the loop a `refresh` counter and the form an
-			`onCommentSubmitted` callback, so a comment posted through
-			commentsForm reloads the list beside it. The two blocks are siblings
-			under this one and have no other way to reach each other.
+/*
+	The grid's state and what it shares with its commentsLoop, commentsForm
+	and commentsGridPagination through CommentsGridContext:
+	- queryPrams: the query, rebuilt only when its content changes (it was a
+	  new object on every render, so the loop refetched on every re-render);
+	- onChangeQuery: for the pagination, which changes the page (the context
+	  had none, so pagination had nothing to call);
+	- refresh / onCommentSubmitted: a comment posted through the form reloads
+	  the list (the counter now always moves on, even after quick posts);
+	- results / onResults: the loop's counts, for the pagination;
+	- cssSelectors: the grid's own, filled from the commentsGrid defaults - the
+	  loop styles its list and cards from `loop-items` / `loop-item`.
+*/
+export function useCommentsGridState(options, post, cssSelectors) {
+	var baseKey = JSON.stringify(commentsGridQuery(options, post));
+	var [paged, setPaged] = useState(1);
+	var [pagedFor, setPagedFor] = useState(baseKey);
+	if (pagedFor !== baseKey) { setPagedFor(baseKey); setPaged(1); }
 
-	The query params carry the shape the rest of the app uses for this endpoint
-	(see components/PageBuilder/elements/Comments.jsx), and anything set on the
-	block's own options wins.
+	var queryPrams = useMemo(() => ({ ...JSON.parse(baseKey), paged }), [baseKey, paged]);
+	var onChangeQuery = useCallback((next) => setPaged(Math.max(1, parseInt(next?.paged) || 1)), []);
+
+	var [refresh, setRefresh] = useState(0);
+	var onCommentSubmitted = useCallback(() => setRefresh(r => r + 1), []);
+
+	var [results, setResults] = useState(null);
+	var onResults = useCallback((r) => setResults(prev => (prev?.total === r?.total && prev?.maxPages === r?.maxPages) ? prev : r), []);
+
+	var selectors = useMemo(() => withElementCssDefaults('commentsGrid', cssSelectors), [cssSelectors]);
+
+	return useMemo(() => ({ queryPrams, onChangeQuery, refresh, onCommentSubmitted, results, onResults, cssSelectors: selectors }),
+		[queryPrams, onChangeQuery, refresh, onCommentSubmitted, results, onResults, selectors]);
+}
+
+/* The grid's wrapper (`*`), the same as Post Grid's; shared with the builder preview (CommentsGrid.jsx). */
+export const CommentsGridMarkup = PostGridMarkup;
+
+/*
+	The comments (reviews) of the post or product on the page, with whatever
+	is inside it - normally a commentsLoop, a commentsForm and a
+	commentsGridPagination, often inside a grid layout.
 */
 const CommentsGridView = (props) => {
 
-	var type = props?.type
 	var children = props?.children;
-	var options = props?.options;
-	var id = props?.id;
+	var index = props?.index;
 
-	var index = props?.index
-	var cssSelectors = props?.cssSelectors ?? {};
-
+	/* A key the block lacks falls back to the commentsGrid defaults in ElementsDefinition.js. */
+	var cls = elementCssClasses('commentsGrid', props?.cssSelectors);
 
 	const post = usePost();
-
-	var [refresh, setrefresh] = useState(0);
-
-
-	function onCommentSubmitted() {
-		setrefresh(refresh + 1);
-	}
-
-
-	var queryPrams = {
-		post_id: post?.post_id ?? null,
-		paged: 1,
-		order: "ASC",
-		per_page: 20,
-		...(options?.queryPrams ?? {}),
-	};
-
+	var contextValue = useCommentsGridState(props?.options, post, props?.cssSelectors);
 
 	return (
-		<div
-			id={id}
-			type={type}
-			className={`  ${cssSelectors['*']?.classes ?? ''}  `}
-
-		>
-
-
-			<CommentsGridProvider value={{ queryPrams: queryPrams, cssSelectors: cssSelectors, refresh: refresh, onCommentSubmitted: onCommentSubmitted }}>
-
-				{children != undefined && children.map((child, indexZ) => {
-
-
-					return (
-
-						<BlockRender index={`${index}${indexZ}`} key={child.id} block={child} />
-
-					)
-
-				})}
-
+		<CommentsGridMarkup cls={cls} id={props?.id} index={index} type={props?.type}>
+			<CommentsGridProvider value={contextValue}>
+				{Array.isArray(children) && children.map((child, indexZ) => (
+					<BlockRender index={`${index}${indexZ}`} key={child.id} block={child} />
+				))}
 			</CommentsGridProvider>
-
-
-		</div>
+		</CommentsGridMarkup>
 	);
 };
 

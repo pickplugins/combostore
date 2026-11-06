@@ -8,6 +8,7 @@ import CssSelectors from "../CssSelectors";
 import IconPicker from "../../../components/IconPicker";
 import ToggleContent from "../../../components/ToggleContent";
 import DropDown from '../../../components/DropDown';
+import { withElementCssDefaults } from "../ElementsDefinition";
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
 
@@ -485,7 +486,7 @@ const ButtonOptions = (props) => {
 
 
 
-				<CssSelectors cssSelectors={cssSelectors} updateBlock={updateBlock} />
+				<CssSelectors cssSelectors={withElementCssDefaults('select', cssSelectors)} updateBlock={updateBlock} />
 
 
 			</div>

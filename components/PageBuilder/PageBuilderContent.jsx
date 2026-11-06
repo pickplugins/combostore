@@ -13,8 +13,9 @@ const PageBuilderContent = (props) => {
 
 
 
+	/* cs-page: where the site template's default fonts and colors apply (lib/templateTheme.js), so they stay off the dashboard, which shares the root layout. */
 	return (
-		<div className="">
+		<div className="cs-page">
 			{blocks?.map((block, index) => (
 				<BlockRender index={index} key={block.id} block={block} />
 			))}

@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, Component } from "react";
+import { useState, useEffect, useMemo, Component } from "react";
 import { IconX, IconCheck, IconEdit } from '@tabler/icons-react';
 
 
@@ -7,6 +7,8 @@ import { IconX, IconCheck, IconEdit } from '@tabler/icons-react';
 
 import DropDown from "../../components/DropDown";
 import tailwindClass from './tailwindClass';
+import { useActiveTemplateSettings } from './templateThemeLive';
+import { templateClassSuggestions } from '../../lib/templateTheme';
 
 
 
@@ -19,6 +21,15 @@ const CssClassPicker = (props) => {
   var onChange = props.onChange
 
   var [edit, setedit] = useState(false);
+
+  /* The site template's classes first - font-heading, font-body, each custom
+     font's font-<name> (Template Settings > Your fonts > Class name), and the
+     template colors - then Tailwind's own. */
+  var templateSettings = useActiveTemplateSettings();
+  var classOptions = useMemo(
+    () => [...new Set([...templateClassSuggestions(templateSettings?.meta ?? {}), ...tailwindClass])],
+    [templateSettings]
+  );
 
 
   return (
@@ -106,7 +117,7 @@ const CssClassPicker = (props) => {
               label="Choose Class"
               labelClass={'inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-2 py-1 text-xs font-medium text-gray-600 cursor-pointer transition-colors hover:border-brand/40 hover:bg-brand/5 hover:text-brand-700 w-fit'}
               value={''}
-              options={tailwindClass}
+              options={classOptions}
               allowSearch={true}
               onOptionsChoose={(newVal) => {
                 //ff

@@ -9,6 +9,7 @@ import CssClassPicker from "../CssClassPicker";
 import CssSelectors from "../CssSelectors";
 
 
+import { withElementCssDefaults } from "../ElementsDefinition";
 const ArchiveTitleOptions = (props) => {
 
 	var updateBlock = props?.updateBlock;
@@ -57,9 +58,10 @@ const ArchiveTitleOptions = (props) => {
 					</div>
 				</div>
 				<div className="flex flex-col gap-2">
-					<label htmlFor="" className="text-xs font-medium text-gray-600">Prefix</label>
+					<label htmlFor="" className="text-xs font-medium text-gray-600">Title text</label>
+					<p className="text-xs text-gray-500"><code>%term_name%</code> is the category, tag or brand name; <code>%term_count%</code>, <code>%term_slug%</code> and <code>%term_description%</code> also work. Left unset, the title is just the name.</p>
 					<div>
-						<input type="text" className="w-full !rounded-lg !border !border-gray-300 !bg-white !px-2.5 !py-1.5 !text-xs !text-gray-700 !shadow-none !outline-none transition-colors focus:!border-brand focus:!ring-4 focus:!ring-brand/10" value={options?.prefix} onChange={ev => {
+						<input type="text" placeholder="%term_name%" className="w-full !rounded-lg !border !border-gray-300 !bg-white !px-2.5 !py-1.5 !text-xs !text-gray-700 !shadow-none !outline-none transition-colors focus:!border-brand focus:!ring-4 focus:!ring-brand/10" value={options?.prefix ?? ''} onChange={ev => {
 
 							var value = ev.target.value;
 
@@ -97,7 +99,7 @@ const ArchiveTitleOptions = (props) => {
 
 
 
-				<CssSelectors cssSelectors={cssSelectors} updateBlock={updateBlock} />
+				<CssSelectors cssSelectors={withElementCssDefaults('archiveTitle', cssSelectors)} updateBlock={updateBlock} />
 
 
 

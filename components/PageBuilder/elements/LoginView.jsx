@@ -6,11 +6,7 @@ import { IconAlertCircle, IconEye, IconEyeOff, IconLock, IconUser, IconLogin2 } 
 import Spinner from "../../../components/Spinner";
 import { useAuth } from "../../../components/auth-context";
 
-/* Field styles shared with RegisterView so the two forms match side by side. */
-export const authFieldClass = "w-full rounded-lg border border-gray-300 bg-white py-2.5 pl-10 pr-3 text-sm text-gray-900 placeholder:text-gray-400 shadow-xs transition-colors hover:border-gray-400 focus:border-[#1b0e9f] focus:outline-none focus:ring-2 focus:ring-[#1b0e9f]/15";
-export const authLabelClass = "mb-1.5 block text-sm font-medium text-gray-700";
-export const authAdornmentClass = "pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400";
-export const authSubmitClass = "inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#1b0e9f] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#150b7d] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1b0e9f]/40 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70";
+import { elementCssClasses } from "../ElementsDefinition";
 
 /*
 	The storefront's sign-in block.
@@ -25,6 +21,8 @@ export const authSubmitClass = "inline-flex w-full items-center justify-center g
 const LoginView = (props) => {
 
 	var cssSelectors = props?.cssSelectors ?? {};
+	/* Each part's classes; a key the block lacks falls back to the login defaults in ElementsDefinition.js. */
+	var cls = elementCssClasses('login', cssSelectors);
 	var type = props?.type;
 	var id = props?.id;
 
@@ -48,29 +46,29 @@ const LoginView = (props) => {
 	};
 
 	return (
-		<div id={id} type={type} className={`${cssSelectors['*']?.classes ?? ''}`}>
+		<div id={id} type={type} className={cls('*')}>
 
-			<form onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
+			<form onSubmit={onSubmit} noValidate className={cls('form')}>
 
 				{/* Pages that put their own heading above the form set hideTitle. */}
 				{!props?.options?.hideTitle && (
-					<div>
-						<h3 className="text-lg font-semibold text-gray-900">Sign in</h3>
-						<p className="text-sm text-gray-500">Welcome back! Sign in to see your orders and saved details.</p>
+					<div className={cls('header')}>
+						<h3 className={cls('title')}>Sign in</h3>
+						<p className={cls('subtitle')}>Welcome back! Sign in to see your orders and saved details.</p>
 					</div>
 				)}
 
 				{(missing || error) && (
-					<p role="alert" className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+					<p role="alert" className={cls('error')}>
 						<IconAlertCircle size={16} className="mt-0.5 shrink-0" />
 						<span>{missing ? "Please enter your username and password." : error}</span>
 					</p>
 				)}
 
-				<div>
-					<label htmlFor={`${id}-login-username`} className={authLabelClass}>Username or email</label>
-					<div className="relative">
-						<span className={authAdornmentClass}><IconUser size={16} /></span>
+				<div className={cls('field')}>
+					<label htmlFor={`${id}-login-username`} className={cls('field-label')}>Username or email</label>
+					<div className={cls('field-control')}>
+						<span className={cls('field-icon')}><IconUser size={16} /></span>
 						<input
 							id={`${id}-login-username`}
 							name="username"
@@ -80,15 +78,15 @@ const LoginView = (props) => {
 							autoCorrect="off"
 							value={username}
 							onChange={(e) => setUsername(e.target.value)}
-							className={authFieldClass}
+							className={`${cls('field-input')} ${cls('username-input')}`}
 						/>
 					</div>
 				</div>
 
-				<div>
-					<label htmlFor={`${id}-login-password`} className={authLabelClass}>Password</label>
-					<div className="relative">
-						<span className={authAdornmentClass}><IconLock size={16} /></span>
+				<div className={cls('field')}>
+					<label htmlFor={`${id}-login-password`} className={cls('field-label')}>Password</label>
+					<div className={cls('field-control')}>
+						<span className={cls('field-icon')}><IconLock size={16} /></span>
 						<input
 							id={`${id}-login-password`}
 							name="password"
@@ -96,21 +94,21 @@ const LoginView = (props) => {
 							autoComplete="current-password"
 							value={password}
 							onChange={(e) => setPassword(e.target.value)}
-							className={`${authFieldClass} !pr-11`}
+							className={`${cls('field-input')} ${cls('password-input')}`}
 						/>
 						<button
 							type="button"
 							aria-label={showPassword ? "Hide password" : "Show password"}
 							title={showPassword ? "Hide password" : "Show password"}
 							onClick={() => setShowPassword(!showPassword)}
-							className="absolute right-1 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-gray-400 transition-colors hover:text-gray-700"
+							className={cls('password-toggle')}
 						>
 							{showPassword ? <IconEyeOff size={16} /> : <IconEye size={16} />}
 						</button>
 					</div>
 				</div>
 
-				<button type="submit" disabled={logging} className={authSubmitClass}>
+				<button type="submit" disabled={logging} className={cls('submit-button')}>
 					{logging ? <Spinner /> : <IconLogin2 size={16} />}
 					{logging ? "Signing in…" : "Sign in"}
 				</button>

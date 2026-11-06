@@ -18,7 +18,7 @@ PostProvider value={product}
   ├─ ProductCategoriesView
   ├─ ProductStockStatusView · ProductSkuView
   ├─ ProductPriceView
-  ├─ ProductVariablePricesView     ← the real variation picker
+  ├─ ProductVariationsView     ← the real variation picker
   └─ AddToCartView                 ← the real Add to Cart
 ```
 

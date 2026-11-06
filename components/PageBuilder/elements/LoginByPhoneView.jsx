@@ -4,24 +4,12 @@ import React from "react";
 import { useState, useEffect } from "react";
 import { IconAlertCircle, IconDeviceMobile, IconPencil } from "@tabler/icons-react";
 import Spinner from "../../../components/Spinner";
+import { elementCssClasses } from "../ElementsDefinition";
 
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
 const defaultSendEndpoint = "wp-json/combo-store/v2/send_login_otp";
 const defaultVerifyEndpoint = "wp-json/combo-store/v2/verify_login_otp";
-
-/* Built-in look for a block saved without classes; the layouts in the page
-   builder set their own, and any class set there wins. */
-const fallbackClasses = {
-	'*': "w-full",
-	'form': "flex flex-col gap-4",
-	'input-fields-wrap': "flex flex-col gap-4",
-	'input-wrap': "flex flex-col gap-1.5",
-	'label-phone': "text-sm font-medium text-gray-700",
-	'label-otp': "text-sm font-medium text-gray-700",
-	'input': "w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 shadow-xs transition-colors hover:border-gray-400 focus:border-[#1b0e9f] focus:outline-none focus:ring-2 focus:ring-[#1b0e9f]/15",
-	'submit': "inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#1b0e9f] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#150b7d]",
-};
 
 const normalizePhone = (value) => {
 	let normalized = String(value).replace(/[\s()-]/g, "");
@@ -91,10 +79,8 @@ const LoginByPhoneView = (props) => {
 	var verifyOtpLabel = options?.verifyOtpLabel ?? 'Verify & sign in';
 	var sendOtpLabel = options?.sendOtpLabel ?? 'Send code';
 
-	const classesFor = (key) => {
-		const value = cssSelectors?.[key]?.classes;
-		return typeof value === 'string' && value.trim() !== '' ? value : (fallbackClasses[key] ?? '');
-	};
+	/* Each part's classes; a key the block lacks falls back to the loginByPhone defaults in ElementsDefinition.js. */
+	const cls = elementCssClasses('loginByPhone', cssSelectors);
 
 	const [step, setstep] = useState(1);
 	const [phone, setPhone] = useState("");
@@ -195,49 +181,49 @@ const LoginByPhoneView = (props) => {
 	};
 
 	return (
-		<div id={id} index={index} type={type} className={classesFor('*')}>
-			<form className={classesFor('form')} onSubmit={onSubmit} noValidate>
-				<div className={classesFor('input-fields-wrap')}>
+		<div id={id} index={index} type={type} className={cls('*')}>
+			<form className={cls('form')} onSubmit={onSubmit} noValidate>
 
-					<div className={classesFor('input-wrap')}>
-						<label htmlFor={`${id}-phone`} className={classesFor('label-phone')}>{phoneLabel}</label>
-						<div className="relative">
-							<input
-								id={`${id}-phone`}
-								type="tel"
-								inputMode="numeric"
-								autoComplete="tel"
-								value={phone}
-								placeholder="01XXXXXXXXX"
-								readOnly={step === 2}
-								onChange={(e) => setPhone(e.target.value)}
-								className={`${classesFor('input-phone')} ${classesFor('input')} ${step === 2 ? 'pr-24 text-gray-500' : ''}`}
-							/>
-							{step === 2 && (
-								<button
-									type="button"
-									className="absolute right-2 top-1/2 inline-flex -translate-y-1/2 items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-[#1b0e9f] hover:bg-[#1b0e9f]/5"
-									onClick={() => { setstep(1); setOtp(""); setError(""); }}
-								>
-									<IconPencil size={12} /> Change
-								</button>
-							)}
-						</div>
+				<div className={cls('field')}>
+					<label htmlFor={`${id}-phone`} className={cls('field-label')}>{phoneLabel}</label>
+					<div className={cls('field-control')}>
+						<input
+							id={`${id}-phone`}
+							type="tel"
+							inputMode="numeric"
+							autoComplete="tel"
+							value={phone}
+							placeholder="01XXXXXXXXX"
+							readOnly={step === 2}
+							onChange={(e) => setPhone(e.target.value)}
+							className={`${cls('field-input')} ${cls('phone-input')} ${step === 2 ? cls('phone-input-locked') : ''}`}
+						/>
+						{step === 2 && (
+							<button
+								type="button"
+								className={cls('change-button')}
+								onClick={() => { setstep(1); setOtp(""); setError(""); }}
+							>
+								<IconPencil size={12} /> Change
+							</button>
+						)}
 					</div>
+				</div>
 
-					{step === 1 && (
-						<button type="submit" className={`${classesFor('submit')} disabled:cursor-not-allowed disabled:opacity-60`} disabled={loading || timer > 0}>
-							{loading ? <Spinner /> : <IconDeviceMobile size={16} />}
-							{loading ? "Sending…" : timer > 0 ? `Send again in ${timer}s` : sendOtpLabel}
-						</button>
-					)}
+				{step === 1 && (
+					<button type="submit" className={cls('submit-button')} disabled={loading || timer > 0}>
+						{loading ? <Spinner /> : <IconDeviceMobile size={16} />}
+						{loading ? "Sending…" : timer > 0 ? `Send again in ${timer}s` : sendOtpLabel}
+					</button>
+				)}
 
-					{step === 2 && (
-						<>
-							<p className="text-sm text-gray-600">We sent a code to <span className="font-medium text-gray-900">{phone}</span>.</p>
+				{step === 2 && (
+					<>
+						<p className={cls('sent-note')}>We sent a code to <span className={cls('sent-phone')}>{phone}</span>.</p>
 
-							<div className={classesFor('input-wrap')}>
-								<label htmlFor={`${id}-otp`} className={classesFor('label-otp')}>{otpLabel}</label>
+						<div className={cls('field')}>
+							<label htmlFor={`${id}-otp`} className={cls('field-label')}>{otpLabel}</label>
+							<div className={cls('field-control')}>
 								<input
 									id={`${id}-otp`}
 									type="text"
@@ -246,33 +232,34 @@ const LoginByPhoneView = (props) => {
 									maxLength={8}
 									value={otp}
 									onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
-									className={`${classesFor('input-otp')} ${classesFor('input')} tracking-[0.3em]`}
+									className={`${cls('field-input')} ${cls('otp-input')}`}
 								/>
 							</div>
-
-							<button type="submit" className={`${classesFor('submit')} disabled:cursor-not-allowed disabled:opacity-60`} disabled={loading}>
-								{loading && <Spinner />}
-								{loading ? "Checking…" : verifyOtpLabel}
-							</button>
-
-							<button
-								type="button"
-								className="text-center text-sm font-medium text-[#1b0e9f] hover:underline disabled:cursor-not-allowed disabled:text-gray-400 disabled:no-underline"
-								disabled={loading || timer > 0}
-								onClick={resend}
-							>
-								{timer > 0 ? `Didn't get it? Send again in ${timer}s` : "Didn't get it? Send again"}
-							</button>
-						</>
-					)}
-
-					{error && (
-						<div role="alert" aria-live="polite" className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-							<IconAlertCircle size={16} className="mt-0.5 shrink-0" />
-							<span>{error}</span>
 						</div>
-					)}
-				</div>
+
+						<button type="submit" className={cls('submit-button')} disabled={loading}>
+							{loading && <Spinner />}
+							{loading ? "Checking…" : verifyOtpLabel}
+						</button>
+
+						<button
+							type="button"
+							className={cls('resend-button')}
+							disabled={loading || timer > 0}
+							onClick={resend}
+						>
+							{timer > 0 ? `Didn't get it? Send again in ${timer}s` : "Didn't get it? Send again"}
+						</button>
+					</>
+				)}
+
+				{error && (
+					<div role="alert" aria-live="polite" className={cls('error')}>
+						<IconAlertCircle size={16} className="mt-0.5 shrink-0" />
+						<span>{error}</span>
+					</div>
+				)}
+
 			</form>
 		</div>
 	);

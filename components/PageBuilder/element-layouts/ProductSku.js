@@ -6,35 +6,25 @@
  * MUST be `"type": "productSku"`. (PageBuilder.jsx regenerates all ids on
  * paste/replace, so the readable ids below are safe.)
  *
- * productSku is a leaf, so a preset is options plus the four selector keys. It
- * is also the one element in this folder where the definition, the renderer and
- * the options panel all agree: `label`, `icon` and `iconSize` are declared
- * (ElementsDefinition.js:3017), read (ProductSku.jsx:28-30) and editable
- * (ProductSkuOptions.jsx:44, :80, :95), and all four selector keys -- `*`,
- * `icon`, `label`, `sku` -- are applied. Nothing below is a workaround.
+ * productSku is a leaf, so a preset is options plus the four selector keys
+ * (`*`, `icon`, `label`, `sku`). ProductSkuView (the shop) and the builder's
+ * ProductSku.jsx render the same ProductSkuMarkup.
  *
  * The few things worth knowing:
  *
- * 1. The label div renders unconditionally (ProductSku.jsx:70), so an empty
- *    label still leaves a box that consumes the root's gap. Every preset carries
- *    `empty:hidden` on the `label` key so clearing the text closes the gap
- *    properly. The icon is already guarded (`{IconX && ...}` at :65), so it
- *    needs no such treatment -- unlike the always-rendered icon slots in
- *    linkList, featurebox and tabs.
+ * 1. The label div is only drawn when there is a label. The `empty:hidden`
+ *    these presets carry on `label` predates that and is now harmless.
  *
- * 2. `options.icon` must be an exact @tabler/icons-react export name; a value
- *    that does not resolve makes `IconX` undefined and the whole icon div
- *    disappears (:36, :65). Every name used here was checked against the
- *    installed package.
+ * 2. `options.icon` must be an exact @tabler/icons-react export name; one that
+ *    does not resolve drops the icon div. `iconSize` defaults to 24 when unset.
  *
- * 3. The SKU itself falls back to the literal string "CUSTOMSKU"
- *    (ProductSku.jsx:33) when there is no product context, which is what shows
- *    in the builder canvas. On a product page it is `product.sku`.
+ * 3. The SKU is the picked variation's own SKU when it has one, otherwise the
+ *    product's; with neither the shop shows nothing and the builder a dimmed
+ *    sample "SKU-12345".
  *
  * 4. DOM order is icon, then label, then SKU, and the root owns the whole
- *    layout through `*` -- there is no hardcoded display utility to fight. So a
- *    stacked label-over-code variant just sets `flex-col` on `*` and leaves the
- *    icon off, which is what Stacked Meta does.
+ *    layout through `*`. A stacked label-over-code variant sets `flex-col` on
+ *    `*` and leaves the icon off, which is what Stacked Meta does.
  */
 
 var layouts = [

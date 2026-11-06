@@ -1,147 +1,86 @@
 "use client"
-import { useState, useEffect } from "react";
-import { Splide, SplideTrack, SplideSlide } from '@splidejs/react-splide';
-import '@splidejs/react-splide/css';
-import Image from "next/image";
+import React from "react";
+import { IconPlus } from "@tabler/icons-react";
 import BlockPreview from '../BlockPreview';
-import { PostProvider } from "../context/PostContext";
-import { PostSliderProvider } from "../context/PostSliderContext";
-import { IconColumns, IconPlus } from "@tabler/icons-react";
-import { useCounterStore } from '../../../store/useCounterStore';
+import BlockRender from '../BlockRender';
+import { useTemplatePart, TemplatePartScope } from "./SiteHeaderView";
+import { SiteFooterMarkup } from "./SiteFooterView";
+import { elementCssClasses } from "../ElementsDefinition";
 
-const SiteHeader = (props) => {
+/*
+	Builder (canvas) preview of the site footer: SiteFooterView's own markup
+	and classes. With a template part chosen it shows that part as it will
+	look - it said "Template will loaded dynamically." - but read-only, with
+	a note: its blocks are edited in the template part itself. Without one,
+	its own blocks are editable here (with the drag props they were missing),
+	and an empty footer is a drop zone.
+*/
+const SiteFooter = (props) => {
 
-	const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
-	const { token, paymentGateways, appData, notifications, addNotification, userDataX, setUserDataX } = useCounterStore()
-
-
+	var handleMoveBlock = props?.handleMoveBlock
 	var draggingBlock = props?.draggingBlock
 	var setDraggingBlock = props?.setDraggingBlock
-
 	var dragOverIndex = props?.dragOverIndex
 	var setDragOverIndex = props?.setDragOverIndex
-	var cssSelectors = props?.cssSelectors ?? {};
-	var handleMoveBlock = props?.handleMoveBlock;
-
-
-
-
-
-
-	var type = props?.type
-	var children = props?.children;
-	var options = props?.options;
-	var templteId = options?.id;
-	var id = props?.id;
-
-	var index = props?.index
-
 	var setSelectedId = props?.setSelectedId
 	var selectedId = props?.selectedId
+	var id = props?.id;
+	var index = props?.index
 
+	var cls = elementCssClasses('siteFooter', props?.cssSelectors);
 
-
-
-	const onDrop = (e) => {
-		e.preventDefault();
-		e.stopPropagation();
-
-		const paletteType = e.dataTransfer.getData("paletteType");
-		const canvasBlockId = e.dataTransfer.getData("canvasBlock");
-
-		if (handleMoveBlock) {
-			handleMoveBlock({ paletteType, canvasBlockId }, id, 'inside');
-		}
-	};
-
-	const onDragOver = (e) => {
-		e.preventDefault();
-		e.stopPropagation();
-	};
-
-
-
-
+	var partId = props?.options?.id || null;
+	var { blocks, loading, error, repeats } = useTemplatePart(partId);
+	var children = Array.isArray(props?.children) ? props.children : [];
 
 	return (
-		<div
+		<SiteFooterMarkup
+			cls={cls}
 			id={id}
-			type={type}
-			className={` ${cssSelectors['*']?.classes ?? ''} ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200 bg-orange-200' : ''} ${selectedId == id ? 'outline-1 outline-solid outline-orange-400 relative ' : ''} `}
-
-			onClick={(e) => {
-				e.preventDefault();
-				e.stopPropagation();
-				setSelectedId(selectedId !== id ? id : null);
+			index={index}
+			type={props?.type}
+			rootClassName={`relative ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200 bg-orange-200' : ''} ${selectedId == id ? 'outline-1 outline-solid outline-orange-400 relative ' : ''}`}
+			rootProps={{
+				draggable: true,
+				onClick: (e) => { e.preventDefault(); e.stopPropagation(); setSelectedId(selectedId !== id ? id : null); },
+				onDragStart: (e) => { e.stopPropagation(); e.dataTransfer.setData("canvasBlock", id); setDraggingBlock?.(id); },
+				onDragEnd: () => { setDraggingBlock?.(null); setDragOverIndex?.(null); },
+				onDragOver: (e) => { e.preventDefault(); e.stopPropagation(); },
+				onDrop: (e) => {
+					e.preventDefault();
+					e.stopPropagation();
+					if (partId) return;
+					const paletteType = e.dataTransfer.getData("paletteType");
+					const canvasBlockId = e.dataTransfer.getData("canvasBlock");
+					handleMoveBlock?.({ paletteType, canvasBlockId }, id, 'inside');
+				},
 			}}
-			onDragStart={(e) => {
-				e.stopPropagation();
-				e.dataTransfer.setData("canvasBlock", id);
-				setDraggingBlock(id);
-			}}
-			onDragEnd={() => {
-				setDraggingBlock(null);
-				setDragOverIndex(null);
-			}}
-			onDragOver={onDragOver}
-			onDrop={onDrop}
-
-
-
 		>
-
-
-
-			{templteId && (
-
-				<div className="text-center bg-yellow-100 border-gray-400 border border-dashed p-5 m-3 rounded-sm">
-					Template will loaded dynamically.
-				</div>
-
-			)}
-			{!templteId && (
-
+			{partId ? (
 				<>
-
-					{children.length > 0 ? (
-						children.map((child, idx) => (
-							<BlockPreview
-								key={child.id}
-								index={`${index}-${idx}`}
-								block={child}
-								draggingBlock={draggingBlock}
-								dragOverIndex={dragOverIndex}
-								setDragOverIndex={setDragOverIndex}
-								setDraggingBlock={setDraggingBlock}
-								setSelectedId={setSelectedId}
-								selectedId={selectedId}
-								handleMoveBlock={handleMoveBlock}
-							/>
-						))
-					) : (
-						<div className="col-span-full flex flex-col items-center justify-center text-gray-400 py-4 pointer-events-none">
-							<IconPlus size={24} stroke={1.5} />
-							<span className="text-xs mt-1">Empty Section - Drop elements here</span>
-						</div>
-					)}
+					<div className="pointer-events-none select-none">
+						<TemplatePartScope partId={partId}>
+							{(blocks ?? []).map((child, idx) => (
+								<BlockRender key={child.id ?? idx} index={`${index}-${idx}`} block={child} />
+							))}
+						</TemplatePartScope>
+					</div>
+					<div className="absolute right-2 top-2 z-10 rounded-md bg-yellow-100/95 px-2 py-1 text-[11px] text-yellow-900 shadow-sm">
+						{repeats ? 'This footer template includes itself, so it is not shown here.' : loading ? 'Loading the footer template…' : error ? 'The footer template could not be loaded.' : 'Footer template - edit it in Template Parts.'}
+					</div>
 				</>
-
+			) : children.length > 0 ? (
+				children.map((child, idx) => (
+					<BlockPreview key={child.id ?? idx} index={`${index}-${idx}`} block={child} draggingBlock={draggingBlock} dragOverIndex={dragOverIndex} setDragOverIndex={setDragOverIndex} setDraggingBlock={setDraggingBlock} setSelectedId={setSelectedId} selectedId={selectedId} handleMoveBlock={handleMoveBlock} />
+				))
+			) : (
+				<div className="flex flex-col items-center justify-center py-4 text-gray-400 pointer-events-none">
+					<IconPlus size={24} stroke={1.5} />
+					<span className="mt-1 text-xs">Empty footer - drop elements here, or choose a footer template in the panel</span>
+				</div>
 			)}
-
-
-
-
-
-
-
-
-
-
-
-
-
-		</div>
+		</SiteFooterMarkup>
 	);
 };
 
-export default SiteHeader;
+export default SiteFooter;

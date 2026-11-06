@@ -6,8 +6,11 @@ import "animate.css";
 
 import * as TablerIcons from "@tabler/icons-react";
 
+import { elementCssClasses } from "../ElementsDefinition";
 const PopoverButton = (props) => {
 	const cssSelectors = props?.cssSelectors || {};
+	/* A key the block lacks falls back to the popoverButton defaults in ElementsDefinition.js. */
+	var cls = elementCssClasses('popoverButton', cssSelectors);
 	const children = props.children ?? [];
 	const prams = props.prams;
 	const onTriggerOpen = props?.onTriggerOpen;
@@ -90,22 +93,22 @@ const PopoverButton = (props) => {
 
 			id={id}
 			type={type}
-			className={`${cssSelectors["*"]?.classes || ""} relative`}
+			className={`${cls('*') || ""} relative`}
 		>
 
 			{/* Trigger Button */}
 			<div
-				className={`${cssSelectors["button"]?.classes || ""}`}
+				className={`${cls('button') || ""}`}
 				onClick={handleOpen}
 			>
 				<div
-					className={`${cssSelectors["button-icon"]?.classes || ""}`}
+					className={`${cls('button-icon') || ""}`}
 				>
 					{IconCustom ? <IconCustom size={iconSize} /> : null}
 				</div>
 
 				<div
-					className={`${cssSelectors["button-label"]?.classes || ""}`}
+					className={`${cls('button-label') || ""}`}
 				>
 					{buttonLabel}
 				</div>
@@ -115,7 +118,7 @@ const PopoverButton = (props) => {
 			{isOpen && (
 				<div
 					className={`
-                        ${cssSelectors["popover"]?.classes || ""}
+                        ${cls('popover') || ""}
                         ${positionClass}
                         animate__animated
                         ${isClosing ? animateOut : animateIn}
@@ -124,7 +127,7 @@ const PopoverButton = (props) => {
 				>
 					{/* Close Button */}
 					<div
-						className={`${cssSelectors["popover-close"]?.classes || ""}`}
+						className={`${cls('popover-close') || ""}`}
 						onClick={handleClose}
 					>
 						<IconX />
@@ -132,7 +135,7 @@ const PopoverButton = (props) => {
 
 					{/* Content */}
 					<div
-						className={`${cssSelectors["popover-content"]?.classes || ""}`}
+						className={`${cls('popover-content') || ""}`}
 					>
 						{children.length > 0 ? (
 							children.map((child, idx) => (
@@ -143,13 +146,8 @@ const PopoverButton = (props) => {
 								/>
 							))
 						) : (
-							<div className="col-span-full flex flex-col items-center justify-center text-gray-400 py-4 pointer-events-none">
-								<IconPlus size={24} stroke={1.5} />
-
-								<span className="text-xs mt-1">
-									Empty Columns - Drop elements here
-								</span>
-							</div>
+							/* Empty: nothing on the shop. The "Drop elements here" prompt is the builder's and used to show to shoppers. */
+							null
 						)}
 					</div>
 				</div>

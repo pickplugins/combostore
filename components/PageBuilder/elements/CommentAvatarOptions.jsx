@@ -1,96 +1,33 @@
-import PropTypes from "prop-types";
 import React from "react";
-import { useState, useEffect } from "react";
-import { IconLibraryPhoto, IconCheckbox, IconSquare, IconFidgetSpinner, IconTrash, IconStarFilled, IconStar, IconX } from "@tabler/icons-react";
-import { useDraggable } from '@dnd-kit/react';
-import ToggleContent from '../../../components/ToggleContent';
-import GalleryPicker from '../../shop-elements/GalleryPicker';
-import CssClassPicker from "../CssClassPicker";
 import CssSelectors from "../CssSelectors";
+import { withElementCssDefaults } from "../ElementsDefinition";
 
-
-const ImageOptions = (props) => {
+/*
+	Settings panel for the `commentAvatar` block: whether the avatar links to
+	the commenter's website, then its cssSelectors keys. It was a copy of the
+	image panel (a gallery picker and an alt text field), none of which this
+	block reads.
+*/
+const CommentAvatarOptions = (props) => {
 
 	var updateBlock = props?.updateBlock;
+	var options = props?.options ?? {};
 
-	var options = props?.options;
-	var items = options?.items ?? [];
-	var cssSelectors = props?.cssSelectors ?? {};
-
-
-	const [loading, setloading] = useState(false);
-
-
-
-
-
-
-	// useEffect(() => {
-
-	// 	fetchPosts();
-	// }, []);
-
-
-
-
-
-
-
-	function onPickFeaturedImage(item) {
-
-
-
-
-		//var post_thumbnail = { id: item.id, title: item.title, src: item.src }
-
-		//setcurrentObject({ ...currentObject, post_thumbnail: post_thumbnail });
-
-		var optionsX = { ...options }
-		optionsX.src = item.src
-		updateBlock('options', optionsX)
-
-	}
-
+	/* Every current key, filled from defaults where the block lacks it. */
+	var cssSelectors = withElementCssDefaults('commentAvatar', props?.cssSelectors);
 
 	return (
 		<div className="px-3" >
-			{/* {JSON.stringify(prams)} */}
-
 			<div className="flex flex-col gap-3">
-
-
-
-
-				<div className="flex flex-col gap-2">
-					<label htmlFor="" className="text-xs font-medium text-gray-600">Image Alt Text</label>
-					<div>
-						<input type="text" className="w-full !rounded-lg !border !border-gray-300 !bg-white !px-2.5 !py-1.5 !text-xs !text-gray-700 !shadow-none !outline-none transition-colors focus:!border-brand focus:!ring-4 focus:!ring-brand/10" value={options?.altText} onChange={ev => {
-
-							var value = ev.target.value;
-
-							var optionsX = { ...options }
-							optionsX.altText = value
-							updateBlock('options', optionsX)
-
-						}} />
-					</div>
-				</div>
-
-
-
-
-
-
+				<label className="flex items-center gap-2 text-xs font-medium text-gray-600">
+					<input type="checkbox" checked={!!options?.linkToAuthor} onChange={ev => updateBlock('options', { ...options, linkToAuthor: ev.target.checked })} />
+					Link to the commenter's website (when they gave one)
+				</label>
+				<p className="text-xs text-gray-500">The commenter's Gravatar. <code>*</code> wraps it, <code>link</code> is the link (when linked) and <code>image</code> the picture: size and round it there, e.g. <code>w-12 h-12 rounded-full object-cover</code>.</p>
 				<CssSelectors cssSelectors={cssSelectors} updateBlock={updateBlock} />
-
-
 			</div>
-
-
 		</div>
 	);
 };
 
-
-
-export default ImageOptions;
+export default CommentAvatarOptions;

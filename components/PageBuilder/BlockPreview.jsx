@@ -39,7 +39,6 @@ import SiteFooter from './elements/SiteFooter';
 import Input from './elements/Input';
 import Select from './elements/Select';
 import QuickSearch from './elements/QuickSearch';
-import GlobalSearch from './elements/GlobalSearch';
 import Grid from './elements/Grid';
 import GridItem from './elements/GridItem';
 import ColumnItem from './elements/ColumnItem';
@@ -50,7 +49,6 @@ import Container from './elements/Container';
 import Menu from './elements/Menu';
 import MenuItem from './elements/MenuItem';
 import Popup from './elements/Popup';
-import ProductArchive from './elements/ProductArchive';
 import RelatedProducts from './elements/RelatedProducts';
 // import Comments from './elements/Comments';
 // import CommentsForm from './elements/CommentsForm';
@@ -63,6 +61,7 @@ import CommentAuthor from './elements/CommentAuthor';
 import CommentsForm from './elements/CommentsForm';
 import CommentContent from './elements/CommentContent';
 import CommentAvatar from './elements/CommentAvatar';
+import CommentRate from './elements/CommentRate';
 import CommentsGridPagination from './elements/CommentsGridPagination';
 
 
@@ -86,6 +85,7 @@ import ProductTags from './elements/ProductTags';
 import ProductBrands from './elements/ProductBrands';
 import ProductSku from './elements/ProductSku';
 import ProductUpsells from './elements/ProductUpsells';
+import ProductCrosssells from './elements/ProductCrosssells';
 import ProductGallery from './elements/ProductGallery';
 import RequestForStock from './elements/RequestForStock';
 import Tabs from './elements/Tabs';
@@ -118,7 +118,7 @@ import ProductRatings from './elements/ProductRatings';
 import ProductBadge from './elements/ProductBadge';
 import ProductDiscount from './elements/ProductDiscount';
 import ProductPrice from './elements/ProductPrice';
-import ProductVariablePrices from './elements/ProductVariablePrices';
+import ProductVariations from './elements/ProductVariations';
 import ProductStockStatus from './elements/ProductStockStatus';
 import AccordionMenu from './elements/AccordionMenu';
 import Notify from './elements/Notify';
@@ -147,8 +147,8 @@ const BlockPreview = (props) => {
 	var ParentCssSelectors = props?.ParentCssSelectors
 
 	/* Block renderers contributed by the active extensions. Hydration of the
-	   stored on/off overrides is driven by Sidebar and PageBuilder; this only
-	   reads the result. */
+		 stored on/off overrides is driven by Sidebar and PageBuilder; this only
+		 reads the result. */
 	const activeExtensionIds = useExtensionsStore((s) => s.activeIds);
 	const extensionRenderers = React.useMemo(
 		() => registry.elementRenderers(activeExtensionIds),
@@ -196,7 +196,6 @@ const BlockPreview = (props) => {
 			input: Input,
 			select: Select,
 			quickSearch: QuickSearch,
-			globalSearch: GlobalSearch,
 			grid: Grid,
 			gridItem: GridItem,
 			columnItem: ColumnItem,
@@ -207,7 +206,8 @@ const BlockPreview = (props) => {
 			section: Section,
 			container: Container,
 			popup: Popup,
-			productArchive: ProductArchive,
+			/* The type is relatedProducts; only the snake-case key was registered, so the canvas drew nothing. The old key is kept as an alias. */
+			relatedProducts: RelatedProducts,
 			related_products: RelatedProducts,
 			// commentsForm: CommentsForm,
 			// comments: Comments,
@@ -218,6 +218,8 @@ const BlockPreview = (props) => {
 			commentAuthor: CommentAuthor,
 			commentContent: CommentContent,
 			commentAvatar: CommentAvatar,
+			/* Had no entry, so the builder drew nothing for comment ratings. */
+			commentRate: CommentRate,
 			commentsForm: CommentsForm,
 			commentsGridPagination: CommentsGridPagination,
 
@@ -242,6 +244,7 @@ const BlockPreview = (props) => {
 			productBrands: ProductBrands,
 			productSku: ProductSku,
 			productUpsells: ProductUpsells,
+			productCrosssells: ProductCrosssells,
 			productGallery: ProductGallery,
 			requestForStock: RequestForStock,
 			tabs: Tabs,
@@ -269,7 +272,9 @@ const BlockPreview = (props) => {
 			productBadge: ProductBadge,
 			productDiscount: ProductDiscount,
 			productPrice: ProductPrice,
-			productVariablePrices: ProductVariablePrices,
+			productVariations: ProductVariations,
+			/* The old name of productVariations, for blocks saved under it. */
+			productVariablePrices: ProductVariations,
 			productStockStatus: ProductStockStatus,
 			accordionMenu: AccordionMenu,
 			address: Address,

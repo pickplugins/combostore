@@ -1,274 +1,82 @@
 "use client"
-import { useState, useEffect } from "react";
-import { Splide, SplideTrack, SplideSlide } from '@splidejs/react-splide';
-import '@splidejs/react-splide/css';
-import Image from "next/image";
 import BlockPreview from '../BlockPreview';
-import { PostProvider } from "../context/PostContext";
 import { usePostGrid } from "../context/PostGridContext";
 import { usePostSlider } from "../context/PostSliderContext";
+import { PostLoopMarkup, postLoopClasses, usePostLoopPosts, useReportPostLoopResults } from "./PostLoopView";
 
+/*
+	Builder (canvas) preview of the post loop: PostLoopView's own markup,
+	classes and fetch, with the cards' blocks rendered by BlockPreview.
+
+	While the posts load, or when the query finds none, it shows sample cards
+	(as many as the query's per-page, up to four) whose blocks show their own
+	samples - it used to show nothing, which left nothing to select or drop
+	onto. Outside a grid or slider it shows a note instead of vanishing.
+	Dropping onto the list adds the block to every card.
+*/
 const PostLoop = (props) => {
 
 	const postGridAttr = usePostGrid();
 	const postSliderAttr = usePostSlider();
-
-	// var queryPrams = postGridAttr?.queryPrams
-	var queryPramsX = postGridAttr?.queryPrams ? postGridAttr?.queryPrams : postSliderAttr?.queryPrams
-	var cssSelectors = postGridAttr?.cssSelectors ? postGridAttr?.cssSelectors : postSliderAttr?.cssSelectors
-	var [queryPrams, setqueryPrams] = useState(queryPramsX);
-
-
-
-	const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
-
+	var parent = postGridAttr ?? postSliderAttr;
 
 	var handleMoveBlock = props?.handleMoveBlock
 	var draggingBlock = props?.draggingBlock
 	var setDraggingBlock = props?.setDraggingBlock
-
 	var dragOverIndex = props?.dragOverIndex
 	var setDragOverIndex = props?.setDragOverIndex
-
-
-
-	var type = props?.type
-	var children = props?.children;
-	var options = props?.options;
-	var items = options?.items ?? [];
-	var id = props?.id;
-
-	var index = props?.index
-
 	var setSelectedId = props?.setSelectedId
 	var selectedId = props?.selectedId
+	var children = props?.children;
+	var id = props?.id;
+	var index = props?.index
 
+	var cls = postLoopClasses(props?.cssSelectors, parent?.cssSelectors);
 
+	var { posts, loading, total, maxPages } = usePostLoopPosts(parent?.queryPrams ?? null);
+	useReportPostLoopResults(postGridAttr, total, maxPages);
 
-	var [posts, setposts] = useState([]);
+	var selectedClass = selectedId == id ? 'outline-1 outline-solid outline-orange-400 relative ' : '';
+	var select = (e) => { e.preventDefault(); e.stopPropagation(); setSelectedId(selectedId !== id ? id : null); };
 
-
-
-	function fetchPosts() {
-
-
-
-
-		var postData = JSON.stringify(queryPrams);
-
-		console.log(postData);
-
-
-		fetch(serverUrl + "wp-json/combo-store/v2/get_posts", {
-			cache: "no-store", // disables caching
-			method: "POST",
-			headers: {
-				'Content-Type': 'application/json',
-				// 'Authorization': `Bearer ${token}`
-			},
-			body: postData,
-		})
-			.then((response) => {
-
-				if (!response.ok) {
-					throw new Error('Token validation failed');
-				}
-
-				if (response.ok && response.status < 400) {
-					response.json().then((res) => {
-
-
-						var posts = res?.posts;
-						var total = res?.total;
-						var max_pages = res?.max_pages;
-
-
-						console.log(res);
-
-
-						// var termsX = [];
-
-						// Object.entries(terms).map(args => {
-						// 	var index = args[0]
-						// 	var item = args[1]
-						// 	termsX.push(item)
-						// })
-
-
-						setposts(posts)
-
-
-						setTimeout(() => {
-						}, 500);
-					});
-				}
-			})
-			.catch((_error) => {
-				//this.saveAsStatus = 'error';
-				// handle the error
-			});
-
+	if (!parent) {
+		return (
+			<div id={id} className={`rounded border border-dashed border-gray-300 p-3 text-xs text-gray-500 ${selectedClass}`} onClick={select}>
+				Post Loop: place it inside a Post Grid or Post Slider, which gives it the posts to show.
+			</div>
+		);
 	}
 
-
-
-	useEffect(() => {
-		fetchPosts();
-	}, []);
-
-
-	useEffect(() => {
-
-
-		fetchPosts();
-
-	}, [queryPrams]);
-
-
-	useEffect(() => {
-
-
-
-		if (postGridAttr?.queryPrams) {
-			setqueryPrams(postGridAttr?.queryPrams)
-		}
-
-		if (postSliderAttr?.queryPrams) {
-			setqueryPrams(postSliderAttr?.queryPrams)
-		}
-
-
-	}, [postGridAttr?.queryPrams, postSliderAttr?.queryPrams]);
-
-
-
-	const onDrop = (e) => {
-		e.preventDefault();
-		e.stopPropagation();
-
-		const paletteType = e.dataTransfer.getData("paletteType");
-		const canvasBlockId = e.dataTransfer.getData("canvasBlock");
-
-
-		if (handleMoveBlock) {
-			handleMoveBlock({ paletteType, canvasBlockId }, id, 'inside');
-		}
-	};
-
-	const onDragOver = (e) => {
-		e.preventDefault();
-		e.stopPropagation();
-	};
+	var perPage = parseInt(parent?.queryPrams?.posts_per_page) || 4;
+	var sample = posts.length === 0;
+	var items = sample ? Array.from({ length: Math.min(Math.max(perPage, 1), 4) }, () => null) : posts;
 
 	return (
-		<>
-
-
-			{postSliderAttr && (
-				<>
-					{posts?.map((item, index) => {
-
-
-						return (
-							<SplideSlide key={index}>
-								<div className={`${cssSelectors['loop-item']?.classes} `} key={index}
-
-
-								>
-
-
-
-									<PostProvider value={item}>
-
-
-
-										{children != undefined && children.map((child, indexZ) => {
-
-
-											return (
-
-												<BlockPreview index={`${index}${indexZ}`} {...item} key={child.id} block={child} draggingBlock={draggingBlock} dragOverIndex={dragOverIndex} setDragOverIndex={setDragOverIndex} setDraggingBlock={setDraggingBlock} setSelectedId={setSelectedId} selectedId={selectedId}
-													handleMoveBlock={handleMoveBlock}
-												/>
-
-											)
-
-										})}
-									</PostProvider>
-
-
-
-								</div>
-							</SplideSlide>
-						)
-					})}
-
-				</>
-			)}
-
-			{postGridAttr != null && (
-
-				<div
-					id={id}
-					type={type}
-					className={` ${cssSelectors['loop-items']?.classes}  ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200 bg-orange-200' : ''} ${selectedId == id ? 'outline-1 outline-solid outline-orange-400 relative ' : ''} `}
-
-					onClick={(e) => {
-						e.preventDefault();
-						e.stopPropagation();
-						setSelectedId(selectedId !== id ? id : null);
-					}}
-					onDragStart={(e) => {
-						e.stopPropagation();
-						e.dataTransfer.setData("canvasBlock", id);
-						setDraggingBlock(id);
-					}}
-					onDragEnd={() => {
-						setDraggingBlock(null);
-						setDragOverIndex(null);
-					}}
-					onDragOver={onDragOver}
-					onDrop={onDrop}
-				>
-
-
-					{posts?.map((item, index) => {
-
-
-						return (<div className={`${cssSelectors['loop-item']?.classes} `} key={index}>
-
-							<PostProvider value={item}>
-
-
-								{children != undefined && children.map((child, indexZ) => {
-
-
-									return (
-
-										<BlockPreview index={`${index}${indexZ}`} {...item} key={child.id} block={child} draggingBlock={draggingBlock} dragOverIndex={dragOverIndex} setDragOverIndex={setDragOverIndex} setDraggingBlock={setDraggingBlock} setSelectedId={setSelectedId} selectedId={selectedId} handleMoveBlock={handleMoveBlock}
-										/>
-
-									)
-
-								})}
-							</PostProvider>
-
-
-
-						</div>)
-					})}
-
-
-
-
-
-
-
-				</div>
-			)}
-
-
-		</>
+		<PostLoopMarkup
+			cls={cls}
+			id={id}
+			index={index}
+			type={props?.type}
+			items={items}
+			inSlider={!postGridAttr && !!postSliderAttr}
+			itemKey={(item, i) => item?.id ?? `sample-${i}`}
+			renderItem={(item, i) => Array.isArray(children) && children.map((child, indexZ) => (
+				<BlockPreview index={`${i}${indexZ}`} key={child.id} block={child} draggingBlock={draggingBlock} dragOverIndex={dragOverIndex} setDragOverIndex={setDragOverIndex} setDraggingBlock={setDraggingBlock} setSelectedId={setSelectedId} selectedId={selectedId} handleMoveBlock={handleMoveBlock} />
+			))}
+			rootClassName={`${sample && loading ? 'animate-pulse' : ''} ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200 bg-orange-200' : ''} ${selectedClass}`}
+			rootProps={{
+				title: sample ? (loading ? 'Loading posts…' : 'The query found no posts: sample cards shown') : undefined,
+				onClick: select,
+				onDragOver: (e) => { e.preventDefault(); e.stopPropagation(); },
+				onDrop: (e) => {
+					e.preventDefault();
+					e.stopPropagation();
+					const paletteType = e.dataTransfer.getData("paletteType");
+					const canvasBlockId = e.dataTransfer.getData("canvasBlock");
+					handleMoveBlock?.({ paletteType, canvasBlockId }, id, 'inside');
+				},
+			}}
+		/>
 	);
 };
 

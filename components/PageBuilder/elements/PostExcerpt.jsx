@@ -1,111 +1,54 @@
-import PropTypes from "prop-types";
 import React from "react";
 import { usePost } from "../context/PostContext";
-import Link from "next/link";
-import * as TablerIcons from '@tabler/icons-react';
+import { PostExcerptMarkup } from "./PostExcerptView";
+import { postUrlFor } from "./PostTitleView";
+import { elementCssClasses } from "../ElementsDefinition";
 
+/* Shown outside a loop, or for a post without an excerpt, at a realistic length. */
+const sampleExcerpt = 'Premium-quality essentials designed for everyday comfort and convenience. Soft, safe and reliable materials make this a practical choice for the whole family, at home or on the go.';
 
-const TermTitle = (props) => {
+/*
+	Builder (canvas) preview of the excerpt: PostExcerptView's own markup and
+	classes, with the same word limit and read-more link. Inside a loop it
+	shows the post's excerpt; otherwise a sample sentence. Links never
+	navigate away from the builder.
+*/
+const PostExcerpt = (props) => {
 
-
-	var draggingBlock = props?.draggingBlock
 	var setDraggingBlock = props?.setDraggingBlock
-
 	var dragOverIndex = props?.dragOverIndex
 	var setDragOverIndex = props?.setDragOverIndex
-
 	var setSelectedId = props?.setSelectedId
 	var selectedId = props?.selectedId
 	var index = props?.index
-	var name = props?.name
-	var cssSelectors = props?.cssSelectors
-
-
 	var id = props?.id;
-	var type = props?.type;
 
-	var options = props?.options;
-	var tag = options?.tag ?? 'h1';
-	var linkTo = options?.linkTo ?? 'postUrl';
-	var readMoreText = options?.readMoreText ?? 'Read more';
-	var maxWord = options?.maxWord ?? 20;
-	var readMoreIcon = options?.readMoreIcon;
-	var readMoreIconSize = options?.readMoreIconSize ?? 25;
+	var cls = elementCssClasses('postExcerpt', props?.cssSelectors);
 
-	const product = usePost();
-
-	var excerpt = product?.excerpt ?? 'Premium-quality baby essentials designed for everyday comfort and convenience. Soft, safe, and reliable materials make this product a practical choice for parents and little ones.';
-
-
-
-	const IconX = TablerIcons[readMoreIcon];
-
+	const post = usePost();
+	var real = String(post?.excerpt ?? '').trim();
 
 	return (
-
-
-		<div draggable id={id} index={index} type={type} className={`${cssSelectors['*']?.classes ?? ''} hover:outline-orange-200 hover:outline-solid hover:outline-1 ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200 ' : ''} ${selectedId == id ? 'outline-1 outline-solid outline-orange-400 relative' : ''} `}
-			onClick={e => {
-				e.preventDefault();
-
-				e.stopPropagation();
-
-
-				setSelectedId(selectedId != id ? id : null);
+		<PostExcerptMarkup
+			cls={cls}
+			id={id}
+			index={index}
+			type={props?.type}
+			options={props?.options}
+			source={real ? post.excerpt : sampleExcerpt}
+			href={(post && postUrlFor(post)) || '#'}
+			onLinkClick={ev => ev.preventDefault()}
+			rootClassName={`hover:outline-orange-200 hover:outline-solid hover:outline-1 ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200 ' : ''} ${selectedId == id ? 'outline-1 outline-solid outline-orange-400 relative' : ''}`}
+			rootProps={{
+				draggable: true,
+				onClick: e => { e.preventDefault(); e.stopPropagation(); setSelectedId(selectedId != id ? id : null); },
+				onDragStart: e => { e.stopPropagation(); e.dataTransfer.setData("canvasBlock", id); setDraggingBlock?.(id); },
+				onDragEnd: () => { setDraggingBlock?.(null); setDragOverIndex?.(null); },
+				onDragOver: e => { e.preventDefault(); setDragOverIndex?.(index); },
+				onDragLeave: () => setDragOverIndex?.(null),
 			}}
-			onDragStart={e => {
-				e.stopPropagation();
-				e.dataTransfer.setData("canvasBlock", id);
-				setDraggingBlock(id);
-			}}
-			onDragEnd={() => {
-				setDraggingBlock(null);
-				setDragOverIndex(null);
-			}}
-
-			onDragOver={e => { e.preventDefault(); setDragOverIndex(index); }}
-			onDragLeave={() => setDragOverIndex(null)} >
-
-			<p className={cssSelectors['excerpt']?.classes} dangerouslySetInnerHTML={{ __html: excerpt }}></p>
-
-
-			{readMoreText && (
-				<Link href={`#`} className={cssSelectors['read-more']?.classes}>
-					{IconX && (
-						<div className={`${cssSelectors['read-more-icon']?.classes}`}>
-							{IconX ? <IconX size={readMoreIconSize} /> : null}
-						</div>
-					)}
-
-					<div className={`${cssSelectors['read-more-label']?.classes}`}>
-						{readMoreText}
-					</div>
-
-				</Link>
-			)}
-
-
-
-
-		</div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+		/>
 	);
 };
 
-
-
-export default TermTitle;
+export default PostExcerpt;

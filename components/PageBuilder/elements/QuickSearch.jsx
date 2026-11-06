@@ -13,6 +13,7 @@ import { useUtilsStore } from '../../../store/useUtilsStore'
 import { useCounterStore } from '../../../store/useCounterStore';
 import * as TablerIcons from '@tabler/icons-react';
 
+import { elementCssClasses } from "../ElementsDefinition";
 const QuickSearch = (props) => {
 
 	const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
@@ -28,6 +29,8 @@ const QuickSearch = (props) => {
 	var selectedId = props?.selectedId
 	var index = props?.index
 	var cssSelectors = props?.cssSelectors ?? {};
+	/* A key the block lacks falls back to the quickSearch defaults in ElementsDefinition.js. */
+	var cls = elementCssClasses('quickSearch', cssSelectors);
 
 
 	var id = props?.id;
@@ -350,7 +353,7 @@ const QuickSearch = (props) => {
 
 
 	return (
-		<div draggable id={id} type={type} className={`${cssSelectors['*']?.classes ?? ''} relative hover:outline-orange-200 hover:outline-solid hover:outline-1 ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200' : ''} ${selectedId == id ? 'outline-1 outline-solid outline-orange-400' : ''} `}
+		<div draggable id={id} type={type} className={`${cls('*')} relative hover:outline-orange-200 hover:outline-solid hover:outline-1 ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200' : ''} ${selectedId == id ? 'outline-1 outline-solid outline-orange-400' : ''} `}
 			onClick={e => {
 				e.stopPropagation();
 
@@ -367,7 +370,7 @@ const QuickSearch = (props) => {
 		>
 
 
-			<div className={` ${cssSelectors['input-wrapper']?.classes}`} onClick={ev => {
+			<div className={` ${cls('input-wrapper')}`} onClick={ev => {
 				if (onTriggerOpen) {
 					onTriggerOpen(isOpen, prams)
 				}
@@ -377,7 +380,7 @@ const QuickSearch = (props) => {
 
 
 
-				<input name="keyword" className={` ${cssSelectors['input-search']?.classes}`} value={queryPrams.keyword} onChange={ev => {
+				<input name="keyword" className={` ${cls('input-search')}`} value={queryPrams.keyword} onChange={ev => {
 
 					var value = ev.target.value;
 					setqueryPrams({ ...queryPrams, keyword: value, paged: 1 })
@@ -392,7 +395,7 @@ const QuickSearch = (props) => {
 
 					<>
 						{IconX && (
-							<div className={`${cssSelectors['icon']?.classes}`}>
+							<div className={`${cls('icon')}`}>
 								{IconX ? <IconX size={iconSize} /> : null}
 							</div>
 						)}
@@ -413,7 +416,7 @@ const QuickSearch = (props) => {
 			</div>
 
 			{queryPrams.keyword.length > 0 && (
-				<div className={`${cssSelectors['popover']?.classes} absolute top-[50px]  p-5 z-50 w-[600px]  `} >
+				<div className={`${cls('popover')} absolute top-[50px]  p-5 z-50 w-[600px]  `} >
 
 					<div className="flex items-center gap-4">
 
@@ -525,7 +528,7 @@ const QuickSearch = (props) => {
 						</select>
 
 						{queryPrams?.keyword?.length > 0 && (
-							<div className={`${cssSelectors['reset']?.classes} `} onClick={ev => {
+							<div className={`${cls('reset')} `} onClick={ev => {
 								setqueryPrams({ ...queryPrams, keyword: "" })
 							}}>Reset</div>
 						)}
@@ -552,17 +555,17 @@ const QuickSearch = (props) => {
 
 								return (
 
-									<div className={`${cssSelectors['item']?.classes} `} key={index}>
+									<div className={`${cls('item')} `} key={index}>
 										{product?.post_thumbnail_url && (
 											<Link href={`/product/${product.slug}/`} >
-												<Image className={`${cssSelectors['item-image']?.classes} `} src={product?.post_thumbnail?.src} width={200} height={200} alt={product?.title} />
+												<Image className={`${cls('item-image')} `} src={product?.post_thumbnail?.src} width={200} height={200} alt={product?.title} />
 											</Link>
 
 										)}
 
 										{!product?.post_thumbnail_url && (
 											<Link href={`/product/${product.slug}/`} >
-												<Image className={`${cssSelectors['item-image']?.classes} `} src={`/thumb.png`} width={200} height={200} alt={product?.title} />
+												<Image className={`${cls('item-image')} `} src={`/thumb.png`} width={200} height={200} alt={product?.title} />
 
 											</Link>
 
@@ -606,7 +609,7 @@ const QuickSearch = (props) => {
 
 
 										<div className="flex flex-col gap-2">
-											<Link className={`${cssSelectors['item-title']?.classes} `} href={`/product/${product.slug}/`} >{product?.title}</Link>
+											<Link className={`${cls('item-title')} `} href={`/product/${product.slug}/`} >{product?.title}</Link>
 
 											<div className="flex gap-3 items-center">
 												<div className="font-bold  text-[#1b0e9f]">{product?.price}Tk</div>
@@ -631,9 +634,9 @@ const QuickSearch = (props) => {
 						</div>
 
 						{promptsData?.posts?.length > 0 && (
-							<div className={`${cssSelectors['pagination']?.classes} `}>
+							<div className={`${cls('pagination')} `}>
 								<div
-									className={`${cssSelectors['page-item']?.classes} `}
+									className={`${cls('page-item')} `}
 									onClick={(ev) => {
 										var paged = queryPrams.paged;
 
@@ -645,7 +648,7 @@ const QuickSearch = (props) => {
 								</div>
 
 								<div>
-									<input name="paged" className={`${cssSelectors['page-count']?.classes} ${cssSelectors['page-item']?.classes} `} type="text" value={queryPrams.paged} onChange={ev => {
+									<input name="paged" className={`${cls('page-count')} ${cls('page-item')} `} type="text" value={queryPrams.paged} onChange={ev => {
 										var value = parseInt(ev.target.value)
 										var paged = value;
 
@@ -656,7 +659,7 @@ const QuickSearch = (props) => {
 								</div>
 
 								<div
-									className={`${cssSelectors['page-item']?.classes} `}
+									className={`${cls('page-item')} `}
 									onClick={(ev) => {
 										var paged = queryPrams.paged + 1;
 

@@ -1,81 +1,40 @@
-import PropTypes from "prop-types";
 import React from "react";
-import { useState, useEffect } from "react";
-import { IconLibraryPhoto, IconCheckbox, IconSquare, IconFidgetSpinner, IconTrash, IconStarFilled, IconStar, IconX } from "@tabler/icons-react";
-import { useDraggable } from '@dnd-kit/react';
-import ToggleContent from '../../../components/ToggleContent';
-import CssClassPicker from "../CssClassPicker";
-import GalleryPicker from '../../shop-elements/GalleryPicker';
-import NextImage from "next/image";
-import DropDown from '../../../components/DropDown';
 import CssSelectors from "../CssSelectors";
 import TermsQueryPrams from "../TermsQueryPrams";
+import { termsGridQuery } from "./TermsGridView";
+import { withElementCssDefaults } from "../ElementsDefinition";
 
-
-const PostGridOptions = (props) => {
+/*
+	Settings panel for the `termsGrid` block: the terms query (saved as
+	options.queryPrams), then its cssSelectors keys. The editor starts from
+	the query the grid actually shows - the default one for a grid saved
+	without a query - so what is listed matches the canvas.
+*/
+const TermsGridOptions = (props) => {
 
 	var updateBlock = props?.updateBlock;
+	var options = props?.options ?? {};
 
-	var options = props?.options;
-	var queryPrams = options?.queryPrams ?? [];
-	var cssSelectors = props?.cssSelectors ?? {};
+	/* Every current key, filled from defaults where the block lacks it. */
+	var cssSelectors = withElementCssDefaults('termsGrid', props?.cssSelectors);
 
-
-	const [loading, setloading] = useState(false);
-
-
-
-
-
-	// useEffect(() => {
-
-	// 	fetchPosts();
-	// }, []);
-
-
-	function onChangeQuery(queryPramsX) {
-
-
-		var optionsX = { ...options }
-		optionsX.queryPrams = queryPramsX
-		updateBlock('options', optionsX)
+	function onChangeQuery(queryPrams) {
+		var optionsX = { ...options, queryPrams: queryPrams };
+		delete optionsX.classes; /* the definition's old option, never read */
+		updateBlock('options', optionsX);
 	}
-
-
-
-
-
-
-
-
-
-
-
 
 	return (
 		<div className="px-3" >
-
 			<div className="flex flex-col gap-3">
-
-
-
-				<TermsQueryPrams queryPrams={queryPrams} onChangeQuery={onChangeQuery} />
-
-
+				<TermsQueryPrams key={props?.id} queryPrams={termsGridQuery(options)} onChangeQuery={onChangeQuery} />
+				<p className="text-xs text-gray-500">
+					<code>*</code> is the grid's wrapper; <code>loop-items</code> is the list of cards (set its columns here, e.g. <code>grid grid-cols-3 md:grid-cols-6 gap-4</code>) and <code>loop-item</code> each card. The cards' contents are the blocks inside the Terms Loop.
+				</p>
 				<CssSelectors cssSelectors={cssSelectors} updateBlock={updateBlock} />
-
-
-
-
-
-
 			</div>
-
-
 		</div>
 	);
 };
 
-
-
-export default PostGridOptions;
+export default TermsGridOptions;

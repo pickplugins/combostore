@@ -9,6 +9,7 @@ import IconPicker from "../../../components/IconPicker";
 import DropDown from "../../../components/DropDown";
 
 
+import { withElementCssDefaults } from "../ElementsDefinition";
 const ButtonOptions = (props) => {
 
 	var updateBlock = props?.updateBlock;
@@ -482,7 +483,7 @@ const ButtonOptions = (props) => {
 
 
 
-				<CssSelectors cssSelectors={cssSelectors} updateBlock={updateBlock} />
+				<CssSelectors cssSelectors={withElementCssDefaults('popoverButton', cssSelectors)} updateBlock={updateBlock} />
 
 
 			</div>

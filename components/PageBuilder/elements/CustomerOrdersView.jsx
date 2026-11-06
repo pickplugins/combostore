@@ -8,6 +8,7 @@ import { useUtilsStore } from '../../../store/useUtilsStore';
 import { useCounterStore } from '../../../store/useCounterStore';
 import { useSavedToken } from './useSavedToken';
 import { StatusBadge, AccountEmptyState, AccountListSkeleton, AccountPager, AccountNotice, formatAccountDate } from './accountUi';
+import { elementCssClasses } from "../ElementsDefinition";
 
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
@@ -27,6 +28,8 @@ const CustomerOrdersView = (props) => {
 	const { id, type } = props;
 
 	var cssSelectors = props?.cssSelectors ?? {};
+	/* Each part's classes; a key the block lacks falls back to the customerOrders defaults in ElementsDefinition.js. */
+	var cls = elementCssClasses('customerOrders', cssSelectors);
 
 	const { orderStatusArgs, paymentGatewaysArgs } = useCounterStore();
 	const { wrapCurrency } = useUtilsStore();
@@ -82,16 +85,19 @@ const CustomerOrdersView = (props) => {
 	}
 
 	return (
-		<div id={id} type={type} className={`${cssSelectors['*']?.classes ?? ''}`}>
+		<div id={id} type={type} className={cls('*')}>
 
-			<div className="flex flex-col gap-4">
+			<div className={cls('panel')}>
 
-				<div className="flex items-baseline justify-between gap-3">
-					<h3 className="text-lg font-semibold text-gray-900">Your orders</h3>
-					{ordersData?.total > 0 && (
-						<span className="text-sm text-gray-500">{ordersData.total} {ordersData.total == 1 ? 'order' : 'orders'}</span>
-					)}
-				</div>
+				{/* Pages or tabs that already label this panel set hideTitle. */}
+				{!props?.options?.hideTitle && (
+					<div className={cls('header')}>
+						<h3 className={cls('title')}>Your orders</h3>
+						{ordersData?.total > 0 && (
+							<span className={cls('count')}>{ordersData.total} {ordersData.total == 1 ? 'order' : 'orders'}</span>
+						)}
+					</div>
+				)}
 
 				{error && <AccountNotice>{error}</AccountNotice>}
 
@@ -104,44 +110,44 @@ const CustomerOrdersView = (props) => {
 				)}
 
 				{orders.length > 0 && (
-					<ul className={`flex flex-col gap-3 transition-opacity ${loading ? 'opacity-60' : ''}`}>
+					<ul className={`${cls('list')} ${loading ? cls('list-loading') : ''}`}>
 						{orders.map(order => {
 							var items = Array.isArray(order?.order_items) ? order.order_items : [];
 							var shown = items.slice(0, visibleItemCount);
 							var hiddenCount = items.length - shown.length;
 
 							return (
-								<li key={order.id} className="rounded-xl border border-gray-200 bg-white p-4 shadow-xs">
+								<li key={order.id} className={cls('order')}>
 
-									<div className="flex flex-wrap items-start justify-between gap-3">
-										<div className="flex items-center gap-3">
-											<span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#1b0e9f]/10 text-[#1b0e9f]">
+									<div className={cls('order-header')}>
+										<div className={cls('order-heading')}>
+											<span className={cls('order-icon')}>
 												<IconPackage size={20} />
 											</span>
 											<div>
-												<div className="text-sm font-semibold text-gray-900">Order #{order.id}</div>
-												<div className="text-xs text-gray-500">{formatAccountDate(order.created_at || order.updated_at)}</div>
+												<div className={cls('order-number')}>Order #{order.id}</div>
+												<div className={cls('order-date')}>{formatAccountDate(order.created_at || order.updated_at)}</div>
 											</div>
 										</div>
 										<StatusBadge value={order.status} label={orderStatusArgs?.[order.status]?.label} />
 									</div>
 
 									{shown.length > 0 && (
-										<ul className="mt-3 flex flex-col gap-1 border-t border-gray-100 pt-3 text-sm text-gray-700">
+										<ul className={cls('items')}>
 											{shown.map(item => (
-												<li key={item.id} className="flex justify-between gap-3">
-													<span className="min-w-0 truncate" dangerouslySetInnerHTML={{ __html: item.product_name || 'Item' }} />
-													<span className="shrink-0 text-gray-500">× {item.quantity}</span>
+												<li key={item.id} className={cls('item')}>
+													<span className={cls('item-name')} dangerouslySetInnerHTML={{ __html: item.product_name || 'Item' }} />
+													<span className={cls('item-quantity')}>× {item.quantity}</span>
 												</li>
 											))}
 											{hiddenCount > 0 && (
-												<li className="text-xs text-gray-500">+{hiddenCount} more {hiddenCount == 1 ? 'item' : 'items'}</li>
+												<li className={cls('items-more')}>+{hiddenCount} more {hiddenCount == 1 ? 'item' : 'items'}</li>
 											)}
 										</ul>
 									)}
 
-									<div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-gray-100 pt-3">
-										<div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
+									<div className={cls('order-footer')}>
+										<div className={cls('payment')}>
 											{order.payment_method && <span>{paymentLabel(order.payment_method)}</span>}
 											{order.payment_status && (
 												<>
@@ -150,7 +156,7 @@ const CustomerOrdersView = (props) => {
 												</>
 											)}
 										</div>
-										<div className="text-base font-semibold text-gray-900">{wrapCurrency(order.total_amount)}</div>
+										<div className={cls('order-total')}>{wrapCurrency(order.total_amount)}</div>
 									</div>
 
 								</li>
@@ -169,6 +175,7 @@ const CustomerOrdersView = (props) => {
 CustomerOrdersView.propTypes = {
 	id: PropTypes.string,
 	type: PropTypes.string,
+	options: PropTypes.object,
 	cssSelectors: PropTypes.object,
 };
 

@@ -2,24 +2,19 @@
 
 import PropTypes from "prop-types";
 import React from "react";
-import { useState, useEffect } from "react";
-import { IconColumns, IconPlus } from "@tabler/icons-react";
+import { IconPlus } from "@tabler/icons-react";
 import BlockPreview from '../BlockPreview';
-import EntriesTable from "../../../components/EntriesTable";
-import { useCounterStore } from '../../../store/useCounterStore';
-import { useUtilsStore } from '../../../store/useUtilsStore';
-import Spinner from "../../../components/Spinner";
-import Link from "next/link";
+import { elementCssClasses } from "../ElementsDefinition";
 
+/*
+	Builder (canvas) preview of the signed-in half of the account area.
 
-
-const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
-
-
-const CustomerAccount = (props) => {
-
-	const { token, paymentGateways, appData, notifications, addNotification, userDataX, setUserDataX } = useCounterStore()
-
+	The storefront shows this block only to a signed-in customer; the builder
+	always shows it, next to the signed-out half, so it can be edited. A small
+	tag (on hover or when selected) says which half it is. It reads the same
+	cssSelectors keys with the same defaults from ElementsDefinition.js.
+*/
+const CustomerAccountLogged = (props) => {
 
 	var draggingBlock = props?.draggingBlock
 	var setDraggingBlock = props?.setDraggingBlock
@@ -27,23 +22,15 @@ const CustomerAccount = (props) => {
 	var dragOverIndex = props?.dragOverIndex
 	var setDragOverIndex = props?.setDragOverIndex
 	var cssSelectors = props?.cssSelectors ?? {};
+	var cls = elementCssClasses('customerAccountLogged', cssSelectors);
 	var setSelectedId = props?.setSelectedId
 	var selectedId = props?.selectedId
 	var handleMoveBlock = props?.handleMoveBlock
 
-	var type = props?.type
-	var options = props?.options;
 	var id = props?.id;
-
 	var index = props?.index
 
-
-
-
-
 	const children = props?.children || [];
-
-
 
 	const onDrop = (e) => {
 		e.preventDefault();
@@ -51,12 +38,6 @@ const CustomerAccount = (props) => {
 
 		const paletteType = e.dataTransfer.getData("paletteType");
 		const canvasBlockId = e.dataTransfer.getData("canvasBlock");
-
-
-
-
-
-
 
 		if (handleMoveBlock) {
 			handleMoveBlock({ paletteType, canvasBlockId }, id, 'inside');
@@ -68,18 +49,11 @@ const CustomerAccount = (props) => {
 		e.stopPropagation();
 	};
 
-
-
-
-
-
-
-
 	return (
 		<div
 			draggable
 			id={id}
-			className={` ${cssSelectors['*']?.classes ?? ''}  hover:outline-orange-200 hover:outline-solid hover:outline-1 relative   ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200 bg-orange-200' : ''}
+			className={` ${cls('*')} group/logged hover:outline-orange-200 hover:outline-solid hover:outline-1 relative   ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200 bg-orange-200' : ''}
 				${selectedId === id ? 'outline-1 outline-solid outline-orange-400 relative' : ''}
 			`}
 			onClick={(e) => {
@@ -100,10 +74,10 @@ const CustomerAccount = (props) => {
 			onDrop={onDrop}
 		>
 
-
-
-
-
+			{/* Builder-only tag; not part of the block's styling. */}
+			<span className={`pointer-events-none absolute -top-2.5 left-2 z-10 rounded bg-orange-100 px-1.5 py-0.5 text-[10px] font-medium text-orange-700 ${selectedId === id ? 'block' : 'hidden group-hover/logged:block'}`}>
+				Signed-in customers only
+			</span>
 
 			{children.length > 0 ? (
 				children.map((child, idx) => (
@@ -123,14 +97,14 @@ const CustomerAccount = (props) => {
 			) : (
 				<div className="col-span-full flex flex-col items-center justify-center text-gray-400 py-4 pointer-events-none">
 					<IconPlus size={24} stroke={1.5} />
-					<span className="text-xs mt-1">Empty Customer Account - Drop elements here</span>
+					<span className="text-xs mt-1">Signed-in area - drop the account blocks here</span>
 				</div>
 			)}
 		</div>
 	);
 };
 
-CustomerAccount.propTypes = {
+CustomerAccountLogged.propTypes = {
 	block: PropTypes.object,
 	draggingBlock: PropTypes.string,
 	setDraggingBlock: PropTypes.func,
@@ -144,4 +118,4 @@ CustomerAccount.propTypes = {
 	handleDropInto: PropTypes.func,
 };
 
-export default CustomerAccount;
+export default CustomerAccountLogged;

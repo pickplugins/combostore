@@ -9,6 +9,7 @@ import CssClassPicker from "../CssClassPicker";
 import CssSelectors from "../CssSelectors";
 
 
+import { withElementCssDefaults } from "../ElementsDefinition";
 const ImageOptions = (props) => {
 
 	var updateBlock = props?.updateBlock;
@@ -81,7 +82,7 @@ const ImageOptions = (props) => {
 
 
 
-				<CssSelectors cssSelectors={cssSelectors} updateBlock={updateBlock} />
+				<CssSelectors cssSelectors={withElementCssDefaults('commentsLoop', cssSelectors)} updateBlock={updateBlock} />
 
 
 			</div>

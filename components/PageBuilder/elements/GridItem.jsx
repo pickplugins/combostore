@@ -1,122 +1,65 @@
 'use client'
-
-import PropTypes from "prop-types";
 import React from "react";
-import { useState } from "react";
-import { IconColumns, IconPlus } from "@tabler/icons-react";
+import { IconPlus } from "@tabler/icons-react";
 import BlockPreview from '../BlockPreview';
+import { LayoutCellMarkup } from "./GridItemView";
+import { elementCssClasses } from "../ElementsDefinition";
 
-const GridItem = (props) => {
-	const {
-		block,
-		draggingBlock,
-		setDraggingBlock,
-		dragOverIndex,
-		setDragOverIndex,
-		setSelectedId,
-		selectedId,
-		index,
-		id,
-		type,
-		prams,
-		handleMoveBlock // New prop for recursive drops
-	} = props;
+/*
+	Builder (canvas) preview of a layout cell - a grid's (GridItem) or, with
+	other props, a columns block's or a tab / accordion panel (no parent key): the shared LayoutCellMarkup with the same
+	classes as the shop, its blocks rendered by BlockPreview, taking drops,
+	and a drop prompt when empty.
+*/
+export function LayoutCellPreview({ props, type, parentType, parentKey, emptyLabel }) {
 
-	const cssSelectors = props?.cssSelectors || {};
-	const children = props?.children || [];
+	var { draggingBlock, setDraggingBlock, dragOverIndex, setDragOverIndex, setSelectedId, selectedId, index, id, handleMoveBlock } = props;
 
-
-
-	const onDrop = (e) => {
-
-
-
-
-
-		e.preventDefault();
-		e.stopPropagation();
-
-		const paletteType = e.dataTransfer.getData("paletteType");
-		const canvasBlockId = e.dataTransfer.getData("canvasBlock");
-
-
-
-
-
-
-		if (handleMoveBlock) {
-			handleMoveBlock({ paletteType, canvasBlockId }, id, 'inside');
-		}
-	};
-
-	const onDragOver = (e) => {
-		e.preventDefault();
-		e.stopPropagation();
-	};
+	var cls = elementCssClasses(type, props?.cssSelectors);
+	var parentCls = parentType ? elementCssClasses(parentType, props?.ParentCssSelectors) : () => '';
+	var children = Array.isArray(props?.children) ? props.children : [];
 
 	return (
-		<div
-			draggable
+		<LayoutCellMarkup
+			cls={cls}
+			parentCls={parentCls}
+			parentKey={parentKey}
 			id={id}
-			className={` ${cssSelectors['*']?.classes ?? ''} hover:outline-orange-200 hover:outline-solid hover:outline-1 relative   ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200 bg-orange-200' : ''}
-				${selectedId === id ? 'outline-1 outline-solid outline-orange-400 relative' : ''}
-			`}
-			onClick={(e) => {
-				e.preventDefault();
-				e.stopPropagation();
-				setSelectedId(selectedId !== id ? id : null);
+			index={index}
+			type={props?.type}
+			rootClassName={`hover:outline-orange-200 hover:outline-solid hover:outline-1 relative ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200 bg-orange-200' : ''} ${selectedId === id ? 'outline-1 outline-solid outline-orange-400 relative' : ''}`}
+			rootProps={{
+				draggable: true,
+				onClick: (e) => { e.preventDefault(); e.stopPropagation(); setSelectedId(selectedId !== id ? id : null); },
+				onDragStart: (e) => { e.stopPropagation(); e.dataTransfer.setData("canvasBlock", id); setDraggingBlock?.(id); },
+				onDragEnd: () => { setDraggingBlock?.(null); setDragOverIndex?.(null); },
+				onDragOver: (e) => { e.preventDefault(); e.stopPropagation(); },
+				onDrop: (e) => {
+					e.preventDefault();
+					e.stopPropagation();
+					const paletteType = e.dataTransfer.getData("paletteType");
+					const canvasBlockId = e.dataTransfer.getData("canvasBlock");
+					handleMoveBlock?.({ paletteType, canvasBlockId }, id, 'inside');
+				},
 			}}
-			onDragStart={(e) => {
-				e.stopPropagation();
-				e.dataTransfer.setData("canvasBlock", id);
-				setDraggingBlock(id);
-			}}
-			onDragEnd={() => {
-				setDraggingBlock(null);
-				setDragOverIndex(null);
-			}}
-			onDragOver={onDragOver}
-			onDrop={onDrop}
 		>
-
-
 			{children.length > 0 ? (
 				children.map((child, idx) => (
-					<BlockPreview
-						key={child.id}
-						index={`${index}-${idx}`}
-						block={child}
-						draggingBlock={draggingBlock}
-						dragOverIndex={dragOverIndex}
-						setDragOverIndex={setDragOverIndex}
-						setDraggingBlock={setDraggingBlock}
-						setSelectedId={setSelectedId}
-						selectedId={selectedId}
-						handleMoveBlock={handleMoveBlock}
-					/>
+					<BlockPreview key={child.id ?? idx} index={`${index}-${idx}`} block={child} draggingBlock={draggingBlock} dragOverIndex={dragOverIndex} setDragOverIndex={setDragOverIndex} setDraggingBlock={setDraggingBlock} setSelectedId={setSelectedId} selectedId={selectedId} handleMoveBlock={handleMoveBlock} />
 				))
 			) : (
 				<div className="col-span-full flex flex-col items-center justify-center text-gray-400 py-4 pointer-events-none">
 					<IconPlus size={24} stroke={1.5} />
-					<span className="text-xs mt-1">Empty GridItem - Drop elements here</span>
+					<span className="text-xs mt-1">{emptyLabel}</span>
 				</div>
 			)}
-		</div>
+		</LayoutCellMarkup>
 	);
-};
+}
 
-GridItem.propTypes = {
-	block: PropTypes.object,
-	draggingBlock: PropTypes.string,
-	setDraggingBlock: PropTypes.func,
-	dragOverIndex: PropTypes.string,
-	setDragOverIndex: PropTypes.func,
-	setSelectedId: PropTypes.func,
-	selectedId: PropTypes.string,
-	index: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-	id: PropTypes.string,
-	type: PropTypes.string,
-	handleDropInto: PropTypes.func,
-};
+/* Builder preview of one grid cell. */
+const GridItem = (props) => (
+	<LayoutCellPreview props={props} type="gridItem" parentType="grid" parentKey="grid-item" emptyLabel="Empty grid cell - drop elements here" />
+);
 
 export default GridItem;

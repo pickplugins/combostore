@@ -113,7 +113,7 @@
  *
  *   - The "1 kg" / "500 g" pill on a product card is a per-product pack size.
  *     `select` exists in ElementsDefinition.js but BlockRender.jsx has no case
- *     for it, and productVariablePrices keeps its selection in one global
+ *     for it, and productVariations keeps its selection in one global
  *     store slot, so inside a loop every card would fight over it. The pill is
  *     left out rather than hard-coded to the same size on every card; the same
  *     goes for the "/kg" and "/pack" suffix beside the price. Both belong to
@@ -5626,8 +5626,8 @@ var template = [
                             ]
                           },
                           {
-                            "id": "rr-productVariablePrices-95",
-                            "type": "productVariablePrices",
+                            "id": "rr-productVariations-95",
+                            "type": "productVariations",
                             "options": {
                               "separator": "",
                               "variablePriceViewType": "inline"

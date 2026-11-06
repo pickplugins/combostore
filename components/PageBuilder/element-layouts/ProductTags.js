@@ -6,44 +6,27 @@
  * MUST be `"type": "productTags"`. (PageBuilder.jsx regenerates all ids on
  * paste/replace, so the readable ids below are safe.)
  *
- * productTags is a leaf: an optional label, then one link per tag. All six
- * declared selector keys are read and nothing undeclared is, so this is one of
- * the tidier elements -- the only real design constraint is where the separator
+ * productTags is a leaf: an optional label, then one link per tag of the
+ * product, each to its /tags/<slug>/ page. ProductTagsView (the shop) and the
+ * builder's ProductTags.jsx render the same ProductTermLinksMarkup as the
+ * categories block. The only real design constraint is where the separator
  * sits.
  *
- * Renderer notes that shaped these presets:
+ * Notes that shaped these presets:
  *
- * 1. The separator span lives INSIDE each tag's <Link> (ProductTags.jsx:84-87),
- *    not between the links. So anything that gives `item` a background, padding
- *    and a radius puts the comma inside the chip -- "Tag Name," on a pill. Every
- *    chip-style preset below therefore sets `separator` to `hidden` and spaces
- *    the tags with a gap on `items` instead, while the inline text presets keep
- *    the comma visible and leave `item` unboxed. Pick one or the other; mixing
- *    them is what looks wrong.
+ * 1. The separator span lives INSIDE each tag's link, after its name. So
+ *    anything that gives `item` a background, padding and a radius puts the
+ *    separator inside the chip -- "Fresh," on a pill. Every chip-style preset
+ *    sets `separator` to `hidden` and spaces the tags with a gap on `items`,
+ *    while the inline text presets keep it and leave `item` unboxed. Pick one
+ *    or the other; mixing them is what looks wrong.
  *
- * 2. The separator text is hardcoded to ", " (:86). The definition declares a
- *    `separator` option, but the renderer never reads it -- so the `separator`
- *    selector key can style or hide that comma, and nothing can change it to a
- *    slash or a bullet. It only renders between items (:85), so there is no
- *    trailing comma to deal with.
+ * 2. `options.separator` sets the text between tags (", " by default; ""
+ *    leaves it out).
  *
- * 3. Tags fall back to two mock entries when there is no product context (:36),
- *    so the canvas shows "Tag Name" and "Tag Name 2" and the block stays
- *    visible and selectable -- unlike productDiscount, which renders nothing.
- *
- * 4. Clicks are swallowed: :82 calls `ev.preventDefault()` on every tag link
- *    with nothing gating it, so the href (`${NEXT_PUBLIC_STORE_URL}tags/<slug>`)
- *    never navigates, on the front end as much as in the canvas. Same pattern as
- *    LinkList.jsx:73. The env var is set, so the hrefs themselves are
- *    well-formed.
- *
- * 5. Options are nearly all dead. `label` works and is guarded (:67), so an
- *    empty label leaves no stray box. `separator` is declared and never read.
- *    Lines 28-31 also read `tag`, `readmore` and `maxWord` and use none of them
- *    -- leftovers from an excerpt element. ProductTagsOptions.jsx adds controls
- *    for `classes`, `icon` and `iconSize` that the renderer never reads (there
- *    is no icon in this element at all), so Label is the only control in that
- *    panel that does anything.
+ * 3. On the shop a product without tags shows nothing; the builder then shows
+ *    a dimmed sample "Fresh, Local" so the block stays visible and selectable.
+ *    Links work on the shop and never navigate in the builder.
  */
 
 var layouts = [

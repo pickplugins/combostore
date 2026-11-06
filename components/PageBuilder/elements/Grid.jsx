@@ -5,6 +5,7 @@ import React from "react";
 import { useState } from "react";
 import { IconColumns, IconPlus } from "@tabler/icons-react";
 import BlockPreview from '../BlockPreview';
+import { elementCssClasses } from "../ElementsDefinition";
 
 const Grid = (props) => {
 	const {
@@ -22,7 +23,9 @@ const Grid = (props) => {
 		handleMoveBlock // New prop for recursive drops
 	} = props;
 
-	const cssSelectors = props?.cssSelectors;
+	const cssSelectors = props?.cssSelectors ?? {};
+	/* Same lookup as GridView: a missing key falls back to the grid defaults in ElementsDefinition.js. */
+	var cls = elementCssClasses('grid', cssSelectors);
 	const children = props?.children || [];
 
 
@@ -52,7 +55,7 @@ const Grid = (props) => {
 		<div
 			draggable
 			id={id}
-			className={` ${cssSelectors['*']?.classes ?? ''}    hover:outline-orange-200 hover:outline-solid hover:outline-1 relative   ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200 bg-orange-200' : ''}
+			className={` ${cls('*')}    hover:outline-orange-200 hover:outline-solid hover:outline-1 relative   ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200 bg-orange-200' : ''}
 				${selectedId === id ? 'outline-1 outline-solid outline-orange-400 relative' : ''}
 			`}
 			onClick={(e) => {
@@ -87,6 +90,7 @@ const Grid = (props) => {
 						setSelectedId={setSelectedId}
 						selectedId={selectedId}
 						handleMoveBlock={handleMoveBlock}
+						ParentCssSelectors={cssSelectors}
 					/>
 				))
 			) : (

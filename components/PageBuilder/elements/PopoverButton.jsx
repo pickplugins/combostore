@@ -8,9 +8,12 @@ import 'animate.css';
 import * as TablerIcons from '@tabler/icons-react';
 
 
+import { elementCssClasses } from "../ElementsDefinition";
 const PopoverButton = (props) => {
 
 	var cssSelectors = props?.cssSelectors ?? {};
+	/* A key the block lacks falls back to the popoverButton defaults in ElementsDefinition.js. */
+	var cls = elementCssClasses('popoverButton', cssSelectors);
 
 	var children = props.children ?? [];
 	var prams = props.prams;
@@ -29,6 +32,8 @@ const PopoverButton = (props) => {
 	var selectedId = props?.selectedId
 	var index = props?.index
 	var cssSelectors = props?.cssSelectors ?? {};
+	/* A key the block lacks falls back to the popoverButton defaults in ElementsDefinition.js. */
+	var cls = elementCssClasses('popoverButton', cssSelectors);
 
 
 	var id = props?.id;
@@ -108,7 +113,7 @@ const PopoverButton = (props) => {
 	};
 
 
-	return <div draggable id={id} type={type} className={`${cssSelectors['*']?.classes ?? ''}  relative hover:outline-orange-200 hover:outline-solid hover:outline-1 ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200' : ''} ${selectedId == id ? 'outline-1 outline-solid outline-orange-400' : ''} `}
+	return <div draggable id={id} type={type} className={`${cls('*')}  relative hover:outline-orange-200 hover:outline-solid hover:outline-1 ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200' : ''} ${selectedId == id ? 'outline-1 outline-solid outline-orange-400' : ''} `}
 		onClick={e => {
 			e.stopPropagation();
 
@@ -127,27 +132,27 @@ const PopoverButton = (props) => {
 	>
 
 
-		<div className={`${cssSelectors['button']?.classes} `} onClick={ev => {
+		<div className={`${cls('button')} `} onClick={ev => {
 			if (onTriggerOpen) {
 				onTriggerOpen(isOpen, prams)
 			}
 
 			setIsOpen(!isOpen)
 		}}>
-			<div className={`${cssSelectors['button-icon']?.classes} `}>
+			<div className={`${cls('button-icon')} `}>
 				{IconCustom ? <IconCustom size={iconSize} /> : null}
 
 
 			</div>
-			<div className={`${cssSelectors['button-label']?.classes} `}>{buttonLabel}</div>
+			<div className={`${cls('button-label')} `}>{buttonLabel}</div>
 
 
 		</div>
 
 		{isOpen && (
-			<div className={`${cssSelectors['popover']?.classes}  ${positionClass} animate__animated ${animate ? " animate__fadeOutLeft" : "animate__fadeInLeft"}`}>
+			<div className={`${cls('popover')}  ${positionClass} animate__animated ${animate ? " animate__fadeOutLeft" : "animate__fadeInLeft"}`}>
 
-				<div className={`${cssSelectors['popover-close']?.classes} `} onClick={ev => {
+				<div className={`${cls('popover-close')} `} onClick={ev => {
 
 					if (onTriggerOpen) {
 						onTriggerOpen(isOpen, prams)
@@ -160,7 +165,7 @@ const PopoverButton = (props) => {
 
 
 
-				<div className={`${cssSelectors['popover-content']?.classes} `}>
+				<div className={`${cls('popover-content')} `}>
 
 
 

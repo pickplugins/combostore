@@ -1,127 +1,45 @@
-import PropTypes from "prop-types";
 import React from "react";
-import { useState, useEffect } from "react";
-import { IconLibraryPhoto, IconCheckbox, IconSquare, IconFidgetSpinner, IconTrash, IconStarFilled, IconStar, IconX } from "@tabler/icons-react";
-import { useDraggable } from '@dnd-kit/react';
-import IconPicker from "../../../components/IconPicker";
-
-import DropDown from "../../../components/DropDown";
-import CssClassPicker from "../CssClassPicker";
 import CssSelectors from "../CssSelectors";
+import { withElementCssDefaults } from "../ElementsDefinition";
 
+const inputClass = "w-full !rounded-lg !border !border-gray-300 !bg-white !px-2.5 !py-1.5 !text-xs !text-gray-700 !shadow-none !outline-none transition-colors focus:!border-brand focus:!ring-4 focus:!ring-brand/10";
 
-const HeadingOptions = (props) => {
+/*
+	Settings panel for the `productBadge` block: the label before the badges,
+	the separator between them, then its cssSelectors keys. (This panel had
+	Icon and Icon Size controls nothing drew, and was not wired in at all - the
+	block showed only a style editor.)
+*/
+const ProductBadgeOptions = (props) => {
 
 	var updateBlock = props?.updateBlock;
-	var options = props?.options;
-	var cssSelectors = props?.cssSelectors ?? {};
+	var options = props?.options ?? {};
 
-	var label = options?.label;
-	var icon = options?.icon;
-	var outOfStockText = options?.outOfStockText;
-	var inStockText = options?.inStockText;
-	var outOfStockIcon = options?.outOfStockIcon;
-	var inStockIcon = options?.inStockIcon;
-	var iconSize = options?.iconSize;
-	var stock_status = options?.stock_status;
+	/* Every current key, filled from defaults where the block lacks it. */
+	var cssSelectors = withElementCssDefaults('productBadge', props?.cssSelectors);
 
-
-
-	// useEffect(() => {
-
-	// 	fetchPosts();
-	// }, []);
-
+	const setOption = (key, value) => updateBlock('options', { ...options, [key]: value });
 
 	return (
 		<div className="px-3" >
-
 			<div className="flex flex-col gap-3">
-
-
-
 
 				<div className="flex flex-col gap-2">
 					<label htmlFor="" className="text-xs font-medium text-gray-600">Label</label>
-					<div>
-						<input type="text" className="w-full !rounded-lg !border !border-gray-300 !bg-white !px-2.5 !py-1.5 !text-xs !text-gray-700 !shadow-none !outline-none transition-colors focus:!border-brand focus:!ring-4 focus:!ring-brand/10" value={options?.label} onChange={ev => {
-
-							var value = ev.target.value;
-
-							var optionsX = { ...options }
-							optionsX.label = value
-							updateBlock('options', optionsX)
-
-						}} >
-
-						</input>
-					</div>
+					<input type="text" placeholder="Badges:" className={inputClass} value={options?.label ?? ''} onChange={ev => setOption('label', ev.target.value)} />
 				</div>
 
-				{/* 
 				<div className="flex flex-col gap-2">
-					<div>
-						<CssClassPicker type="text" className="w-full !rounded-lg !border !border-gray-300 !bg-white !px-2.5 !py-1.5 !text-xs !text-gray-700 !shadow-none !outline-none transition-colors focus:!border-brand focus:!ring-4 focus:!ring-brand/10" value={options?.classes} onChange={(value) => {
-
-
-							var optionsX = { ...options }
-							optionsX.classes = value
-							updateBlock('options', optionsX)
-
-						}} />
-					</div>
-				</div> */}
-
-				<div className="flex flex-col gap-2">
-					<label htmlFor="" className="text-xs font-medium text-gray-600">Icon</label>
-					<div>
-
-
-
-						<IconPicker allowReset={true} value={''} position={`right`} label={`Choose`} labelClass={'inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-2 py-1 text-xs font-medium text-gray-600 cursor-pointer transition-colors hover:border-brand/40 hover:bg-brand/5 hover:text-brand-700 w-fit'} onOptionsChoose={(args) => {
-
-
-
-
-
-							var optionsX = { ...options }
-							optionsX.icon = args
-							updateBlock('options', optionsX)
-
-						}} />
-					</div>
+					<label htmlFor="" className="text-xs font-medium text-gray-600">Separator</label>
+					<input type="text" placeholder=", " className={inputClass} value={options?.separator ?? ', '} onChange={ev => setOption('separator', ev.target.value)} />
 				</div>
 
-
-				<div className="flex flex-col gap-2">
-					<label htmlFor="" className="text-xs font-medium text-gray-600">Icon Size</label>
-					<div>
-						<input type="number" className="w-full !rounded-lg !border !border-gray-300 !bg-white !px-2.5 !py-1.5 !text-xs !text-gray-700 !shadow-none !outline-none transition-colors focus:!border-brand focus:!ring-4 focus:!ring-brand/10" value={iconSize} onChange={ev => {
-
-							var value = ev.target.value;
-
-							var optionsX = { ...options }
-							optionsX.iconSize = value
-							updateBlock('options', optionsX)
-
-						}} />
-					</div>
-				</div>
-
+				<p className="text-xs text-gray-500">Shows the badges picked for the product (New, Sale...), as text; nothing for a product without any. For chip-style badges, clear the separator and put a gap on <code>items</code>. The builder shows a dimmed sample when there are none.</p>
 
 				<CssSelectors cssSelectors={cssSelectors} updateBlock={updateBlock} />
-
-
-
-
-
 			</div>
-
-
 		</div>
 	);
 };
 
-
-
-export default HeadingOptions;
+export default ProductBadgeOptions;

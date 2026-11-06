@@ -1,4 +1,5 @@
 
+import { templateMetadata, slugToName } from "@/lib/templateSeo";
 import Link from "next/link";
 import Image from "next/image";
 import React from "react";
@@ -19,39 +20,9 @@ const appUrl = process.env.NEXT_PUBLIC_STORE_URL;
 
 
 
-export async function generateMetadata({ params }) {
-  const { slug } = await params; // ✅ await params
-
-
-  var pageMetaData = {
-
-    title: `All Brands`,
-    description: "",
-    post_thumbnail: { src: "", alt: "" },
-    keywords: "",
-    ogTitle: `All Brands`,
-    ogDes: ""
-
-  }
-
-
-
-  return {
-    title: pageMetaData.title,
-    description: pageMetaData.description?.slice(0, 160),
-    openGraph: {
-      title: pageMetaData.ogTitle,
-      description: pageMetaData.post_excerpt?.slice(0, 160),
-      url: `${appUrl}product/`,
-      images: [{ url: pageMetaData.post_thumbnail?.src, alt: pageMetaData.ogTitle }],
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: pageMetaData.ogTitle,
-      description: pageMetaData.post_excerpt?.slice(0, 160),
-      images: [pageMetaData.post_thumbnail?.src],
-    },
-  };
+/* Template Part Settings > SEO for this template (lib/templateSeo.js), filled with the page's data. */
+export async function generateMetadata() {
+	return templateMetadata('brands', { item: { title: 'All Brands' }, path: `brands` });
 }
 
 

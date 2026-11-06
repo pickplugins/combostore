@@ -11,11 +11,12 @@ import DropDown from '../../../components/DropDown';
 import CssSelectors from "../CssSelectors";
 
 
-const TermsSliderOptions = (props) => {
+import { withElementCssDefaults } from "../ElementsDefinition";
+const ProductGalleryOptions = (props) => {
 
 	var updateBlock = props?.updateBlock;
 
-	var options = props?.options;
+	var options = props?.options ?? {};
 	var items = options?.items ?? [];
 	var cssSelectors = props?.cssSelectors ?? {};
 
@@ -125,7 +126,8 @@ const TermsSliderOptions = (props) => {
 						<DropDown allowReset={true} multiple={false} value={''} position="right" options={sliderOptionsArgs} label={`Choose`} labelClass={'inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-2 py-1 text-xs font-medium text-gray-600 cursor-pointer transition-colors hover:border-brand/40 hover:bg-brand/5 hover:text-brand-700 w-fit'} onOptionsChoose={(args) => {
 							//setorderData({ ...orderData, payment_status: args?.value })
 							var optionsX = { ...options }
-							var sliderOptionsX = optionsX.sliderOptions ?? {}
+							/* A copy: changing the saved object in place also changed the undo history. */
+							var sliderOptionsX = { ...(optionsX.sliderOptions ?? {}) }
 
 							sliderOptionsX[args.id] = args?.value
 
@@ -180,7 +182,8 @@ const TermsSliderOptions = (props) => {
 											const { name, value } = ev.target;
 
 											var optionsX = { ...options }
-											var sliderOptionsX = optionsX.sliderOptions ?? {}
+											/* A copy: changing the saved object in place also changed the undo history. */
+							var sliderOptionsX = { ...(optionsX.sliderOptions ?? {}) }
 
 											sliderOptionsX[key] = value
 
@@ -224,7 +227,8 @@ const TermsSliderOptions = (props) => {
 
 
 											var optionsX = { ...options }
-											var sliderOptionsX = optionsX.sliderOptions ?? {}
+											/* A copy: changing the saved object in place also changed the undo history. */
+							var sliderOptionsX = { ...(optionsX.sliderOptions ?? {}) }
 
 											sliderOptionsX[key] = !value
 
@@ -252,7 +256,8 @@ const TermsSliderOptions = (props) => {
 											const { name, value } = ev.target;
 
 											var optionsX = { ...options }
-											var sliderOptionsX = optionsX.sliderOptions ?? {}
+											/* A copy: changing the saved object in place also changed the undo history. */
+							var sliderOptionsX = { ...(optionsX.sliderOptions ?? {}) }
 
 											sliderOptionsX[key] = value
 
@@ -270,7 +275,8 @@ const TermsSliderOptions = (props) => {
 
 
 											var optionsX = { ...options }
-											var sliderOptionsX = optionsX.sliderOptions ?? {}
+											/* A copy: changing the saved object in place also changed the undo history. */
+							var sliderOptionsX = { ...(optionsX.sliderOptions ?? {}) }
 
 											sliderOptionsX[key] = !value
 
@@ -297,7 +303,8 @@ const TermsSliderOptions = (props) => {
 											const { name, value } = ev.target;
 
 											var optionsX = { ...options }
-											var sliderOptionsX = optionsX.sliderOptions ?? {}
+											/* A copy: changing the saved object in place also changed the undo history. */
+							var sliderOptionsX = { ...(optionsX.sliderOptions ?? {}) }
 
 											sliderOptionsX[key] = value
 
@@ -314,7 +321,8 @@ const TermsSliderOptions = (props) => {
 
 
 											var optionsX = { ...options }
-											var sliderOptionsX = optionsX.sliderOptions ?? {}
+											/* A copy: changing the saved object in place also changed the undo history. */
+							var sliderOptionsX = { ...(optionsX.sliderOptions ?? {}) }
 
 											sliderOptionsX[key] = !value
 
@@ -341,7 +349,8 @@ const TermsSliderOptions = (props) => {
 											const { name, value } = ev.target;
 
 											var optionsX = { ...options }
-											var sliderOptionsX = optionsX.sliderOptions ?? {}
+											/* A copy: changing the saved object in place also changed the undo history. */
+							var sliderOptionsX = { ...(optionsX.sliderOptions ?? {}) }
 
 											sliderOptionsX[key] = value
 
@@ -360,7 +369,8 @@ const TermsSliderOptions = (props) => {
 
 
 											var optionsX = { ...options }
-											var sliderOptionsX = optionsX.sliderOptions ?? {}
+											/* A copy: changing the saved object in place also changed the undo history. */
+							var sliderOptionsX = { ...(optionsX.sliderOptions ?? {}) }
 
 											sliderOptionsX[key] = !value
 
@@ -409,7 +419,7 @@ const TermsSliderOptions = (props) => {
 				</div>
 
 
-				<CssSelectors cssSelectors={cssSelectors} updateBlock={updateBlock} />
+				<CssSelectors cssSelectors={withElementCssDefaults('productGallery', cssSelectors)} updateBlock={updateBlock} />
 
 
 
@@ -425,4 +435,4 @@ const TermsSliderOptions = (props) => {
 
 
 
-export default TermsSliderOptions;
+export default ProductGalleryOptions;

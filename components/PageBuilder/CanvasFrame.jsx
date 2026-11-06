@@ -4,6 +4,7 @@ import React from "react";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { TAILWIND_BROWSER_SRC, GENERATED_STYLE_ID } from "./canvasRuntime";
+import { TEMPLATE_THEME_TOKENS } from "../../lib/templateTheme";
 
 
 /*
@@ -266,6 +267,18 @@ const CanvasFrame = (props) => {
 
 			base.textContent = FRAME_BASE_CSS;
 			doc.head.appendChild(base);
+
+			/* The site template's tokens (font-heading, bg-primary, ...) for the
+				 browser build, the same ones the saved stylesheet is compiled with.
+				 Their values are the editor document's #template-theme, cloned in
+				 above; cs-page on the body is where its default fonts apply, as on
+				 the storefront's page wrapper. */
+			const tokens = doc.createElement("style");
+
+			tokens.setAttribute("type", "text/tailwindcss");
+			tokens.textContent = TEMPLATE_THEME_TOKENS;
+			doc.head.appendChild(tokens);
+			doc.body.classList.add("cs-page");
 
 			const compiler = doc.createElement("script");
 

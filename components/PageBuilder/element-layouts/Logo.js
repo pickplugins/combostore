@@ -7,10 +7,9 @@
  * the readable ids below are safe.)
  *
  * logo is three elements in one: `options.logoType` picks between a text
- * wordmark, an image mark, or both, and each branch emits different markup
- * (Logo.jsx:36, :49, :77). All three declared options are read and all four
- * selector keys are applied -- but not in every branch, which is the thing to
- * get right here.
+ * wordmark, an image mark, or both. LogoView (the shop) and the builder's
+ * Logo.jsx render the same LogoMarkup. All four selector keys are applied --
+ * but not in every mode, which is the thing to get right here.
  *
  * Which selector keys do anything, per logoType:
  *
@@ -24,34 +23,28 @@
  * below carry the layout on the `link` key -- it is the <a> wrapping image and
  * text, and without a `flex` there the name drops under the mark.
  *
- * Renderer notes that shaped these presets:
+ * Notes that shaped these presets:
  *
- * 1. `logoType` must be one of the three exact strings. The `?? 'text'` default
- *    at :29 only covers undefined, so the panel's own "Choose" option -- which
- *    writes `''` -- matches no branch and renders an empty logo. Every preset
- *    sets it explicitly.
+ * 1. `logoType` should be one of the three exact strings; anything else (the
+ *    panel's old "Choose" saved '') falls back to `image` with a src, else
+ *    `text`. Every preset sets it explicitly.
  *
- * 2. An image preset must ship a non-empty `src`. Unlike Image.jsx:34, Logo.jsx
- *    has no `{src && ...}` guard, so `image` or `both` with a blank src hands
- *    next/image an empty src instead of rendering nothing.
+ * 2. An image or both preset should ship a non-empty `src`: without one the
+ *    logo falls back to its text (next/image used to get an empty src).
  *
- * 3. Size the mark with classes on `img`. `width={500} height={500}` is
- *    hardcoded at :58 and :86, so `h-* w-auto object-contain` on the `img` key
- *    is the only control -- and `object-contain` matters, since a logo file's
- *    real ratio rarely matches the square those attributes imply.
+ * 3. Size the mark with classes on `img`. The <img> has 500x500 attributes,
+ *    so `h-* w-auto object-contain` on the `img` key is the control -- and
+ *    `object-contain` matters, since a logo file's real ratio rarely matches
+ *    the square those attributes imply.
  *
- * 4. The href is not yours to set. `options.link` is read into a variable at
- *    :27 and then never used: the text branch hardcodes `href="/"` and the
- *    image and both branches hardcode `href="#"`. The panel's "Image Link"
- *    field writes a value nothing consumes, so presets leave it alone rather
- *    than imply it works.
+ * 4. `options.link` is the href ('/' when empty); it used to be ignored.
+ *    Presets leave it at '/'.
  *
- * 5. There is no alt text -- `alt={``}` at :58 and :86 -- though the panel
- *    writes `options.altText`. The image presets set it anyway, for the day the
- *    renderer reads it.
+ * 5. `options.altText` is the image's alt text, falling back to `logoText`, so
+ *    an image-only logo's home link has a name for screen readers.
  *
- * `src` values use placehold.co, which is allowlisted in next.config.mjs
- * (`images.remotePatterns`).
+ * `src` values use placehold.co. The image is `unoptimized`, so next/image
+ * never checks the host against next.config's images.remotePatterns.
  */
 
 var layouts = [

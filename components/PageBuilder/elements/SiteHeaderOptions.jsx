@@ -4,6 +4,7 @@ import { IconReplace, IconPlug, IconPlugX, IconSearch, IconAlertTriangle, IconRe
 import CssSelectors from "../CssSelectors";
 import { useCounterStore } from '../../../store/useCounterStore';
 
+import { withElementCssDefaults } from "../ElementsDefinition";
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
 /* Global CSS styles `input` and `button` with unlayered rules, so they beat
@@ -277,7 +278,7 @@ const SiteHeaderOptions = (props) => {
 				</div>
 
 
-				<CssSelectors cssSelectors={cssSelectors} updateBlock={updateBlock} />
+				<CssSelectors cssSelectors={withElementCssDefaults('siteHeader', cssSelectors)} updateBlock={updateBlock} />
 
 
 			</div>

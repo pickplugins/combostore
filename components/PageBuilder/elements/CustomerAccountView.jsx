@@ -2,70 +2,58 @@
 
 import PropTypes from "prop-types";
 import React from "react";
-import { useState } from "react";
-import { IconColumns, IconPlus, IconLogout } from "@tabler/icons-react";
+import { IconLogout } from "@tabler/icons-react";
 import BlockRender from '../BlockRender';
 import { useAuth } from "../../../components/auth-context";
 import { useCounterStore } from '../../../store/useCounterStore'
 import Image from "next/image";
+import { elementCssClasses } from "../ElementsDefinition";
 
+/*
+	The storefront's account area: a welcome card with a log-out button for a
+	signed-in customer (hidden with options.hideWelcome), then the child blocks
+	(usually customerAccountNotLogged and customerAccountLogged).
+*/
 const CustomerAccountView = (props) => {
-	const {
-		block,
-
-		index,
-		id,
-		type,
-		prams,
-		handleMoveBlock // New prop for recursive drops
-	} = props;
+	const { index, id, type } = props;
 	const { handleLogout } = useAuth();
 
 	const children = props?.children || [];
 
 	var cssSelectors = props?.cssSelectors ?? {};
+	/* Each part's classes; a key the block lacks falls back to the customerAccount defaults in ElementsDefinition.js. */
+	var cls = elementCssClasses('customerAccount', cssSelectors);
 
-	const { appData, token, notifications, addNotification, cartItems, addCartItems, removeCartItems, resetCartItems, updateCartItems, userDataX, setUserDataX, navToggle, setnavToggle } = useCounterStore()
-
-
+	const { userDataX } = useCounterStore()
 
 	return (
-		<div
+		<div id={id} type={type} className={cls('*')}>
 
-			id={id}
-			type={type}
-			className={`${cssSelectors['*']?.classes}   
-			`}
+			{userDataX && !props?.options?.hideWelcome && (
+				<div className={cls('welcome')}>
 
-		>
-
-
-
-			{userDataX && (
-				<div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-xs">
-
-					<div className="flex min-w-0 items-center gap-4">
-						<div className="h-14 w-14 shrink-0 overflow-hidden rounded-full bg-[#1b0e9f]/10 ring-2 ring-white">
+					<div className={cls('welcome-profile')}>
+						<div className={cls('avatar')}>
 							{userDataX?.avatar ? (
-								<Image className="h-full w-full object-cover" src={userDataX.avatar} width={112} height={112} alt={userDataX?.name ?? ''} />
+								<Image className={cls('avatar-image')} src={userDataX.avatar} width={112} height={112} alt={userDataX?.name ?? ''} />
 							) : (
 								/* No photo: the first letter of their name instead of a broken image. */
-								<span className="flex h-full w-full items-center justify-center text-xl font-semibold text-[#1b0e9f]">
+								<span className={cls('avatar-initial')}>
 									{String(userDataX?.name || '?').trim().charAt(0).toUpperCase()}
 								</span>
 							)}
 						</div>
 
-						<div className="min-w-0">
-							<div className="text-sm text-gray-500">Welcome back,</div>
-							<div className="truncate text-lg font-semibold text-gray-900">{userDataX?.name}</div>
-							{userDataX?.email && <div className="truncate text-sm text-gray-500">{userDataX.email}</div>}
+						<div className={cls('welcome-text')}>
+							<div className={cls('welcome-greeting')}>Welcome back,</div>
+							<div className={cls('welcome-name')}>{userDataX?.name}</div>
+							{userDataX?.email && <div className={cls('welcome-email')}>{userDataX.email}</div>}
 						</div>
 					</div>
 
 					<button
 						type="button"
-						className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-xs transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/30"
+						className={cls('logout-button')}
 						onClick={() => handleLogout()}
 					>
 						<IconLogout size={16} />
@@ -75,21 +63,12 @@ const CustomerAccountView = (props) => {
 				</div>
 			)}
 
-
-
-
-			{/* {JSON.stringify(userDataX)} */}
-
-
-
-
 			{
 				children.map((child, idx) => (
 					<BlockRender
 						key={child.id}
 						index={`${index}-${idx}`}
 						block={child}
-
 					/>
 				))
 			}
@@ -98,13 +77,12 @@ const CustomerAccountView = (props) => {
 };
 
 CustomerAccountView.propTypes = {
-	block: PropTypes.object,
-
 	index: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
 	id: PropTypes.string,
 	type: PropTypes.string,
-	prams: PropTypes.object,
-	handleDropInto: PropTypes.func,
+	options: PropTypes.object,
+	cssSelectors: PropTypes.object,
+	children: PropTypes.array,
 };
 
 export default CustomerAccountView;

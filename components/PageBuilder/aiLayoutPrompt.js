@@ -329,8 +329,9 @@ body copy one or two sentences.`;
 const DATA_BINDING_RULES = `# Live content
 
 Static elements - heading, text, image, button, list - hold the words you write.
-Everything in the catalog's content and product groups is bound to the store's
-data at render time, so never hand-write product names or prices into them.
+Everything in the catalog's content, archive, product and suggestions groups is
+bound to the store's data at render time, so never hand-write product names or
+prices into them.
 
 postGrid, postSlider, relatedProducts, termsGrid and termsSlider take their
 query from options.queryPrams. Note the spelling: queryPrams, not queryParams.

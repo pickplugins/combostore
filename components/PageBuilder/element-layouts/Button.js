@@ -14,63 +14,39 @@
  * inside either a Next `<Link>` or a plain `<div>`. Three selector keys, and
  * all three are live.
  *
- * Renderer notes that shaped these presets:
+ * Notes that shaped these presets:
  *
- * 1. The icon always renders before the label. Button.jsx:67-75 emits the icon
- *    div then the label div, with no option to reorder, so an icon that should
- *    trail the text needs `flex-row-reverse` on `*`. Arrow Link and Hero CTA
- *    use that; everything else keeps the icon leading.
+ * 1. ButtonView (the shop) and the builder's Button.jsx render the same
+ *    ButtonMarkup, so a preset looks the same in both. A key a preset leaves
+ *    out falls back to its default in ElementsDefinition.js.
  *
- * 2. Always set `iconSize` explicitly. :69 passes it straight through as
- *    `<IconX size={iconSize} />` with no fallback of any kind, so an unset
- *    value reaches the icon as `size={undefined}` and tabler falls back to 24 --
- *    too big next to `text-sm`. Note ButtonOptions.jsx:142 writes this from a
- *    number input, so it arrives as a *string* ("16") when edited by hand;
- *    tabler accepts that, which is why it still works.
+ * 2. The icon always renders before the label, so an icon that should trail
+ *    the text needs `flex-row-reverse` on `*`. Arrow Link and Hero CTA use
+ *    that; everything else keeps the icon leading.
  *
- * 3. `icon` must be an exact @tabler/icons-react export name (:38 looks it up
- *    as `TablerIcons[icon]`). An unknown name makes `IconX` undefined, and
- *    because :67 guards with `{IconX && ...}` the whole icon div disappears
- *    rather than leaving an empty box. Every name used below was checked
- *    against the installed package.
+ * 3. Set `iconSize` on a preset with an icon; unset, it falls back to 24,
+ *    which is large next to `text-sm`. `icon` must be an exact
+ *    @tabler/icons-react export name; an unknown one drops the icon div
+ *    rather than leaving an empty box. Every name below was checked against
+ *    the installed package.
  *
- * 4. There is no option to hide the label -- `text` always renders into the
- *    label div. Icon Only Square gets there by giving `label` the `sr-only`
- *    class, which keeps the text for screen readers while taking it out of the
- *    layout. Setting `hidden` instead would drop it for everyone, so `sr-only`
- *    is the better of the two.
+ * 4. There is no option to hide the label. Icon Only Square gives `label`
+ *    the `sr-only` class, which keeps the text for screen readers while
+ *    taking it out of the layout.
  *
- * 5. `linkTo: "custom"` switches the root from a `<div>` to a `<Link>`, and
- *    then `scheme` matters: :49 builds `href={`${scheme}${url}`}`, and
- *    ButtonOptions.jsx has the Scheme control commented out (:85-112), so the
- *    panel can never set it. Left undefined it stringifies into the href --
- *    `href="undefined/shop"`. Every preset therefore ships `"scheme": ""`
- *    explicitly, which is also what the templates do. Keep it that way: it
- *    means a user who types a full `https://...` into the panel's Custom URL
- *    field gets a correct href rather than a doubled scheme.
+ * 5. `linkTo: "custom"` with a `url` makes the root a `<Link>`; without a
+ *    url it stays a `<div>`. `scheme` (tel, mailto...; saved with or
+ *    without its colon) is put in front of the url, and `target: "_blank"`
+ *    opens it in a new tab. These presets use `url: "#"` with no scheme so
+ *    they drop in as working placeholders.
  *
- * 6. Styling does not depend on `linkTo`. Both branches (:47 and :80) carry the
- *    same three selectors, so the `<Link>` and `<div>` roots look identical.
- *    These presets all use the link branch with `url: "#"` so they drop in as
- *    working placeholders.
+ * 6. Styling does not depend on the link: the `<Link>` and `<div>` roots
+ *    carry the same three selectors.
  *
- * 7. The root is a `<div>` or a `<Link>` -- never a real `<button>`, despite
- *    the element declaring `tag: "button"`. That matters because globals.css
- *    styles `button` in *unlayered* rules (border, shadow, radius, padding,
- *    text colour) that outrank utilities, and they simply do not reach this
- *    element. Nothing here needs an important modifier, unlike the cart's
- *    coupon input.
- *
- * 8. `tag` and `target` are dead. `tag` is read into `Tag` at :36 and never
- *    rendered; `target` is read at :31 and never applied to the Link, so an
- *    external link cannot be made to open in a new tab from here. The
- *    templates carry `"target": ""` anyway and these follow, so the key is
- *    already in place if the renderer ever starts honouring it.
- *
- * 9. The root is block-level by default, so every preset sets `inline-flex`
- *    plus `w-fit` to make the button shrink-wrap its content instead of
- *    spanning the row. Drop `w-fit` for a full-width button inside a narrow
- *    column; Hero CTA keeps it so it can sit beside a secondary action.
+ * 7. The root is block-level unless told otherwise, so every preset sets
+ *    `inline-flex` plus `w-fit` to make the button shrink-wrap its content.
+ *    Drop `w-fit` for a full-width button inside a narrow column; Hero CTA
+ *    keeps it so it can sit beside a secondary action.
  */
 
 var layouts = [

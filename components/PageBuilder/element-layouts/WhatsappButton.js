@@ -6,26 +6,26 @@
  * here MUST be `"type": "whatsappButton"`. (PageBuilder.jsx regenerates all ids
  * on paste/replace, so the readable ids below are safe.)
  *
- * whatsappButton is a leaf: a wrapper <div>, a <Link> to wa.me, an optional icon
- * div and a label div. Its renderer is line-for-line the same component as
- * MessengerButton.jsx -- the only differences are the option name (`phone`
- * rather than `username`), the host (`wa.me` rather than `m.me`), the default
- * wording, and one commented-out alternative URL at :51. So see
- * MessengerButton.js in this folder for the shared reasoning; all five declared
- * options are read (:37-41) and all four selector keys are applied (:105, :129,
- * :133, :138).
+ * whatsappButton is a leaf: a wrapper <div>, an <a> to wa.me, an optional icon
+ * div and a label div. It renders the same ChatButtonMarkup
+ * (elements/chatButton.jsx) as messengerButton -- the only differences are the
+ * option name (`phone` rather than `username`), the host (`wa.me` rather than
+ * `m.me`) and the default wording. So see MessengerButton.js in this folder for
+ * the shared reasoning; all five declared options are read and all four
+ * selector keys are applied.
  *
  * Renderer notes that shaped these presets:
  *
- * 1. `phone` is the one field a preset cannot fill, and the link is broken until
- *    it is set. The href is `https://wa.me/${phone}?text=...` (:50), so an empty
- *    value yields `https://wa.me/?text=...`. wa.me also wants the number in full
- *    international form with digits only -- country code, no `+`, no spaces or
- *    dashes (a Bangladesh number as `8801737034053`), and it silently fails on
- *    anything else. It is store-specific, so every preset leaves it `""` and
- *    that is the field to set in the options panel after dropping one.
+ * 1. `phone` is the one field a preset cannot fill, and the shop hides the
+ *    button until it is set (the href is `https://wa.me/${phone}?text=...`).
+ *    wa.me wants the number in full international form with digits only; the
+ *    renderer strips `+`, spaces, dashes and a leading `00`, but it cannot add
+ *    a missing country code (a Bangladesh number must be `8801737034053`, not
+ *    `01737034053` -- the panel warns about that). It is store-specific, so
+ *    every preset leaves it `""` and that is the field to set in the options
+ *    panel after dropping one.
  *
- * 2. Put the button on the `link` key, not on `*`. The <a> at :129 is the
+ * 2. Put the button on the `link` key, not on `*`. The <a> is the
  *    clickable area and `*` is only the box around it, so padding or a
  *    background on `*` gives you button-looking edges that do nothing. These
  *    presets keep `link` as the whole button and use `*` for width and
@@ -34,28 +34,26 @@
  *
  * 3. `message` supports six placeholders, substituted before the URL is
  *    encoded: `{product_id}`, `{product_title}`, `{product_price}`,
- *    `{product_description}`, `{product_image}` and `{product_url}` (:79-84).
+ *    `{product_description}`, `{product_image}` and `{product_url}`.
  *    They are safe in a preset -- the whole message goes through
- *    `encodeURIComponent` (:49) -- and they preview sensibly because
- *    `productData` falls back to a dummy product (:9-16) when nothing supplies
- *    one, which in the builder is always. Keep `{product_url}`: it is the only
- *    thing telling the shop which product the chat is about.
+ *    `encodeURIComponent` -- and they preview sensibly because the canvas
+ *    falls back to a sample product when no PostContext supplies one, which in
+ *    the builder is always. Keep `{product_url}`: it is the only thing telling
+ *    the shop which product the chat is about.
  *
- * 4. Set `iconSize` explicitly. :40 reads it with no fallback, so a block
- *    missing the key renders at tabler's default rather than the 20 the
- *    definition suggests. The icon div is conditional on the name resolving
- *    (:132), so an unknown or empty `icon` emits no wrapper at all.
+ * 4. `iconSize` falls back to 20 when missing. The icon div is conditional on
+ *    the name resolving, so an unknown or empty `icon` emits no wrapper at all.
  *
- * 5. The label div is NOT conditional (:138), so an icon-only button needs both
+ * 5. The label div is NOT conditional, so an icon-only button needs both
  *    `label: ""` and `empty:hidden` on the `label` key -- otherwise an empty div
  *    keeps the link's gap and the glyph sits visibly off-centre. The round
  *    floating preset does exactly that.
  *
- * 6. The link cannot be clicked in the canvas and cannot open in a new tab. The
- *    wrapper's onClick calls `preventDefault()` (:107) so selecting the block
- *    never navigates -- right for editing, but it means the href has to be
- *    checked on the published page. There is no `target` option and the renderer
- *    sets none, so WhatsApp opens in the same tab.
+ * 6. The link cannot be clicked in the canvas: the wrapper's onClick calls
+ *    `preventDefault()` so selecting the block never navigates, so check the
+ *    href on the published page. There it opens WhatsApp in a new tab. With
+ *    no `phone` the shop renders nothing, and the canvas shows the button with
+ *    a <span> in place of the link.
  *
  * These presets mirror the MessengerButton set shape for shape, so a product
  * page can carry both buttons side by side with only the brand colour differing

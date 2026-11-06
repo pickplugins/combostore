@@ -5,30 +5,26 @@
  * can Replace the selected slider like-for-like. Block ids are regenerated on
  * Add/Replace, so the ids below only need to be unique within a preset.
  *
- * Four things to know before editing these:
+ * Things to know before editing these:
  *
- * 1. `options.sliderOptions` is REQUIRED. PostSlider.jsx assigns
- *    `sliderOptions.classes = {...}` unconditionally, so a preset without it
- *    throws "Cannot set properties of undefined". Every preset below sets it.
+ * 1. `options.sliderOptions` goes to Splide as it is (PostSliderView copies it
+ *    and adds the controls' classes), so any Splide option works. `perPage`
+ *    controls the column count (not grid classes), and `breakpoints` makes it
+ *    responsive. These use `mediaQuery: "max"`, so breakpoint keys are
+ *    max-widths.
  *
- * 2. `sliderOptions` is handed straight to Splide, so any Splide option works.
- *    `perPage` controls the column count (not grid classes), and `breakpoints`
- *    makes it responsive. These use `mediaQuery: "max"` to match the options
- *    panel's default, so breakpoint keys are max-widths.
+ * 2. The query lives in `options.queryPrams` (note the spelling) -- what
+ *    postSliderQuery reads and hands to the PostLoop, which posts it to
+ *    combo-store/v2/get_posts. The options panel now edits the same key.
  *
- * 3. The query lives in `options.queryPrams` (note the spelling) — that is what
- *    PostSlider.jsx reads and passes to PostLoop, which posts it to
- *    combo-store/v2/get_posts. The options panel writes the query to
- *    `options.query` instead, so query edits made there currently have no
- *    effect; edit `queryPrams` here or in the block JSON.
+ * 3. `loop-item` styles each slide's card: the postLoop's own value wins when
+ *    set, else the postSlider's (through PostSliderContext). The same value is
+ *    mirrored onto both here. `loop-items` is unused in slider mode (Splide's
+ *    track is the list).
  *
- * 4. `loop-item` is read from the postSlider's selectors, not the postLoop's:
- *    PostLoop.jsx overwrites its own cssSelectors with the slider's one from
- *    PostSliderContext. The same value is mirrored onto postLoop here, as the
- *    rest of the codebase does. `loop-items` is unused in slider mode (Splide's
- *    track handles layout), and the arrow/pagination selectors below only become
- *    literal Splide class names — nothing applies them inline today, since the
- *    Tailwind-to-stylesheet path in EditorActions.jsx is commented out.
+ * 4. `arrows-wrap`, `arrow-item` (both arrows), `arrow-prev`, `arrow-next`,
+ *    `pagination` and `page-item` are applied to Splide's controls through its
+ *    `classes` option, next to Splide's own class names.
  */
 
 var layouts = [

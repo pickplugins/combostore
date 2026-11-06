@@ -1,53 +1,11 @@
-"use client"
-import PropTypes from "prop-types";
 import React from "react";
-import { useState, useEffect } from "react";
-import { IconLibraryPhoto, IconCheckbox, IconSquare, IconFidgetSpinner, IconTrash, IconStarFilled, IconStar, IconX } from "@tabler/icons-react";
-import { useDraggable } from '@dnd-kit/react';
-import CssClassPicker from "../CssClassPicker";
-import CssSelectors from "../CssSelectors";
+import PostGridPaginationOptions from "./PostGridPaginationOptions";
 
+/*
+	Settings panel for the `termsGridPagination` block: the post grid
+	pagination's panel (style, Previous / Next labels and icons, selectors)
+	with this block's own selector defaults. It had only the style editor.
+*/
+const TermsGridPaginationOptions = (props) => <PostGridPaginationOptions {...props} type="termsGridPagination" />;
 
-const TextOptions = (props) => {
-
-	var updateBlock = props?.updateBlock;
-
-	var options = props?.options;
-	var cssSelectors = props?.cssSelectors ?? {};
-
-
-	const [loading, setloading] = useState(false);
-
-
-
-
-
-
-	// useEffect(() => {
-
-	// 	fetchPosts();
-	// }, []);
-
-
-	return (
-		<div className="px-3" >
-			{/* {JSON.stringify(prams)} */}
-
-			<div className="flex flex-col gap-3">
-
-
-
-
-				<CssSelectors cssSelectors={cssSelectors} updateBlock={updateBlock} />
-
-
-			</div>
-
-
-		</div>
-	);
-};
-
-
-
-export default TextOptions;
+export default TermsGridPaginationOptions;

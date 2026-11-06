@@ -6,60 +6,42 @@
  * MUST be `"type": "accordion"`. (PageBuilder.jsx regenerates all ids on
  * paste/replace, so the readable ids below are safe.)
  *
- * Renderer notes that shaped these presets:
+ * Notes that shaped these presets:
  *
- * 1. Accordion.jsx:95 reads `items[idx]` with no guard on `items` itself, so an
- *    accordion without `options.items` throws "Cannot read properties of
- *    undefined" the moment it renders. Every preset carries it.
+ * 1. AccordionView (the shop) and the builder's Accordion.jsx render the same
+ *    AccordionMarkup, so a preset looks the same in both. Every part has a
+ *    cssSelectors key, declared with its default in ElementsDefinition.js. A
+ *    key a preset leaves out falls back to that default; "" really is empty.
+ *    (Before AccordionView existed the shop printed "[accordion]" instead.)
  *
- * 2. Headers and panels are two lists joined by index, but the loop runs over
- *    `children` (Accordion.jsx:92) and looks up `items[idx]` inside it -- the
- *    mirror image of tabs. A surplus `items` entry is silently dropped rather
- *    than rendered as an empty row, and a surplus child renders a header with no
- *    label. The element definition ships 3 and 3, but the options panel's add
- *    button (AccordionOptions.jsx:89) pushes a label without adding an
- *    accordionItem, so a tenth label does nothing until a tenth child exists.
- *    Every preset below is balanced.
+ * 2. Headers and panels are two lists joined by index: `options.items` holds
+ *    the header labels and `children` the accordionItem panels. One header is
+ *    drawn per child; a child with no matching label falls back to its own
+ *    label or "Item n". Every preset below is balanced.
  *
- * 3. Every item needs a `classes` key even when empty. Accordion.jsx:95
- *    interpolates `${items[idx]?.classes}` with no fallback, so an item without
- *    the key puts the literal string "undefined" into the header's class
- *    attribute. The key is genuinely useful -- it decorates one header without
- *    touching the rest -- but note AccordionOptions.jsx:129 reads
- *    `items.classes` instead of `items[index].classes`, so the panel's input for
- *    it always looks empty even once a value is saved.
+ * 3. Each `items[i].classes` decorates that one header without touching the
+ *    rest. `accordion-header-open` is added to an open item's header, for
+ *    styling the open state.
  *
- * 4. `accordion-content` must not set a display utility. Accordion.jsx:130
- *    appends `block` or `hidden` after those classes, and conflicting display
- *    utilities have equal specificity, so a `flex` or `grid` there could win on
- *    stylesheet order and leave closed panels visible. Stack panel content with
- *    flex on the accordionItem's own `*` instead, which is what these presets
- *    do.
+ * 4. A closed panel is hidden with the `hidden` attribute, which Tailwind v4
+ *    enforces with !important, so `accordion-content` may set a display
+ *    utility (flex, grid) without leaving closed panels visible.
  *
- * 5. The header and its panel are siblings inside `accordion-items`, not nested,
- *    so a gap on that wrapper separates each header from its own content. These
- *    presets either use no gap and rule off each row with a border, or use a
- *    small gap and let the panel read as an indented continuation. Attaching a
- *    bordered panel flush under a bordered header is not worth the corner
- *    artifacts it leaves when the panel is closed.
+ * 5. The header and its panel are siblings inside `accordion-items`, not
+ *    nested, so a gap on that wrapper separates each header from its own
+ *    content. These presets either use no gap and rule off each row with a
+ *    border, or use a small gap and let the panel read as an indented
+ *    continuation.
  *
- * 6. Panels all start closed (`activeIndex` is `[]`, Accordion.jsx:34) and the
- *    state is an array, so several can be open at once -- this is a multi-open
- *    accordion, not an exclusive one.
+ * 6. Panels all start closed. By default several can be open at once;
+ *    `options.multiple: false` makes opening one close the rest.
  *
- * 7. The chevron is inverted: Accordion.jsx:117-122 shows IconChevronDown while
- *    a panel is open and IconChevronUp while it is closed, which is backwards
- *    from every other accordion a shopper has used. It is hardcoded, so no
- *    preset can correct it -- swapping those two lines is the fix.
+ * 7. The chevron points down while closed and up while open, and it lives in
+ *    `header-icon`.
  *
- * 8. `options.orientation` is declared and read into a variable
- *    (Accordion.jsx:31) but never used, unlike the tabs renderer. It is kept
- *    empty here to match the definition.
- *
- * 9. Accordion.jsx:69 hardcodes `p-4` on the root ahead of `cssSelectors['*']`.
- *    Conflicting padding utilities have equal specificity, so whether an
- *    override wins depends on Tailwind's stylesheet order rather than class
- *    order -- these presets work with that 1rem instead of fighting it.
+ * 8. The root's padding is its own key, `spacing` (default `p-4`), applied
+ *    ahead of `*`. These presets leave it at its default; set it to "" or a
+ *    different padding rather than fighting it from `*`.
  */
 
 var layouts = [

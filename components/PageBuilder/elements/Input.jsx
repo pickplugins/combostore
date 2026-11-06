@@ -4,6 +4,7 @@ import * as TablerIcons from '@tabler/icons-react';
 import Link from "next/link";
 
 
+import { elementCssClasses } from "../ElementsDefinition";
 const Input = (props) => {
 
 
@@ -18,6 +19,8 @@ const Input = (props) => {
 	var index = props?.index
 	var onChangeInput = props?.onChangeInput
 	var cssSelectors = props?.cssSelectors ?? {};
+	/* A key the block lacks falls back to the input defaults in ElementsDefinition.js. */
+	var cls = elementCssClasses('input', cssSelectors);
 
 
 	var id = props?.id;
@@ -42,7 +45,7 @@ const Input = (props) => {
 
 
 
-		<div draggable id={id} type={type} className={`${cssSelectors['*']?.classes ?? ''} hover:outline-orange-200 hover:outline-solid hover:outline-1 ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200' : ''} ${selectedId == id ? 'outline-1 outline-solid outline-orange-400' : ''} `}
+		<div draggable id={id} type={type} className={`${cls('*')} hover:outline-orange-200 hover:outline-solid hover:outline-1 ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200' : ''} ${selectedId == id ? 'outline-1 outline-solid outline-orange-400' : ''} `}
 
 
 
@@ -61,17 +64,17 @@ const Input = (props) => {
 			onDragLeave={() => setDragOverIndex(null)}
 		>
 
-			<input type={inputType} placeholder={placeholder} value={value} className={`${cssSelectors['input']?.classes}`} onChange={ev => {
+			<input type={inputType} placeholder={placeholder} value={value} className={`${cls('input')}`} onChange={ev => {
 
 				var value = ev.target.value;
 
-				onChangeInput(value)
+				onChangeInput?.(value)
 
 			}} />
 
 
 			{IconX && (
-				<div className={`${cssSelectors['icon']?.classes}`}>
+				<div className={`${cls('icon')}`}>
 					{IconX ? <IconX size={iconSize} /> : null}
 				</div>
 			)}

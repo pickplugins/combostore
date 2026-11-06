@@ -13,6 +13,7 @@ import { useUtilsStore } from '../../../store/useUtilsStore'
 import { useCounterStore } from '../../../store/useCounterStore';
 import * as TablerIcons from '@tabler/icons-react';
 
+import { elementCssClasses } from "../ElementsDefinition";
 const QuickSearchView = (props) => {
 
 	const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
@@ -20,6 +21,8 @@ const QuickSearchView = (props) => {
 
 	var index = props?.index
 	var cssSelectors = props?.cssSelectors ?? {};
+	/* A key the block lacks falls back to the quickSearch defaults in ElementsDefinition.js. */
+	var cls = elementCssClasses('quickSearch', cssSelectors);
 
 
 	var id = props?.id;
@@ -365,7 +368,7 @@ const QuickSearchView = (props) => {
 
 
 	return (
-		<div ref={wrapperRef} id={id} type={type} className={`${cssSelectors['*']?.classes} relative  `}
+		<div ref={wrapperRef} id={id} type={type} className={`${cls('*')} relative  `}
 
 		>
 
@@ -388,14 +391,14 @@ const QuickSearchView = (props) => {
 					setpromptsData({ ...promptsData, posts: [], total: 0, })
 
 
-				}} type="text" className={`${cssSelectors['input-search']?.classes}  w-full lg:w-max  px-3`} placeholder={placeholder} />
+				}} type="text" className={`${cls('input-search')}  w-full lg:w-max  px-3`} placeholder={placeholder} />
 
 
 				{!loading && (
 
 					<>
 						{IconX && (
-							<div className={`${cssSelectors['icon']?.classes}`}>
+							<div className={`${cls('icon')}`}>
 								{IconX ? <IconX size={iconSize} /> : null}
 							</div>
 						)}
@@ -421,12 +424,12 @@ const QuickSearchView = (props) => {
 				>
 
 					{/* Filters */}
-					<div className="flex flex-wrap items-center gap-2 border-b border-gray-100 p-3">
+					<div className={cls('filters')}>
 						<select
 							name="category"
 							aria-label="Category"
 							value={queryPrams.category}
-							className="min-w-0 flex-1 rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-sm text-gray-700 focus:border-[#1b0e9f] focus:outline-none focus:ring-2 focus:ring-[#1b0e9f]/15"
+							className={cls('filter-select')}
 							onChange={ev => {
 								setqueryPrams({ ...queryPrams, category: ev.target.value, paged: 1 });
 							}}
@@ -453,7 +456,7 @@ const QuickSearchView = (props) => {
 							name="brand"
 							aria-label="Brand"
 							value={queryPrams.brand}
-							className="min-w-0 flex-1 rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-sm text-gray-700 focus:border-[#1b0e9f] focus:outline-none focus:ring-2 focus:ring-[#1b0e9f]/15"
+							className={cls('filter-select')}
 							onChange={ev => {
 								setqueryPrams({ ...queryPrams, brand: ev.target.value, paged: 1 });
 							}}
@@ -478,7 +481,7 @@ const QuickSearchView = (props) => {
 						</select>
 						<button
 							type="button"
-							className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-sm font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900"
+							className={cls('clear-filters')}
 							onClick={() => setqueryPrams({ ...queryPrams, keyword: "", paged: 1 })}
 						>
 							<IconClose size={14} /> Clear
@@ -486,21 +489,21 @@ const QuickSearchView = (props) => {
 					</div>
 
 					{/* Results */}
-					<div className="min-h-0 flex-1 overflow-y-auto p-2">
+					<div className={cls('results')}>
 
 						{/* Still waiting for the pause in typing, or for the reply:
 						   "No products found" used to flash up here meanwhile. */}
 						{(loading || queryPrams.keyword !== debouncedQuery?.keyword) && promptsData?.posts?.length == 0 && (
-							<div className="flex items-center justify-center gap-2 py-8 text-sm text-gray-500">
+							<div className={cls('loading')}>
 								<Spinner /> Searching…
 							</div>
 						)}
 
 						{!loading && queryPrams.keyword === debouncedQuery?.keyword && promptsData?.posts?.length == 0 && (
-							<div className="flex flex-col items-center gap-2 py-8 text-center">
-								<IconMoodEmpty size={28} className="text-gray-400" />
-								<div className="text-sm font-medium text-gray-900">No products match “{queryPrams.keyword}”</div>
-								<div className="text-xs text-gray-500">Try a different word, or clear the category and brand filters.</div>
+							<div className={cls('empty')}>
+								<IconMoodEmpty size={28} className={cls('empty-icon')} />
+								<div className={cls('empty-title')}>No products match “{queryPrams.keyword}”</div>
+								<div className={cls('empty-text')}>Try a different word, or clear the category and brand filters.</div>
 							</div>
 						)}
 
@@ -514,12 +517,12 @@ const QuickSearchView = (props) => {
 									var cartLine = { id: product?.id, title: product?.title, price: product?.price, regular_price: product?.regular_price, sale_price: product?.sale_price, priceHtml: product?.price_html, thumbnail: product?.post_thumbnail?.src };
 
 									return (
-										<li key={product?.id ?? index} className="flex items-center gap-3 rounded-lg p-2 transition-colors hover:bg-gray-50">
+										<li key={product?.id ?? index} className={cls('result')}>
 
-											<Link href={`/product/${product.slug}/`} className="shrink-0 overflow-hidden rounded-md border border-gray-200 bg-gray-50">
+											<Link href={`/product/${product.slug}/`} className={cls('result-thumb')}>
 												<Image
 													unoptimized
-													className="h-14 w-14 object-cover"
+													className={cls('result-image')}
 													src={product?.post_thumbnail_url && product?.post_thumbnail?.src ? product.post_thumbnail.src : `/thumb.png`}
 													width={112}
 													height={112}
@@ -527,32 +530,32 @@ const QuickSearchView = (props) => {
 												/>
 											</Link>
 
-											<div className="min-w-0 flex-1">
-												<Link href={`/product/${product.slug}/`} className="line-clamp-2 text-sm font-medium text-gray-900 hover:text-[#1b0e9f]" dangerouslySetInnerHTML={{ __html: product?.title ?? '' }} />
-												<div className="mt-0.5 flex items-baseline gap-2 text-sm">
-													<span className="font-semibold text-[#1b0e9f]">{wrapCurrency(product?.price)}</span>
+											<div className={cls('result-info')}>
+												<Link href={`/product/${product.slug}/`} className={cls('result-title')} dangerouslySetInnerHTML={{ __html: product?.title ?? '' }} />
+												<div className={cls('result-prices')}>
+													<span className={cls('result-price')}>{wrapCurrency(product?.price)}</span>
 													{product?.sale_price && product?.regular_price && product?.regular_price != product?.price && (
-														<span className="text-xs text-gray-400 line-through">{wrapCurrency(product?.regular_price)}</span>
+														<span className={cls('result-regular-price')}>{wrapCurrency(product?.regular_price)}</span>
 													)}
 												</div>
 											</div>
 
 											{/* Same cart calls as before: +1 and -1 on this product's line. */}
 											{quantityInCart > 0 ? (
-												<div className="flex shrink-0 items-center rounded-lg border border-gray-300">
+												<div className={cls('stepper')}>
 													<button
 														type="button"
 														aria-label={`Remove one ${product?.title ?? ''}`}
-														className="flex h-8 w-8 items-center justify-center text-gray-600 transition-colors hover:bg-gray-100"
+														className={cls('stepper-button')}
 														onClick={() => addCartItems({ ...cartLine, quantity: -1 })}
 													>
 														<IconMinus size={14} />
 													</button>
-													<span className="min-w-6 text-center text-sm font-medium tabular-nums">{quantityInCart}</span>
+													<span className={cls('stepper-value')}>{quantityInCart}</span>
 													<button
 														type="button"
 														aria-label={`Add one more ${product?.title ?? ''}`}
-														className="flex h-8 w-8 items-center justify-center text-gray-600 transition-colors hover:bg-gray-100"
+														className={cls('stepper-button')}
 														onClick={() => addCartItems({ ...cartLine, quantity: 1 })}
 													>
 														<IconPlus size={14} />
@@ -561,7 +564,7 @@ const QuickSearchView = (props) => {
 											) : (
 												<button
 													type="button"
-													className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-[#1b0e9f] px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-[#150b7d]"
+													className={cls('add-button')}
 													onClick={() => addCartItems({ ...cartLine, quantity: 1 })}
 												>
 													<IconPlus size={14} /> Add
@@ -576,12 +579,12 @@ const QuickSearchView = (props) => {
 
 					{/* Pages */}
 					{promptsData?.posts?.length > 0 && promptsData?.maxPages > 1 && (
-						<div className="flex items-center justify-between gap-3 border-t border-gray-100 px-3 py-2">
+						<div className={cls('pager')}>
 							<button
 								type="button"
 								aria-label="Previous page"
 								disabled={queryPrams.paged <= 1}
-								className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-300 text-gray-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
+								className={cls('pager-button')}
 								onClick={() => {
 									if (queryPrams.paged <= 1) return;
 									setqueryPrams({ ...queryPrams, paged: queryPrams.paged - 1 });
@@ -589,7 +592,7 @@ const QuickSearchView = (props) => {
 							>
 								<IconChevronLeft size={16} />
 							</button>
-							<span className="text-xs text-gray-500">
+							<span className={cls('pager-info')}>
 								Page {queryPrams.paged} of {promptsData?.maxPages}
 								{promptsData?.total ? ` · ${promptsData.total} products` : ''}
 							</span>
@@ -597,7 +600,7 @@ const QuickSearchView = (props) => {
 								type="button"
 								aria-label="Next page"
 								disabled={queryPrams.paged >= promptsData?.maxPages}
-								className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-300 text-gray-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
+								className={cls('pager-button')}
 								onClick={() => {
 									var paged = queryPrams.paged + 1;
 									if (paged > promptsData?.maxPages) return;

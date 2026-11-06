@@ -11,34 +11,25 @@
  *
  * Renderer notes that shaped these presets:
  *
- * 1. The element renders nothing in the builder canvas. ProductDiscount.jsx:43
- *    bails out with `return null` when the product has no sale_price, and unlike
- *    ProductPrice.jsx:46 this renderer has no mock-product fallback -- outside a
- *    product loop `usePost()` is null, so there is no sale price and no output.
- *    With no DOM node there is also no click target, so the block cannot be
- *    selected on the canvas. Select it in the layer tree on the left instead
- *    (BlockTree.jsx:115, mounted at PanelsLeft.jsx:123) and this panel becomes
- *    reachable. Worth knowing before concluding the element is broken: it only
- *    appears on a discounted product.
+ * 1. In the builder the badge always shows. On a product that is not
+ *    discounted, or outside a product loop, ProductDiscount.jsx draws a dimmed
+ *    sample "20%" so the block can be selected and styled; on the shop
+ *    ProductDiscountView renders nothing unless the product is marked down.
+ *    Both use the same ProductDiscountMarkup.
  *
  * 2. What it outputs is a bare percentage -- `{percent}%` from
  *    calculateDiscountPercentage (:92), rounded, with no minus sign and no
  *    "off". So the word comes from `options.label`, which renders as a span
- *    after the number and is properly guarded by `{label && ...}` (:93), so an
+ *    after the number and is properly guarded by `{label && ...}`, so an
  *    empty label leaves no stray box. That is why most presets below set a label
  *    and the two that do not are designed to read correctly without one.
  *
  * 3. All three declared selector keys -- `*`, `discount`, `label` -- are read,
  *    and nothing undeclared is. This is one of the tidier elements.
  *
- * 4. Options are nearly all dead. `label` works; `separator` is declared and
- *    never read. Lines 27-33 also read `labelIcon`, `outOfStockIcon`,
- *    `inStockIcon`, `iconSize`, `outOfStockText`, `inStockText` and
- *    `stock_status` into variables and use none of them -- copy-paste leftovers
- *    from the stock-status element. ProductDiscountOptions.jsx adds controls for
- *    `classes` (:68), `icon` (:88) and `iconSize` (:104), none of which the
- *    renderer reads, so Label is the only control in that panel that does
- *    anything.
+ * 4. `label` is the only option. The panel's old Icon and Icon Size controls
+ *    were never drawn and are gone; ten template blocks still carry an `icon`
+ *    copied from add-to-cart, which nothing reads.
  *
  * 5. The Card Corner preset positions itself absolutely. That only works if the
  *    card or thumbnail wrapper it sits in is `relative` -- the product card

@@ -1,17 +1,19 @@
 "use client";
 
 import { useState } from "react";
-// import { useAuth } from "./auth-context";
-// import { useRouter } from "next/navigation";
-// import Spinner from "/components/Spinner";
-// import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
-// import { useCounterStore } from '../store/useCounterStore'
+import { IconEye, IconEyeOff, IconLock, IconUser, IconLogin2 } from "@tabler/icons-react";
+import { elementCssClasses } from "../ElementsDefinition";
 
+/*
+	Builder (canvas) preview of the sign-in block.
 
+	It mirrors LoginView's markup and reads the same cssSelectors keys (with
+	the same defaults), so styles edited in the builder show here exactly as
+	on the storefront. It does not sign in: the submit is a no-op here, and
+	the fields stay typeable so filled inputs can be previewed.
+*/
 const Login = (props) => {
 
-
-	var draggingBlock = props?.draggingBlock
 	var setDraggingBlock = props?.setDraggingBlock
 
 	var dragOverIndex = props?.dragOverIndex
@@ -20,69 +22,23 @@ const Login = (props) => {
 	var setSelectedId = props?.setSelectedId
 	var selectedId = props?.selectedId
 	var index = props?.index
-	var name = props?.name
-	var cssSelectors = props?.cssSelectors
-
+	var cssSelectors = props?.cssSelectors ?? {};
+	var cls = elementCssClasses('login', cssSelectors);
 
 	var id = props?.id;
 	var type = props?.type;
-
 	var options = props?.options;
-	var tag = options?.tag ?? 'h1';
-	var usernameLabel = options?.usernameLabel ?? 'Username/Email';
-	var passwordLabel = options?.passwordLabel ?? 'Password';
-	var loginLabel = options?.loginLabel ?? 'Login';
-	var forgetPasswordLabel = options?.forgetPasswordLabel ?? 'Forget Password';
-
-
-
-	const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
-	// const settings = useCounterStore((state) => state.settings);
-	// const fetchSettings = useCounterStore((state) => state.fetchSettings);
-
-	// const login_ID = settings?.apiKeys?.googleLogin?.id;
-
-
-	// const { user, handleLogin, logging } = useAuth();
-	// const router = useRouter();
 
 	const [username, setUsername] = useState("");
 	const [password, setPassword] = useState("");
-	const [error, setError] = useState("");
-
-	const onSubmit = (e) => {
-		//e.preventDefault();
-		// const success = handleLogin(username, password);
-
-		// if (success) {
-		// 	router.push("/"); // redirect after login
-		// } else {
-		// 	setError("Invalid username or password");
-		// }
-	};
-
-
-
-
-
-
-
-
-
-
-
-
-
+	const [showPassword, setShowPassword] = useState(false);
 
 	return (
 
-		<div draggable id={id} index={index} type={type} className={`${cssSelectors['*']?.classes ?? ''} hover:outline-orange-200 hover:outline-solid hover:outline-1 ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200 ' : ''} ${selectedId == id ? 'outline-1 outline-solid outline-orange-400 relative' : ''} `}
+		<div draggable id={id} index={index} type={type} className={`${cls('*')} hover:outline-orange-200 hover:outline-solid hover:outline-1 ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200 ' : ''} ${selectedId == id ? 'outline-1 outline-solid outline-orange-400 relative' : ''} `}
 			onClick={e => {
 				e.preventDefault();
-
 				e.stopPropagation();
-
-
 				setSelectedId(selectedId != id ? id : null);
 			}}
 			onDragStart={e => {
@@ -98,53 +54,65 @@ const Login = (props) => {
 			onDragOver={e => { e.preventDefault(); setDragOverIndex(index); }}
 			onDragLeave={() => setDragOverIndex(null)}
 		>
-			<form className={`${cssSelectors['form']?.classes}`}>
-				<div className={`${cssSelectors['input-fields-wrap']?.classes}`}>
-					<div className={`${cssSelectors['input-wrap']?.classes}`}>
-						<label className={`${cssSelectors['label-username']?.classes}`}>{usernameLabel}</label>
+			<form onSubmit={ev => ev.preventDefault()} noValidate className={cls('form')}>
+
+				{/* Pages that put their own heading above the form set hideTitle. */}
+				{!options?.hideTitle && (
+					<div className={cls('header')}>
+						<h3 className={cls('title')}>Sign in</h3>
+						<p className={cls('subtitle')}>Welcome back! Sign in to see your orders and saved details.</p>
+					</div>
+				)}
+
+				<div className={cls('field')}>
+					<label htmlFor={`${id}-login-username`} className={cls('field-label')}>Username or email</label>
+					<div className={cls('field-control')}>
+						<span className={cls('field-icon')}><IconUser size={16} /></span>
 						<input
+							id={`${id}-login-username`}
+							name="username"
 							type="text"
+							autoComplete="off"
 							value={username}
 							onChange={(e) => setUsername(e.target.value)}
-
-							className={`${cssSelectors['input-username']?.classes} ${cssSelectors['input']?.classes}`}
+							className={`${cls('field-input')} ${cls('username-input')}`}
 						/>
 					</div>
+				</div>
 
-					<div className={`${cssSelectors['input-wrap']?.classes}`}>
-						<label className={`${cssSelectors['label-email']?.classes}`}>{passwordLabel}</label>
+				<div className={cls('field')}>
+					<label htmlFor={`${id}-login-password`} className={cls('field-label')}>Password</label>
+					<div className={cls('field-control')}>
+						<span className={cls('field-icon')}><IconLock size={16} /></span>
 						<input
-							type="password"
+							id={`${id}-login-password`}
+							name="password"
+							type={showPassword ? "text" : "password"}
+							autoComplete="off"
 							value={password}
 							onChange={(e) => setPassword(e.target.value)}
-							className={`${cssSelectors['input-email']?.classes} ${cssSelectors['input']?.classes}`}
+							className={`${cls('field-input')} ${cls('password-input')}`}
 						/>
-					</div>
-					<div
-						className={`${cssSelectors['submit']?.classes}`}
-
-						onClick={ev => {
-							onSubmit()
-						}}
-					>
-						<div>{loginLabel}</div>
-
-
-						{/* {logging && <Spinner />} */}
+						<button
+							type="button"
+							aria-label={showPassword ? "Hide password" : "Show password"}
+							title={showPassword ? "Hide password" : "Show password"}
+							onClick={e => { e.stopPropagation(); setShowPassword(!showPassword); }}
+							className={cls('password-toggle')}
+						>
+							{showPassword ? <IconEyeOff size={16} /> : <IconEye size={16} />}
+						</button>
 					</div>
 				</div>
 
-
-				<div className={`${cssSelectors['forget-password']?.classes}`}>
-					{forgetPasswordLabel}
-				</div>
-
-
+				{/* type="button" so a click only selects the block in the canvas. */}
+				<button type="button" className={cls('submit-button')}>
+					<IconLogin2 size={16} />
+					Sign in
+				</button>
 
 			</form>
 		</div>
-
-
 
 	);
 }

@@ -39,7 +39,7 @@ import PostTitleView from './elements/PostTitleView';
 import PostThumbnailView from './elements/PostThumbnailView';
 import ImageView from './elements/ImageView';
 import LogoView from './elements/LogoView';
-import FooterLinksView from './elements/FooterLinksView';
+// import FooterLinksView from './elements/FooterLinksView';
 import SiteHeaderView from './elements/SiteHeaderView';
 import SiteFooterView from './elements/SiteFooterView';
 import QuickSearchView from './elements/QuickSearchView';
@@ -54,6 +54,12 @@ import MenuView from './elements/MenuView';
 import MenuItemView from './elements/MenuItemView';
 import PopupView from './elements/PopupView';
 import ArchiveTitleView from './elements/ArchiveTitleView';
+import ArchiveCountView from './elements/ArchiveCountView';
+import ArchiveDescriptionView from './elements/ArchiveDescriptionView';
+import InputView from './elements/InputView';
+import SelectView from './elements/SelectView';
+import CollectionsView from './elements/CollectionsView';
+import CollectionsFieldView from './elements/CollectionsFieldView';
 import PostContentView from './elements/PostContentView';
 import PostExcerptView from './elements/PostExcerptView';
 import PostAuthorView from './elements/PostAuthorView';
@@ -85,13 +91,17 @@ import CommentAuthorView from './elements/CommentAuthorView';
 import CommentRateView from './elements/CommentRateView';
 import CommentContentView from './elements/CommentContentView';
 import ProductPriceView from './elements/ProductPriceView';
-import ProductVariablePricesView from './elements/ProductVariablePricesView';
+import ProductVariationsView from './elements/ProductVariationsView';
 import ProductRatingsView from './elements/ProductRatingsView';
 import AddToCartView from './elements/AddToCartView';
 import RelatedProductsView from './elements/RelatedProductsView';
+import ProductUpsellsView from './elements/ProductUpsellsView';
+import ProductCrosssellsView from './elements/ProductCrosssellsView';
 
 import TabsView from './elements/TabsView';
 import TabsItemView from './elements/TabsItemView';
+import AccordionView from './elements/AccordionView';
+import AccordionItemView from './elements/AccordionItemView';
 import CheckoutView from './elements/CheckoutView';
 import CartView from './elements/CartView';
 import NotifyView from './elements/NotifyView';
@@ -148,12 +158,12 @@ const BlockRender = (props) => {
 			case "logo": return <LogoView {...block} index={index} />;
 			case "menu": return <MenuView {...block} index={index} />;
 			case "menuItem": return <MenuItemView {...block} index={index} />;
-			case "footerLinks": return <FooterLinksView {...block} index={index} />;
+			// case "footerLinks": return <FooterLinksView {...block} index={index} />;
 			case "siteHeader": return <SiteHeaderView {...block} index={index} />;
 			case "siteFooter": return <SiteFooterView {...block} index={index} />;
 			case "quickSearch": return <QuickSearchView {...block} index={index} />;
 			case "grid": return <GridView {...block} index={index} />;
-			case "gridItem": return <GridItemView {...block} index={index} />;
+			case "gridItem": return <GridItemView {...block} index={index} ParentCssSelectors={ParentCssSelectors} />;
 			case "columnItem": return <ColumnItemView {...block} index={index} ParentCssSelectors={ParentCssSelectors} />;
 			case "columns": return <ColumnsView {...block} index={index} />;
 			case "sidebar": return <SidebarView {...block} index={index} />;
@@ -163,8 +173,14 @@ const BlockRender = (props) => {
 			case "container": return <ContainerView {...block} index={index} />;
 			case "popup": return <PopupView {...block} index={index} />;
 			case "archiveTitle": return <ArchiveTitleView {...block} index={index} />;
-			case "archiveDescription": return <ArchiveDescriptionView {...block} index={index} />;
+			/* These two named views that did not exist and were never imported, so rendering either threw. */
 			case "archiveCount": return <ArchiveCountView {...block} index={index} />;
+			case "archiveDescription": return <ArchiveDescriptionView {...block} index={index} />;
+			/* These four had no storefront renderer: the shop printed "[input]" and so on. */
+			case "input": return <InputView {...block} index={index} />;
+			case "select": return <SelectView {...block} index={index} />;
+			case "collections": return <CollectionsView {...block} index={index} />;
+			case "collectionsField": return <CollectionsFieldView {...block} index={index} />;
 			case "postContent": return <PostContentView {...block} index={index} />;
 			case "postExcerpt": return <PostExcerptView {...block} index={index} />;
 			case "postAuthor": return <PostAuthorView {...block} index={index} />;
@@ -189,10 +205,14 @@ const BlockRender = (props) => {
 			case "commentRate": return <CommentRateView {...block} index={index} />;
 			case "commentContent": return <CommentContentView {...block} index={index} />;
 			case "productPrice": return <ProductPriceView {...block} index={index} />;
-			case "productVariablePrices": return <ProductVariablePricesView {...block} index={index} />;
+			/* productVariablePrices is the old name of productVariations; blocks saved under it still render. */
+			case "productVariations":
+			case "productVariablePrices": return <ProductVariationsView {...block} index={index} />;
 			case "productRatings": return <ProductRatingsView {...block} index={index} />;
 			case "addToCart": return <AddToCartView {...block} index={index} />;
 			case "relatedProducts": return <RelatedProductsView {...block} index={index} />;
+			case "productUpsells": return <ProductUpsellsView {...block} index={index} />;
+			case "productCrosssells": return <ProductCrosssellsView {...block} index={index} />;
 			case "notify": return <NotifyView {...block} index={index} />;
 
 			case "customerAccountLogged": return <CustomerAccountLoggedView {...block} index={index} />;
@@ -212,8 +232,10 @@ const BlockRender = (props) => {
 			case "cart": return <CartView {...block} index={index} />;
 			case "checkout": return <CheckoutView {...block} index={index} />;
 			case "tabs": return <TabsView {...block} index={index} />;
-			case "tabs": return <TabsView {...block} index={index} />;
 			case "tabsItem": return <TabsItemView {...block} index={index} />;
+			/* Accordions had no storefront renderer: the shop printed "[accordion]". */
+			case "accordion": return <AccordionView {...block} index={index} />;
+			case "accordionItem": return <AccordionItemView {...block} index={index} />;
 			case "featureboxItem": return <FeatureboxItemView {...block} index={index} />;
 			case "featurebox": return <FeatureboxView {...block} index={index} />;
 			case "featureboxDetails": return <FeatureboxDetailsView {...block} index={index} />;

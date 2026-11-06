@@ -7,6 +7,7 @@ import ExtensionsRuntime from "../components/ExtensionsRuntime";
 import NextTopLoader from 'nextjs-toploader';
 import Script from "next/script";
 import { getSettings } from "@/lib/getSettings";
+import TemplateThemeStyle from "@/components/TemplateThemeStyle";
 
 
 
@@ -96,6 +97,9 @@ export default function RootLayout({ children }) {
 	return (
 		<html lang="en">
 			<head>
+				{/* The site template's fonts and colors (Template Settings), behind font-heading, bg-primary and the other template classes. */}
+				<TemplateThemeStyle />
+
 				{/* Facebook Pixel Script */}
 				{FacebookPixel_ID && (
 					<FacebookPixel pixelId={FacebookPixel_ID} />

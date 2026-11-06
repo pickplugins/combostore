@@ -6,54 +6,35 @@
  * here MUST be `"type": "productBrands"`. (PageBuilder.jsx regenerates all ids
  * on paste/replace, so the readable ids below are safe.)
  *
- * productBrands is a leaf: an optional label, then one link per brand. The
- * renderer is the same shape as ProductCategories.jsx and ProductTags.jsx,
- * differing in the data it reads (`product.brands`), the mock values and the
- * /brands/ href -- so see ProductCategories.js in this folder for the shared
- * constraints. The presets below are built for where a brand actually appears:
- * as a meta line under a product title, as a linked name, or as a chip.
+ * productBrands is a leaf: an optional label, then one link per brand of the
+ * product, each to its /brands/<slug>/ page. ProductBrandsView (the shop) and
+ * the builder's ProductBrands.jsx render the same ProductTermLinksMarkup as
+ * the categories and tags blocks. The presets below are built for where a
+ * brand appears: as a meta line under a product title, as a linked name, or
+ * as a chip.
  *
- * Renderer notes that shaped these presets:
+ * Notes that shaped these presets:
  *
- * 1. The separator span lives INSIDE each brand's <Link>
- *    (ProductBrands.jsx:81-85), not between the links. So anything that gives
- *    `item` a background, padding and a radius puts the comma inside the chip.
- *    The chip presets set `separator` to `hidden` and space the items with a gap
- *    on `items`; the inline presets keep the comma and leave `item` unboxed.
+ * 1. The separator span lives INSIDE each brand's link, after its name. So
+ *    anything that gives `item` a background, padding and a radius puts the
+ *    separator inside the chip. The chip presets set `separator` to `hidden`
+ *    and space the items with a gap on `items`; the inline presets keep it and
+ *    leave `item` unboxed. `options.separator` sets its text (", " by
+ *    default; "" leaves it out).
  *
- * 2. The separator text is hardcoded to ", " (:84) and the declared `separator`
- *    option is never read, so that key can style or hide the comma but cannot
- *    change the glyph.
+ * 2. Because the separator is inside the link, a `hover:underline` on `item`
+ *    underlines it too. The linked-name preset marks `item` as a `group` and
+ *    puts `group-hover:underline` on `category-name` (the name span; the key
+ *    is named after the categories block), so only the brand name underlines.
  *
- * 3. Because the comma is inside the link, a `hover:underline` on `item`
- *    underlines the comma too. The linked-name preset instead marks `item` as a
- *    `group` and puts `group-hover:underline` on `category-name`, so hovering
- *    anywhere on the link underlines the brand name and leaves the punctuation
- *    alone. (`category-name` is the inner <span> at :82 -- the key is named
- *    after the category element this renderer was copied from.)
+ * 3. The label div is a sibling of `items`, not a parent, so putting them on
+ *    one line takes a `flex` on `*`. That is what the meta and spec presets
+ *    do; the chip presets leave the label empty and let `items` own the row.
+ *    This element's `*` has no default classes.
  *
- * 4. Clicks are swallowed, but not where the sibling swallows them. Unlike
- *    ProductCategories.jsx:81-83, the <Link> here has no onClick at all; the
- *    root div's handler calls `e.preventDefault()` on the bubbled event (:48),
- *    which cancels the navigation just the same -- and also selects the brands
- *    block. So the href (`${NEXT_PUBLIC_STORE_URL}brands/<slug>`) never resolves
- *    from a click, on the front end as much as in the canvas.
- *
- * 5. Brands fall back to two mock entries when there is no product context
- *    (:36), so the canvas shows "Brand Name" and "Brand Name 2" with the comma
- *    between them -- which means every preset previews its multi-brand case,
- *    including the separator decision above.
- *
- * 6. `label` is guarded (:67), so an empty label leaves no stray box -- and the
- *    label div is a sibling of `items`, not a parent, so putting them on one
- *    line takes a `flex` on `*`. That is what the meta and spec presets do; the
- *    chip presets leave the label empty and let `items` own the row.
- *
- * 7. The rest of the options are dead. Lines 28-31 read `tag` (assigned to an
- *    unused `Tag` at :38), `readmore` and `maxWord` and use none of them, and
- *    ProductBrandsOptions.jsx adds `classes`, `icon` and `iconSize` controls the
- *    renderer never reads -- so Label is the only control in that panel that
- *    does anything, and a preset is the only way to set the rest of the look.
+ * 4. On the shop a product without a brand shows nothing; the builder then
+ *    shows a dimmed sample "Acme, Northwind". Links work on the shop and never
+ *    navigate in the builder.
  */
 
 var layouts = [

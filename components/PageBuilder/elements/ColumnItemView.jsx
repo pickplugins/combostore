@@ -1,57 +1,31 @@
 'use client'
-
-import PropTypes from "prop-types";
 import React from "react";
-import { useState, useEffect } from "react";
-import { IconMenu2, IconSquare, IconFidgetSpinner, IconTrash, IconStarFilled, IconStar, IconX } from "@tabler/icons-react";
 import BlockRender from '../BlockRender';
+import { LayoutCellMarkup } from "./GridItemView";
+import { elementCssClasses } from "../ElementsDefinition";
 
-
+/*
+	One column: the shared layout-cell markup with its own `*` classes
+	(width, padding, surface) plus the parent columns block's `column`
+	classes, which style every column at once. (It used to call
+	preventDefault on every click, which stopped plain links inside a column
+	from opening on the shop.)
+*/
 const ColumnItemView = (props) => {
 
-
-	const cssSelectors = props?.cssSelectors;
-	const parentCssSelectors = props?.parentCssSelectors || {};
-
-	var index = props?.index
-	var type = props?.type
-
-
-	var id = props?.id;
-
-	var children = props?.children;
-	var options = props?.options;
-
-
+	/* A key the block lacks falls back to the columnItem / columns defaults in ElementsDefinition.js. */
+	var cls = elementCssClasses('columnItem', props?.cssSelectors);
+	var parentCls = elementCssClasses('columns', props?.ParentCssSelectors);
+	var children = Array.isArray(props?.children) ? props.children : [];
+	var index = props?.index;
 
 	return (
-		<div id={id} type={type} className={` ${cssSelectors['*']?.classes}  ${parentCssSelectors['column']?.classes}  
-				
-			`}
-			onClick={e => {
-				e.preventDefault();
-
-				e.stopPropagation();
-
-
-			}}
-
-		>
-
-
-
-			{children != undefined && children.map((child, indexZ) => {
-				return (
-					<BlockRender index={`${index}${indexZ}`} key={child.id} block={child} />
-				)
-			})}
-
-
-
-		</div>
+		<LayoutCellMarkup cls={cls} parentCls={parentCls} parentKey="column" id={props?.id} index={index} type={props?.type}>
+			{children.map((child, idx) => (
+				<BlockRender key={child.id ?? idx} index={`${index}-${idx}`} block={child} />
+			))}
+		</LayoutCellMarkup>
 	);
 };
-
-
 
 export default ColumnItemView;

@@ -15,11 +15,11 @@
  *
  * Renderer notes that shaped these presets:
  *
- * 1. The `grid-item` key on a grid does nothing. Grid.jsx:36 applies only
- *    `cssSelectors['*']` and GridItem.jsx:61 likewise, so every cell is styled
- *    through its own `*`. That is not a limitation here -- it is what makes
- *    bento possible, since each cell needs its own span. The dead key is kept at
- *    "" because the definition declares it.
+ * 1. The grid's `grid-item` classes are added to every cell (the grid hands
+ *    them down as ParentCssSelectors), on top of each cell's own `*`. These
+ *    presets leave it "" and style each cell through its own `*`, since a bento
+ *    cell needs its own span; put shared cell styling in `grid-item` instead of
+ *    repeating it per cell.
  *
  * 2. Spans live on the cell, the tracks live on the grid. `grid-cols-*`,
  *    `gap-*` and `auto-rows-*` go on the grid's `*`; `col-span-*` and
@@ -47,10 +47,11 @@
  *    the palette into a specific cell registers -- unlike the loop inside
  *    relatedProducts. Most cells below are left empty on purpose.
  *
- * 6. Cells are already positioned. Both renderers hardcode `relative` after the
- *    `*` classes (:36, :61), so an absolutely positioned child -- an overlay
- *    caption, a corner badge -- anchors to its cell with nothing extra on the
- *    preset. (It also means `static` on a cell cannot be set from here.)
+ * 6. Only the builder positions cells. Grid.jsx and GridItem.jsx add
+ *    `relative` for the canvas chrome, but GridView and GridItemView on the
+ *    shop do not, so a cell that holds an absolutely positioned child -- an
+ *    overlay caption, a corner badge -- needs `relative` on its own `*` (or on
+ *    the grid's `grid-item`) to anchor it on the shop too.
  *
  * 7. The grid's own empty state spans the full row. Grid.jsx:74's placeholder
  *    carries `col-span-full`, so an empty grid shows one centred prompt rather

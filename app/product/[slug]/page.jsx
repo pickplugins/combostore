@@ -1,3 +1,4 @@
+import { templateMetadata, slugToName } from "@/lib/templateSeo";
 import { sendMetaEvent } from "@/lib/sendMetaEvent";
 import { getPageTemplate } from "@/lib/getPageTemplate";
 import PageBuilderContent from "../../../components/PageBuilder/PageBuilderContent";
@@ -20,33 +21,17 @@ export const dynamic = "force-dynamic";
 
 import { getProduct } from "@/lib/getProduct";
 
+/* Template Part Settings > SEO for this template (lib/templateSeo.js), filled with the page's data. */
 export async function generateMetadata({ params }) {
-  const { slug } = await params; // ✅ await params
+  const { slug } = await params;
   const productResponse = await getProduct(slug);
-
   if (!productResponse) return { title: "Product Not Found" };
-
-
-  var productData = productResponse?.product;
-
-
-
-  return {
-    title: productData?.title?.slice(0, 65),
-    description: productData.post_excerpt || productData.post_excerpt?.slice(0, 160),
-    openGraph: {
-      title: productData.title,
-      description: productData.post_excerpt || productData.post_excerpt?.slice(0, 160),
-      url: `${appUrl}product/${slug}`,
-      images: [{ url: productData.post_thumbnail?.src, alt: productData.title }],
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: productData.title,
-      description: productData.post_excerpt || productData.post_excerpt?.slice(0, 160),
-      images: [productData.post_thumbnail?.src],
-    },
-  };
+  const productData = productResponse?.product;
+  return templateMetadata('product', {
+    single: true,
+    item: { title: productData?.title, description: productData?.post_excerpt, image: productData?.post_thumbnail?.src },
+    path: `product/${slug}`,
+  });
 }
 
 
@@ -74,6 +59,7 @@ export default async function page({ params }) {
 
   var productData = productResponse?.product;
 
+  console.log(productData);
 
 
   var product_template = productData?.product_template ?? JSON.parse(productData?.product_template);

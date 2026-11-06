@@ -2,339 +2,47 @@
 
 import PropTypes from "prop-types";
 import React from "react";
-import { useState, useEffect } from "react";
-import { IconColumns, IconPlus } from "@tabler/icons-react";
-import BlockPreview from '../BlockPreview';
-import EntriesTable from "../../../components/EntriesTable";
-import { useCounterStore } from '../../../store/useCounterStore';
-import { useUtilsStore } from '../../../store/useUtilsStore';
-import Spinner from "../../../components/Spinner";
-import Link from "next/link";
+import { IconRepeat, IconCalendarEvent } from "@tabler/icons-react";
+import { StatusBadge } from './accountUi';
+import { describeInterval } from './CustomerSubscriptionsView';
+import { elementCssClasses } from "../ElementsDefinition";
 
+/* Sample subscriptions for the canvas: the builder never fetches a customer's real ones. */
+const sampleSubscriptions = [
+	{ id: 208, interval: 'month', count: 1, orderId: 1017, status: 'active', started: '18 Oct 2026', next: '18 Nov 2026', total: '৳ 640' },
+	{ id: 191, interval: 'week', count: 2, orderId: 984, status: 'paused', started: '2 Sep 2026', next: '—', total: '৳ 1,180' },
+];
 
+/*
+	Builder (canvas) preview of the customer's subscriptions.
 
-const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
+	It mirrors CustomerSubscriptionsView's markup with sample subscriptions,
+	and reads the same cssSelectors keys with the same defaults from
+	ElementsDefinition.js, so styles edited in the builder show here exactly
+	as on the storefront. It never fetches or changes anything: the old
+	builder version called get_subscriptions and delete_subscriptions from
+	the canvas.
+*/
+const CustomerSubscriptions = (props) => {
 
-
-const CustomerOrders = (props) => {
-
-	const { token, paymentGateways, appData, notifications, addNotification, userDataX, setUserDataX } = useCounterStore()
-
-
-	var draggingBlock = props?.draggingBlock
 	var setDraggingBlock = props?.setDraggingBlock
 
 	var dragOverIndex = props?.dragOverIndex
 	var setDragOverIndex = props?.setDragOverIndex
 	var cssSelectors = props?.cssSelectors ?? {};
+	var cls = elementCssClasses('customerSubscriptions', cssSelectors);
 	var setSelectedId = props?.setSelectedId
 	var selectedId = props?.selectedId
-	var handleMoveBlock = props?.handleMoveBlock
 
-	var type = props?.type
 	var options = props?.options;
 	var id = props?.id;
-
 	var index = props?.index
-
-
-
-
-
-	const children = props?.children || [];
-
-
-
-	const onDrop = (e) => {
-		e.preventDefault();
-		e.stopPropagation();
-
-		const paletteType = e.dataTransfer.getData("paletteType");
-		const canvasBlockId = e.dataTransfer.getData("canvasBlock");
-
-
-
-
-
-
-
-		if (handleMoveBlock) {
-			handleMoveBlock({ paletteType, canvasBlockId }, id, 'inside');
-		}
-	};
-
-	const onDragOver = (e) => {
-		e.preventDefault();
-		e.stopPropagation();
-	};
-
-
-	var [subscriptionsData, setsubscriptionsData] = useState(null);
-	var [queryPrams, setqueryPrams] = useState({
-		keyword: "",
-		page: 1,
-		order: "DESC",
-		per_page: 10,
-		first_date: "",
-		last_date: "",
-	});
-
-
-	var [loading, setloading] = useState(false);
-
-	var [selectedRows, setselectedRows] = useState([]);
-
-	function onSelectRows(rows) {
-		setselectedRows(rows);
-	}
-	function onRefreshRequest(rows) {
-		get_subscriptions();
-	}
-
-	function delete_subscriptions() {
-
-
-		// if (!token) {
-		// 	throw new Error("No token found");
-		// }
-
-		if (queryPrams.page < 0) {
-			return;
-		}
-
-		var postData = {
-			ids: selectedRows,
-		};
-		postData = JSON.stringify(postData);
-		setloading(true);
-		fetch(
-			serverUrl + "wp-json/combo-store/v2/delete_subscriptions",
-			{
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-					Authorization: `Bearer ${token}`,
-				},
-				body: postData,
-			}
-		)
-			.then((response) => {
-				if (!response.ok) {
-					throw new Error("Token validation failed");
-				}
-
-				if (response.ok && response.status < 400) {
-					response.json().then((res) => {
-						var errors = res?.errors;
-						var success = res?.success;
-
-						setloading(false);
-
-						get_subscriptions();
-
-						// setaddTask({ ...addTask, loading: false, errors: errors, success: success })
-
-						// setTimeout(() => {
-						// 	setaddTask({ ...addTask, title: "", success: null, errors: null })
-
-						// }, 3000);
-					});
-				}
-			})
-			.catch((_error) => {
-				//this.saveAsStatus = 'error';
-				// handle the error
-			});
-	}
-
-	function get_subscriptions() {
-
-		if (!token) {
-			return null;
-		}
-
-		var postData = JSON.stringify(queryPrams);
-
-		setloading(true);
-
-		fetch(serverUrl + "wp-json/combo-store/v2/get_subscriptions", {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-				Authorization: `Bearer ${token}`,
-			},
-			body: postData,
-		})
-			.then((response) => {
-				if (!response.ok) {
-					throw new Error("Token validation failed");
-				}
-
-				if (response.ok && response.status < 400) {
-					response.json().then((res) => {
-
-
-
-
-						var posts = res?.posts;
-						var total = res?.total;
-						var max_pages = res?.max_pages;
-
-						setsubscriptionsData({
-							posts: posts,
-							total: total,
-							maxPages: max_pages,
-						});
-						setloading(false);
-
-						setTimeout(() => { }, 500);
-					});
-				}
-			})
-			.catch((_error) => {
-				//this.saveAsStatus = 'error';
-				// handle the error
-			});
-	}
-
-	// useEffect(() => {
-	// 	get_subscriptions();
-	// }, []);
-
-	useEffect(() => {
-		get_subscriptions();
-	}, [queryPrams]);
-
-	var columns = {
-		// check: { label: ("Check") },
-		id: { label: ("ID"), callback: callbackTitleLinkTo, classes: "w-30" },
-		order_id: { label: "Order id", callback: callbackOrder, },
-		status: { label: ("Status"), callback: callbackStatus, },
-		total_amount: { label: ("Total"), callback: callbackTotal, },
-		subtotal_amount: { label: ("Sub Total"), callback: callbackSubTotal, },
-		renewal_interval: { label: ("Interval"), callback: callbackInterval, },
-		interval_count: { label: "Interval Count", callback: callbackIntervalCount, },
-		start_date: { label: ("Start Date"), callback: callbackStartDate, },
-		next_billing_date: { label: ("Next Billing Date"), callback: callbackNextBillingDate, },
-		// total: { label: ("Total") },
-
-		// datetime: { label: ("Datetime"), callback: callbackFormatDate },
-	};
-
-	function onChangeQueryPrams(queryPrams) {
-		if (queryPrams) {
-			setqueryPrams(queryPrams);
-			get_subscriptions();
-		}
-	}
-
-	function callbackTitleLinkTo(entry, columnIndex) {
-
-		return (
-			<td data-label="ID" className="text-center pl-5 py-3"
-				key={columnIndex}>
-				<Link className="  font-bold" href={`/subscriptions/${entry.id}`}>
-					{"#" + entry.id}
-				</Link>
-			</td>
-
-		);
-	}
-
-
-
-	function callbackOrder(entry, columnIndex) {
-
-		return (
-			<td data-label="Order ID" className="text-center pl-5"
-				key={columnIndex}>
-				<Link className="  font-bold" href={`/orders/${entry.order_id}`}>
-					{"#" + entry.order_id}
-				</Link>
-			</td>
-
-		);
-	}
-
-
-	function callbackStatus(entry, columnIndex) {
-
-		return (
-			<td data-label="Status" className="text-center pl-5"
-				key={columnIndex}>
-				{entry.status}
-			</td>
-
-		);
-	}
-	function callbackTotal(entry, columnIndex) {
-
-		return (
-			<td data-label="Total" className="text-center pl-5"
-				key={columnIndex}>
-				{entry.total_amount}Tk
-			</td>
-
-		);
-	}
-	function callbackSubTotal(entry, columnIndex) {
-
-		return (
-			<td data-label="Sub Total" className="text-center pl-5"
-				key={columnIndex}>
-				{entry.subtotal_amount}TK
-			</td>
-
-		);
-	}
-	function callbackInterval(entry, columnIndex) {
-
-		return (
-			<td data-label="Interval" className="text-center pl-5"
-				key={columnIndex}>
-				{entry.renewal_interval}
-			</td>
-
-		);
-	}
-	function callbackIntervalCount(entry, columnIndex) {
-
-		return (
-			<td data-label="Interval Count" className="text-center pl-5"
-				key={columnIndex}>
-				{entry.interval_count}
-			</td>
-
-		);
-	}
-	function callbackStartDate(entry, columnIndex) {
-
-		return (
-			<td data-label="Start Date" className="text-center pl-5"
-				key={columnIndex}>
-				{entry.start_date}
-			</td>
-
-		);
-	}
-	function callbackNextBillingDate(entry, columnIndex) {
-
-		return (
-			<td data-label="Next Billing Date" className="text-center pl-5"
-				key={columnIndex}>
-				{entry.next_billing_date}
-			</td>
-
-		);
-	}
-
-
 
 	return (
 		<div
 			draggable
 			id={id}
-			className={` ${cssSelectors['*']?.classes ?? ''}  hover:outline-orange-200 hover:outline-solid hover:outline-1 relative   ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200 bg-orange-200' : ''}
+			className={` ${cls('*')}  hover:outline-orange-200 hover:outline-solid hover:outline-1 relative   ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200 bg-orange-200' : ''}
 				${selectedId === id ? 'outline-1 outline-solid outline-orange-400 relative' : ''}
 			`}
 			onClick={(e) => {
@@ -351,52 +59,63 @@ const CustomerOrders = (props) => {
 				setDraggingBlock(null);
 				setDragOverIndex(null);
 			}}
-			onDragOver={onDragOver}
-			onDrop={onDrop}
+			onDragOver={e => { e.preventDefault(); setDragOverIndex(index); }}
+			onDragLeave={() => setDragOverIndex(null)}
 		>
 
+			<div className={cls('panel')}>
 
+				{!options?.hideTitle && (
+					<div className={cls('header')}>
+						<h3 className={cls('title')}>Subscriptions</h3>
+						<span className={cls('count')}>{sampleSubscriptions.length} subscriptions</span>
+					</div>
+				)}
 
-			<EntriesTable
-				queryPrams={queryPrams}
-				columns={columns}
-				entries={subscriptionsData}
-				itemPath={"subscriptions"}
-				onChange={onChangeQueryPrams}
-				loading={loading}
-				selectedRows={selectedRows}
-				onSelectRows={onSelectRows}
-				onRefreshRequest={onRefreshRequest}
-			/>
+				<ul className={cls('list')}>
+					{sampleSubscriptions.map(subscription => (
+						<li key={subscription.id} className={cls('subscription')}>
 
+							<div className={cls('subscription-header')}>
+								<div className={cls('subscription-heading')}>
+									<span className={cls('subscription-icon')}>
+										<IconRepeat size={20} />
+									</span>
+									<div>
+										<div className={cls('subscription-number')}>Subscription #{subscription.id}</div>
+										<div className={cls('subscription-schedule')}>
+											{describeInterval(subscription.interval, subscription.count)} · from order #{subscription.orderId}
+										</div>
+									</div>
+								</div>
+								<StatusBadge value={subscription.status} />
+							</div>
 
-			{/* {children.length > 0 ? (
-				children.map((child, idx) => (
-					<BlockPreview
-						key={child.id}
-						index={`${index}-${idx}`}
-						block={child}
-						draggingBlock={draggingBlock}
-						dragOverIndex={dragOverIndex}
-						setDragOverIndex={setDragOverIndex}
-						setDraggingBlock={setDraggingBlock}
-						setSelectedId={setSelectedId}
-						selectedId={selectedId}
-						handleMoveBlock={handleMoveBlock}
-					/>
-				))
-			) : (
-				<div className="col-span-full flex flex-col items-center justify-center text-gray-400 py-4 pointer-events-none">
-					<IconPlus size={24} stroke={1.5} />
-					<span className="text-xs mt-1">Empty CustomerOrders - Drop elements here</span>
-				</div>
-			)} */}
+							<dl className={cls('details')}>
+								<div className={cls('detail')}>
+									<dt className={cls('detail-label')}>Started</dt>
+									<dd className={cls('detail-value')}>{subscription.started}</dd>
+								</div>
+								<div className={cls('detail')}>
+									<dt className={cls('detail-label')}><IconCalendarEvent size={12} /> Next delivery</dt>
+									<dd className={cls('detail-value')}>{subscription.next}</dd>
+								</div>
+								<div className={cls('detail-total')}>
+									<dt className={cls('detail-label')}>Each delivery</dt>
+									<dd className={cls('total-value')}>{subscription.total}</dd>
+								</div>
+							</dl>
+
+						</li>
+					))}
+				</ul>
+
+			</div>
 		</div>
 	);
 };
 
-CustomerOrders.propTypes = {
-	block: PropTypes.object,
+CustomerSubscriptions.propTypes = {
 	draggingBlock: PropTypes.string,
 	setDraggingBlock: PropTypes.func,
 	dragOverIndex: PropTypes.string,
@@ -406,7 +125,8 @@ CustomerOrders.propTypes = {
 	index: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
 	id: PropTypes.string,
 	type: PropTypes.string,
-	handleDropInto: PropTypes.func,
+	options: PropTypes.object,
+	cssSelectors: PropTypes.object,
 };
 
-export default CustomerOrders;
+export default CustomerSubscriptions;

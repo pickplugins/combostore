@@ -1,4 +1,5 @@
 
+import { templateMetadata, slugToName } from "@/lib/templateSeo";
 import Link from "next/link";
 import Image from "next/image";
 import React from "react";
@@ -16,52 +17,12 @@ const appUrl = process.env.NEXT_PUBLIC_STORE_URL;
 
 
 
+/* Template Part Settings > SEO for this template (lib/templateSeo.js), filled with the page's data. */
 export async function generateMetadata({ searchParams }) {
-
-	var searchParamsX = await searchParams;
-
-	var term = "";
-
-	if (searchParamsX.tag) {
-		term = searchParamsX.tag; // 👈 gets ?tag=baby-care
-	}
-	if (searchParamsX.category) {
-		term = searchParamsX.category; // 👈 gets ?category=baby-care
-	}
-
-
-
-
-
-	var pageMetaData = {
-
-		title: ``,
-		description: "",
-		post_thumbnail: { src: "", alt: "" },
-		keywords: "",
-		ogTitle: ``,
-		ogDes: ""
-
-	}
-
-
-
-	return {
-		title: pageMetaData.title,
-		description: pageMetaData.description?.slice(0, 160),
-		openGraph: {
-			title: pageMetaData.ogTitle,
-			description: pageMetaData.post_excerpt?.slice(0, 160),
-			url: `${appUrl}product/`,
-			images: [{ url: pageMetaData.post_thumbnail?.src, alt: pageMetaData.ogTitle }],
-		},
-		twitter: {
-			card: "summary_large_image",
-			title: pageMetaData.ogTitle,
-			description: pageMetaData.post_excerpt?.slice(0, 160),
-			images: [pageMetaData.post_thumbnail?.src],
-		},
-	};
+	const searchParamsX = await searchParams;
+	/* ?tag= / ?category= filter the blog; their name leads the title. */
+	const term = searchParamsX?.tag || searchParamsX?.category || '';
+	return templateMetadata('blog', { item: { title: term ? `${slugToName(term)} - Blog` : 'Blog' }, path: `blog` });
 }
 
 

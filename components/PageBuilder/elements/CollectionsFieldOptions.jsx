@@ -9,6 +9,7 @@ import CssSelectors from "../CssSelectors";
 import IconPicker from "../../IconPicker";
 
 
+import { withElementCssDefaults } from "../ElementsDefinition";
 const CollectionsFieldOptions = (props) => {
 
 	var updateBlock = props?.updateBlock;
@@ -64,7 +65,7 @@ const CollectionsFieldOptions = (props) => {
 					</div>
 				</div>
 
-				<CssSelectors cssSelectors={cssSelectors} updateBlock={updateBlock} />
+				<CssSelectors cssSelectors={withElementCssDefaults('collectionsField', cssSelectors)} updateBlock={updateBlock} />
 
 
 

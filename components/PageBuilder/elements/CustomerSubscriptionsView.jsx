@@ -7,11 +7,12 @@ import { IconRepeat, IconCalendarEvent } from "@tabler/icons-react";
 import { useUtilsStore } from '../../../store/useUtilsStore';
 import { useSavedToken } from './useSavedToken';
 import { StatusBadge, AccountEmptyState, AccountListSkeleton, AccountPager, AccountNotice, formatAccountDate } from './accountUi';
+import { elementCssClasses } from "../ElementsDefinition";
 
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
 /* "month" + 1 -> "Every month", "week" + 2 -> "Every 2 weeks". */
-function describeInterval(interval, count) {
+export function describeInterval(interval, count) {
 	var unit = String(interval || "month").toLowerCase();
 	var n = parseInt(count) || 1;
 	return n === 1 ? `Every ${unit}` : `Every ${n} ${unit}s`;
@@ -29,6 +30,8 @@ const CustomerSubscriptionsView = (props) => {
 	const { id, type } = props;
 
 	var cssSelectors = props?.cssSelectors ?? {};
+	/* Each part's classes; a key the block lacks falls back to the customerSubscriptions defaults in ElementsDefinition.js. */
+	var cls = elementCssClasses('customerSubscriptions', cssSelectors);
 
 	const { wrapCurrency } = useUtilsStore();
 	const token = useSavedToken();
@@ -79,16 +82,19 @@ const CustomerSubscriptionsView = (props) => {
 	var subscriptions = subscriptionsData?.posts ?? [];
 
 	return (
-		<div id={id} type={type} className={`${cssSelectors['*']?.classes ?? ''}`}>
+		<div id={id} type={type} className={cls('*')}>
 
-			<div className="flex flex-col gap-4">
+			<div className={cls('panel')}>
 
-				<div className="flex items-baseline justify-between gap-3">
-					<h3 className="text-lg font-semibold text-gray-900">Subscriptions</h3>
-					{subscriptionsData?.total > 0 && (
-						<span className="text-sm text-gray-500">{subscriptionsData.total} {subscriptionsData.total == 1 ? "subscription" : "subscriptions"}</span>
-					)}
-				</div>
+				{/* Pages or tabs that already label this panel set hideTitle. */}
+				{!props?.options?.hideTitle && (
+					<div className={cls('header')}>
+						<h3 className={cls('title')}>Subscriptions</h3>
+						{subscriptionsData?.total > 0 && (
+							<span className={cls('count')}>{subscriptionsData.total} {subscriptionsData.total == 1 ? "subscription" : "subscriptions"}</span>
+						)}
+					</div>
+				)}
 
 				{error && <AccountNotice>{error}</AccountNotice>}
 
@@ -101,18 +107,18 @@ const CustomerSubscriptionsView = (props) => {
 				)}
 
 				{subscriptions.length > 0 && (
-					<ul className={`flex flex-col gap-3 transition-opacity ${loading ? 'opacity-60' : ''}`}>
+					<ul className={`${cls('list')} ${loading ? cls('list-loading') : ''}`}>
 						{subscriptions.map(subscription => (
-							<li key={subscription.id} className="rounded-xl border border-gray-200 bg-white p-4 shadow-xs">
+							<li key={subscription.id} className={cls('subscription')}>
 
-								<div className="flex flex-wrap items-start justify-between gap-3">
-									<div className="flex items-center gap-3">
-										<span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#1b0e9f]/10 text-[#1b0e9f]">
+								<div className={cls('subscription-header')}>
+									<div className={cls('subscription-heading')}>
+										<span className={cls('subscription-icon')}>
 											<IconRepeat size={20} />
 										</span>
 										<div>
-											<div className="text-sm font-semibold text-gray-900">Subscription #{subscription.id}</div>
-											<div className="text-xs text-gray-500">
+											<div className={cls('subscription-number')}>Subscription #{subscription.id}</div>
+											<div className={cls('subscription-schedule')}>
 												{describeInterval(subscription.renewal_interval, subscription.interval_count)}
 												{subscription.order_id ? ` · from order #${subscription.order_id}` : ''}
 											</div>
@@ -121,18 +127,18 @@ const CustomerSubscriptionsView = (props) => {
 									<StatusBadge value={subscription.status} />
 								</div>
 
-								<dl className="mt-3 grid grid-cols-2 gap-3 border-t border-gray-100 pt-3 text-sm sm:grid-cols-3">
-									<div>
-										<dt className="text-xs text-gray-500">Started</dt>
-										<dd className="font-medium text-gray-800">{formatAccountDate(subscription.start_date) || '—'}</dd>
+								<dl className={cls('details')}>
+									<div className={cls('detail')}>
+										<dt className={cls('detail-label')}>Started</dt>
+										<dd className={cls('detail-value')}>{formatAccountDate(subscription.start_date) || '—'}</dd>
 									</div>
-									<div>
-										<dt className="flex items-center gap-1 text-xs text-gray-500"><IconCalendarEvent size={12} /> Next delivery</dt>
-										<dd className="font-medium text-gray-800">{formatAccountDate(subscription.next_billing_date) || '—'}</dd>
+									<div className={cls('detail')}>
+										<dt className={cls('detail-label')}><IconCalendarEvent size={12} /> Next delivery</dt>
+										<dd className={cls('detail-value')}>{formatAccountDate(subscription.next_billing_date) || '—'}</dd>
 									</div>
-									<div className="col-span-2 sm:col-span-1 sm:text-right">
-										<dt className="text-xs text-gray-500">Each delivery</dt>
-										<dd className="text-base font-semibold text-gray-900">{wrapCurrency(subscription.total_amount)}</dd>
+									<div className={cls('detail-total')}>
+										<dt className={cls('detail-label')}>Each delivery</dt>
+										<dd className={cls('total-value')}>{wrapCurrency(subscription.total_amount)}</dd>
 									</div>
 								</dl>
 
@@ -151,6 +157,7 @@ const CustomerSubscriptionsView = (props) => {
 CustomerSubscriptionsView.propTypes = {
 	id: PropTypes.string,
 	type: PropTypes.string,
+	options: PropTypes.object,
 	cssSelectors: PropTypes.object,
 };
 

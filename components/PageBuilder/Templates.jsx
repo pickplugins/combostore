@@ -10,6 +10,7 @@ import Link from 'next/link';
 import TemplatesLibrary from './TemplatesLibrary';
 import AIThemeBuilder from './AIThemeBuilder';
 import TemplateSettings from './TemplateSettings';
+import { refreshTemplateTheme } from './templateThemeLive';
 import Tabs from '../../components/Tabs';
 import Tab from '../../components/Tab';
 import ToggleContent from '../../components/ToggleContent';
@@ -548,6 +549,9 @@ const Templates = (props) => {
 
 						get_active_template()
 
+						/* The new active template's fonts and colors: in this builder's canvas now, and on the shop from its next request. */
+						refreshTemplateTheme()
+
 					});
 				}
 			})
@@ -756,19 +760,13 @@ const Templates = (props) => {
 												<IconCopy size={16} />
 											</div>
 
-											<PopoverButton wrapperClass={` flex justify-end`} buttonLabel={null} buttonIcon={<IconSettings size={16} />} title={"Template Settings"} position={null} buttonClass={`inline-flex items-center justify-center gap-1.5 rounded-lg border border-gray-200 bg-white p-1.5 text-xs font-medium text-gray-500 cursor-pointer transition-colors hover:border-gray-300 hover:bg-gray-100 hover:text-gray-900`}>
+											<PopoverButton wrapperClass={` flex justify-end`} buttonLabel={null} buttonIcon={<IconSettings size={16} />} title={`Template Settings - ${template?.name || 'Unnamed'}`} position={null} buttonClass={`inline-flex items-center justify-center gap-1.5 rounded-lg border border-gray-200 bg-white p-1.5 text-xs font-medium text-gray-500 cursor-pointer transition-colors hover:border-gray-300 hover:bg-gray-100 hover:text-gray-900`}>
 
-												<TemplateSettings templateData={template} />
-
-
-
-
-
-
-
-
-
-
+												{/* onSaved puts the saved settings back in the list; the panel remounts on every open and starts from this entry, so without it a reopened panel showed the settings from before the save. */}
+												<TemplateSettings templateData={template} onSaved={saved => setordersData(current => ({
+													...current,
+													posts: (current?.posts ?? []).map(item => item?.id == saved?.id ? { ...item, meta: saved.meta } : item),
+												}))} />
 
 
 											</PopoverButton>

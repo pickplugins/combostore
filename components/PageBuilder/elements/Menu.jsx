@@ -1,131 +1,65 @@
 'use client'
-
-import PropTypes from "prop-types";
 import React from "react";
-import { useState } from "react";
-import { IconColumns, IconPlus } from "@tabler/icons-react";
+import { IconPlus } from "@tabler/icons-react";
 import BlockPreview from '../BlockPreview';
-import { MenuProvider } from "../context/MenuContext";
+import { MenuMarkup } from "./MenuView";
+import { elementCssClasses } from "../ElementsDefinition";
 
-const Grid = (props) => {
-	const {
-		block,
-		draggingBlock,
-		setDraggingBlock,
-		dragOverIndex,
-		setDragOverIndex,
-		setSelectedId,
-		selectedId,
-		index,
-		id,
-		type,
-		prams,
-		handleMoveBlock // New prop for recursive drops
-	} = props;
+/*
+	Builder (canvas) preview of the menu: MenuView's own markup, classes and
+	context. It is always shown here, whatever its "Show from" width, so it
+	can be edited on any canvas size; an empty menu is a drop zone for menu
+	items (outside the list, which may only hold <li>s).
+*/
+const Menu = (props) => {
 
-	const cssSelectors = props?.cssSelectors;
-	const children = props?.children || [];
+	var handleMoveBlock = props?.handleMoveBlock
+	var draggingBlock = props?.draggingBlock
+	var setDraggingBlock = props?.setDraggingBlock
+	var dragOverIndex = props?.dragOverIndex
+	var setDragOverIndex = props?.setDragOverIndex
+	var setSelectedId = props?.setSelectedId
+	var selectedId = props?.selectedId
+	var id = props?.id;
+	var index = props?.index
 
+	var cls = elementCssClasses('menu', props?.cssSelectors);
+	var children = Array.isArray(props?.children) ? props.children : [];
 
-
-	const onDrop = (e) => {
-		e.preventDefault();
-		e.stopPropagation();
-
-		const paletteType = e.dataTransfer.getData("paletteType");
-		const canvasBlockId = e.dataTransfer.getData("canvasBlock");
-
-
-
-
-
-		if (handleMoveBlock) {
-			handleMoveBlock({ paletteType, canvasBlockId }, id, 'inside');
-		}
+	var rootClassName = `hover:outline-orange-200 hover:outline-solid hover:outline-1 relative ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200 bg-orange-200' : ''} ${selectedId == id ? 'outline-1 outline-solid outline-orange-400 relative' : ''}`;
+	var rootProps = {
+		draggable: true,
+		onClick: (e) => { e.preventDefault(); e.stopPropagation(); setSelectedId(selectedId !== id ? id : null); },
+		onDragStart: (e) => { e.stopPropagation(); e.dataTransfer.setData("canvasBlock", id); setDraggingBlock?.(id); },
+		onDragEnd: () => { setDraggingBlock?.(null); setDragOverIndex?.(null); },
+		onDragOver: (e) => { e.preventDefault(); e.stopPropagation(); },
+		onDrop: (e) => {
+			e.preventDefault();
+			e.stopPropagation();
+			const paletteType = e.dataTransfer.getData("paletteType");
+			const canvasBlockId = e.dataTransfer.getData("canvasBlock");
+			handleMoveBlock?.({ paletteType, canvasBlockId }, id, 'inside');
+		},
 	};
 
-	const onDragOver = (e) => {
-		e.preventDefault();
-		e.stopPropagation();
-	};
+	if (children.length === 0) {
+		return (
+			<nav id={id} index={index} type={props?.type} className={`${cls('*')} ${rootClassName}`} {...rootProps}>
+				<div className="flex flex-col items-center justify-center py-4 text-gray-400 pointer-events-none">
+					<IconPlus size={24} stroke={1.5} />
+					<span className="mt-1 text-xs">Empty menu - drop menu items here, or use Add Item in the panel</span>
+				</div>
+			</nav>
+		);
+	}
 
 	return (
-		<div
-			draggable
-			id={id}
-			className={` ${cssSelectors['*']?.classes ?? ''}    hover:outline-orange-200 hover:outline-solid hover:outline-1 relative   ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200 bg-orange-200' : ''}
-				${selectedId === id ? 'outline-1 outline-solid outline-orange-400 relative' : ''}
-			`}
-			onClick={(e) => {
-				e.preventDefault();
-				e.stopPropagation();
-				setSelectedId(selectedId !== id ? id : null);
-			}}
-			onDragStart={(e) => {
-				e.stopPropagation();
-				e.dataTransfer.setData("canvasBlock", id);
-				setDraggingBlock(id);
-			}}
-			onDragEnd={() => {
-				setDraggingBlock(null);
-				setDragOverIndex(null);
-			}}
-			onDragOver={onDragOver}
-			onDrop={onDrop}
-		>
-
-
-			{children.length > 0 ? (
-
-
-				<ul className={`${cssSelectors['menu']?.classes} menu`}>
-					<MenuProvider value={{ cssSelectors: cssSelectors }}>
-
-
-						{
-							children.map((child, idx) => (
-								<BlockPreview
-									key={child.id}
-									index={`${index}-${idx}`}
-									block={child}
-									draggingBlock={draggingBlock}
-									dragOverIndex={dragOverIndex}
-									setDragOverIndex={setDragOverIndex}
-									setDraggingBlock={setDraggingBlock}
-									setSelectedId={setSelectedId}
-									selectedId={selectedId}
-									handleMoveBlock={handleMoveBlock}
-								/>
-							))
-						}
-
-					</MenuProvider>
-
-				</ul>
-
-
-			) : (
-				<div className="col-span-full flex flex-col items-center justify-center text-gray-400 py-4 pointer-events-none">
-					<IconPlus size={24} stroke={1.5} />
-					<span className="text-xs mt-1">Empty Section - Drop elements here</span>
-				</div>
-			)}
-		</div>
+		<MenuMarkup cls={cls} id={id} index={index} type={props?.type} options={props?.options} cssSelectors={props?.cssSelectors} rootClassName={rootClassName} rootProps={rootProps}>
+			{children.map((child, idx) => (
+				<BlockPreview key={child.id ?? idx} index={`${index}-${idx}`} block={child} draggingBlock={draggingBlock} dragOverIndex={dragOverIndex} setDragOverIndex={setDragOverIndex} setDraggingBlock={setDraggingBlock} setSelectedId={setSelectedId} selectedId={selectedId} handleMoveBlock={handleMoveBlock} />
+			))}
+		</MenuMarkup>
 	);
 };
 
-Grid.propTypes = {
-	block: PropTypes.object,
-	draggingBlock: PropTypes.string,
-	setDraggingBlock: PropTypes.func,
-	dragOverIndex: PropTypes.string,
-	setDragOverIndex: PropTypes.func,
-	setSelectedId: PropTypes.func,
-	selectedId: PropTypes.string,
-	index: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-	id: PropTypes.string,
-	type: PropTypes.string,
-	handleDropInto: PropTypes.func,
-};
-
-export default Grid;
+export default Menu;

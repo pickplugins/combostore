@@ -2,24 +2,20 @@
 
 import PropTypes from "prop-types";
 import React from "react";
-import { useState, useEffect } from "react";
-import { IconColumns, IconPlus } from "@tabler/icons-react";
+import { IconPlus, IconLogout } from "@tabler/icons-react";
 import BlockPreview from '../BlockPreview';
-import EntriesTable from "../../../components/EntriesTable";
-import { useCounterStore } from '../../../store/useCounterStore';
-import { useUtilsStore } from '../../../store/useUtilsStore';
-import Spinner from "../../../components/Spinner";
-import Link from "next/link";
+import { elementCssClasses } from "../ElementsDefinition";
 
+/*
+	Builder (canvas) preview of the account area.
 
-
-const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
-
-
+	It mirrors CustomerAccountView: a welcome card, then the child blocks. The
+	storefront shows the card only to a signed-in customer; here it always
+	shows (unless options.hideWelcome is set), with sample details, so it can
+	be styled. It reads the same cssSelectors keys with the same defaults from
+	ElementsDefinition.js.
+*/
 const CustomerAccount = (props) => {
-
-	const { token, paymentGateways, appData, notifications, addNotification, userDataX, setUserDataX } = useCounterStore()
-
 
 	var draggingBlock = props?.draggingBlock
 	var setDraggingBlock = props?.setDraggingBlock
@@ -27,23 +23,16 @@ const CustomerAccount = (props) => {
 	var dragOverIndex = props?.dragOverIndex
 	var setDragOverIndex = props?.setDragOverIndex
 	var cssSelectors = props?.cssSelectors ?? {};
+	var cls = elementCssClasses('customerAccount', cssSelectors);
 	var setSelectedId = props?.setSelectedId
 	var selectedId = props?.selectedId
 	var handleMoveBlock = props?.handleMoveBlock
 
-	var type = props?.type
 	var options = props?.options;
 	var id = props?.id;
-
 	var index = props?.index
 
-
-
-
-
 	const children = props?.children || [];
-
-
 
 	const onDrop = (e) => {
 		e.preventDefault();
@@ -51,12 +40,6 @@ const CustomerAccount = (props) => {
 
 		const paletteType = e.dataTransfer.getData("paletteType");
 		const canvasBlockId = e.dataTransfer.getData("canvasBlock");
-
-
-
-
-
-
 
 		if (handleMoveBlock) {
 			handleMoveBlock({ paletteType, canvasBlockId }, id, 'inside');
@@ -68,13 +51,11 @@ const CustomerAccount = (props) => {
 		e.stopPropagation();
 	};
 
-
-
 	return (
 		<div
 			draggable
 			id={id}
-			className={` ${cssSelectors['*']?.classes ?? ''}  hover:outline-orange-200 hover:outline-solid hover:outline-1 relative   ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200 bg-orange-200' : ''}
+			className={` ${cls('*')}  hover:outline-orange-200 hover:outline-solid hover:outline-1 relative   ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200 bg-orange-200' : ''}
 				${selectedId === id ? 'outline-1 outline-solid outline-orange-400 relative' : ''}
 			`}
 			onClick={(e) => {
@@ -95,10 +76,29 @@ const CustomerAccount = (props) => {
 			onDrop={onDrop}
 		>
 
+			{!options?.hideWelcome && (
+				<div className={cls('welcome')} title="Shown to signed-in customers">
 
+					<div className={cls('welcome-profile')}>
+						<div className={cls('avatar')}>
+							<span className={cls('avatar-initial')}>C</span>
+						</div>
 
+						<div className={cls('welcome-text')}>
+							<div className={cls('welcome-greeting')}>Welcome back,</div>
+							<div className={cls('welcome-name')}>Customer name</div>
+							<div className={cls('welcome-email')}>customer@example.com</div>
+						</div>
+					</div>
 
+					{/* type="button" with no handler, so a click only selects the block. */}
+					<button type="button" className={cls('logout-button')}>
+						<IconLogout size={16} />
+						Log out
+					</button>
 
+				</div>
+			)}
 
 			{children.length > 0 ? (
 				children.map((child, idx) => (

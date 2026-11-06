@@ -1,118 +1,52 @@
-import PropTypes from "prop-types";
 import React from "react";
 import { usePost } from "../context/PostContext";
-import Link from "next/link";
-const appUrl = process.env.NEXT_PUBLIC_STORE_URL;
+import { ProductBadgeMarkup, badgesFor } from "./ProductBadgeView";
+import { elementCssClasses } from "../ElementsDefinition";
 
+/* Shown outside a product loop, or for a product without badges, where the shop shows nothing. */
+const sampleBadges = [{ slug: 'new', name: 'New' }, { slug: 'best-seller', name: 'Best Seller' }];
 
-const TermTitle = (props) => {
+/*
+	Builder (canvas) preview of the product badges: ProductBadgeView's own
+	markup and classes. With real badges it shows them; without, a dimmed
+	sample "New, Best Seller" (the old placeholder read "Tag Name"), so the
+	block stays visible and styleable.
+*/
+const ProductBadge = (props) => {
 
-
-	var draggingBlock = props?.draggingBlock
 	var setDraggingBlock = props?.setDraggingBlock
-
 	var dragOverIndex = props?.dragOverIndex
 	var setDragOverIndex = props?.setDragOverIndex
-
 	var setSelectedId = props?.setSelectedId
 	var selectedId = props?.selectedId
 	var index = props?.index
-	var name = props?.name
-	var cssSelectors = props?.cssSelectors
-
-
 	var id = props?.id;
-	var type = props?.type;
 
-	var options = props?.options;
-	var tag = options?.tag ?? 'h1';
-	var label = options?.label;
-	var readmore = options?.readmore ?? 'Read more';
-	var maxWord = options?.maxWord ?? 20;
-
+	var cls = elementCssClasses('productBadge', props?.cssSelectors);
 
 	const product = usePost();
-
-	var badges = product?.badges ?? [{ slug: 'tag-slug', name: 'Tag Name' }, { slug: 'tag-slug2', name: 'Tag Name 2' }];
-
-
-
-
+	var real = badgesFor(product);
 
 	return (
-
-
-		<div draggable id={id} index={index} type={type} className={`${cssSelectors['*']?.classes ?? ''} hover:outline-orange-200 hover:outline-solid hover:outline-1 ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200 ' : ''} ${selectedId == id ? 'outline-1 outline-solid outline-orange-400 relative' : ''} `}
-			onClick={e => {
-				e.preventDefault();
-
-				e.stopPropagation();
-
-
-				setSelectedId(selectedId != id ? id : null);
+		<ProductBadgeMarkup
+			cls={cls}
+			id={id}
+			index={index}
+			type={props?.type}
+			options={props?.options}
+			badges={real.length ? real : sampleBadges}
+			rootClassName={`${real.length ? '' : 'opacity-60'} hover:outline-orange-200 hover:outline-solid hover:outline-1 ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200 ' : ''} ${selectedId == id ? 'outline-1 outline-solid outline-orange-400 relative' : ''}`}
+			rootProps={{
+				draggable: true,
+				title: real.length ? undefined : 'Sample: shows only on products that have badges',
+				onClick: e => { e.preventDefault(); e.stopPropagation(); setSelectedId(selectedId != id ? id : null); },
+				onDragStart: e => { e.stopPropagation(); e.dataTransfer.setData("canvasBlock", id); setDraggingBlock?.(id); },
+				onDragEnd: () => { setDraggingBlock?.(null); setDragOverIndex?.(null); },
+				onDragOver: e => { e.preventDefault(); setDragOverIndex?.(index); },
+				onDragLeave: () => setDragOverIndex?.(null),
 			}}
-			onDragStart={e => {
-				e.stopPropagation();
-				e.dataTransfer.setData("canvasBlock", id);
-				setDraggingBlock(id);
-			}}
-			onDragEnd={() => {
-				setDraggingBlock(null);
-				setDragOverIndex(null);
-			}}
-
-			onDragOver={e => { e.preventDefault(); setDragOverIndex(index); }}
-			onDragLeave={() => setDragOverIndex(null)} >
-			{label && (
-				<div className={cssSelectors['label']?.classes}>{options?.label}</div>
-			)}
-
-
-
-			{badges?.length > 0 && (
-
-				<div className={cssSelectors['items']?.classes}>
-
-
-
-
-					{badges.map((item, index) => {
-						return (
-							<Link key={index} href={`${appUrl}badges/${item.slug}`} onClick={ev => {
-								ev.preventDefault()
-							}} className={cssSelectors['item']?.classes}>
-								<span className={cssSelectors['category-name']?.classes}>{item.name}</span>
-								{badges?.length > (index + 1) && (
-									<span className={cssSelectors['separator']?.classes}>, </span>
-								)}
-							</Link>
-						)
-					})}
-				</div>
-
-			)}
-
-
-
-		</div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+		/>
 	);
 };
 
-
-
-export default TermTitle;
+export default ProductBadge;

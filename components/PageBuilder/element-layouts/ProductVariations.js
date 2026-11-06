@@ -1,55 +1,39 @@
 /**
- * Element layouts for the `productVariablePrices` element.
+ * Element layouts for the `productVariations` element.
  *
- * ElementLayouts.jsx scopes this file to a selected `productVariablePrices`
+ * ElementLayouts.jsx scopes this file to a selected `productVariations`
  * block and its Replace action splices the preset in place of that block, so
- * every root here MUST be `"type": "productVariablePrices"`. (PageBuilder.jsx
+ * every root here MUST be `"type": "productVariations"`. (PageBuilder.jsx
  * regenerates all ids on paste/replace, so the readable ids below are safe.)
  *
- * This element is a leaf and, as it stands, a styling-only element: it takes no
- * children and ignores every option it declares, so a preset is exactly one
- * thing -- the look of the attribute selector. What the renderer draws is fixed:
- * an `attr-wrap` column, one `attr-item` group per attribute holding an
- * `attr-title` and an `attr-items-wrap` row of `variation-item` chips, and a
- * single `variation-price` line at the end.
+ * This element is a leaf and styling-only: no children and no options; the
+ * attributes and variations come from the product. ProductVariationsView
+ * (the shop) and the builder's ProductVariations.jsx render the same
+ * VariationsMarkup: an `attr-wrap` column, one `attr-item` per attribute
+ * holding an `attr-title` and an `attr-items-wrap` row of `variation-item`
+ * tiles. Picking a full combination sets the product's active variation, which
+ * the price, gallery and add-to-cart blocks follow.
  *
- * Renderer notes that shaped these presets:
+ * Notes that shaped these presets:
  *
- * 1. `attr-item` (ProductVariablePrices.jsx:118) is read but not declared in the
- *    definition's cssSelectors. It is the wrapper for one attribute group, so it
- *    is the key that decides whether a group stacks (title above chips) or sits
- *    on one row (title beside chips). The presets set it; adding it to the
- *    definition at ElementsDefinition.js:3118 would be the tidy fix.
+ * 1. `attr-item` decides whether a group stacks (title above tiles) or sits on
+ *    one row (title beside tiles).
  *
- * 2. `variation-selected` and `variation-disabled` are declared but never
- *    applied. There is no selection state in the renderer at all -- the chips
- *    have no onClick, and `variablePricesIndex` (:59) is set up and never used.
- *    Both keys are still filled in below so the states look right the moment
- *    selection is wired up, but nothing shows them today.
+ * 2. `variation-selected` is added to a picked tile and `variation-disabled` to
+ *    one whose combination is out of stock. These presets fill both in; the
+ *    builder lets a tile be clicked to see the selected look, and shows its last
+ *    sample option (Size: Large) as unavailable.
  *
- * 3. The price is hardcoded. ProductVariablePrices.jsx:141 renders the literal
- *    string "$123" rather than a variation price, and `wrapCurrency` from
- *    useUtilsStore (:43) is destructured and never called -- so a BDT store
- *    shows a dollar amount. Styling `variation-price` is still worth doing, but
- *    the number and the currency symbol both come from that line, not the data.
+ * 3. The tile keys (`attr-items-wrap`, `variation-item`, `variation-selected`,
+ *    `variation-disabled`) treat a blank value as "use the default look", so a
+ *    preset cannot switch the selected highlight off by leaving it empty.
  *
- * 4. Everything on screen in the canvas is mock data. `usePost()` returns null
- *    outside a product loop, so :46 swaps in a placeholder product -- which has
- *    no `attributes` key, so :72 falls back to its own hardcoded Color
- *    (Red/Blue) and Size (Small/Medium). That is what these presets are designed
- *    against: two attribute groups of two chips each.
+ * 4. Outside a product loop, or on a product without attributes, the builder
+ *    shows sample Color (Red/Blue/Green) and Size (Small/Medium/Large)
+ *    options. On the shop a product without attributes shows nothing.
  *
- * 5. Every declared option is inert. The definition lists `separator` and
- *    `variablePriceViewType`, and the renderer reads neither; it reads
- *    `options.tag` and `options.linkTo` instead and uses neither of those
- *    either (`Tag` is built at :40 and never rendered). `viewType`,
- *    `onChangePrice` and `quantity` come from props rather than options, and
- *    BlockPreview does not pass them. The two declared options are kept below to
- *    match the definition.
- *
- * 6. Both `.map()` calls (:111, :123) render without a React key, so this
- *    element logs key warnings in the console. Pre-existing and unrelated to the
- *    presets.
+ * 5. `variation-price` is retired. Only the old builder preview drew it, as a
+ *    hardcoded "$123"; the presets below may still carry it, and it is ignored.
  */
 
 var layouts = [
@@ -59,7 +43,7 @@ var layouts = [
     thumbnail: '',
     content: {
       "id": "pvp-boxed",
-      "type": "productVariablePrices",
+      "type": "productVariations",
       "options": {
         "separator": "",
         "variablePriceViewType": "inline"
@@ -83,7 +67,7 @@ var layouts = [
     thumbnail: '',
     content: {
       "id": "pvp-pill",
-      "type": "productVariablePrices",
+      "type": "productVariations",
       "options": {
         "separator": "",
         "variablePriceViewType": "inline"
@@ -107,7 +91,7 @@ var layouts = [
     thumbnail: '',
     content: {
       "id": "pvp-inline",
-      "type": "productVariablePrices",
+      "type": "productVariations",
       "options": {
         "separator": "",
         "variablePriceViewType": "inline"
@@ -131,7 +115,7 @@ var layouts = [
     thumbnail: '',
     content: {
       "id": "pvp-dark",
-      "type": "productVariablePrices",
+      "type": "productVariations",
       "options": {
         "separator": "",
         "variablePriceViewType": "inline"
@@ -155,7 +139,7 @@ var layouts = [
     thumbnail: '',
     content: {
       "id": "pvp-grid",
-      "type": "productVariablePrices",
+      "type": "productVariations",
       "options": {
         "separator": "",
         "variablePriceViewType": "inline"
@@ -179,7 +163,7 @@ var layouts = [
     thumbnail: '',
     content: {
       "id": "pvp-min",
-      "type": "productVariablePrices",
+      "type": "productVariations",
       "options": {
         "separator": "",
         "variablePriceViewType": "inline"

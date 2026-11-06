@@ -4554,7 +4554,7 @@ var template = [
                           },
                           {
                             "id": "bp-pd-var-1",
-                            "type": "productVariablePrices",
+                            "type": "productVariations",
                             "options": {
                               "separator": "",
                               "variablePriceViewType": "inline"

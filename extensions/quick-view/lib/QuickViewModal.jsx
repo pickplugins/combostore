@@ -12,7 +12,7 @@ import Spinner from "../../../components/Spinner";
 
 import ProductGalleryView from "../../../components/PageBuilder/elements/ProductGalleryView";
 import ProductPriceView from "../../../components/PageBuilder/elements/ProductPriceView";
-import ProductVariablePricesView from "../../../components/PageBuilder/elements/ProductVariablePricesView";
+import ProductVariationsView from "../../../components/PageBuilder/elements/ProductVariationsView";
 import ProductStockStatusView from "../../../components/PageBuilder/elements/ProductStockStatusView";
 import ProductSkuView from "../../../components/PageBuilder/elements/ProductSkuView";
 import ProductCategoriesView from "../../../components/PageBuilder/elements/ProductCategoriesView";
@@ -265,9 +265,9 @@ const QuickViewModal = () => {
 								    empty picker on a simple product is a gap the
 								    merchant cannot explain. */}
 								{show.variations !== false && hasVariations && (
-									<ProductVariablePricesView
+									<ProductVariationsView
 										id="quick-view-variations"
-										type="productVariablePrices"
+										type="productVariations"
 										cssSelectors={VARIATIONS}
 										options={{}}
 									/>

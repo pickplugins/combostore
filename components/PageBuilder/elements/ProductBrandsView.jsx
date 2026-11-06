@@ -1,97 +1,44 @@
 import PropTypes from "prop-types";
 import React from "react";
 import { usePost } from "../context/PostContext";
-import Link from "next/link";
-const appUrl = process.env.NEXT_PUBLIC_STORE_URL;
+import { ProductTermLinksMarkup, productTermsFor, termArchiveHref } from "./ProductCategoriesView";
+import { elementCssClasses } from "../ElementsDefinition";
 
+/*
+	The product's brands, each linking to its /brands/<slug>/ page, through the
+	same ProductTermLinksMarkup the categories and tags blocks use. The shop
+	used to fall back to two placeholders, "Brand Name" and "Brand Name 2", so
+	every product without a brand showed fake ones; it now shows nothing. The
+	separator option was declared but the text was hardcoded to ", ".
+*/
+const ProductBrandsView = (props) => {
 
-const TermTitle = (props) => {
-
-
-
-
-
-
-
-
-
-
-	var index = props?.index
-	var name = props?.name
-	var cssSelectors = props?.cssSelectors
-
-
-	var id = props?.id;
-	var type = props?.type;
-
-	var options = props?.options;
-	var tag = options?.tag ?? 'h1';
-	var label = options?.label;
-	var readmore = options?.readmore ?? 'Read more';
-	var maxWord = options?.maxWord ?? 20;
-
+	/* A key the block lacks falls back to the productBrands defaults in ElementsDefinition.js. */
+	var cls = elementCssClasses('productBrands', props?.cssSelectors);
 
 	const product = usePost();
-
-	var brands = product?.brands ?? [{ slug: 'brand-slug', name: 'Brand Name' }, { slug: 'brand-slug2', name: 'Brand Name 2' }];
-
-	const Tag = tag;
-
-
-
+	var brands = productTermsFor(product, 'brands');
+	if (brands.length === 0) return null;
 
 	return (
-
-
-		<div id={id} index={index} type={type} className={`${cssSelectors['*']?.classes}  `}
-		>
-			{(label && brands?.length > 0) && (
-				<div className={cssSelectors['label']?.classes}>{options?.label}</div>
-			)}
-
-
-			{brands?.length > 0 && (
-
-				<div className={cssSelectors['items']?.classes}>
-
-
-
-
-					{brands.map((item, index) => {
-						return (
-							<Link key={index} href={`${appUrl}brands/${item.slug}`} className={cssSelectors['item']?.classes}>
-								<span className={cssSelectors['category-name']?.classes}>{item.name}</span>
-								{brands?.length > (index + 1) && (
-									<span className={cssSelectors['separator']?.classes}>, </span>
-								)}
-							</Link>
-						)
-					})}
-				</div>
-
-			)}
-
-
-
-		</div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+		<ProductTermLinksMarkup
+			cls={cls}
+			id={props?.id}
+			index={props?.index}
+			type={props?.type}
+			options={props?.options}
+			terms={brands}
+			hrefFor={term => termArchiveHref('brands', term.slug)}
+		/>
 	);
 };
 
+ProductBrandsView.propTypes = {
+	index: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+	id: PropTypes.string,
+	type: PropTypes.string,
+	options: PropTypes.object,
+	cssSelectors: PropTypes.object,
+};
 
-
-export default TermTitle;
+export default ProductBrandsView;

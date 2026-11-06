@@ -6,55 +6,44 @@
  * `"type": "tabs"`. (PageBuilder.jsx regenerates all ids on paste/replace, so
  * the readable ids below are safe.)
  *
- * Renderer notes that shaped these presets:
+ * Notes that shaped these presets:
  *
- * 1. Tabs.jsx:92 calls `tabsItems.map(...)` with no optional chaining and no
- *    fallback, so a tabs block without `options.tabsItems` throws
- *    "Cannot read properties of undefined (reading 'map')" as soon as it
- *    renders. Every preset carries it.
+ * 1. TabsView and the builder's Tabs.jsx render the same TabsMarkup, so a
+ *    preset looks the same in the canvas and on the shop. Every part has a
+ *    cssSelectors key, declared with its default in ElementsDefinition.js. A
+ *    key a preset leaves out falls back to that default; a key set to ""
+ *    really is empty.
  *
- * 2. Labels and panels are two separate lists joined by index: the nav strip
- *    comes from `options.tabsItems` and the panels from `children`, with
- *    Tabs.jsx:122 rendering the child whose index equals the active tab. So
- *    `tabsItems.length` must equal `children.length` -- a surplus label opens an
- *    empty panel and a surplus child is unreachable. The element definition
- *    itself ships 3 labels against 4 tabsItem children, and the options panel's
- *    add-tab button (TabsOptions.jsx:76) pushes a label without adding a
- *    tabsItem, so after adding a tab there you still have to drop a tabsItem
- *    into the block. Every preset below is balanced.
+ * 2. Labels and panels are two lists joined by index: the nav strip comes
+ *    from `options.tabsItems` and the panels from `children`, and label n
+ *    opens the n-th tabsItem. So `tabsItems.length` must equal
+ *    `children.length` -- a surplus label opens nothing and a surplus child is
+ *    unreachable. Every preset below is balanced. (A block saved without
+ *    `tabsItems` falls back to its children's labels instead of crashing.)
  *
- * 3. `tabsItems[i]` supports `{ label, icon }` although the definition declares
- *    only `label`. The icon is resolved with `TablerIcons[tab.icon]`
- *    (Tabs.jsx:95), so it must be an exact @tabler/icons-react export name --
- *    every name used here was checked against the installed package. The
- *    panel's per-tab `iconSize` input is inert: Tabs.jsx:111 renders `<IconX />`
- *    with no size prop.
+ * 3. `tabsItems[i]` is `{ label, icon, iconSize }`. The icon is resolved with
+ *    `TablerIcons[tab.icon]`, so it must be an exact @tabler/icons-react export
+ *    name; `iconSize` defaults to 18. The icon wrapper (`nav-item-icon`) is
+ *    only drawn for a tab that has an icon, so the `empty:hidden` these presets
+ *    put on it is harmless but no longer needed.
  *
- * 4. Tabs.jsx:110 renders the `nav-item-icon` div unconditionally, even for a
- *    tab with no icon, which leaves an empty div adding gap inside the nav item.
- *    Every preset sets `nav-item-icon` to `empty:hidden` so it collapses when
- *    unused and still appears once an icon is picked.
+ * 4. The root's padding is its own key, `spacing` (default `p-4`), applied
+ *    ahead of `*`. These presets leave it at its default; set it to "" or a
+ *    different padding to change it, rather than fighting it from `*`.
  *
- * 5. Tabs.jsx:69 hardcodes `p-4` on the root ahead of `cssSelectors['*']`.
- *    Conflicting padding utilities have equal specificity, so whether an
- *    override wins depends on Tailwind's stylesheet order rather than on class
- *    order -- these presets work with that 1rem instead of fighting it.
+ * 5. `nav-item-active` is merged onto the same element as `nav-item`, so any
+ *    property the active state changes needs the important modifier to win
+ *    reliably. This project is on Tailwind v4, where that modifier is a suffix
+ *    (`text-orange-600!`), not the v3 prefix form.
  *
- * 6. `nav-item-active` is merged onto the same element as `nav-item`
- *    (Tabs.jsx:102-105), so any property the active state changes needs the
- *    important modifier to win reliably. This project is on Tailwind v4, where
- *    that modifier is a suffix (`text-orange-600!`), not the v3 prefix form.
+ * 6. `options.orientation` ('' or 'vertical') is set in the Tabs panel.
+ *    "vertical" adds `navs-vertical` to the strip, which only stacks the nav
+ *    from `lg:` -- the root is not a flex row -- so the vertical preset also
+ *    sets `lg:flex` on `*` and a width on `navs-items` to get a real
+ *    side-by-side layout.
  *
- * 7. `options.orientation` is read (Tabs.jsx:91) but TabsOptions.jsx has no
- *    control for it, so a preset is the only practical way to set it.
- *    "vertical" alone only stacks the nav above the content -- the root is not
- *    a flex row -- so the vertical preset also sets `lg:flex` on `*` and a
- *    width on `navs-items` to get a real side-by-side layout.
- *
- * 8. tabsItem renders only `cssSelectors['*']` plus its children, and shows a
- *    "drop elements here" placeholder while empty (TabsItem.jsx:83). Its
- *    renderer also reads `items`, `tag`, `label` and `url` from options, none of
- *    which it ever uses.
+ * 7. A tabsItem renders its `*` around its children, and the builder shows a
+ *    "drop elements here" placeholder while it is empty.
  */
 
 var layouts = [

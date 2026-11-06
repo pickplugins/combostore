@@ -1,4 +1,5 @@
 
+import { templateMetadata, slugToName } from "@/lib/templateSeo";
 import Link from "next/link";
 import Image from "next/image";
 import React from "react";
@@ -18,44 +19,9 @@ const appUrl = process.env.NEXT_PUBLIC_STORE_URL;
 
 
 
-export async function generateMetadata({ searchParams }) {
-
-
-
-
-
-
-
-
-	var pageMetaData = {
-
-		title: ``,
-		description: "",
-		post_thumbnail: { src: "", alt: "" },
-		keywords: "",
-		ogTitle: ``,
-		ogDes: ""
-
-	}
-
-
-
-	return {
-		title: pageMetaData.title,
-		description: pageMetaData.description?.slice(0, 160),
-		openGraph: {
-			title: pageMetaData.title,
-			description: pageMetaData.post_excerpt?.slice(0, 160),
-			url: `${appUrl}product/`,
-			images: [{ url: pageMetaData.post_thumbnail?.src, alt: pageMetaData.title }],
-		},
-		twitter: {
-			card: "summary_large_image",
-			title: pageMetaData.title,
-			description: pageMetaData.post_excerpt?.slice(0, 160),
-			images: [pageMetaData.post_thumbnail?.src],
-		},
-	};
+/* Template Part Settings > SEO for this template (lib/templateSeo.js), filled with the page's data. */
+export async function generateMetadata() {
+	return templateMetadata('account', { item: { title: 'My Account' }, path: `account` });
 }
 
 
@@ -69,19 +35,25 @@ export default async function page({ params, searchParams }) {
 
 	const pageTemplateData = await getPageTemplate({ type: 'account' })
 	const pageTemplatecontent = pageTemplateData?.content ? JSON.parse(pageTemplateData?.content) : [];
-
-
-
-
+	/*
+		The site header and footer, as on every other template route. The server
+		sends them unless the Account template's Disable Header / Disable Footer
+		is on; this page used to drop them, so it never had a site header.
+	*/
+	const pageTemplateHeader = pageTemplateData?.header ? JSON.parse(pageTemplateData?.header?.content || '[]') : [];
+	const pageTemplateFooter = pageTemplateData?.footer ? JSON.parse(pageTemplateData?.footer?.content || '[]') : [];
+	const pageTemplate = [...pageTemplateHeader, ...pageTemplatecontent, ...pageTemplateFooter];
 
 	return (
 
 		<>
 
-			<PageBuilderContent blocks={pageTemplatecontent} />
+			<PageBuilderContent blocks={pageTemplate} />
 
 			<style>
 				{pageTemplateData?.style}
+				{pageTemplateData?.header?.style}
+				{pageTemplateData?.footer?.style}
 			</style>
 		</>
 

@@ -39,6 +39,7 @@ import PostTitleOptions from './elements/PostTitleOptions';
 import PostThumbnailOptions from './elements/PostThumbnailOptions';
 import TermsGridOptions from './elements/TermsGridOptions';
 import TermsGridPaginationOptions from './elements/TermsGridPaginationOptions';
+import TermCountOptions from './elements/TermCountOptions';
 import ArchiveTitleOptions from './elements/ArchiveTitleOptions';
 import SiteHeaderOptions from './elements/SiteHeaderOptions';
 import SiteFooterOptions from './elements/SiteFooterOptions';
@@ -46,13 +47,12 @@ import SidebarOptions from './elements/SidebarOptions';
 import ColumnsOptions from './elements/ColumnsOptions';
 import ColumnItemOptions from './elements/ColumnItemOptions';
 import PopupOptions from './elements/PopupOptions';
-import ProductArchiveOptions from './elements/ProductArchiveOptions';
 import ProductPriceOptions from './elements/ProductPriceOptions';
-import ProductVariablePricesOptions from './elements/ProductVariablePricesOptions';
+import ProductVariationsOptions from './elements/ProductVariationsOptions';
 import RelatedProductsOptions from './elements/RelatedProductsOptions';
 import CommentsOptions from './elements/CommentsOptions';
 import CommentsFormOptions from './elements/CommentsFormOptions';
-import CommentsListOptions from './elements/CommentsListOptions';
+// import CommentsListOptions from './elements/CommentsListOptions';
 import WhatsappButtonOptions from './elements/WhatsappButtonOptions';
 import MessengerButtonOptions from './elements/MessengerButtonOptions';
 import ProductCategoriesOptions from './elements/ProductCategoriesOptions';
@@ -60,6 +60,7 @@ import ProductTagsOptions from './elements/ProductTagsOptions';
 import ProductBrandsOptions from './elements/ProductBrandsOptions';
 import ProductSkuOptions from './elements/ProductSkuOptions';
 import ProductUpsellsOptions from './elements/ProductUpsellsOptions';
+import ProductCrosssellsOptions from './elements/ProductCrosssellsOptions';
 import ProductGalleryOptions from './elements/ProductGalleryOptions';
 import RequestForStockOptions from './elements/RequestForStockOptions';
 import TabsOptions from './elements/TabsOptions';
@@ -69,7 +70,6 @@ import AccordionItemOptions from './elements/AccordionItemOptions';
 import IconOptions from './elements/IconOptions';
 import InputOptions from './elements/InputOptions';
 import SelectOptions from './elements/SelectOptions';
-import GlobalSearchOptions from './elements/GlobalSearchOptions';
 import ArchiveDescriptionOptions from './elements/ArchiveDescriptionOptions';
 import ArchiveCountOptions from './elements/ArchiveCountOptions';
 import PostContentOptions from './elements/PostContentOptions';
@@ -78,6 +78,7 @@ import PostAuthorOptions from './elements/PostAuthorOptions';
 import PostDateOptions from './elements/PostDateOptions';
 import FeatureboxOptions from './elements/FeatureboxOptions';
 import FeatureboxItemOptions from './elements/FeatureboxItemOptions';
+import FeatureboxTextOptions from './elements/FeatureboxTextOptions';
 import AddressOptions from './elements/AddressOptions';
 import ProductRatingsOptions from './elements/ProductRatingsOptions';
 import ProductBadgeOptions from './elements/ProductBadgeOptions';
@@ -88,6 +89,16 @@ import AddToCartOptions from './elements/AddToCartOptions';
 import PopoverButtonOptions from './elements/PopoverButtonOptions';
 import LoginOptions from './elements/LoginOptions';
 import RegisterOptions from './elements/RegisterOptions';
+import LoginByPhoneOptions from './elements/LoginByPhoneOptions';
+import CustomerAccountOptions from './elements/CustomerAccountOptions';
+import CustomerAccountLoggedOptions from './elements/CustomerAccountLoggedOptions';
+import CustomerAccountNotLoggedOptions from './elements/CustomerAccountNotLoggedOptions';
+import CustomerOrdersOptions from './elements/CustomerOrdersOptions';
+import CustomerProfileOptions from './elements/CustomerProfileOptions';
+import CustomerProfileEditOptions from './elements/CustomerProfileEditOptions';
+import CustomerSubscriptionsOptions from './elements/CustomerSubscriptionsOptions';
+import CustomerTicketsOptions from './elements/CustomerTicketsOptions';
+import StyleOnlyOptions from './elements/StyleOnlyOptions';
 import NotifyOptions from './elements/NotifyOptions';
 import CollectionsOptions from './elements/CollectionsOptions';
 import CollectionsFieldOptions from './elements/CollectionsFieldOptions';
@@ -124,7 +135,7 @@ const ElementOptions = (props) => {
 
 
 	return (
-		<div className="">
+		<div className="py-5">
 
 
 
@@ -182,15 +193,13 @@ const ElementOptions = (props) => {
 			{selectedBlock?.type == 'popup' && (
 				<PopupOptions {...selectedBlock} updateBlock={updateBlock} />
 			)}
-			{selectedBlock?.type == 'productArchive' && (
-				<ProductArchiveOptions {...selectedBlock} updateBlock={updateBlock} />
-			)}
+
 
 			{selectedBlock?.type == 'productPrice' && (
 				<ProductPriceOptions {...selectedBlock} updateBlock={updateBlock} />
 			)}
-			{selectedBlock?.type == 'productVariablePrices' && (
-				<ProductVariablePricesOptions {...selectedBlock} updateBlock={updateBlock} />
+			{(selectedBlock?.type == 'productVariations' || selectedBlock?.type == 'productVariablePrices') && (
+				<ProductVariationsOptions {...selectedBlock} updateBlock={updateBlock} />
 			)}
 			{selectedBlock?.type == 'relatedProducts' && (
 				<RelatedProductsOptions {...selectedBlock} updateBlock={updateBlock} />
@@ -201,9 +210,9 @@ const ElementOptions = (props) => {
 			{selectedBlock?.type == 'commentsForm' && (
 				<CommentsFormOptions {...selectedBlock} updateBlock={updateBlock} />
 			)}
-			{selectedBlock?.type == 'commentsList' && (
+			{/* {selectedBlock?.type == 'commentsList' && (
 				<CommentsListOptions {...selectedBlock} updateBlock={updateBlock} />
-			)}
+			)} */}
 			{selectedBlock?.type == 'whatsappButton' && (
 				<WhatsappButtonOptions {...selectedBlock} updateBlock={updateBlock} />
 			)}
@@ -224,6 +233,9 @@ const ElementOptions = (props) => {
 			)}
 			{selectedBlock?.type == 'productUpsells' && (
 				<ProductUpsellsOptions {...selectedBlock} updateBlock={updateBlock} />
+			)}
+			{selectedBlock?.type == 'productCrosssells' && (
+				<ProductCrosssellsOptions {...selectedBlock} updateBlock={updateBlock} />
 			)}
 			{selectedBlock?.type == 'productGallery' && (
 				<ProductGalleryOptions {...selectedBlock} updateBlock={updateBlock} />
@@ -253,9 +265,7 @@ const ElementOptions = (props) => {
 			{selectedBlock?.type == 'select' && (
 				<SelectOptions {...selectedBlock} updateBlock={updateBlock} handleMoveBlock={handleMoveBlock} />
 			)}
-			{selectedBlock?.type == 'globalSearch' && (
-				<GlobalSearchOptions {...selectedBlock} updateBlock={updateBlock} handleMoveBlock={handleMoveBlock} />
-			)}
+
 
 
 			{selectedBlock?.type == 'image' && (
@@ -290,7 +300,7 @@ const ElementOptions = (props) => {
 
 
 			{selectedBlock?.type == 'grid' && (
-				<GridOptions {...selectedBlock} updateBlock={updateBlock} />
+				<GridOptions {...selectedBlock} updateBlock={updateBlock} handleMoveBlock={handleMoveBlock} />
 			)}
 			{selectedBlock?.type == 'gridItem' && (
 				<GridItemOptions {...selectedBlock} updateBlock={updateBlock} />
@@ -371,7 +381,8 @@ const ElementOptions = (props) => {
 			{selectedBlock?.type == 'productRatings' && (
 				<ProductRatingsOptions {...selectedBlock} updateBlock={updateBlock} handleMoveBlock={handleMoveBlock} />
 			)}
-			{selectedBlock?.type == 'ProductBadge' && (
+			{/* Was 'ProductBadge' (capital P), which never matches the productBadge type, so this panel never showed. */}
+			{selectedBlock?.type == 'productBadge' && (
 				<ProductBadgeOptions {...selectedBlock} updateBlock={updateBlock} handleMoveBlock={handleMoveBlock} />
 			)}
 			{selectedBlock?.type == 'productDiscount' && (
@@ -391,6 +402,46 @@ const ElementOptions = (props) => {
 			)}
 			{selectedBlock?.type == 'login' && (
 				<LoginOptions {...selectedBlock} updateBlock={updateBlock} handleMoveBlock={handleMoveBlock} />
+			)}
+			{/* These had no panel at all, so their styles could not be edited. */}
+			{selectedBlock?.type == 'postLoop' && (
+				<StyleOnlyOptions {...selectedBlock} updateBlock={updateBlock} />
+			)}
+			{selectedBlock?.type == 'termCount' && (
+				<TermCountOptions {...selectedBlock} updateBlock={updateBlock} />
+			)}
+			{selectedBlock?.type == 'termsLoop' && (
+				<StyleOnlyOptions {...selectedBlock} updateBlock={updateBlock} note="loop-items and loop-item set on the Terms Grid or Terms Slider it sits in win over these; these apply only where the parent leaves them empty." />
+			)}
+			{['featureboxTitle', 'featureboxDetails'].includes(selectedBlock?.type) && (
+				<FeatureboxTextOptions {...selectedBlock} updateBlock={updateBlock} />
+			)}
+			{selectedBlock?.type == 'customerTickets' && (
+				<CustomerTicketsOptions {...selectedBlock} updateBlock={updateBlock} handleMoveBlock={handleMoveBlock} />
+			)}
+			{selectedBlock?.type == 'customerSubscriptions' && (
+				<CustomerSubscriptionsOptions {...selectedBlock} updateBlock={updateBlock} handleMoveBlock={handleMoveBlock} />
+			)}
+			{selectedBlock?.type == 'customerProfileEdit' && (
+				<CustomerProfileEditOptions {...selectedBlock} updateBlock={updateBlock} handleMoveBlock={handleMoveBlock} />
+			)}
+			{selectedBlock?.type == 'customerProfile' && (
+				<CustomerProfileOptions {...selectedBlock} updateBlock={updateBlock} handleMoveBlock={handleMoveBlock} />
+			)}
+			{selectedBlock?.type == 'customerOrders' && (
+				<CustomerOrdersOptions {...selectedBlock} updateBlock={updateBlock} handleMoveBlock={handleMoveBlock} />
+			)}
+			{selectedBlock?.type == 'customerAccountNotLogged' && (
+				<CustomerAccountNotLoggedOptions {...selectedBlock} updateBlock={updateBlock} handleMoveBlock={handleMoveBlock} />
+			)}
+			{selectedBlock?.type == 'customerAccountLogged' && (
+				<CustomerAccountLoggedOptions {...selectedBlock} updateBlock={updateBlock} handleMoveBlock={handleMoveBlock} />
+			)}
+			{selectedBlock?.type == 'customerAccount' && (
+				<CustomerAccountOptions {...selectedBlock} updateBlock={updateBlock} handleMoveBlock={handleMoveBlock} />
+			)}
+			{selectedBlock?.type == 'loginByPhone' && (
+				<LoginByPhoneOptions {...selectedBlock} updateBlock={updateBlock} handleMoveBlock={handleMoveBlock} />
 			)}
 			{selectedBlock?.type == 'register' && (
 				<RegisterOptions {...selectedBlock} updateBlock={updateBlock} handleMoveBlock={handleMoveBlock} />

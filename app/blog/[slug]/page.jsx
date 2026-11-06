@@ -1,4 +1,5 @@
 
+import { templateMetadata, slugToName } from "@/lib/templateSeo";
 import React, { use } from 'react'
 import Link from "next/link";
 import Image from "next/image";
@@ -20,33 +21,17 @@ import { getBlogPost } from "@/lib/getBlogPost";
 const appUrl = process.env.NEXT_PUBLIC_STORE_URL;
 
 
+/* Template Part Settings > SEO for this template (lib/templateSeo.js), filled with the page's data. */
 export async function generateMetadata({ params }) {
-  const { slug } = await params; // ✅ await params
-  const productResponse = await getBlogPost(slug);
-
-  if (!productResponse) return { title: "Blog Not Found" };
-
-
-  var postData = productResponse?.post;
-
-
-
-  return {
-    title: postData.title,
-    description: postData.post_excerpt || postData.description?.slice(0, 160),
-    openGraph: {
-      title: postData.title,
-      description: postData.post_excerpt || postData.post_excerpt?.slice(0, 160),
-      url: `${appUrl}blog/${slug}`,
-      images: [{ url: postData.post_thumbnail?.src, alt: postData.title }],
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: postData.title,
-      description: postData.post_excerpt || postData.post_excerpt?.slice(0, 160),
-      images: [postData.post_thumbnail?.src],
-    },
-  };
+	const { slug } = await params;
+	const postResponse = await getBlogPost(slug);
+	if (!postResponse) return { title: "Blog Not Found" };
+	const postData = postResponse?.post;
+	return templateMetadata('blog_single', {
+		single: true,
+		item: { title: postData?.title, description: postData?.post_excerpt || postData?.description, image: postData?.post_thumbnail?.src },
+		path: `blog/${slug}`,
+	});
 }
 
 

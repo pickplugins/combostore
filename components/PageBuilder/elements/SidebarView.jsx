@@ -1,115 +1,48 @@
 "use client"
+import React from "react";
 import BlockRender from '../BlockRender';
-import { useState, useEffect } from "react";
+import { SiteHeaderMarkup, useTemplatePart, TemplatePartScope } from "./SiteHeaderView";
+import { elementCssClasses } from "../ElementsDefinition";
 
-const SiteHeader = (props) => {
+/*
+	The sidebar's markup, shared with the builder preview (Sidebar.jsx): the
+	header's markup as an <aside> (it was a div, so the page had no
+	complementary landmark for screen readers), carrying the `*` classes.
+*/
+export function SidebarMarkup(props) {
+	return <SiteHeaderMarkup {...props} as="aside" />;
+}
 
-	const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
+/*
+	The sidebar: the saved template part options.id when one is chosen, else
+	the blocks placed inside this block - loaded like the header's
+	(useTemplatePart): once per visit, so it no longer refetches on every page
+	or goes blank between them; a broken saved part renders empty instead of
+	throwing (JSON.parse ran outside the catch); and a part that includes
+	itself is not drawn again. It also only loaded the part chosen when the
+	page first rendered, and a sidebar with neither crashed the page
+	(children.map on undefined).
+*/
+const SidebarView = (props) => {
 
+	/* A key the block lacks falls back to the sidebar defaults in ElementsDefinition.js. */
+	var cls = elementCssClasses('sidebar', props?.cssSelectors);
 
-
-	var cssSelectors = props?.cssSelectors ?? {};
-
-
-	var type = props?.type
-	var id = props?.id;
-
-	var index = props?.index
-
-	var options = props?.options;
-	var templteId = options?.id;
-
-	var [children, setchildren] = useState(props?.children);
-
-
-	function get_template_part() {
-
-
-
-
-		var postData = {
-			id: templteId,
-		};
-		postData = JSON.stringify(postData);
-		fetch(serverUrl + "wp-json/combo-store/v2/get_template_part", {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-
-			},
-			body: postData,
-		})
-			.then((response) => {
-				if (!response.ok) {
-					throw new Error("Token validation failed");
-				}
-
-				if (response.ok && response.status < 400) {
-					response.json().then((res) => {
-
-
-						var content = res?.content;
-						const pageTemplatecontent = content ? JSON.parse(content) : [];
-
-
-						setchildren(pageTemplatecontent)
-
-						//setselectedRows([]);
-
-
-
-					});
-				}
-			})
-			.catch((_error) => {
-				//this.saveAsStatus = 'error';
-				// handle the error
-			});
-	}
-
-
-	useEffect(() => {
-
-		if (templteId) {
-			get_template_part();
-		}
-
-	}, []);
-
-
-
-
-
+	var partId = props?.options?.id || null;
+	var { blocks, repeats } = useTemplatePart(partId);
+	if (repeats) return null;
+	var children = blocks ?? (Array.isArray(props?.children) ? props.children : []);
+	var index = props?.index;
 
 	return (
-		<div
-			id={id}
-			type={type}
-			className={` ${cssSelectors['*']?.classes}  `}
-
-		>
-			{
-				children.map((child, idx) => (
-					<BlockRender
-						key={child.id}
-						index={`${index}-${idx}`}
-						block={child}
-
-					/>
-				))
-			}
-
-
-
-
-
-
-
-
-
-
-		</div>
+		<SidebarMarkup cls={cls} id={props?.id} index={index} type={props?.type}>
+			<TemplatePartScope partId={blocks ? partId : null}>
+				{children.map((child, idx) => (
+					<BlockRender key={child.id ?? idx} index={`${index}-${idx}`} block={child} />
+				))}
+			</TemplatePartScope>
+		</SidebarMarkup>
 	);
 };
 
-export default SiteHeader;
+export default SidebarView;

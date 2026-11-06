@@ -13,21 +13,21 @@
  *
  * Renderer notes that shaped these presets:
  *
- * 1. Both halves render at once in the canvas. CustomerAccount.jsx,
- *    CustomerAccountNotLogged.jsx and CustomerAccountLogged.jsx are the same
- *    container component three times over -- each reads only
- *    `cssSelectors['*']`, maps children through BlockPreview, and shows a "drop
- *    elements here" placeholder while empty. None of them gates on auth: all
- *    three destructure `token` and `userDataX` from the store and never use
- *    them, and BlockPreview.jsx:214-216 maps the three types straight to those
- *    components. So while editing you see the signed-out forms stacked above
- *    the signed-in tabs. Every preset keeps the two halves self-contained --
- *    their own padding, their own card edges -- and puts a flex column with a
- *    gap on the root so that stack stays readable instead of collapsing into
- *    one run of fields.
+ * 1. Both halves render at once in the canvas. CustomerAccountNotLogged.jsx
+ *    and CustomerAccountLogged.jsx are plain containers that do not gate on
+ *    auth, so while editing you see the signed-out forms stacked above the
+ *    signed-in tabs -- and CustomerAccount.jsx adds a sample welcome card above
+ *    both. Every preset keeps the two halves self-contained -- their own
+ *    padding, their own card edges -- and puts a flex column with a gap on the
+ *    root so that stack stays readable instead of collapsing into one run of
+ *    fields.
  *
- * 2. None of the three containers takes options, and each has exactly one
- *    selector key. Anything beyond layout has to come from the children.
+ * 2. The customerAccount root has options.hideWelcome and a cssSelectors key
+ *    for each part of the welcome card (welcome, avatar, welcome-name,
+ *    logout-button...), declared with their defaults in ElementsDefinition.js.
+ *    Each preset builds the root's cssSelectors with withElementCssDefaults(),
+ *    so the full key set is there to edit. The two halves take no options and
+ *    one `*` key each.
  *
  * 3. The five panel elements are closed boxes. customerOrders,
  *    customerProfile, customerProfileEdit, customerSubscriptions and
@@ -55,23 +55,55 @@
  *    styled through each gridItem's own `*` -- the `grid-item` key is kept at
  *    "" because the definition declares it.
  *
- * 7. The register and login label keys do not mean what they say. In register,
- *    `label-username` styles the email AND phone labels and `label-email`
- *    styles BOTH password labels (Register.jsx:112,:126,:141,:153), while
- *    `input-username` is the email input; `input-email`, `label`,
- *    `label-phone` and `label-password` are declared and never read. In login,
- *    row one is `label-username`/`input-username` and the password row is
- *    `label-email`/`input-email` (Login.jsx:104,:110,:115,:120). So to style
- *    every label alike you set both label keys to the same string, which is
- *    what these presets do; `input` carries the shared field styling and the
- *    per-row input keys stay empty.
- *
- * 8. Neither form submits. Both submits are <div>s whose handlers are commented
- *    out (Register.jsx:168-175, Login.jsx:124-129) and neither <form> has an
- *    onSubmit, so `cursor-pointer` on `submit` is the only honest affordance a
- *    preset can give, and `have-account` and `forget-password` are plain divs
- *    rather than links.
+ * 7. The nested login and register blocks are built with
+ *    withElementCssDefaults() too, so each carries its form's full key set
+ *    (field-label, field-input, submit-button...; see the login and register
+ *    entries in ElementsDefinition.js) and gets the default form styling. The
+ *    old per-row keys these presets used to set (label-username, input-email,
+ *    submit...) no longer exist. Both forms are light by default, so the dark
+ *    preset overrides their text, inputs and buttons -- and the welcome card's
+ *    -- through the constants below.
  */
+
+import { withElementCssDefaults } from '../ElementsDefinition';
+
+/* Overrides for forms on a dark background; same values as the Dark Panel presets in Login.js and Register.js. */
+var darkFormSelectors = {
+  "title": { "classes": "text-lg font-semibold text-white" },
+  "subtitle": { "classes": "text-sm text-gray-400" },
+  "field-label": { "classes": "mb-1.5 block text-sm font-medium text-gray-300" },
+  "field-input": { "classes": "w-full rounded-lg border border-white/10 bg-white/5 py-2.5 pl-10 pr-3 text-sm text-white placeholder:text-gray-500 transition-colors focus:border-amber-400/50 focus:outline-none focus:ring-2 focus:ring-amber-400/10" },
+  "field-icon": { "classes": "pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" },
+  "password-toggle": { "classes": "absolute right-1 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-gray-500 transition-colors hover:text-gray-200" },
+  "submit-button": { "classes": "inline-flex w-full items-center justify-center gap-2 rounded-lg bg-amber-400 px-4 py-2.5 text-sm font-semibold text-gray-900 transition-colors hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-70" }
+};
+
+var darkLoginSelectors = {
+  ...darkFormSelectors,
+  "error": { "classes": "flex items-start gap-2 rounded-lg border border-red-400/30 bg-red-500/10 px-3 py-2 text-sm text-red-300" }
+};
+
+var darkRegisterSelectors = {
+  ...darkFormSelectors,
+  "field-hint": { "classes": "mt-1 text-xs text-gray-500" },
+  "message-error": { "classes": "border-red-400/30 bg-red-500/10 text-red-300" },
+  "message-success": { "classes": "border-green-400/30 bg-green-500/10 text-green-300" }
+};
+
+/* Every preset root is a flex column with a gap, so the welcome card drops its default mb-6. */
+var welcomeInFlexRoot = {
+  "welcome": { "classes": "flex flex-wrap items-center justify-between gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-xs" }
+};
+
+var darkWelcomeSelectors = {
+  "welcome": { "classes": "flex flex-wrap items-center justify-between gap-4 rounded-xl border border-white/10 bg-white/5 p-4" },
+  "avatar": { "classes": "h-14 w-14 shrink-0 overflow-hidden rounded-full bg-amber-400/15 ring-2 ring-white/10" },
+  "avatar-initial": { "classes": "flex h-full w-full items-center justify-center text-xl font-semibold text-amber-400" },
+  "welcome-greeting": { "classes": "text-sm text-gray-400" },
+  "welcome-name": { "classes": "truncate text-lg font-semibold text-white" },
+  "welcome-email": { "classes": "truncate text-sm text-gray-400" },
+  "logout-button": { "classes": "inline-flex items-center gap-2 rounded-lg border border-white/15 bg-transparent px-4 py-2 text-sm font-medium text-gray-200 transition-colors hover:border-red-400/40 hover:bg-red-500/10 hover:text-red-300" }
+};
 
 var layouts = [
 
@@ -81,8 +113,8 @@ var layouts = [
     content: {
       "id": "ca-split",
       "type": "customerAccount",
-      "options": {},
-      "cssSelectors": { "*": { "classes": "w-full max-w-6xl mx-auto px-4 py-10 flex flex-col gap-12" } },
+      "options": { "hideWelcome": false },
+      "cssSelectors": withElementCssDefaults('customerAccount', { ...{ "*": { "classes": "w-full max-w-6xl mx-auto px-4 py-10 flex flex-col gap-12" } }, ...welcomeInFlexRoot }),
       "children": [
         {
           "id": "ca-split-out",
@@ -108,32 +140,8 @@ var layouts = [
                     {
                       "id": "ca-split-register",
                       "type": "register",
-                      "options": {
-                        "emailLabel": "Email",
-                        "phoneLabel": "Phone",
-                        "password1Label": "Password",
-                        "password2Label": "Confirm password",
-                        "registerLabel": "Create account",
-                        "haveAccountLabel": "Already have an account? Log in"
-                      },
-                      "cssSelectors": {
-                        "*": { "classes": "" },
-                        "form": { "classes": "flex flex-col gap-5" },
-                        "input-fields-wrap": { "classes": "flex flex-col gap-4" },
-                        "input-wrap": { "classes": "flex flex-col gap-1.5" },
-                        "input": { "classes": "w-full px-3 py-2.5 rounded-md border border-neutral-300 bg-white text-sm text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100" },
-                        "input-username": { "classes": "" },
-                        "input-phone": { "classes": "" },
-                        "input-password": { "classes": "" },
-                        "input-email": { "classes": "" },
-                        "label": { "classes": "" },
-                        "label-username": { "classes": "text-xs font-medium text-neutral-600" },
-                        "label-email": { "classes": "text-xs font-medium text-neutral-600" },
-                        "label-phone": { "classes": "" },
-                        "label-password": { "classes": "" },
-                        "submit": { "classes": "w-full py-2.5 rounded-md bg-orange-500 text-sm font-semibold text-white text-center cursor-pointer hover:bg-orange-600 transition-colors" },
-                        "have-account": { "classes": "text-xs text-neutral-500 text-center" }
-                      },
+                      "options": { "hideTitle": false },
+                      "cssSelectors": withElementCssDefaults('register', {}),
                       "children": []
                     }
                   ]
@@ -147,26 +155,8 @@ var layouts = [
                     {
                       "id": "ca-split-login",
                       "type": "login",
-                      "options": {
-                        "usernameLabel": "Email or phone",
-                        "passwordLabel": "Password",
-                        "loginLabel": "Log in",
-                        "forgetPasswordLabel": "Forgot your password?"
-                      },
-                      "cssSelectors": {
-                        "*": { "classes": "" },
-                        "form": { "classes": "flex flex-col gap-5" },
-                        "input-fields-wrap": { "classes": "flex flex-col gap-4" },
-                        "input-wrap": { "classes": "flex flex-col gap-1.5" },
-                        "input": { "classes": "w-full px-3 py-2.5 rounded-md border border-neutral-300 bg-white text-sm text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100" },
-                        "input-username": { "classes": "" },
-                        "input-email": { "classes": "" },
-                        "label": { "classes": "" },
-                        "label-username": { "classes": "text-xs font-medium text-neutral-600" },
-                        "label-email": { "classes": "text-xs font-medium text-neutral-600" },
-                        "submit": { "classes": "w-full py-2.5 rounded-md bg-orange-500 text-sm font-semibold text-white text-center cursor-pointer hover:bg-orange-600 transition-colors" },
-                        "forget-password": { "classes": "text-xs text-neutral-500 text-center" }
-                      },
+                      "options": { "hideTitle": false },
+                      "cssSelectors": withElementCssDefaults('login', {}),
                       "children": []
                     }
                   ]
@@ -293,8 +283,8 @@ var layouts = [
     content: {
       "id": "ca-center",
       "type": "customerAccount",
-      "options": {},
-      "cssSelectors": { "*": { "classes": "w-full max-w-5xl mx-auto px-4 py-12 flex flex-col gap-12" } },
+      "options": { "hideWelcome": false },
+      "cssSelectors": withElementCssDefaults('customerAccount', { ...{ "*": { "classes": "w-full max-w-5xl mx-auto px-4 py-12 flex flex-col gap-12" } }, ...welcomeInFlexRoot }),
       "children": [
         {
           "id": "ca-center-out",
@@ -320,26 +310,8 @@ var layouts = [
                     {
                       "id": "ca-center-login",
                       "type": "login",
-                      "options": {
-                        "usernameLabel": "Email or phone",
-                        "passwordLabel": "Password",
-                        "loginLabel": "Log in",
-                        "forgetPasswordLabel": "Forgot your password?"
-                      },
-                      "cssSelectors": {
-                        "*": { "classes": "" },
-                        "form": { "classes": "flex flex-col gap-5" },
-                        "input-fields-wrap": { "classes": "flex flex-col gap-4" },
-                        "input-wrap": { "classes": "flex flex-col gap-1.5" },
-                        "input": { "classes": "w-full px-3.5 py-3 rounded-lg border border-neutral-200 bg-neutral-50 text-sm text-neutral-900 focus:outline-none focus:bg-white focus:border-neutral-900" },
-                        "input-username": { "classes": "" },
-                        "input-email": { "classes": "" },
-                        "label": { "classes": "" },
-                        "label-username": { "classes": "text-xs font-semibold uppercase tracking-wide text-neutral-500" },
-                        "label-email": { "classes": "text-xs font-semibold uppercase tracking-wide text-neutral-500" },
-                        "submit": { "classes": "w-full py-3 rounded-lg bg-neutral-900 text-sm font-semibold text-white text-center cursor-pointer hover:bg-neutral-800 transition-colors" },
-                        "forget-password": { "classes": "text-xs text-neutral-500 text-center hover:text-neutral-900 cursor-pointer" }
-                      },
+                      "options": { "hideTitle": false },
+                      "cssSelectors": withElementCssDefaults('login', {}),
                       "children": []
                     }
                   ]
@@ -353,32 +325,8 @@ var layouts = [
                     {
                       "id": "ca-center-register",
                       "type": "register",
-                      "options": {
-                        "emailLabel": "Email",
-                        "phoneLabel": "Phone",
-                        "password1Label": "Password",
-                        "password2Label": "Confirm password",
-                        "registerLabel": "Create account",
-                        "haveAccountLabel": "Already have an account? Log in"
-                      },
-                      "cssSelectors": {
-                        "*": { "classes": "" },
-                        "form": { "classes": "flex flex-col gap-5" },
-                        "input-fields-wrap": { "classes": "flex flex-col gap-4" },
-                        "input-wrap": { "classes": "flex flex-col gap-1.5" },
-                        "input": { "classes": "w-full px-3.5 py-3 rounded-lg border border-neutral-200 bg-neutral-50 text-sm text-neutral-900 focus:outline-none focus:bg-white focus:border-neutral-900" },
-                        "input-username": { "classes": "" },
-                        "input-phone": { "classes": "" },
-                        "input-password": { "classes": "" },
-                        "input-email": { "classes": "" },
-                        "label": { "classes": "" },
-                        "label-username": { "classes": "text-xs font-semibold uppercase tracking-wide text-neutral-500" },
-                        "label-email": { "classes": "text-xs font-semibold uppercase tracking-wide text-neutral-500" },
-                        "label-phone": { "classes": "" },
-                        "label-password": { "classes": "" },
-                        "submit": { "classes": "w-full py-3 rounded-lg bg-neutral-900 text-sm font-semibold text-white text-center cursor-pointer hover:bg-neutral-800 transition-colors" },
-                        "have-account": { "classes": "text-xs text-neutral-500 text-center hover:text-neutral-900 cursor-pointer" }
-                      },
+                      "options": { "hideTitle": false },
+                      "cssSelectors": withElementCssDefaults('register', {}),
                       "children": []
                     }
                   ]
@@ -505,8 +453,8 @@ var layouts = [
     content: {
       "id": "ca-rail",
       "type": "customerAccount",
-      "options": {},
-      "cssSelectors": { "*": { "classes": "w-full max-w-6xl mx-auto px-4 py-10 flex flex-col gap-12" } },
+      "options": { "hideWelcome": false },
+      "cssSelectors": withElementCssDefaults('customerAccount', { ...{ "*": { "classes": "w-full max-w-6xl mx-auto px-4 py-10 flex flex-col gap-12" } }, ...welcomeInFlexRoot }),
       "children": [
         {
           "id": "ca-rail-out",
@@ -532,32 +480,8 @@ var layouts = [
                     {
                       "id": "ca-rail-register",
                       "type": "register",
-                      "options": {
-                        "emailLabel": "Email",
-                        "phoneLabel": "Phone",
-                        "password1Label": "Password",
-                        "password2Label": "Confirm password",
-                        "registerLabel": "Create account",
-                        "haveAccountLabel": "Already have an account? Log in"
-                      },
-                      "cssSelectors": {
-                        "*": { "classes": "" },
-                        "form": { "classes": "flex flex-col gap-5" },
-                        "input-fields-wrap": { "classes": "flex flex-col gap-4" },
-                        "input-wrap": { "classes": "flex flex-col gap-1.5" },
-                        "input": { "classes": "w-full px-3 py-2.5 rounded-md border border-neutral-300 bg-white text-sm focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100" },
-                        "input-username": { "classes": "" },
-                        "input-phone": { "classes": "" },
-                        "input-password": { "classes": "" },
-                        "input-email": { "classes": "" },
-                        "label": { "classes": "" },
-                        "label-username": { "classes": "text-xs font-medium text-neutral-600" },
-                        "label-email": { "classes": "text-xs font-medium text-neutral-600" },
-                        "label-phone": { "classes": "" },
-                        "label-password": { "classes": "" },
-                        "submit": { "classes": "w-full py-2.5 rounded-md bg-orange-500 text-sm font-semibold text-white text-center cursor-pointer hover:bg-orange-600 transition-colors" },
-                        "have-account": { "classes": "text-xs text-neutral-500" }
-                      },
+                      "options": { "hideTitle": false },
+                      "cssSelectors": withElementCssDefaults('register', {}),
                       "children": []
                     }
                   ]
@@ -571,26 +495,8 @@ var layouts = [
                     {
                       "id": "ca-rail-login",
                       "type": "login",
-                      "options": {
-                        "usernameLabel": "Email or phone",
-                        "passwordLabel": "Password",
-                        "loginLabel": "Log in",
-                        "forgetPasswordLabel": "Forgot your password?"
-                      },
-                      "cssSelectors": {
-                        "*": { "classes": "" },
-                        "form": { "classes": "flex flex-col gap-5" },
-                        "input-fields-wrap": { "classes": "flex flex-col gap-4" },
-                        "input-wrap": { "classes": "flex flex-col gap-1.5" },
-                        "input": { "classes": "w-full px-3 py-2.5 rounded-md border border-neutral-300 bg-white text-sm focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100" },
-                        "input-username": { "classes": "" },
-                        "input-email": { "classes": "" },
-                        "label": { "classes": "" },
-                        "label-username": { "classes": "text-xs font-medium text-neutral-600" },
-                        "label-email": { "classes": "text-xs font-medium text-neutral-600" },
-                        "submit": { "classes": "w-full py-2.5 rounded-md bg-orange-500 text-sm font-semibold text-white text-center cursor-pointer hover:bg-orange-600 transition-colors" },
-                        "forget-password": { "classes": "text-xs text-neutral-500" }
-                      },
+                      "options": { "hideTitle": false },
+                      "cssSelectors": withElementCssDefaults('login', {}),
                       "children": []
                     }
                   ]
@@ -717,8 +623,8 @@ var layouts = [
     content: {
       "id": "ca-cards",
       "type": "customerAccount",
-      "options": {},
-      "cssSelectors": { "*": { "classes": "w-full max-w-5xl mx-auto px-4 py-10 flex flex-col gap-12 bg-neutral-50" } },
+      "options": { "hideWelcome": false },
+      "cssSelectors": withElementCssDefaults('customerAccount', { ...{ "*": { "classes": "w-full max-w-5xl mx-auto px-4 py-10 flex flex-col gap-12 bg-neutral-50" } }, ...welcomeInFlexRoot }),
       "children": [
         {
           "id": "ca-cards-out",
@@ -744,32 +650,8 @@ var layouts = [
                     {
                       "id": "ca-cards-register",
                       "type": "register",
-                      "options": {
-                        "emailLabel": "Email",
-                        "phoneLabel": "Phone",
-                        "password1Label": "Password",
-                        "password2Label": "Confirm password",
-                        "registerLabel": "Create account",
-                        "haveAccountLabel": "Already have an account? Log in"
-                      },
-                      "cssSelectors": {
-                        "*": { "classes": "" },
-                        "form": { "classes": "flex flex-col gap-5" },
-                        "input-fields-wrap": { "classes": "flex flex-col gap-4" },
-                        "input-wrap": { "classes": "flex flex-col gap-1.5" },
-                        "input": { "classes": "w-full px-3 py-2.5 rounded-md border border-neutral-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-neutral-200" },
-                        "input-username": { "classes": "" },
-                        "input-phone": { "classes": "" },
-                        "input-password": { "classes": "" },
-                        "input-email": { "classes": "" },
-                        "label": { "classes": "" },
-                        "label-username": { "classes": "text-xs font-medium text-neutral-600" },
-                        "label-email": { "classes": "text-xs font-medium text-neutral-600" },
-                        "label-phone": { "classes": "" },
-                        "label-password": { "classes": "" },
-                        "submit": { "classes": "w-full py-2.5 rounded-md bg-neutral-900 text-sm font-semibold text-white text-center cursor-pointer hover:bg-neutral-800 transition-colors" },
-                        "have-account": { "classes": "text-xs text-neutral-500" }
-                      },
+                      "options": { "hideTitle": false },
+                      "cssSelectors": withElementCssDefaults('register', {}),
                       "children": []
                     }
                   ]
@@ -783,26 +665,8 @@ var layouts = [
                     {
                       "id": "ca-cards-login",
                       "type": "login",
-                      "options": {
-                        "usernameLabel": "Email or phone",
-                        "passwordLabel": "Password",
-                        "loginLabel": "Log in",
-                        "forgetPasswordLabel": "Forgot your password?"
-                      },
-                      "cssSelectors": {
-                        "*": { "classes": "" },
-                        "form": { "classes": "flex flex-col gap-5" },
-                        "input-fields-wrap": { "classes": "flex flex-col gap-4" },
-                        "input-wrap": { "classes": "flex flex-col gap-1.5" },
-                        "input": { "classes": "w-full px-3 py-2.5 rounded-md border border-neutral-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-neutral-200" },
-                        "input-username": { "classes": "" },
-                        "input-email": { "classes": "" },
-                        "label": { "classes": "" },
-                        "label-username": { "classes": "text-xs font-medium text-neutral-600" },
-                        "label-email": { "classes": "text-xs font-medium text-neutral-600" },
-                        "submit": { "classes": "w-full py-2.5 rounded-md bg-neutral-900 text-sm font-semibold text-white text-center cursor-pointer hover:bg-neutral-800 transition-colors" },
-                        "forget-password": { "classes": "text-xs text-neutral-500" }
-                      },
+                      "options": { "hideTitle": false },
+                      "cssSelectors": withElementCssDefaults('login', {}),
                       "children": []
                     }
                   ]
@@ -929,8 +793,8 @@ var layouts = [
     content: {
       "id": "ca-dark",
       "type": "customerAccount",
-      "options": {},
-      "cssSelectors": { "*": { "classes": "w-full max-w-6xl mx-auto px-4 py-10 flex flex-col gap-12 bg-neutral-900" } },
+      "options": { "hideWelcome": false },
+      "cssSelectors": withElementCssDefaults('customerAccount', { ...{ "*": { "classes": "w-full max-w-6xl mx-auto px-4 py-10 flex flex-col gap-12 bg-neutral-900" } }, ...welcomeInFlexRoot, ...darkWelcomeSelectors }),
       "children": [
         {
           "id": "ca-dark-out",
@@ -956,32 +820,8 @@ var layouts = [
                     {
                       "id": "ca-dark-register",
                       "type": "register",
-                      "options": {
-                        "emailLabel": "Email",
-                        "phoneLabel": "Phone",
-                        "password1Label": "Password",
-                        "password2Label": "Confirm password",
-                        "registerLabel": "Create account",
-                        "haveAccountLabel": "Already have an account? Log in"
-                      },
-                      "cssSelectors": {
-                        "*": { "classes": "" },
-                        "form": { "classes": "flex flex-col gap-5" },
-                        "input-fields-wrap": { "classes": "flex flex-col gap-4" },
-                        "input-wrap": { "classes": "flex flex-col gap-1.5" },
-                        "input": { "classes": "w-full px-3 py-2.5 rounded-md border border-neutral-700 bg-neutral-900 text-sm text-neutral-100 placeholder:text-neutral-500 focus:outline-none focus:border-amber-400" },
-                        "input-username": { "classes": "" },
-                        "input-phone": { "classes": "" },
-                        "input-password": { "classes": "" },
-                        "input-email": { "classes": "" },
-                        "label": { "classes": "" },
-                        "label-username": { "classes": "text-xs font-medium text-neutral-400" },
-                        "label-email": { "classes": "text-xs font-medium text-neutral-400" },
-                        "label-phone": { "classes": "" },
-                        "label-password": { "classes": "" },
-                        "submit": { "classes": "w-full py-2.5 rounded-md bg-amber-400 text-sm font-semibold text-neutral-900 text-center cursor-pointer hover:bg-amber-300 transition-colors" },
-                        "have-account": { "classes": "text-xs text-neutral-400 text-center" }
-                      },
+                      "options": { "hideTitle": false },
+                      "cssSelectors": withElementCssDefaults('register', darkRegisterSelectors),
                       "children": []
                     }
                   ]
@@ -995,26 +835,8 @@ var layouts = [
                     {
                       "id": "ca-dark-login",
                       "type": "login",
-                      "options": {
-                        "usernameLabel": "Email or phone",
-                        "passwordLabel": "Password",
-                        "loginLabel": "Log in",
-                        "forgetPasswordLabel": "Forgot your password?"
-                      },
-                      "cssSelectors": {
-                        "*": { "classes": "" },
-                        "form": { "classes": "flex flex-col gap-5" },
-                        "input-fields-wrap": { "classes": "flex flex-col gap-4" },
-                        "input-wrap": { "classes": "flex flex-col gap-1.5" },
-                        "input": { "classes": "w-full px-3 py-2.5 rounded-md border border-neutral-700 bg-neutral-900 text-sm text-neutral-100 placeholder:text-neutral-500 focus:outline-none focus:border-amber-400" },
-                        "input-username": { "classes": "" },
-                        "input-email": { "classes": "" },
-                        "label": { "classes": "" },
-                        "label-username": { "classes": "text-xs font-medium text-neutral-400" },
-                        "label-email": { "classes": "text-xs font-medium text-neutral-400" },
-                        "submit": { "classes": "w-full py-2.5 rounded-md bg-amber-400 text-sm font-semibold text-neutral-900 text-center cursor-pointer hover:bg-amber-300 transition-colors" },
-                        "forget-password": { "classes": "text-xs text-neutral-400 text-center" }
-                      },
+                      "options": { "hideTitle": false },
+                      "cssSelectors": withElementCssDefaults('login', darkLoginSelectors),
                       "children": []
                     }
                   ]
@@ -1141,8 +963,8 @@ var layouts = [
     content: {
       "id": "ca-compact",
       "type": "customerAccount",
-      "options": {},
-      "cssSelectors": { "*": { "classes": "w-full px-3 py-6 flex flex-col gap-8" } },
+      "options": { "hideWelcome": false },
+      "cssSelectors": withElementCssDefaults('customerAccount', { ...{ "*": { "classes": "w-full px-3 py-6 flex flex-col gap-8" } }, ...welcomeInFlexRoot }),
       "children": [
         {
           "id": "ca-compact-out",
@@ -1168,26 +990,8 @@ var layouts = [
                     {
                       "id": "ca-compact-login",
                       "type": "login",
-                      "options": {
-                        "usernameLabel": "Email or phone",
-                        "passwordLabel": "Password",
-                        "loginLabel": "Log in",
-                        "forgetPasswordLabel": "Forgot your password?"
-                      },
-                      "cssSelectors": {
-                        "*": { "classes": "" },
-                        "form": { "classes": "flex flex-col gap-4" },
-                        "input-fields-wrap": { "classes": "flex flex-col gap-3" },
-                        "input-wrap": { "classes": "flex flex-col gap-1" },
-                        "input": { "classes": "w-full px-3 py-2 rounded-md border border-neutral-300 bg-white text-sm focus:outline-none focus:border-orange-500" },
-                        "input-username": { "classes": "" },
-                        "input-email": { "classes": "" },
-                        "label": { "classes": "" },
-                        "label-username": { "classes": "text-xs text-neutral-600" },
-                        "label-email": { "classes": "text-xs text-neutral-600" },
-                        "submit": { "classes": "w-full py-2 rounded-md bg-orange-500 text-sm font-semibold text-white text-center cursor-pointer hover:bg-orange-600" },
-                        "forget-password": { "classes": "text-xs text-neutral-500 text-center" }
-                      },
+                      "options": { "hideTitle": false },
+                      "cssSelectors": withElementCssDefaults('login', {}),
                       "children": []
                     }
                   ]
@@ -1201,32 +1005,8 @@ var layouts = [
                     {
                       "id": "ca-compact-register",
                       "type": "register",
-                      "options": {
-                        "emailLabel": "Email",
-                        "phoneLabel": "Phone",
-                        "password1Label": "Password",
-                        "password2Label": "Confirm password",
-                        "registerLabel": "Create account",
-                        "haveAccountLabel": "Already have an account? Log in"
-                      },
-                      "cssSelectors": {
-                        "*": { "classes": "" },
-                        "form": { "classes": "flex flex-col gap-4" },
-                        "input-fields-wrap": { "classes": "flex flex-col gap-3" },
-                        "input-wrap": { "classes": "flex flex-col gap-1" },
-                        "input": { "classes": "w-full px-3 py-2 rounded-md border border-neutral-300 bg-white text-sm focus:outline-none focus:border-orange-500" },
-                        "input-username": { "classes": "" },
-                        "input-phone": { "classes": "" },
-                        "input-password": { "classes": "" },
-                        "input-email": { "classes": "" },
-                        "label": { "classes": "" },
-                        "label-username": { "classes": "text-xs text-neutral-600" },
-                        "label-email": { "classes": "text-xs text-neutral-600" },
-                        "label-phone": { "classes": "" },
-                        "label-password": { "classes": "" },
-                        "submit": { "classes": "w-full py-2 rounded-md bg-orange-500 text-sm font-semibold text-white text-center cursor-pointer hover:bg-orange-600" },
-                        "have-account": { "classes": "text-xs text-neutral-500 text-center" }
-                      },
+                      "options": { "hideTitle": false },
+                      "cssSelectors": withElementCssDefaults('register', {}),
                       "children": []
                     }
                   ]

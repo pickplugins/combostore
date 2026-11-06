@@ -8,14 +8,15 @@
  * Two things to know before editing these:
  *
  * 1. The query lives in `options.queryPrams` (note the spelling) on the postGrid
- *    block; PostGrid.jsx reads `queryPrams`, not the `queryParams` that
- *    ElementsDefinition declares. PostLoop posts it to combo-store/v2/get_posts.
+ *    block; postGridQuery in PostGridView.jsx reads it (falling back to the
+ *    latest blog posts when it is missing) and PostLoop posts it to
+ *    combo-store/v2/get_posts. The definition now declares the same key.
  *
  * 2. `loop-items` and `loop-item` are read from the postGrid's selectors, not the
- *    postLoop's: PostLoop.jsx overwrites its own cssSelectors with the grid's one
- *    from PostGridContext. The same values are mirrored onto postLoop here, as
- *    the rest of the codebase does, so the cards keep their look if that ever
- *    changes.
+ *    postLoop's: PostGridView hands the grid's ones (filled from the postGrid
+ *    defaults) to the loop through PostGridContext. The same values are
+ *    mirrored onto postLoop here, as the rest of the codebase does, so the
+ *    cards keep their look if that ever changes.
  */
 
 var layouts = [

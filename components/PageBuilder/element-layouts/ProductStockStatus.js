@@ -6,52 +6,37 @@
  * root here MUST be `"type": "productStockStatus"`. (PageBuilder.jsx regenerates
  * all ids on paste/replace, so the readable ids below are safe.)
  *
- * productStockStatus is a leaf: an optional prefix label, then one of two state
- * rows, each with an optional icon and its text.
+ * productStockStatus is a leaf: an optional prefix label, then the product's
+ * status -- in stock or out of stock -- with an optional icon and its text.
+ * ProductStockStatusView (the shop) and the builder's ProductStockStatus.jsx
+ * render the same ProductStockStatusMarkup.
  *
- * Renderer notes that shaped these presets:
+ * Notes that shaped these presets:
  *
- * 1. The status does not come from the product. ProductStockStatus.jsx:35 reads
- *    `options?.stock_status ?? 'instock'` -- the product-based version is sitting
- *    commented out on the next line -- and `usePost()` (:36) is never used. So
- *    every product shows "In stock" until that line is switched back. Note
- *    `stock_status` is not declared in the definition's options either, so the
- *    panel cannot set it.
- *    Consequence for presets: five of the six leave it alone (and therefore read
- *    as in-stock), and Out Of Stock Preview sets it explicitly so the red state
- *    can be designed and reviewed. That preset forces the state everywhere it is
- *    used, front end included -- it is for previewing, not for shipping.
+ * 1. The status comes from the product: its stock_status, or for a picked
+ *    variation the same rule the variation picker uses to grey out a tile.
+ *    `options.stock_status` is only the builder's "Preview as" state outside a
+ *    product loop. The Out Of Stock Preview preset sets it so the red state
+ *    can be designed; it no longer forces that state on the shop (it used to,
+ *    on every product, because the block read its status from that option).
  *
- * 2. Four declared selector keys are never read: `out-of-stock-label`,
- *    `out-of-stock-icon`, `in-stock-label` and `in-stock-icon`. Both state rows
- *    use `label-text` for their text (:99, :114) and `icon` for their icon
- *    (:94, :109) -- and `icon` is not declared anywhere. The four dead keys are
- *    kept below to match the definition; `icon` is included because it is the
- *    one that works.
+ * 2. The status row gets `stock-status` plus `in-stock` or `out-of-stock`;
+ *    its icon `icon` plus `in-stock-icon` / `out-of-stock-icon`; its text
+ *    `label-text` plus `in-stock-label` / `out-of-stock-label`. These presets
+ *    put the state colour on `in-stock` / `out-of-stock` and leave the four
+ *    per-state icon and label keys empty.
  *
- * 3. `label-text` is shared. The prefix label's text (:81) and both status texts
- *    use the same key, so they cannot be styled apart. These presets keep
- *    `label-text` to size and weight only and put the state colour on the
- *    `in-stock` / `out-of-stock` wrapper, letting the text inherit it. That way
- *    one key serves both without a fight.
+ * 3. `label-text` is shared by the prefix label and the status text, so these
+ *    presets keep it to size and weight and let the colour come from the state
+ *    wrapper.
  *
- * 4. `stock-status` and `in-stock`/`out-of-stock` land on the same div (:91,
- *    :107), so overlapping utilities between them would be decided by stylesheet
- *    order rather than class order. Layout lives in `stock-status` here and
- *    colour in the per-state keys, with no overlap.
+ * 4. `stock-status` and `in-stock` / `out-of-stock` land on the same div, so
+ *    overlapping utilities between them would be decided by stylesheet order.
+ *    Layout lives in `stock-status` here and colour in the per-state keys.
  *
- * 5. Typo in the renderer: :110 passes `Iize={iconSize}` instead of `size`, so
- *    the in-stock icon ignores iconSize and renders at Tabler's default 24px --
- *    and React forwards the unknown prop to the SVG, which logs a warning. The
- *    out-of-stock icon at :95 is correct. Until that is fixed, the in-stock
- *    presets size their icon with an arbitrary variant on the `icon` key
- *    (`[&_svg]:size-4`), which also works on the correct branch.
- *
- * 6. Guards are in place for a change: the prefix label only renders when
- *    `options.label` is set (:73), and each icon div only renders when its name
- *    resolves through TablerIcons (:75, :93, :108). So no empty boxes, and no
- *    `empty:hidden` needed. Icon names must still be exact @tabler/icons-react
- *    exports; every one used here was checked against the installed package.
+ * 5. Icons use `iconSize` (24 when unset). The presets also size them with an
+ *    arbitrary variant on `icon` (`[&_svg]:size-4`). Icon names must be exact
+ *    @tabler/icons-react exports; an unknown one drops the icon div.
  */
 
 var layouts = [

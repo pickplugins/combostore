@@ -9,12 +9,10 @@
  *
  * Renderer notes that shaped these presets:
  *
- * 1. TermsSlider.jsx:71-74 does NOT apply `cssSelectors['*']` to its root div
- *    (TermsGrid.jsx:68 and PostSlider.jsx:137 both do). So the `*` key is inert
- *    on a termsSlider: no max-width, padding or background can be set on the
- *    wrapper. All visual weight therefore lives in `loop-item`, and outer
- *    breathing room comes from `sliderOptions.gap` / `sliderOptions.padding`.
- *    Adding `${cssSelectors['*']?.classes}` to that className is a one-line fix.
+ * 1. The root div takes `*` (TermsSliderMarkup, shared with Post Slider), so
+ *    the wrapper can have a max-width, padding or background. The arrows and
+ *    dots take `arrows-wrap`, `arrow-item`, `arrow-prev`, `arrow-next`,
+ *    `pagination` and `page-item` through Splide's `classes` option.
  *
  * 2. TermsLoop.jsx:17 replaces the loop's own cssSelectors with the parent
  *    slider's, so `loop-item` must be declared on the termsSlider. It is
@@ -32,28 +30,24 @@
  *    Note the panel's orderby <select> only offers date|rand, so re-picking it
  *    would overwrite the name/count values used here.
  *
- * 4. `number` vs `per_page`: the page-builder panel writes `number`, while the
- *    other get_terms callers (QuickSearch.jsx:63, TermsPicker.jsx:23,
- *    TaxTermsQuery.jsx:67) send `per_page`. Which one combo-store/v2/get_terms
- *    honours is not visible from this repo, so both are set to the same value.
- *    Editing the count in the panel only updates `number`.
+ * 4. `number` vs `per_page`: combo-store/v2/get_terms takes the count from
+ *    `number` when it is sent; `per_page` only counts together with `paged`.
+ *    The panel writes `number`; both are set to the same value here.
  *
- * 5. sliderOptions is optional here -- TermsSlider.jsx just forwards it to
- *    Splide and never assigns `.classes` onto it, so a missing one does not
- *    crash the way PostSlider.jsx:39 does. Without it Splide falls back to
- *    perPage 1, so every preset sets it. It goes straight to Splide:
- *    `breakpoints` is not exposed by the panel, and `mediaQuery: "max"` makes
- *    the breakpoint keys read as max-widths. The panel renders `padding` as a
- *    number input, so editing it there replaces the object form used below.
+ * 5. sliderOptions goes to Splide as a copy, with the controls' classes added.
+ *    Without `perPage` Splide shows one term at a time, so every preset sets
+ *    it. `mediaQuery: "max"` makes the breakpoint keys read as max-widths.
+ *    The panel's settings editor edits `breakpoints` and an object
+ *    `padding` (as below) as JSON.
  *
  * 6. Child element quirks: termTitle's `text` option is inert (the renderer
  *    prints category.name) and the `link` selector some inline definitions
  *    give it is never read by TermTitle.jsx, so it is omitted here to match the
- *    standalone termTitle definition (ElementsDefinition.js:2029); termThumbnail
- *    with `linkTo: "termUrl"` renders href="#" and loses the /thumb.png
- *    fallback for terms without an image, so it is omitted here; termCount
- *    ignores its declared `label`/`suffix` and reads an undeclared `tag`, so it
- *    renders a bare number -- styled as a badge rather than captioned.
+ *    standalone termTitle definition (ElementsDefinition.js:2029); termThumbnail with `linkTo: "termUrl"` now links to the
+ *    term's archive page and keeps the /thumb.png fallback (presets still
+ *    leave it unlinked, as the title is the link); termCount shows `label` + the
+ *    count + `suffix` (e.g. "12 items"; `singularSuffix` for 1) in its `tag`
+ *    (a span by default).
  */
 
 var layouts = [

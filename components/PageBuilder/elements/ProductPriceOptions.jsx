@@ -1,86 +1,29 @@
-import PropTypes from "prop-types";
 import React from "react";
-import { useState, useEffect } from "react";
-import { IconLibraryPhoto, IconCheckbox, IconSquare, IconFidgetSpinner, IconTrash, IconStarFilled, IconStar, IconX } from "@tabler/icons-react";
-import { useDraggable } from '@dnd-kit/react';
-
-import DropDown from "../../../components/DropDown";
-import CssClassPicker from "../CssClassPicker";
 import CssSelectors from "../CssSelectors";
+import { withElementCssDefaults } from "../ElementsDefinition";
 
-
+/*
+	Settings panel for the `productPrice` block. The price itself comes from
+	the product, so the only settings are its styles. (The Link To and Classes
+	controls this panel used to show saved options nothing reads.)
+*/
 const ProductPriceOptions = (props) => {
 
 	var updateBlock = props?.updateBlock;
-	var options = props?.options;
-	var cssSelectors = props?.cssSelectors ?? {};
 
-
-	const [loading, setloading] = useState(false);
-
-
-
-	// useEffect(() => {
-
-	// 	fetchPosts();
-	// }, []);
-
+	/* Every current key, filled from defaults where the block lacks it. */
+	var cssSelectors = withElementCssDefaults('productPrice', props?.cssSelectors);
 
 	return (
 		<div className="px-3" >
-
 			<div className="flex flex-col gap-3">
-
-
-				<div className="flex flex-col gap-2">
-					<label htmlFor="" className="text-xs font-medium text-gray-600">Link To</label>
-					<div>
-						<select className="w-full !rounded-lg !border !border-gray-300 !bg-white !px-2.5 !py-1.5 !text-xs !text-gray-700 !shadow-none !outline-none transition-colors focus:!border-brand focus:!ring-4 focus:!ring-brand/10" value={options?.linkTo} onChange={ev => {
-
-							var value = ev.target.value;
-
-							var optionsX = { ...options }
-							optionsX.linkTo = value
-							updateBlock('options', optionsX)
-
-						}} >
-							<option value="postUrl">Post URL</option>
-							<option value="">No Link</option>
-
-						</select>
-					</div>
-				</div>
-
-				{/* 
-				<div className="flex flex-col gap-2">
-					<div>
-						<CssClassPicker type="text" className="w-full !rounded-lg !border !border-gray-300 !bg-white !px-2.5 !py-1.5 !text-xs !text-gray-700 !shadow-none !outline-none transition-colors focus:!border-brand focus:!ring-4 focus:!ring-brand/10" value={options?.classes} onChange={(value) => {
-
-
-							var optionsX = { ...options }
-							optionsX.classes = value
-							updateBlock('options', optionsX)
-
-						}} />
-					</div>
-				</div> */}
-
-
-
-
+				<p className="text-xs text-gray-500">
+					<code>simple-price-sale</code> is the price the customer pays and <code>simple-price-regular</code> the struck-through original, shown only on sale. Products with variations show <code>variable-price-*</code> until one is picked; pay-what-you-want products show the <code>pwyw-*</code> controls. Outside a product loop the builder shows a sample sale price.
+				</p>
 				<CssSelectors cssSelectors={cssSelectors} updateBlock={updateBlock} />
-
-
-
-
-
 			</div>
-
-
 		</div>
 	);
 };
-
-
 
 export default ProductPriceOptions;

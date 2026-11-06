@@ -6,48 +6,33 @@
  * MUST be `"type": "image"`. (PageBuilder.jsx regenerates all ids on
  * paste/replace, so the readable ids below are safe.)
  *
- * image is a leaf: a wrapper <div>, an optional <Link>, and a next/image. The
- * definition declares `src`, `width`, `height`; the renderer reads `src` and
- * `link`; the panel edits `src`, `altText` and `link`. Those three lists do not
- * agree, which is most of what a preset here has to work around.
+ * image is a leaf: a wrapper <div> (`*`), an optional link (`link`) and a
+ * next/image (`img`). ImageView (the shop) and the builder's Image.jsx render
+ * the same ImageMarkup.
  *
- * Renderer notes that shaped these presets:
+ * Notes that shaped these presets:
  *
- * 1. Size with classes on the `img` key -- `width` and `height` do nothing.
- *    Image.jsx:45,65 hardcodes `width={500} height={500}` on next/image and
- *    never looks at `options.width`/`options.height`, so the two declared size
- *    options are dead. Every preset below sizes through the `img` class string.
+ * 1. Size with classes on the `img` key. The <img> gets width/height
+ *    attributes of 500x500 (or options.width / options.height when set), which
+ *    only matter as its ratio while it loads.
  *
  * 2. Prefer an explicit `aspect-*` (or a fixed `h-*`) over `h-auto`. The
- *    hardcoded 500x500 attributes give the <img> a 1:1 default aspect ratio
- *    while it loads, so `w-full h-auto` reserves a square box and then reflows
- *    to the real ratio once the file arrives -- a visible jump on every image
- *    that is not actually square. Pinning the ratio in CSS reserves the right
- *    box from the first paint, and `object-cover` keeps the crop clean when the
- *    uploaded file does not match it.
+ *    square default attributes reserve a 1:1 box while the file loads, so
+ *    `w-full h-auto` reflows to the real ratio once it arrives -- a visible jump
+ *    on every image that is not square. Pinning the ratio in CSS reserves the
+ *    right box from the first paint, and `object-cover` keeps the crop clean.
  *
- * 3. `link` is real but undeclared. It is absent from the definition's options,
- *    so a block dragged from the palette has no `link` key, but both the
- *    renderer (:27,:36) and the panel (ImageOptions.jsx:105) use it. Setting it
- *    in a preset switches the markup to the <Link> branch, which is the only
- *    branch where the `link` selector key applies -- so that key is worth
- *    styling only on a preset that ships a link, and `block` belongs on it, as
- *    an inline <a> would otherwise add descender space under the image.
+ * 3. `link` switches the markup to the linked branch, the only one where the
+ *    `link` selector key applies -- so style that key only on a preset that
+ *    ships a link, and give it `block`, as an inline <a> adds descender space
+ *    under the image. `newTab` opens the link in a new tab.
  *
- * 4. There is no alt text. `alt={``}` is hardcoded at :45 and :65, so whatever
- *    the panel's "Image Alt Text" field writes into `options.altText` is never
- *    rendered. Presets set it anyway: it is where an author will type, and it
- *    costs nothing when the renderer starts reading it.
+ * 4. `altText` is the image's alt text (it was ignored until now). Presets
+ *    set it as a reminder; the author should describe their own image.
  *
- * 5. Keep all three selector keys present. The renderer interpolates
- *    `cssSelectors['link']?.classes` straight into className, so a missing key
- *    puts the literal string "undefined" in the class list. Harmless today,
- *    but it collides the moment a utility named `undefined` exists.
- *
- * `src` values use placehold.co, which is allowlisted in next.config.mjs
- * (`images.remotePatterns`) alongside localhost and server.kidobazar.com -- a
- * host outside that list throws at render even though the component passes
- * `unoptimized`.
+ * `src` values use placehold.co. The image is `unoptimized`, so next/image
+ * never checks the host against next.config's images.remotePatterns: any
+ * image URL works.
  */
 
 var layouts = [

@@ -11,6 +11,7 @@ import EditorActions from './EditorActions';
 import { ThemeProvider } from "./context/ThemeContext";
 import coreElements from "./ElementsDefinition";
 import useBlockHistory from "./useBlockHistory";
+import { loadTemplateTheme } from "./templateThemeLive";
 import registry from "../../extensions";
 import { useExtensionsStore } from "../../store/useExtensionsStore";
 
@@ -55,6 +56,9 @@ const PageBuilder = (props) => {
 	const hydrateExtensions = useExtensionsStore((s) => s.hydrate);
 
 	useEffect(() => { hydrateExtensions(); }, [hydrateExtensions]);
+
+	/* The active template's fonts and colors, including its font-<name> classes, for the canvas and the class picker (templateThemeLive.js). */
+	useEffect(() => { loadTemplateTheme(); }, []);
 
 	const elements = useMemo(() => {
 		const extras = registry.elementDefinitions(activeExtensionIds);

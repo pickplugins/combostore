@@ -1,4 +1,5 @@
 
+import { templateMetadata, slugToName } from "@/lib/templateSeo";
 import React from "react";
 import PageBuilderContent from "../components/PageBuilder/PageBuilderContent";
 
@@ -16,38 +17,10 @@ import { after } from 'next/server';
 import { headers, cookies } from 'next/headers';
 import { getSettings } from "@/lib/getSettings";
 
+/* Template Part Settings > SEO for this template (lib/templateSeo.js), filled with the page's data. */
 export async function generateMetadata() {
-
-
-  var pageMetaData = {
-
-    title: "",
-    description: "",
-    post_thumbnail: { src: "", alt: "" },
-    keywords: "",
-    ogTitle: "",
-    ogDes: ""
-
-  }
-
-
-
-  return {
-    title: pageMetaData.title,
-    description: pageMetaData.description?.slice(0, 160),
-    openGraph: {
-      title: pageMetaData.ogTitle,
-      description: pageMetaData.post_excerpt?.slice(0, 160),
-      url: `${appUrl}product/`,
-      images: [{ url: pageMetaData.post_thumbnail?.src, alt: pageMetaData.ogTitle }],
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: pageMetaData.ogTitle,
-      description: pageMetaData.post_excerpt?.slice(0, 160),
-      images: [pageMetaData.post_thumbnail?.src],
-    },
-  };
+	/* The home template's SEO settings; with none, the store name. */
+	return templateMetadata('home', { path: '' });
 }
 
 

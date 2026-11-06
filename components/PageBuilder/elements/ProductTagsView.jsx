@@ -1,97 +1,44 @@
 import PropTypes from "prop-types";
 import React from "react";
 import { usePost } from "../context/PostContext";
-import Link from "next/link";
-const appUrl = process.env.NEXT_PUBLIC_STORE_URL;
+import { ProductTermLinksMarkup, productTermsFor, termArchiveHref } from "./ProductCategoriesView";
+import { elementCssClasses } from "../ElementsDefinition";
 
+/*
+	The product's tags, each linking to its /tags/<slug>/ page, through the
+	same ProductTermLinksMarkup the categories block uses. The shop used to
+	fall back to two placeholders, "Tag Name" and "Tag Name 2", so every
+	product without tags showed fake ones; it now shows nothing. The separator
+	option was declared but the text was hardcoded to ", ".
+*/
+const ProductTagsView = (props) => {
 
-const TermTitle = (props) => {
-
-
-
-
-
-
-
-
-
-
-	var index = props?.index
-	var name = props?.name
-	var cssSelectors = props?.cssSelectors
-
-
-	var id = props?.id;
-	var type = props?.type;
-
-	var options = props?.options;
-	var tag = options?.tag ?? 'h1';
-	var label = options?.label;
-	var readmore = options?.readmore ?? 'Read more';
-	var maxWord = options?.maxWord ?? 20;
-
+	/* A key the block lacks falls back to the productTags defaults in ElementsDefinition.js. */
+	var cls = elementCssClasses('productTags', props?.cssSelectors);
 
 	const product = usePost();
-
-	var tags = product?.tags ?? [{ slug: 'tag-slug', name: 'Tag Name' }, { slug: 'tag-slug2', name: 'Tag Name 2' }];
-
-	const Tag = tag;
-
-
-
+	var tags = productTermsFor(product, 'tags');
+	if (tags.length === 0) return null;
 
 	return (
-
-
-		<div id={id} index={index} type={type} className={`${cssSelectors['*']?.classes}  `}
-		>
-			{(label && tags?.length > 0) && (
-				<div className={cssSelectors['label']?.classes}>{options?.label}</div>
-			)}
-
-
-			{tags?.length > 0 && (
-
-				<div className={cssSelectors['items']?.classes}>
-
-
-
-
-					{tags.map((item, index) => {
-						return (
-							<Link key={index} href={`${appUrl}tags/${item.slug}`} className={cssSelectors['item']?.classes}>
-								<span className={cssSelectors['category-name']?.classes}>{item.name}</span>
-								{tags?.length > (index + 1) && (
-									<span className={cssSelectors['separator']?.classes}>, </span>
-								)}
-							</Link>
-						)
-					})}
-				</div>
-
-			)}
-
-
-
-		</div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+		<ProductTermLinksMarkup
+			cls={cls}
+			id={props?.id}
+			index={props?.index}
+			type={props?.type}
+			options={props?.options}
+			terms={tags}
+			hrefFor={term => termArchiveHref('tags', term.slug)}
+		/>
 	);
 };
 
+ProductTagsView.propTypes = {
+	index: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+	id: PropTypes.string,
+	type: PropTypes.string,
+	options: PropTypes.object,
+	cssSelectors: PropTypes.object,
+};
 
-
-export default TermTitle;
+export default ProductTagsView;

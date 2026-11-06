@@ -3,14 +3,21 @@
 import PropTypes from "prop-types";
 import React from "react";
 import { useState } from "react";
-import { IconColumns, IconPlus } from "@tabler/icons-react";
 import BlockPreview from '../BlockPreview';
-import { MenuProvider } from "../context/MenuContext";
-import * as TablerIcons from '@tabler/icons-react';
+import { TabsMarkup, tabsItemsFor } from './TabsView';
+import { elementCssClasses } from "../ElementsDefinition";
 
-const Grid = (props) => {
+/*
+	Builder (canvas) preview of a tabs block.
+
+	It renders TabsView's own TabsMarkup, reading the same cssSelectors keys
+	with the same defaults from ElementsDefinition.js, so the canvas shows the
+	tabs exactly as the shop does. Clicking a tab opens it here too, so each
+	tab's content can be edited; the open panel is drawn with BlockPreview so
+	it stays droppable.
+*/
+const Tabs = (props) => {
 	const {
-		block,
 		draggingBlock,
 		setDraggingBlock,
 		dragOverIndex,
@@ -19,20 +26,17 @@ const Grid = (props) => {
 		selectedId,
 		index,
 		id,
-		type,
-		prams,
-		handleMoveBlock // New prop for recursive drops
+		handleMoveBlock
 	} = props;
 
-	const cssSelectors = props?.cssSelectors;
 	const children = props?.children || [];
-
 	var options = props?.options;
-	var orientation = options?.orientation;
-	var tabsItems = options?.tabsItems;
+	var vertical = options?.orientation == 'vertical';
+	var tabsItems = tabsItemsFor(options, children);
+
+	var cls = elementCssClasses('tabs', props?.cssSelectors);
 
 	const [activeTab, setActiveTab] = useState(props?.activeTab ?? 0);
-
 
 	const onDrop = (e) => {
 		e.preventDefault();
@@ -40,10 +44,6 @@ const Grid = (props) => {
 
 		const paletteType = e.dataTransfer.getData("paletteType");
 		const canvasBlockId = e.dataTransfer.getData("canvasBlock");
-
-
-
-
 
 		if (handleMoveBlock) {
 			handleMoveBlock({ paletteType, canvasBlockId }, id, 'inside');
@@ -55,98 +55,53 @@ const Grid = (props) => {
 		e.stopPropagation();
 	};
 
-
-	// const childrenArray = React?.Children?.toArray(children);
-
-
-	// console.log(childrenArray);
-
-
 	return (
-		<div
-			draggable
+		<TabsMarkup
+			cls={cls}
 			id={id}
-			className={`p-4 ${cssSelectors['*']?.classes ?? ''}    hover:outline-orange-200 hover:outline-solid hover:outline-1 relative   ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200 bg-orange-200' : ''}
-				${selectedId === id ? 'outline-1 outline-solid outline-orange-400 relative' : ''}
-			`}
-			onClick={(e) => {
-				e.preventDefault();
-				e.stopPropagation();
-				setSelectedId(selectedId !== id ? id : null);
+			tabsItems={tabsItems}
+			children={children}
+			vertical={vertical}
+			activeTab={activeTab}
+			onSelect={setActiveTab}
+			rootClassName={`hover:outline-orange-200 hover:outline-solid hover:outline-1 relative ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200 bg-orange-200' : ''} ${selectedId === id ? 'outline-1 outline-solid outline-orange-400' : ''}`}
+			rootProps={{
+				draggable: true,
+				onClick: (e) => {
+					e.preventDefault();
+					e.stopPropagation();
+					setSelectedId(selectedId !== id ? id : null);
+				},
+				onDragStart: (e) => {
+					e.stopPropagation();
+					e.dataTransfer.setData("canvasBlock", id);
+					setDraggingBlock(id);
+				},
+				onDragEnd: () => {
+					setDraggingBlock(null);
+					setDragOverIndex(null);
+				},
+				onDragOver: onDragOver,
+				onDrop: onDrop,
 			}}
-			onDragStart={(e) => {
-				e.stopPropagation();
-				e.dataTransfer.setData("canvasBlock", id);
-				setDraggingBlock(id);
-			}}
-			onDragEnd={() => {
-				setDraggingBlock(null);
-				setDragOverIndex(null);
-			}}
-			onDragOver={onDragOver}
-			onDrop={onDrop}
-		>
-
-
-			<div className={`${cssSelectors['navs-items']?.classes} flex overflow-x-auto scrollbar-hide ${orientation == 'vertical' ? " lg:flex-col mb-4 lg:flex-nowrap flex-wrap" : ""} `}>
-				{tabsItems?.map((tab, index) => {
-
-					var isActive = activeTab === index;
-					const IconX = TablerIcons[tab.icon];
-
-					return (
-
-
-						<div
-							key={index}
-							className={`${cssSelectors['nav-item']?.classes}  ${isActive
-								? cssSelectors['nav-item-active']?.classes
-								: ""
-								}`}
-							onClick={() => setActiveTab(index)}
-						>
-							{/* <div>{tab.icon}</div> */}
-
-							<div className={`${cssSelectors['nav-item-icon']?.classes}`}>
-								{IconX ? <IconX /> : null}
-							</div>
-							<div className={`${cssSelectors['nav-item-label']?.classes}`}>{tab.label}</div>
-						</div>
-					)
-				})}
-			</div>
-
-			{
-				children.map((child, idx) => (
-					<>
-						{idx == activeTab && (
-
-							<div className={`${cssSelectors['nav-item-content']?.classes}`}>
-								<BlockPreview
-									key={child.id}
-									index={`${index}-${idx}`}
-									block={child}
-									draggingBlock={draggingBlock}
-									dragOverIndex={dragOverIndex}
-									setDragOverIndex={setDragOverIndex}
-									setDraggingBlock={setDraggingBlock}
-									setSelectedId={setSelectedId}
-									selectedId={selectedId}
-									handleMoveBlock={handleMoveBlock}
-								/>
-							</div>
-
-						)}
-
-					</>
-				))
-			}
-		</div>
+			renderPanel={(child, tabIndex) => (
+				<BlockPreview
+					index={`${index}-${tabIndex}`}
+					block={child}
+					draggingBlock={draggingBlock}
+					dragOverIndex={dragOverIndex}
+					setDragOverIndex={setDragOverIndex}
+					setDraggingBlock={setDraggingBlock}
+					setSelectedId={setSelectedId}
+					selectedId={selectedId}
+					handleMoveBlock={handleMoveBlock}
+				/>
+			)}
+		/>
 	);
 };
 
-Grid.propTypes = {
-	block: PropTypes.object,
+Tabs.propTypes = {
 	draggingBlock: PropTypes.string,
 	setDraggingBlock: PropTypes.func,
 	dragOverIndex: PropTypes.string,
@@ -156,7 +111,8 @@ Grid.propTypes = {
 	index: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
 	id: PropTypes.string,
 	type: PropTypes.string,
-	handleDropInto: PropTypes.func,
+	options: PropTypes.object,
+	cssSelectors: PropTypes.object,
 };
 
-export default Grid;
+export default Tabs;

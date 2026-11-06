@@ -1,17 +1,22 @@
-
 "use client"
-import { useState, useEffect } from "react";
-import { IconSquareRoundedPlusFilled, IconSquareRoundedMinusFilled, IconStarFilled, IconStar, IconIdBadge2 } from "@tabler/icons-react";
+
+import { useState } from "react";
+import { IconSquareRoundedPlusFilled, IconSquareRoundedMinusFilled } from "@tabler/icons-react";
 import * as TablerIcons from '@tabler/icons-react';
+import { elementCssClasses } from "../ElementsDefinition";
+import { withLegacyStepperKeys } from "./AddToCartView";
 
+/*
+	Builder (canvas) preview of the add-to-cart control.
 
-
-
-
+	It mirrors AddToCartView's markup - the quantity stepper and the button -
+	and reads the same cssSelectors keys with the same defaults from
+	ElementsDefinition.js, so styles edited in the builder show here exactly
+	as on the storefront. It never touches the cart: the stepper only changes
+	the number shown, and the button only selects the block.
+*/
 const AddToCart = (props) => {
 
-
-	var draggingBlock = props?.draggingBlock
 	var setDraggingBlock = props?.setDraggingBlock
 
 	var dragOverIndex = props?.dragOverIndex
@@ -20,112 +25,66 @@ const AddToCart = (props) => {
 	var setSelectedId = props?.setSelectedId
 	var selectedId = props?.selectedId
 	var index = props?.index
-	var cssSelectors = props?.cssSelectors ?? {};
-
+	var cssSelectors = withLegacyStepperKeys(props?.cssSelectors);
+	var cls = elementCssClasses('addToCart', cssSelectors);
 
 	var id = props?.id;
 	var type = props?.type;
 
 	var options = props?.options;
 	var iconSize = options?.iconSize ?? 20;
-	var target = options?.target;
-	var scheme = options?.scheme;
-	var url = options?.url;
-
 	var icon = options?.icon;
-	var iconSize = options?.iconSize;
 	var buttonText = options?.buttonText;
-	var hideQuanity = options?.hideQuanity ?? false;
+	/* Same rule as AddToCartView: either spelling being true hides the stepper. */
+	var hideQuantity = options?.hideQuantity === true || options?.hideQuanity === true;
 	var hideButton = options?.hideButton ?? false;
 
-
-
-
-
-
-
-
-
-
-
-	var [quantity, setquantity] = useState(0);
-
-	var productData = props?.productData
-	var hideButtonText = props?.hideButtonText
-
-
-
-
-	var productId = productData?.id
-
+	var [quantity, setquantity] = useState(1);
 
 	const IconX = TablerIcons[icon];
 
-
-
-
 	return (
 
-		<div draggable id={id} type={type} className={`${cssSelectors['*']?.classes ?? ''} hover:outline-orange-200 hover:outline-solid hover:outline-1 ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200' : ''} ${selectedId == id ? 'outline-1 outline-solid outline-orange-400' : ''} `}
-
-
-
+		<div draggable id={id} type={type} className={`${cls('*')} hover:outline-orange-200 hover:outline-solid hover:outline-1 ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200' : ''} ${selectedId == id ? 'outline-1 outline-solid outline-orange-400' : ''} `}
 			onClick={e => {
 				e.stopPropagation();
-
 				setSelectedId(selectedId != id ? id : null);
 			}}
 			onDragStart={e => {
 				e.stopPropagation(); e.dataTransfer.setData("canvasBlock", id); setDraggingBlock(id);
 			}}
 			onDragEnd={() => { setDraggingBlock(null); setDragOverIndex(null); }}
-
 			onDragOver={e => { e.preventDefault(); setDragOverIndex(index); }}
 			onDragLeave={() => setDragOverIndex(null)}>
 
-
-			{!hideQuanity && (
-				<div className={`${cssSelectors['quantity-wrapper']?.classes}`} >
-					<div onClick={() => {
-
-
-					}} className="cursor-pointer ">
+			{!hideQuantity && (
+				<div className={cls('quantity-wrapper')} >
+					<button type="button" aria-label="Decrease quantity" className={cls('quantity-decrease')}
+						onClick={e => { e.stopPropagation(); setquantity(Math.max(1, quantity - 1)); }}
+					>
 						<IconSquareRoundedMinusFilled />
-					</div>
-					<input type="text" name="addToCart" className={` ${hideButtonText ? "w-full" : "w-16"} !border-0 !shadow-none text-center focus:border-0`} value={quantity} onChange={ev => {
-
-
-					}} />
-					<div onClick={() => {
-
-					}} className="cursor-pointer ">
+					</button>
+					<input type="text" inputMode="numeric" aria-label="Quantity" readOnly className={cls('quantity-input')} value={quantity} />
+					<button type="button" aria-label="Increase quantity" className={cls('quantity-increase')}
+						onClick={e => { e.stopPropagation(); setquantity(quantity + 1); }}
+					>
 						<IconSquareRoundedPlusFilled />
-					</div>
+					</button>
 				</div>
 			)}
-
 
 			{!hideButton && (
-				<div onClick={() => { }} className={`${cssSelectors['button-wrapper']?.classes}`} >
-
+				<div className={cls('button-wrapper')} >
 					{IconX && (
-						<div className={`${cssSelectors['button-icon']?.classes}`}>
-							{IconX ? <IconX size={iconSize} /> : null}
+						<div className={cls('button-icon')}>
+							<IconX size={iconSize} />
 						</div>
 					)}
-
-					<div className={`${cssSelectors['button-label']?.classes}`}>{buttonText}</div>
-
-
+					<div className={cls('button-label')}>{buttonText}</div>
 				</div>
-
 			)}
 
-
-
-
 		</div>
-
 
 	);
 };

@@ -67,9 +67,34 @@ export async function generateMetadata({ params }) {
 		}
 	}
 
+	/*
+		The page's SEO settings from the builder (Template Part Settings > SEO,
+		saved as meta.seo). Each falls back to what the page had before: its
+		title and excerpt. The social image and canonical URL are left out when
+		unset; noindex keeps the page out of search results.
+	*/
+	const seo = page?.meta?.seo ?? {}
+	const title = (seo.title || '').trim() || page.title
+	const description = (seo.description || '').trim() || page.excerpt || ''
+	const image = (seo.image || '').trim()
+	const canonical = (seo.canonical || '').trim()
+
 	return {
-		title: page.title,
-		description: page.excerpt || '',
+		title: title,
+		description: description,
+		openGraph: {
+			title: title,
+			description: description,
+			...(image ? { images: [{ url: image, alt: title }] } : {}),
+		},
+		twitter: {
+			card: image ? 'summary_large_image' : 'summary',
+			title: title,
+			description: description,
+			...(image ? { images: [image] } : {}),
+		},
+		...(canonical ? { alternates: { canonical: canonical } } : {}),
+		...(seo.noindex ? { robots: { index: false, follow: true } } : {}),
 	}
 }
 
@@ -97,7 +122,19 @@ export default async function DynamicPage({ params }) {
 
 	var blocks = JSON.parse(content)
 
-
+	/*
+		Template Part Settings > Disable Header / Disable Footer (saved as
+		page.meta). A builder page carries its own siteHeader / siteFooter
+		blocks rather than getting the site template's, so these hide the
+		page's top-level ones. They were saved but never read.
+	*/
+	var meta = page?.meta ?? {}
+	if (Array.isArray(blocks) && (meta.disableHeader || meta.disableFooter)) {
+		blocks = blocks.filter(block =>
+			!(meta.disableHeader && block?.type === 'siteHeader') &&
+			!(meta.disableFooter && block?.type === 'siteFooter')
+		)
+	}
 
 	return (
 		<>
