@@ -7,7 +7,7 @@ const page = ({ params }) => {
 	const { id } = use(params);
 
 	return (
-		<RiderEdit id={id} />
+		<RiderEdit id={id} role="support_agent" />
 	);
 };
 

@@ -104,7 +104,7 @@ const NAVS = [
 	{ label: ("Customers"), value: "customers", icon: <IconUserDollar />, parent: "users-group", roles: ['administrator'] },
 	{ label: ("Store Managers"), value: "store-managers", icon: <IconTrolley />, parent: "users-group", roles: ['administrator'] },
 	{ label: ("Support Agents"), value: "support-agents", icon: <IconUserSquare />, parent: "users-group", roles: ['administrator'] },
-	{ label: ("Affiliates"), value: "affiliate", icon: <IconUserDollar />, parent: "users-group", roles: ['administrator'] },
+	// { label: ("Affiliates"), value: "affiliate", icon: <IconUserDollar />, parent: "users-group", roles: ['administrator'] },
 	{ label: ("Suppliers"), value: "suppliers", icon: <IconTrolley />, parent: "users-group", roles: ['administrator'] },
 	// { label: ("Sellers"), value: "sellers", icon: <IconUserPin />, parent: "users-group", roles: ['administrator'] },
 	{ label: ("Riders"), value: "riders", icon: <IconBike />, parent: "users-group", roles: ['administrator'] },
@@ -126,7 +126,7 @@ const NAVS = [
 	{ label: ("Settings"), value: "settings", icon: <IconAdjustmentsAlt />, roles: ['administrator'] },
 	/* Top-level, so its link is `/${slug}` rather than `/dashboard/${slug}` -
 		 hence the explicit slug pointing at app/dashboard/extensions. */
-	// { label: ("Extensions"), value: "extensions", slug: "dashboard/extensions", icon: <IconPuzzle />, roles: ['administrator'] },
+	{ label: ("Extensions"), value: "extensions", slug: "dashboard/extensions", icon: <IconPuzzle />, roles: ['administrator'] },
 	// { label: ("Media"), value: "media", icon: <IconLibraryPhoto />, roles: ['administrator'] },
 	// { label: ("Onboard"), value: "onboard", icon: <IconAdjustmentsAlt />, roles: ['administrator'] },
 
@@ -139,8 +139,8 @@ const NAVS = [
 	/* Distinct keys from the Store entries above, with `slug` keeping the
 		 route they already pointed at. Both routes are hardcoded to the
 		 product taxonomies, so these still open the product screens. */
-	{ label: ("Categories"), value: "post-categories", slug: "categories", icon: <IconSubtask />, parent: "blogs", roles: ['administrator'] },
-	{ label: ("Tags"), value: "posts-tags", slug: "tags", icon: <IconTags />, parent: "blogs", roles: ['administrator'] },
+	{ label: ("Categories"), value: "post-categories", slug: "post-categories", icon: <IconSubtask />, parent: "blogs", roles: ['administrator'] },
+	{ label: ("Tags"), value: "posts-tags", slug: "posts-tags", icon: <IconTags />, parent: "blogs", roles: ['administrator'] },
 	{ label: ("Bulk Submit Blog"), value: "bulk-submit-blog", icon: <IconPropeller />, parent: "blogs", roles: ['administrator'] },
 
 

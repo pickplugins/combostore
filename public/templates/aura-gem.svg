@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600" role="img" aria-label="Aura &amp; Gem template preview">
+  <title>Aura &amp; Gem template preview</title>
+
+  <!--
+    Picker thumbnail for templates/AuraGem.js: a wireframe of the template's
+    own layout in its palette - plum #120B19 / #1C1224 / #281B33, gold
+    #E6C594 / #C79F63 / #EED9B6, lavender #F7F4F9.
+  -->
+
+  <defs>
+    <linearGradient id="ag-gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FAF4EB"/>
+      <stop offset="0.5" stop-color="#E6C594"/>
+      <stop offset="1" stop-color="#C79F63"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="800" height="600" fill="#F7F4F9"/>
+
+  <!-- ticker -->
+  <rect width="800" height="18" fill="#120B19"/>
+  <rect x="32" y="7" width="210" height="4" rx="2" fill="#E6C594" opacity="0.8"/>
+  <rect x="690" y="7" width="78" height="4" rx="2" fill="#FDFCFE" opacity="0.5"/>
+
+  <!-- header -->
+  <rect y="18" width="800" height="52" fill="#1C1224"/>
+  <rect x="32" y="41" width="56" height="5" rx="2.5" fill="#FDFCFE" opacity="0.6"/>
+  <rect x="100" y="41" width="56" height="5" rx="2.5" fill="#FDFCFE" opacity="0.6"/>
+  <rect x="168" y="41" width="56" height="5" rx="2.5" fill="#FDFCFE" opacity="0.6"/>
+  <rect x="320" y="33" width="160" height="12" rx="3" fill="url(#ag-gold)"/>
+  <rect x="352" y="51" width="96" height="3" rx="1.5" fill="#E6C594" opacity="0.7"/>
+  <rect x="560" y="35" width="120" height="18" rx="9" fill="#281B33" stroke="#E6C594" stroke-opacity="0.35"/>
+  <rect x="692" y="33" width="22" height="22" rx="6" fill="#281B33" stroke="#E6C594" stroke-opacity="0.35"/>
+  <circle cx="714" cy="33" r="5" fill="#E6C594"/>
+
+  <!-- hero -->
+  <rect y="70" width="800" height="250" fill="#120B19"/>
+  <rect x="300" y="88" width="468" height="214" rx="18" fill="#281B33" stroke="#E6C594" stroke-opacity="0.3"/>
+  <circle cx="500" cy="180" r="56" fill="none" stroke="url(#ag-gold)" stroke-width="10"/>
+  <path d="M482 118 l18 -22 l18 22 l-18 16 z" fill="#EED9B6"/>
+  <circle cx="420" cy="160" r="9" fill="#E6C594"/>
+  <circle cx="620" cy="250" r="9" fill="#E6C594"/>
+  <rect x="32" y="104" width="300" height="182" rx="18" fill="#1C1224" stroke="#E6C594" stroke-opacity="0.35"/>
+  <rect x="56" y="124" width="110" height="12" rx="6" fill="#E6C594" opacity="0.18"/>
+  <rect x="56" y="150" width="210" height="16" rx="3" fill="#FDFCFE"/>
+  <rect x="56" y="174" width="170" height="16" rx="3" fill="url(#ag-gold)"/>
+  <rect x="56" y="202" width="240" height="5" rx="2.5" fill="#FDFCFE" opacity="0.4"/>
+  <rect x="56" y="214" width="200" height="5" rx="2.5" fill="#FDFCFE" opacity="0.4"/>
+  <rect x="56" y="238" width="104" height="26" rx="7" fill="#E6C594"/>
+  <rect x="170" y="238" width="96" height="26" rx="7" fill="#281B33" stroke="#E6C594" stroke-opacity="0.4"/>
+
+  <!-- manifesto band -->
+  <rect y="320" width="800" height="26" fill="#1C1224"/>
+  <rect x="80" y="331" width="140" height="4" rx="2" fill="#E6C594"/>
+  <rect x="250" y="331" width="140" height="4" rx="2" fill="#E6C594"/>
+  <rect x="420" y="331" width="140" height="4" rx="2" fill="#E6C594"/>
+  <rect x="590" y="331" width="130" height="4" rx="2" fill="#E6C594"/>
+
+  <!-- bento -->
+  <rect x="300" y="366" width="200" height="12" rx="3" fill="#120B19"/>
+  <rect x="340" y="386" width="120" height="4" rx="2" fill="#120B19" opacity="0.4"/>
+  <rect x="32" y="404" width="430" height="96" rx="16" fill="#1C1224"/>
+  <rect x="474" y="404" width="294" height="96" rx="16" fill="#281B33"/>
+  <rect x="32" y="512" width="240" height="80" rx="16" fill="#281B33"/>
+  <rect x="284" y="512" width="484" height="80" rx="16" fill="#1C1224"/>
+  <rect x="52" y="470" width="180" height="10" rx="3" fill="#FDFCFE"/>
+  <rect x="494" y="470" width="140" height="10" rx="3" fill="#FDFCFE"/>
+  <rect x="52" y="566" width="130" height="9" rx="3" fill="#FDFCFE"/>
+  <rect x="304" y="566" width="200" height="9" rx="3" fill="#FDFCFE"/>
+  <rect x="52" y="456" width="80" height="4" rx="2" fill="#E6C594"/>
+  <rect x="494" y="456" width="80" height="4" rx="2" fill="#E6C594"/>
+</svg>

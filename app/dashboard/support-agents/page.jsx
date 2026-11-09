@@ -6,7 +6,7 @@ import Riders from "../../../components/pages/Riders";
 const page = () => {
 
 	return (
-		<Riders />
+		<Riders role="support_agent" />
 	);
 };
 

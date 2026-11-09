@@ -1,7 +1,6 @@
 "use client";
 import { useState, useEffect, Component } from "react";
-import { IconChevronDown, IconChevronUp, IconPhoneCall, IconBrandWhatsapp, IconMail, IconMailForward, IconCopy, IconPhone, IconRosetteDiscountCheck, IconX, IconSquareRoundedPlusFilled, IconSquareRoundedMinusFilled, IconStarFilled, IconStar, IconSearch, IconShoppingCartCancel, IconLetterX, IconArrowNarrowRightDashed, IconArrowNarrowLeftDashed, } from "@tabler/icons-react";
-import Image from "next/image";
+import { IconPhoneCall, IconBrandWhatsapp, IconMail, IconMailForward, IconCopy, IconPhone, IconExclamationCircle, IconTruckDelivery, IconPlayerPlay, IconExternalLink } from "@tabler/icons-react";
 import Link from "next/link";
 
 
@@ -21,18 +20,38 @@ import Spinner from "../components/Spinner";
 
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
+/* Same card shell as OrderUpdate and the other editor screens. `form-card`
+   also opts the fields inside into the shared input styling in globals.css. */
+const CARD_CLASSES =
+  "form-card !gap-0 !rounded-xl border border-gray-200 [&>div:first-child]:!px-5 [&>div:first-child]:!py-4 [&>div:nth-child(2)]:!p-5 [&>div:nth-child(2)]:!pt-3 [&_h2]:text-base [&_h2]:font-semibold [&_h2]:text-gray-900";
+
+const FIELD_CLASSES = "!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 rounded-lg px-3 py-2 text-sm w-full bg-white";
+const LABEL_CLASSES = "mb-1.5 block text-sm font-medium text-gray-700";
+const PRIMARY_BUTTON = "inline-flex items-center gap-2 rounded-lg bg-[#634FE5] px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#5540d4] cursor-pointer disabled:cursor-not-allowed disabled:opacity-60";
+const CHIP_BUTTON = "inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-700 transition-colors hover:border-gray-300 hover:bg-gray-50 hover:text-gray-900 cursor-pointer";
+
+const STATUS_TONES = {
+  pending: "bg-amber-50 text-amber-700 ring-amber-200",
+  started: "bg-blue-50 text-blue-700 ring-blue-200",
+  paused: "bg-gray-100 text-gray-700 ring-gray-200",
+  resumed: "bg-indigo-50 text-indigo-700 ring-indigo-200",
+  delivered: "bg-emerald-50 text-emerald-700 ring-emerald-200",
+  canceled: "bg-rose-50 text-rose-700 ring-rose-200",
+};
+
 
 
 const OrderDelivery = (props) => {
   const { formatDate } = useUtilsStore()
 
 
-  const { token, settings, cartToggle, setcartToggle, notifications, addNotification, cartItems, addCartItems, removeCartItems, resetCartItems, updateCartItems, userDataX, setUserDataX, navToggle, setnavToggle, lang, setlang } = useCounterStore()
+  const { token, settings, cartToggle, setcartToggle, notifications, addNotification, cartItems, addCartItems, removeCartItems, resetCartItems, updateCartItems, userDataX, setUserDataX, navToggle, setnavToggle, lang, setlang, couriersPrams } = useCounterStore()
 
   var order_id = props?.order_id
   var [orderData, setorderData] = useState(null);
 
   var userid = orderData?.userid
+  var couriers = settings?.couriers
 
 
   var [loading, setloading] = useState(false);
@@ -108,7 +127,7 @@ const OrderDelivery = (props) => {
 
             setloading(false);
 
-            if (delivery.id != null) {
+            if (delivery?.id != null) {
 
               setdeliveryData(delivery)
 
@@ -135,8 +154,7 @@ const OrderDelivery = (props) => {
         }
       })
       .catch((_error) => {
-        //this.saveAsStatus = 'error';
-        // handle the error
+        setloading(false);
       });
   }
 
@@ -196,8 +214,7 @@ const OrderDelivery = (props) => {
         }
       })
       .catch((_error) => {
-        //this.saveAsStatus = 'error';
-        // handle the error
+        setloading(false);
       });
   }
 
@@ -311,8 +328,7 @@ const OrderDelivery = (props) => {
         }
       })
       .catch((_error) => {
-        //this.saveAsStatus = 'error';
-        // handle the error
+        setloading(false);
       });
   }
 
@@ -364,19 +380,19 @@ const OrderDelivery = (props) => {
         }
       })
       .catch((_error) => {
-        //this.saveAsStatus = 'error';
-        // handle the error
+        setloading(false);
       });
 
   }
 
   function onPickRider(args) {
 
-    get_rider(args?.ID).then((rider) => {
-      setriderData(rider)
+    setdeliveryData({ ...deliveryData, rider_id: args?.id })
+    // get_rider(args?.id).then((rider) => {
+    //   setriderData(rider)
 
-      setdeliveryData({ ...deliveryData, rider_id: args?.ID })
-    });
+
+    // });
   }
   function onLocationSelect(coords) {
 
@@ -389,6 +405,11 @@ const OrderDelivery = (props) => {
 
 
 
+  const statusTone = STATUS_TONES[deliveryData?.status] ?? "bg-gray-100 text-gray-600 ring-gray-200";
+  const courierLabel = couriersPrams?.[deliveryData?.courier]?.label
+    ?? Object.values(couriersPrams ?? {}).find(c => c?.id == deliveryData?.courier)?.label
+    ?? deliveryData?.courier;
+
   const requiredRoles = ["administrator", "rider"];
   const customerRoles = ["customer"];
 
@@ -397,205 +418,139 @@ const OrderDelivery = (props) => {
 
 
 
+  const copyText = (value, title) => {
+    navigator.clipboard.writeText(value ?? "")
+    addNotification({ type: 'success', title: title, content: title })
+  }
+
   return (
 
-    <div className='flex flex-col gap-5'>
-
-
+    <div className="flex flex-col gap-4">
 
       {!deliveryData?.id && (
-        <div className="flex bg-white p-5 rounded-sm items-center justify-between">
-          <div>Delivery hasn't started.</div>
-          <div className='flex    items-center gap-2'>
-
-            {loading && (
-              <Spinner />
-            )}
-
-            <div
-              onClick={(ev) => {
-                start_delivery();
-              }}
-              className="  rounded-sm cursor-pointer px-4 py-2 bg-[#1b0e9f] text-white flex gap-2 w-max">
-              {("Start Delivery")}
-            </div>
+        <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-gray-300 bg-white px-6 py-10 text-center">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#634FE5]/10 text-[#634FE5]">
+            <IconTruckDelivery size={24} />
           </div>
+          <div>
+            <div className="text-sm font-semibold text-gray-900">{("Delivery hasn't started")}</div>
+            <div className="mt-1 text-xs text-gray-500">{("Start a delivery to choose a courier, assign a rider and track this order.")}</div>
+          </div>
+          <button type="button" disabled={loading} onClick={() => start_delivery()} className={PRIMARY_BUTTON}>
+            {loading ? <Spinner /> : <IconPlayerPlay size={16} />}
+            {("Start Delivery")}
+          </button>
         </div>
       )}
 
-
-
       {deliveryData?.id && (
-
         <>
 
-          {deliveryData?.status?.length > 0 && (
-            <div className='flex gap-3 items-center  justify-end'>
-
-
-              <div className='flex gap-2 items-center'>
-                {loading && (
-
-                  <Spinner />
-
-                )}
-                <div className='p-2  rounded-sm cursor-pointer px-4 bg-[#1b0e9f] text-white'
-
-                  onClick={ev => {
-                    update_delivery()
-                  }}
-                >Update</div>
-
-              </div>
-
-
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm">
+            <div className="flex flex-wrap items-center gap-2 text-sm">
+              <span className="font-semibold text-gray-900">{("Delivery")} #{deliveryData?.id}</span>
+              {deliveryData?.status && (
+                <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold capitalize ring-1 ring-inset ${statusTone}`}>{deliveryData.status}</span>
+              )}
+              {deliveryData?.courier && (
+                <span className="inline-flex items-center rounded-full bg-gray-50 px-2 py-0.5 text-[11px] font-semibold text-gray-600 ring-1 ring-inset ring-gray-200">{courierLabel}</span>
+              )}
             </div>
-          )}
 
-          <WidgetWrapper collapsible={true} title="Delivery">
+            <div className="flex items-center gap-2">
+              {loading && <Spinner />}
+              <button type="button" disabled={loading} onClick={() => update_delivery()} className={PRIMARY_BUTTON}>
+                {("Update")}
+              </button>
+            </div>
+          </div>
 
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-5  ">
+          <WidgetWrapper className={CARD_CLASSES} collapsible={true} title="Delivery">
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
 
               <div>
-                <div htmlFor="">Courier</div>
-
-                <select name="shipping_method" className=" w-full  !border-2 border-solid border-gray-400 !shadow-none !outline-none focus:border-0"
-
-                  value={deliveryData?.courier} id="" onChange={(ev) => {
-
-
-                    var courier = ev.target.value;
-
-
-                    setdeliveryData({
-                      ...deliveryData,
-                      courier: courier,
-                    });
+                <label htmlFor="delivery-courier" className={LABEL_CLASSES}>{("Courier")}</label>
+                <select id="delivery-courier" name="shipping_method" className={FIELD_CLASSES}
+                  value={deliveryData?.courier ?? ""}
+                  onChange={(ev) => {
+                    setdeliveryData({ ...deliveryData, courier: ev.target.value });
                   }}>
-
-                  <option value="">Choose</option>
-                  <option value="comboStore">ComboStore Delivery</option>
-                  <option value="steadfast">Steadfast Courier</option>
-                  <option value="pathao">Pathao Courier</option>
-                  <option value="karatoa">Karatoa Courier</option>
-                  <option value="sundarban">Sundarban Courier</option>
+                  <option value="">{("Choose")}</option>
+                  {Object.entries(couriersPrams ?? {}).map(([key, item]) => (
+                    couriers?.[key]?.enabled ? <option key={key} value={item.id}>{item.label}</option> : null
+                  ))}
                 </select>
-
-
               </div>
+
               <div>
-                <div htmlFor="">Status</div>
+                <label htmlFor="delivery-status" className={LABEL_CLASSES}>{("Status")}</label>
+                <select id="delivery-status" name="status" className={FIELD_CLASSES}
+                  value={deliveryData?.status ?? ""}
+                  onChange={(ev) => {
+                    var status = ev.target.value;
 
-                <select name="status" className=" w-full  !border-2 border-solid border-gray-400 !shadow-none !outline-none focus:border-0" value={deliveryData?.status} id="" onChange={(ev) => {
-
-
-                  var status = ev.target.value;
-
-
-
-                  if (status == "started") {
-                    if (deliveryData?.rider_id == null) {
+                    if (status == "started" && deliveryData?.rider_id == null) {
                       addNotification({ type: 'error', title: 'Rider not selected', content: 'Please select a rider' })
                       return;
                     }
 
-
-                  }
-
-                  setdeliveryData({
-                    ...deliveryData,
-                    status: ev.target.value,
-                  });
-                }}>
-                  <option value="">Choose</option>
+                    setdeliveryData({ ...deliveryData, status: status });
+                  }}>
+                  <option value="">{("Choose")}</option>
                   <option value="pending">Pending</option>
                   <option value="started">Started</option>
                   <option value="paused">Paused</option>
                   <option value="resumed">Resumed</option>
                   <option value="delivered">Delivered</option>
                   <option value="canceled">Canceled</option>
-
                 </select>
-
-
-
               </div>
 
-              {deliveryData?.courier == 'kidobazar' && (
+              {(deliveryData?.courier == 'combostore' || deliveryData?.courier == 'steadfast') && (
                 <div>
-                  <div htmlFor="">Type</div>
-                  <select name="type" className=" w-full !border-2 border-solid border-gray-400 !shadow-none !outline-none focus:border-0 " value={deliveryData?.type} id="" onChange={(ev) => {
-
-                    var type = ev.target.value;
-
-                    setdeliveryData({
-                      ...deliveryData,
-                      type: type,
-                    });
-                  }}>
-                    <option value="">Choose</option>
-                    <option value="express">Express</option>
-                    <option value="normal">Normal</option>
+                  <label htmlFor="delivery-type" className={LABEL_CLASSES}>{("Type")}</label>
+                  <select id="delivery-type" name="type" className={FIELD_CLASSES}
+                    value={deliveryData?.type ?? ""}
+                    onChange={(ev) => {
+                      setdeliveryData({ ...deliveryData, type: ev.target.value });
+                    }}>
+                    <option value="">{("Choose")}</option>
+                    {deliveryData?.courier == 'combostore' ? (
+                      <>
+                        <option value="express">Express</option>
+                        <option value="normal">Normal</option>
+                      </>
+                    ) : (
+                      <>
+                        <option value="0">Home Delivery</option>
+                        <option value="1">Hub Pickup</option>
+                      </>
+                    )}
                   </select>
                 </div>
               )}
 
-
-
               {deliveryData?.courier == 'steadfast' && (
                 <>
-
                   <div>
-                    <div htmlFor="">Type</div>
-                    <select name="type" className=" w-full !border-2 border-solid border-gray-400 !shadow-none !outline-none focus:border-0 " value={deliveryData?.type} id="" onChange={(ev) => {
-
-                      var type = ev.target.value;
-
-                      setdeliveryData({
-                        ...deliveryData,
-                        type: type,
-                      });
-                    }}>
-                      <option value="">Choose</option>
-                      <option value="0">Home Delivery</option>
-                      <option value="1">Hub Pickup</option>
-                    </select>
-                  </div>
-
-
-                  <div className="">
-                    <div htmlFor="">Consignment ID</div>
-                    <input type="text" name="" id="" className=" w-full !border-2 border-solid border-gray-400 !shadow-none !outline-none focus:border-0 "
-                      value={deliveryData?.consignment_id}
+                    <label htmlFor="delivery-consignment" className={LABEL_CLASSES}>{("Consignment ID")}</label>
+                    <input id="delivery-consignment" type="text" className={FIELD_CLASSES}
+                      value={deliveryData?.consignment_id ?? ""}
                       onChange={(ev) => {
-                        setdeliveryData({
-                          ...deliveryData,
-                          consignment_id: ev.target.value,
-                        });
+                        setdeliveryData({ ...deliveryData, consignment_id: ev.target.value });
                       }} />
                   </div>
-                  <div className="">
-                    <div htmlFor="">Tracking code</div>
-                    <input type="text" name="" id="" className=" w-full !border-2 border-solid border-gray-400 !shadow-none !outline-none focus:border-0 "
-                      value={deliveryData?.tracking_code}
+                  <div>
+                    <label htmlFor="delivery-tracking" className={LABEL_CLASSES}>{("Tracking code")}</label>
+                    <input id="delivery-tracking" type="text" className={FIELD_CLASSES}
+                      value={deliveryData?.tracking_code ?? ""}
                       onChange={(ev) => {
-                        setdeliveryData({
-                          ...deliveryData,
-                          tracking_code: ev.target.value,
-                        });
+                        setdeliveryData({ ...deliveryData, tracking_code: ev.target.value });
                       }} />
                   </div>
-
-
                 </>
               )}
-
-
-
-
-
-
-
 
             </div>
 
@@ -603,177 +558,115 @@ const OrderDelivery = (props) => {
 
 
           {deliveryData?.courier == 'steadfast' && (
-
-            <WidgetWrapper collapsible={true} title="Steadfast">
-
+            <WidgetWrapper className={CARD_CLASSES} collapsible={true} title="Steadfast">
 
               <div className="flex flex-col gap-4">
-                <div className="flex gap-3 items">
-
-                  <a className="text-white bg-gray-600  px-3 py-2 rounded-sm cursor-pointer" href={`https://steadfast.com.bd/t/${deliveryData?.tracking_code}`} target="_blank">Tracking on Steadfast</a>
-
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                    <div className="text-xs font-medium uppercase tracking-wide text-gray-500">{("Consignment ID")}</div>
+                    <div className="mt-1 flex items-center gap-2 text-sm font-semibold tabular-nums text-gray-900">
+                      {deliveryData?.consignment_id || <span className="font-normal text-gray-400">—</span>}
+                      {deliveryData?.consignment_id && (
+                        <span className={CHIP_BUTTON} onClick={() => copyText(deliveryData.consignment_id, "Consignment ID Copied")}><IconCopy size={14} /></span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                    <div className="text-xs font-medium uppercase tracking-wide text-gray-500">{("Tracking Code")}</div>
+                    <div className="mt-1 flex items-center gap-2 text-sm font-semibold tabular-nums text-gray-900">
+                      {deliveryData?.tracking_code || <span className="font-normal text-gray-400">—</span>}
+                      {deliveryData?.tracking_code && (
+                        <span className={CHIP_BUTTON} onClick={() => copyText(deliveryData.tracking_code, "Tracking Code Copied")}><IconCopy size={14} /></span>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <div>Consignment ID: {deliveryData?.consignment_id}</div>
-                <div>Tracking Code: {deliveryData?.tracking_code}</div>
 
+                {deliveryData?.tracking_code && (
+                  <a className="inline-flex w-fit items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
+                    href={`https://steadfast.com.bd/t/${deliveryData?.tracking_code}`} target="_blank" rel="noopener noreferrer">
+                    {("Track on Steadfast")} <IconExternalLink size={16} />
+                  </a>
+                )}
               </div>
 
             </WidgetWrapper>
           )}
 
 
-          {/* {directions?.origin && (
-        <div className="pb-20">
-          <GoogleMapDirections origin={directions?.origin} destination={directions?.destination} waypoints={directions?.waypoints} />
-        </div>
-      )} */}
-
-
-          {/* <div className="bg-white shadow-sm  p-5 rounded-sm">
-        {deliveryData?.startLatLng && (
-          <div className=" flex flex-col gap-4">
-            <div className="text-lg">Rider Pickup Location</div>
-            <LocationPicker markerDraggable={false} latlng={JSON.parse(deliveryData?.startLatLng)} />
-          </div>
-        )}
-      </div> */}
-
-          {deliveryData?.courier == 'comboStore' && (
-
-
+          {deliveryData?.courier == 'combostore' && (
             <>
-              <WidgetWrapper collapsible={true} title="Rider">
+              <WidgetWrapper className={CARD_CLASSES} collapsible={true} title="Rider">
 
-                <div className="flex flex-col gap-3">
-                  <div className="flex justify-between">
-
-                    <UsersPicker role={`rider`} onPick={onPickRider} />
+                <div className="flex flex-col gap-4">
+                  <div className="flex items-center justify-between">
+                    <UsersPicker placeholder={"Search Rider"} role={`rider`} onPick={onPickRider} />
                   </div>
 
-
+                  {!riderData?.id && (
+                    <div className="inline-flex w-fit items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-700"><IconExclamationCircle size={16} /> {("No rider assigned")}</div>
+                  )}
 
                   {riderData?.id && (
-                    <div className="flex justify-between ">
-                      <div className="flex gap-3">
-                        <div className="w-[50px] h-[50px] rounded-full overflow-hidden">
-                          <Image src={riderData?.avatar} width={50} height={50} alt={``} />
+                    <div className="flex flex-col gap-4">
+                      <div className="flex items-start gap-3">
+                        <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full border border-gray-200 bg-gray-100">
+                          {riderData?.avatar && <img className="h-full w-full object-cover" src={riderData.avatar} alt="" width={40} height={40} />}
                         </div>
-                        <div className="flex flex-col gap-1">
-                          <Link className="text-lg" href={`/rider/${riderData.id}`}>{riderData?.name}</Link>
-                          <div className="flex flex-col gap-2 items-top">
-
-                            <div className="flex items-center gap-2"><IconMail width={20} height={20} />
-
-                              <div>{riderData?.email}</div>
-
-                              <div className="flex gap-2">
-                                <a href={`mailto:${riderData?.email}`} className="flex items-center gap-2 text-white bg-gray-600 text-sm px-3 py-1 rounded-sm cursor-pointer"><IconMailForward size={16} /> Send Mail</a>
-                                <div className="flex items-center gap-2 text-white bg-gray-600 text-sm px-3 py-1 rounded-sm cursor-pointer" onClick={() => {
-                                  navigator.clipboard.writeText(riderData?.email)
-                                  addNotification({ type: 'success', title: 'Email Copied', content: "Email Copied" })
-                                }}>
-                                  <IconCopy size={16} /> Copy
-                                </div>
-                              </div>
-
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <div className="flex gap-3 items-center">
-                                <div className="flex items-center gap-2"><IconPhone width={20} height={20} /></div>
-                                <div>{riderData?.phone}</div>
-                                <a href={`tel:${riderData?.phone}`} className="flex items-center gap-2 text-white bg-gray-600 text-sm px-3 py-1 rounded-sm cursor-pointer"><IconPhoneCall size={16} /> Call</a>
-                                <a href={`https://wa.me/${riderData?.phone}`} className="flex items-center gap-2 text-white bg-gray-600 text-sm px-3 py-1 rounded-sm cursor-pointer"><IconBrandWhatsapp size={16} /> WhatsApp</a>
-                                <div className="flex items-center gap-2 text-white bg-gray-600 text-sm px-3 py-1 rounded-sm cursor-pointer" onClick={() => {
-                                  navigator.clipboard.writeText(riderData?.phone)
-                                  addNotification({ type: 'success', title: 'Phone Copied', content: "Phone Copied" })
-                                }}>
-                                  <IconCopy size={16} /> Copy
-                                </div>
-                              </div>
-                            </div>
-
-
-
-                          </div>
-
-
+                        <div>
+                          <Link className="text-sm font-semibold text-gray-900 hover:text-[#634FE5]" href={`/dashboard/riders/${riderData.id}`}>{riderData?.name}</Link>
+                          <div className="text-xs text-gray-500">ID: {riderData?.id}</div>
                         </div>
-
-
-
-
-
-
-
-
-
                       </div>
-                      <div className="text-right hidden">
-                        <div>Total Delivery: 125</div>
-                        <div>Rating : 4.8/5</div>
+
+                      <div className="flex flex-col items-start gap-2.5">
+                        {riderData?.email && (
+                          <div className="flex flex-wrap items-center gap-2">
+                            <IconMail className="text-gray-400" size={16} />
+                            <div className="text-sm text-gray-700">{riderData.email}</div>
+                            <a href={`mailto:${riderData.email}`} className={CHIP_BUTTON}><IconMailForward size={16} /> Send Mail</a>
+                            <span className={CHIP_BUTTON} onClick={() => copyText(riderData.email, "Email Copied")}><IconCopy size={16} /> Copy</span>
+                          </div>
+                        )}
+                        {riderData?.phone && (
+                          <div className="flex flex-wrap items-center gap-2">
+                            <IconPhone className="text-gray-400" size={16} />
+                            <div className="text-sm text-gray-700">{riderData.phone}</div>
+                            <a href={`tel:${riderData.phone}`} className={CHIP_BUTTON}><IconPhoneCall size={16} /> Call</a>
+                            <a href={`https://wa.me/${riderData.phone}`} target="_blank" rel="noopener noreferrer" className={CHIP_BUTTON}><IconBrandWhatsapp size={16} /> WhatsApp</a>
+                            <span className={CHIP_BUTTON} onClick={() => copyText(riderData.phone, "Phone Copied")}><IconCopy size={16} /> Copy</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}
                 </div>
 
-
               </WidgetWrapper>
 
-
-
-              <WidgetWrapper collapsible={true} title="Pickup Location">
-
-
-                <LocationPicker markerDraggable={true} latlng={deliveryData?.startLatLng} onLocationSelect={(coords) => {
-                  setdeliveryData(prev => ({ ...prev, startLatLng: coords }));
-                }} />
-              </WidgetWrapper>
-              <WidgetWrapper collapsible={true} title="Delivery Location">
-
-
-                <LocationPicker markerDraggable={true} latlng={deliveryData?.endLatLng} onLocationSelect={(coords) => {
-                  setdeliveryData(prev => ({ ...prev, endLatLng: coords }));
-                }} />
-              </WidgetWrapper>
+              <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+                <WidgetWrapper className={CARD_CLASSES} collapsible={true} title="Pickup Location">
+                  <div className="overflow-hidden rounded-lg border border-gray-200">
+                    <LocationPicker markerDraggable={true} latlng={deliveryData?.startLatLng} onLocationSelect={(coords) => {
+                      setdeliveryData(prev => ({ ...prev, startLatLng: coords }));
+                    }} />
+                  </div>
+                </WidgetWrapper>
+                <WidgetWrapper className={CARD_CLASSES} collapsible={true} title="Delivery Location">
+                  <div className="overflow-hidden rounded-lg border border-gray-200">
+                    <LocationPicker markerDraggable={true} latlng={deliveryData?.endLatLng} onLocationSelect={(coords) => {
+                      setdeliveryData(prev => ({ ...prev, endLatLng: coords }));
+                    }} />
+                  </div>
+                </WidgetWrapper>
+              </div>
             </>
           )}
 
-
-
-
-
-
         </>
-
       )}
 
-
-
-
-
-
-
-
-
-
-
-
     </div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   );
 };
 

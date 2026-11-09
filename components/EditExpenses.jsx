@@ -1,275 +1,158 @@
 "use client";
-import { useState, useEffect, Component } from "react";
-import { IconChevronDown, IconChevronUp, IconSquare, IconMapPin, IconTrash, IconBasketPlus, IconClockPause, IconExclamationCircle, IconRosetteDiscountCheck, IconX, IconSquareRoundedPlusFilled, IconPhoneCall, IconFilter2Check, IconFilter2Edit, IconCopy, IconMailForward, IconArrowNarrowRightDashed, IconArrowNarrowLeftDashed, IconMail, IconPhone, IconAddressBook, IconBrandWhatsapp } from "@tabler/icons-react";
-import Image from "next/image";
-import Link from "next/link";
-
-import { APIProvider, Map, useMapsLibrary, useMap } from '@vis.gl/react-google-maps';
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
-import { format } from "date-fns";
-import DropDown from '../components/DropDown';
+import { useState, useEffect, useMemo } from "react";
+import { IconTrash, IconPlus, IconMinus, IconMail, IconPhone, IconCopy, IconDeviceFloppy, IconUser, IconInfoCircle, IconX } from "@tabler/icons-react";
 
 import { useCounterStore } from '../store/useCounterStore'
 import { useUtilsStore } from '../store/useUtilsStore';
-import LocationPicker from '../components/LocationPicker';
-import GoogleMapDirections from '../components/GoogleMapDirections';
-import PopoverButton from '../components/PopoverButton';
 import Spinner from '../components/Spinner';
 import WidgetWrapper from '../components/WidgetWrapper';
 import UsersPicker from '../components/shop-elements/UsersPicker';
 import ExpensesItemsPicker from '../components/shop-elements/ExpensesItemsPicker';
 
-/* Toolbar buttons here were dark gray slabs that lightened on hover. */
-const SECONDARY_BUTTON =
-  "inline-flex h-9 items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 text-sm font-medium text-gray-700 transition-colors hover:border-gray-400 hover:bg-gray-50 cursor-pointer";
-
-
-
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
+/* Same card shell, fields and buttons as OrderUpdate and the user editor. */
+const CARD_CLASSES =
+  "form-card !gap-0 !rounded-xl border border-gray-200 [&>div:first-child]:!px-5 [&>div:first-child]:!py-4 [&>div:nth-child(2)]:!p-5 [&>div:nth-child(2)]:!pt-3 [&_h2]:text-base [&_h2]:font-semibold [&_h2]:text-gray-900";
+const FIELD = "!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 rounded-lg px-3 py-2 text-sm w-full bg-white";
+const LABEL = "mb-1.5 block text-sm font-medium text-gray-700";
+const PRIMARY_BUTTON =
+  "inline-flex !h-9 items-center gap-2 !rounded-lg !border-0 !bg-[#634FE5] !px-4 !py-0 !text-sm !font-semibold !text-white !shadow-sm transition-colors hover:!bg-[#5540d4] cursor-pointer disabled:cursor-not-allowed disabled:opacity-50";
+const SECONDARY_BUTTON =
+  "inline-flex !h-9 items-center gap-2 !rounded-lg !border !border-gray-300 !bg-white !px-3 !py-0 !text-sm !font-medium !text-gray-700 !shadow-none transition-colors hover:!border-gray-400 hover:!bg-gray-50 cursor-pointer disabled:opacity-50";
+const ICON_BUTTON = "inline-flex h-7 w-7 items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-900 cursor-pointer";
+const CHIP_BUTTON = "inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-700 transition-colors hover:border-gray-300 hover:bg-gray-50 cursor-pointer";
+
+/* The payment statuses the expenses list filters by. */
+const PAYMENT_STATUSES = [["pending", "Pending"], ["paid", "Paid"], ["partial", "Partial"], ["due", "Due"], ["delayed", "Delayed"], ["failed", "Failed"], ["refunded", "Refunded"]];
+
+const lineTotal = (item) => (parseFloat(item?.price) || 0) * (parseFloat(item?.quantity) || 0);
+
+/* Only what update_expense stores, so "unsaved" means a real difference. */
+const SAVED_FIELDS = ["title", "category", "note", "total_amount", "payment_method", "payment_status", "transaction_id", "created_for", "billing_name", "billing_email", "billing_phone", "billing_address"];
+const snapshot = (expense, items) => JSON.stringify({
+  ...Object.fromEntries(SAVED_FIELDS.map(key => [key, String(expense?.[key] ?? "")])),
+  items: (items ?? []).map(item => [String(item?.product_name ?? ""), String(parseFloat(item?.quantity) || 0), String(parseFloat(item?.price) || 0)]),
+});
+
+
 /*
-  Field styling for this screen.
+  An expense's editor: what it was for, its lines (or a single amount),
+  who it was paid to, and the payment. Used in the Expense tab of ExpenseEdit;
+  `onSaved` lets that page refresh its summary after a save.
 
-  The base control rules in globals.css are commented out, so an input with no
-  classes renders as a raw browser default - which is how fields here ended up
-  wearing one-off strings of `!border-2`, `!shadow-none` and `focus:border-0`,
-  each slightly different from the next. These three cover every field.
-
-  Selects are left to the unlayered `select` rule in globals.css, which beats
-  utilities on the element and already styles them to match; they only need
-  their width and text size here.
+  It used to show a Status dropdown and a Discount card for fields expenses do
+  not have (neither was ever saved, and the discount was shown as taken off a
+  total that never subtracted it); force the total to the items' sum even when
+  there were none, so an expense entered as one amount could only ever be 0;
+  read the picked person as \`args.ID\` (the picker sends \`id\`), so choosing who
+  it was paid to did nothing; save a picked line with its row id as a product;
+  and report every save as "Order update". Category and note, which are saved,
+  had no field at all.
 */
-const FIELD =
-  "w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 shadow-sm transition-colors hover:border-gray-400";
-
-const FIELD_SM =
-  "rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-xs text-gray-700 shadow-sm transition-colors hover:border-gray-400";
-
-const SELECT = "w-full text-sm text-gray-700";
-
-
-
-
-
 const EditExpense = (props) => {
-  const { formatDate, wrapCurrency } = useUtilsStore()
-
-
-  const { token, cartToggle, setcartToggle, notifications, addNotification, cartItems, addCartItems, resetCartItems, userDataX, setUserDataX, navToggle, setnavToggle, lang, setlang, inHousePaymentMethods, orderStatusArgs, paymentStatusArgs } = useCounterStore()
+  const { wrapCurrency } = useUtilsStore()
+  const { token, addNotification, inHousePaymentMethods, privacyMode } = useCounterStore()
 
   var expenseId = props?.id
   var [loading, setloading] = useState(false);
-  var [editItems, seteditItems] = useState(false);
+  var [saving, setsaving] = useState(false);
+  var [loadError, setloadError] = useState("");
 
-  var [expenseData, setexpenseData] = useState(props?.expenseData);
-  var [customerData, setcustomerData] = useState(null);
+  var [expenseData, setexpenseData] = useState(null);
   var [lineItems, setlineItems] = useState([]);
-  var [lineItemsQuery, setlineItemsQuery] = useState({ keyword: "" });
+  var [paidTo, setpaidTo] = useState(null);
+  var [saved, setsaved] = useState("");
 
+  var itemsTotal = useMemo(() => (lineItems ?? []).reduce((sum, item) => sum + lineTotal(item), 0), [lineItems]);
+  var hasItems = (lineItems?.length ?? 0) > 0;
 
+  /* With lines, the total is their sum; without, it is the amount typed in. */
+  var total = hasItems ? itemsTotal : (parseFloat(expenseData?.total_amount) || 0);
 
-
-
-  useEffect(() => {
-    get_expense();
-  }, [expenseId]);
-
-
-
-  useEffect(() => {
-
-    calculateOrder();
-
-  }, [expenseData?.discount_amount, lineItems]);
-
-
-
-
-
-  useEffect(() => {
-
-
-    if (!expenseData?.created_for) {
-      return
-    };
-
-    get_customer_data(expenseData?.created_for).then((user) => {
-      setcustomerData(user)
-
-
-    });
-  }, [expenseData?.created_for]);
-
-
-
-  function calculateOrder() {
-
-    var subtotal = 0;
-    var totalQuantity = 0;
-
-    lineItems?.map(item => {
-
-      var quantity = parseInt(item.quantity)
-      var price = parseFloat(item.price)
-
-      subtotal += (price * quantity);
-      totalQuantity += quantity;
-
-    })
-
-
-    setexpenseData((prevExpenseData) => {
-      var totalPay = parseFloat(subtotal) + parseFloat(prevExpenseData?.shipping_amount || 0);
-
-
-      if (prevExpenseData?.advance_payment) {
-        totalPay = totalPay - parseFloat(prevExpenseData?.advance_payment)
-      }
-
-      return { ...prevExpenseData, total_amount: totalPay, subtotal_amount: subtotal }
-    })
-
-  }
-
-
-
+  var dirty = expenseData ? snapshot({ ...expenseData, total_amount: total }, lineItems) !== saved : false;
 
 
   function get_expense() {
 
-
-    // if (!token) {
-    //   throw new Error("No token found");
-    // }
+    if (!expenseId) return;
 
     setloading(true);
+    setloadError("");
 
-    var postData = {
-      id: expenseId,
-    };
-    postData = JSON.stringify(postData);
-    setloading(true);
-    fetch(
-      serverUrl + "wp-json/combo-store/v2/get_expense",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: postData,
-      }
-    )
+    fetch(serverUrl + "wp-json/combo-store/v2/get_expense", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ id: expenseId }),
+    })
       .then((response) => {
         if (!response.ok) {
-          throw new Error("Token validation failed");
+          throw new Error(`Server answered ${response.status}.`);
         }
-
-        if (response.ok && response.status < 400) {
-          response.json().then((res) => {
-
-
-
-
-
-            // var errors = res?.errors;
-            // var success = res?.success;
-            var expense = res?.expense;
-            var lineItems = res?.lineItems;
-
-
-
-
-            setloading(false);
-            setexpenseData(expense)
-            setlineItems(lineItems)
-            calculateOrder();
-
-
-            // setTimeout(() => {
-            // 	setaddTask({ ...addTask, title: "", success: null, errors: null })
-
-            // }, 3000);
-          });
-        }
+        return response.json();
       })
-      .catch((_error) => {
-        //this.saveAsStatus = 'error';
-        // handle the error
+      .then((res) => {
+        var expense = res?.expense;
+        var items = Array.isArray(res?.lineItems) ? res.lineItems : [];
+
+        setloading(false);
+
+        if (!expense?.id) {
+          setloadError("This expense could not be found.");
+          return;
+        }
+
+        var itemsSum = items.reduce((sum, item) => sum + lineTotal(item), 0);
+        var normalised = { ...expense, total_amount: items.length ? itemsSum : (parseFloat(expense.total_amount) || 0) };
+
+        setexpenseData(normalised);
+        setlineItems(items);
+        setsaved(snapshot(expense, items));
+      })
+      .catch((error) => {
+        setloading(false);
+        setloadError(error?.message ?? "The expense could not be loaded.");
       });
   }
 
+  useEffect(() => {
+    if (!token) return;
+    get_expense();
+  }, [expenseId, token]);
 
 
+  /* Who it was paid to, for the card. */
+  useEffect(() => {
+    if (!expenseData?.created_for || !token) {
+      setpaidTo(null);
+      return;
+    }
 
-
-
-
-  async function get_customer() {
-
-
-    // if (!token) {
-    //   throw new Error("No token found");
-    // }
-
-    setloading(true);
-
-    var postData = {
-      id: expenseData?.created_for,
-    };
-    postData = JSON.stringify(postData);
-    setloading(true);
-    fetch(
-      serverUrl + "wp-json/combo-store/v2/get_customer",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: postData,
-      }
-    )
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Token validation failed");
-        }
-
-        if (response.ok && response.status < 400) {
-          response.json().then((res) => {
-
-
-            // var errors = res?.errors;
-            // var success = res?.success;
-            var user = res?.user;
-
-
-            setloading(false);
-            setcustomerData(user)
-
-
-
-            // setTimeout(() => {
-            // 	setaddTask({ ...addTask, title: "", success: null, errors: null })
-
-            // }, 3000);
-          });
-        }
+    fetch(serverUrl + "wp-json/combo-store/v2/get_customer", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ id: expenseData.created_for }),
+    })
+      .then((response) => response.ok ? response.json() : null)
+      .then((res) => {
+        /* For non-staff the API sends their own profile back; only show the person asked for. */
+        var person = res?.customer;
+        setpaidTo(person && String(person.id) === String(expenseData.created_for) ? person : null);
       })
-      .catch((_error) => {
-        //this.saveAsStatus = 'error';
-        // handle the error
-      });
-  }
+      .catch(() => setpaidTo(null));
+  }, [expenseData?.created_for, token]);
+
 
   function update_expense() {
 
-    setloading(true)
+    if (!expenseData || saving) return;
 
+    setsaving(true);
 
-
-    var postData = JSON.stringify({ ...expenseData, lineItems: lineItems });
+    var payload = { ...expenseData, total_amount: total, lineItems: lineItems };
 
     fetch(serverUrl + "wp-json/combo-store/v2/update_expense", {
       method: "POST",
@@ -277,778 +160,297 @@ const EditExpense = (props) => {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },
-      body: postData,
+      body: JSON.stringify(payload),
     })
       .then((response) => {
-
-        if (!response.ok) {
-          throw new Error('Token validation failed');
+        if (response.status === 403) {
+          throw new Error("You are not allowed to change expenses.");
         }
-
-        if (response.ok && response.status < 400) {
-          response.json().then((res) => {
-
-
-
-
-            var status = res?.status;
-            var message = res?.message;
-
-            if (status == 'success') {
-              addNotification({ type: 'success', title: 'Order update', content: message })
-            }
-            if (status == 'failed') {
-              addNotification({ type: 'error', title: 'Order update failed', content: message })
-            }
-
-
-
-            setTimeout(() => {
-              setloading(false)
-
-            }, 500);
-          });
-        }
-      })
-      .catch((_error) => {
-        //this.saveAsStatus = 'error';
-        // handle the error
-      });
-
-  }
-
-
-
-
-
-  function onPickSupplier(args) {
-
-    get_customer_data(args?.ID).then((user) => {
-      setcustomerData(user)
-
-
-
-
-      setexpenseData({
-        ...expenseData,
-        created_for: user?.id,
-        billing_address: [user?.billing_address1, user?.billing_address2].filter(Boolean).join(" "),
-        billing_name: user?.name,
-        billing_phone: user?.phone,
-        billing_email: user?.email,
-      })
-
-    });
-  }
-
-
-
-
-  async function get_customer_data(rider_id) {
-    const postData = JSON.stringify({ id: rider_id });
-
-    setloading(true);
-
-    return fetch(serverUrl + "wp-json/combo-store/v2/get_customer", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: postData,
-    })
-      .then((response) => {
         if (!response.ok) {
-          throw new Error("Token validation failed");
+          throw new Error(`Server answered ${response.status}.`);
         }
         return response.json();
       })
       .then((res) => {
-        setloading(false);
+        setsaving(false);
 
-        return res?.customer; // <-- THIS is now returned to the caller
+        if (res?.status === 'failed') {
+          addNotification({ type: 'error', title: 'Expense not saved', content: res?.message ?? "" })
+          return;
+        }
+
+        addNotification({ type: 'success', title: 'Expense saved', content: `Expense #${expenseId} saved.` })
+        setsaved(snapshot({ ...expenseData, total_amount: total }, lineItems));
+        props?.onSaved?.();
       })
       .catch((error) => {
-        setloading(false);
-        return null; // or throw error
+        setsaving(false);
+        addNotification({ type: 'error', title: 'Expense not saved', content: error?.message ?? "" })
       });
   }
 
 
-  function onAddProducts(item) {
+  /* A person picked as the payee fills in their billing details. */
+  function onPickPayee(args) {
 
+    var id = args?.id ?? args?.ID;
+    if (!id) return;
 
-    var lineItemsX = [...lineItems]
-
-
-    //var upsells = currentObject?.upsells ? currentObject.upsells : {};
-    lineItemsX.push({
-      "purchase_id": expenseData?.id,
-      "product_id": item.id,
-      "product_name": item.product_name,
-      "sku": "",
-      "quantity": 1,
-      "price": item.price,
-      "subtotal": 0,
-      "tax": 0,
-      "total": 0,
-      "meta": null,
+    fetch(serverUrl + "wp-json/combo-store/v2/get_customer", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ id: id }),
     })
+      .then((response) => response.ok ? response.json() : null)
+      .then((res) => {
+        var person = res?.customer;
+        if (!person?.id) return;
 
-    setlineItems(lineItemsX)
+        setexpenseData(prev => ({
+          ...prev,
+          created_for: person.id,
+          billing_name: person.name ?? prev?.billing_name ?? "",
+          billing_phone: person.phone || person.billing_phone || "",
+          billing_email: person.email ?? "",
+          billing_address: [person.billing_address1, person.billing_address2].filter(Boolean).join(" "),
+        }));
+      })
+      .catch(() => { });
+  }
 
-
+  function clearPayee() {
+    setexpenseData(prev => ({ ...prev, created_for: "" }));
   }
 
 
+  /* A past expense line, reused: its name and price. These are free-text
+     lines, not products, so it carries no product link. */
+  function onAddPastItem(item) {
+    setlineItems(prev => [...(prev ?? []), {
+      expense_id: expenseData?.id,
+      product_id: 0,
+      product_name: item?.product_name ?? "",
+      sku: "",
+      quantity: 1,
+      price: parseFloat(item?.price) || 0,
+      subtotal: 0, tax: 0, total: 0, meta: null,
+    }]);
+  }
+
+  function addBlankItem() {
+    setlineItems(prev => [...(prev ?? []), { expense_id: expenseData?.id, product_id: 0, product_name: "", sku: "", quantity: 1, price: 0, subtotal: 0, tax: 0, total: 0, meta: null }]);
+  }
+
+  function setItem(index, patch) {
+    setlineItems(prev => prev.map((item, i) => i === index ? { ...item, ...patch } : item));
+  }
+
+  function removeItem(index) {
+    setlineItems(prev => prev.filter((_, i) => i !== index));
+  }
+
+  function setField(key, value) {
+    setexpenseData(prev => ({ ...prev, [key]: value }));
+  }
+
+  function copy(value, what) {
+    navigator.clipboard?.writeText(value)
+      .then(() => addNotification({ type: 'success', title: `${what} copied`, content: value }))
+      .catch(() => { });
+  }
 
 
+  if (loading && !expenseData) {
+    return (
+      <div className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white p-5 text-sm text-gray-500">
+        <Spinner size={16} /> {("Loading expense")}
+      </div>
+    );
+  }
 
-  const requiredRoles = ["administrator", "rider", ""];
-  const hasAccess = requiredRoles.some(role => userDataX?.roles?.includes(role));
+  if (loadError && !expenseData) {
+    return (
+      <div className="flex flex-col items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+        {loadError}
+        <button type="button" className={SECONDARY_BUTTON} onClick={get_expense}>{("Try again")}</button>
+      </div>
+    );
+  }
 
+  if (!expenseData) return null;
 
-
+  var blur = privacyMode ? "blur-[3px]" : "";
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-4">
 
-
-
-      <div className='flex justify-between items-center'>
-        <div className="flex gap-3">
-          <DropDown allowReset={true} multiple={false} value={expenseData?.status} options={orderStatusArgs} label={`Status`} onOptionsChoose={(args) => {
-            setexpenseData({ ...expenseData, status: args?.value })
-          }} />
-
-
-          <DropDown allowReset={true} multiple={false} value={expenseData?.payment_method ?? 'cash'} options={inHousePaymentMethods} label={`Payment Method`} onOptionsChoose={(args) => {
-
-
-
-
-            setexpenseData({ ...expenseData, payment_method: args?.value })
-          }} />
-          <DropDown allowReset={true} multiple={false} value={expenseData?.payment_status} options={paymentStatusArgs} label={`Payment Status`} onOptionsChoose={(args) => {
-            setexpenseData({ ...expenseData, payment_status: args?.value })
-          }} />
-
-
-
-
+      {/* ---------- what it was for ---------- */}
+      <WidgetWrapper className={CARD_CLASSES} title="Details">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="sm:col-span-2">
+            <label htmlFor={`expense-${expenseId}-title`} className={LABEL}>{("Title")}</label>
+            <input id={`expense-${expenseId}-title`} type="text" className={FIELD} placeholder={("e.g. Bike servicing")}
+              value={expenseData?.title ?? ""} onChange={ev => setField("title", ev.target.value)} />
+          </div>
+          <div>
+            <label htmlFor={`expense-${expenseId}-category`} className={LABEL}>{("Category")}</label>
+            <input id={`expense-${expenseId}-category`} type="text" className={FIELD} placeholder={("e.g. Delivery, Rent, Salary")}
+              value={expenseData?.category ?? ""} onChange={ev => setField("category", ev.target.value)} />
+          </div>
+          <div className="sm:col-span-2">
+            <label htmlFor={`expense-${expenseId}-note`} className={LABEL}>{("Note")}</label>
+            <textarea id={`expense-${expenseId}-note`} className={`${FIELD} min-h-20`}
+              value={expenseData?.note ?? ""} onChange={ev => setField("note", ev.target.value)} />
+          </div>
         </div>
+      </WidgetWrapper>
 
-        <div className='flex gap-2 items-center'>
-          {loading && (
 
-            <Spinner />
+      {/* ---------- lines, or one amount ---------- */}
+      <WidgetWrapper className={CARD_CLASSES} title="Amount">
+        <div className="flex flex-col gap-4">
 
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <ExpensesItemsPicker placeholder={("Reuse a past line...")} onPick={onAddPastItem} />
+            <button type="button" className={SECONDARY_BUTTON} onClick={addBlankItem}>
+              <IconPlus size={16} /> {("Add line")}
+            </button>
+          </div>
+
+          {hasItems ? (
+            <div className="flex flex-col divide-y divide-gray-100 rounded-lg border border-gray-200">
+              {lineItems.map((item, index) => (
+                <div key={index} className="flex flex-wrap items-center gap-3 px-3 py-2.5">
+                  <input type="text" aria-label={("Line")} className={`${FIELD} min-w-48 flex-1`} placeholder={("What was paid for")}
+                    value={item?.product_name ?? ""} onChange={ev => setItem(index, { product_name: ev.target.value })} />
+
+                  <div className="flex items-center rounded-lg border border-gray-300">
+                    <button type="button" aria-label={("Fewer")} className={ICON_BUTTON} onClick={() => setItem(index, { quantity: Math.max(1, (parseFloat(item?.quantity) || 1) - 1) })}><IconMinus size={14} /></button>
+                    <input type="number" min="1" step="1" aria-label={("Quantity")} className="w-14 border-0 bg-transparent text-center text-sm tabular-nums focus:outline-none"
+                      value={item?.quantity ?? 1} onChange={ev => setItem(index, { quantity: ev.target.value })} />
+                    <button type="button" aria-label={("More")} className={ICON_BUTTON} onClick={() => setItem(index, { quantity: (parseFloat(item?.quantity) || 0) + 1 })}><IconPlus size={14} /></button>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 text-sm text-gray-500">
+                    <span>×</span>
+                    <input type="number" min="0" step="0.01" aria-label={("Price")} className={`${FIELD} w-28 text-right tabular-nums`}
+                      value={item?.price ?? 0} onChange={ev => setItem(index, { price: ev.target.value })} />
+                  </div>
+
+                  <span className="w-28 text-right text-sm font-medium tabular-nums text-gray-900">{wrapCurrency(lineTotal(item))}</span>
+
+                  <button type="button" title={("Remove line")} aria-label={("Remove line")} className={`${ICON_BUTTON} hover:!bg-red-50 hover:!text-red-600`} onClick={() => removeItem(index)}>
+                    <IconTrash size={16} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div>
+              <label htmlFor={`expense-${expenseId}-amount`} className={LABEL}>{("Amount")}</label>
+              <input id={`expense-${expenseId}-amount`} type="number" min="0" step="0.01" className={`${FIELD} max-w-xs text-right tabular-nums`}
+                value={expenseData?.total_amount ?? ""} onChange={ev => setField("total_amount", ev.target.value)} />
+              <p className="mt-1.5 flex items-start gap-1.5 text-xs text-gray-500">
+                <IconInfoCircle size={14} className="mt-px shrink-0" />
+                {("A single amount - or add lines above, and the total becomes their sum.")}
+              </p>
+            </div>
           )}
 
-
-          <div className='p-2  rounded-sm cursor-pointer px-4 bg-[#1b0e9f] text-white'
-
-            onClick={ev => {
-              update_expense()
-            }}
-          >Update</div>
-
+          <div className="flex items-center justify-between rounded-lg bg-gray-50 px-4 py-3">
+            <span className="text-sm font-semibold text-gray-900">{("Total")}</span>
+            <span className="text-lg font-bold tabular-nums text-gray-900">{wrapCurrency(total)}</span>
+          </div>
+        </div>
+      </WidgetWrapper>
 
 
+      {/* ---------- paid to ---------- */}
+      <WidgetWrapper className={CARD_CLASSES} title="Paid to">
+        <div className="flex flex-col gap-4">
+
+          {paidTo ? (
+            <div className="flex flex-wrap items-start justify-between gap-3 rounded-lg border border-gray-200 p-3">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-[#634FE5]/10 text-[#634FE5]">
+                  {paidTo?.avatar ? <img className="h-full w-full object-cover" src={paidTo.avatar} alt="" width={40} height={40} /> : <IconUser size={18} />}
+                </div>
+                <div className="min-w-0">
+                  <div className={`text-sm font-semibold text-gray-900 ${blur}`}>{paidTo?.name}</div>
+                  <div className="flex flex-wrap gap-x-3 text-xs text-gray-500">
+                    {paidTo?.email && <span className={`inline-flex items-center gap-1 ${blur}`}><IconMail size={12} /> {paidTo.email} <IconCopy size={12} className="cursor-pointer hover:text-gray-800" onClick={() => copy(paidTo.email, "Email")} /></span>}
+                    {paidTo?.phone && <span className={`inline-flex items-center gap-1 ${blur}`}><IconPhone size={12} /> {paidTo.phone} <IconCopy size={12} className="cursor-pointer hover:text-gray-800" onClick={() => copy(paidTo.phone, "Phone")} /></span>}
+                  </div>
+                </div>
+              </div>
+              <button type="button" className={CHIP_BUTTON} onClick={clearPayee}><IconX size={14} /> {("Remove")}</button>
+            </div>
+          ) : (
+            <div className="flex flex-wrap items-center gap-3">
+              <UsersPicker placeholder={("Search a person or supplier")} role={``} onPick={onPickPayee} />
+              <span className="text-xs text-gray-500">{("Optional. Picking someone fills in the billing details below.")}</span>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {[["billing_name", "Name", "text"], ["billing_phone", "Phone", "tel"], ["billing_email", "Email", "email"]].map(([key, label, type]) => (
+              <div key={key}>
+                <label htmlFor={`expense-${expenseId}-${key}`} className={LABEL}>{label}</label>
+                <input id={`expense-${expenseId}-${key}`} type={type} className={FIELD}
+                  value={expenseData?.[key] ?? ""} onChange={ev => setField(key, ev.target.value)} />
+              </div>
+            ))}
+            <div className="sm:col-span-2">
+              <label htmlFor={`expense-${expenseId}-billing_address`} className={LABEL}>{("Address")}</label>
+              <textarea id={`expense-${expenseId}-billing_address`} className={`${FIELD} min-h-20`}
+                value={expenseData?.billing_address ?? ""} onChange={ev => setField("billing_address", ev.target.value)} />
+            </div>
+          </div>
+        </div>
+      </WidgetWrapper>
 
 
+      {/* ---------- payment ---------- */}
+      <WidgetWrapper className={CARD_CLASSES} title="Payment">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div>
+            <label htmlFor={`expense-${expenseId}-pstatus`} className={LABEL}>{("Status")}</label>
+            <select id={`expense-${expenseId}-pstatus`} className={FIELD} value={expenseData?.payment_status ?? ""} onChange={ev => setField("payment_status", ev.target.value)}>
+              <option value="">{("Choose")}</option>
+              {PAYMENT_STATUSES.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+            </select>
+          </div>
+          <div>
+            <label htmlFor={`expense-${expenseId}-pmethod`} className={LABEL}>{("Method")}</label>
+            <select id={`expense-${expenseId}-pmethod`} className={FIELD} value={expenseData?.payment_method ?? ""} onChange={ev => setField("payment_method", ev.target.value)}>
+              <option value="">{("Choose")}</option>
+              {Object.keys(inHousePaymentMethods ?? {}).map(key => <option key={key} value={key}>{inHousePaymentMethods[key].label}</option>)}
+            </select>
+          </div>
+          <div>
+            <label htmlFor={`expense-${expenseId}-txn`} className={LABEL}>{("Transaction ID")}</label>
+            <input id={`expense-${expenseId}-txn`} type="text" className={FIELD}
+              value={expenseData?.transaction_id ?? ""} onChange={ev => setField("transaction_id", ev.target.value)} />
+          </div>
+        </div>
+      </WidgetWrapper>
 
+
+      {/* ---------- save ---------- */}
+      <div className={`sticky bottom-4 z-10 flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-white px-4 py-3 shadow-lg ${dirty ? "border-[#634FE5]/30" : "border-gray-200"}`}>
+        <span className="text-sm text-gray-600">
+          {dirty ? ("Unsaved changes") : ("All changes saved")}
+          <span className="ml-2 font-semibold tabular-nums text-gray-900">{wrapCurrency(total)}</span>
+        </span>
+        <div className="flex items-center gap-2">
+          {dirty && <button type="button" className={SECONDARY_BUTTON} disabled={saving} onClick={get_expense}>{("Discard")}</button>}
+          <button type="button" className={PRIMARY_BUTTON} disabled={saving || !dirty} onClick={update_expense}>
+            {saving ? <Spinner /> : <IconDeviceFloppy size={16} />} {("Save expense")}
+          </button>
         </div>
       </div>
 
-      <WidgetWrapper title="Title">
-
-        <div className="">
-
-          <div className="">
-            <input type="text" className={FIELD} value={expenseData?.title} onChange={ev => {
-              var value = ev.target.value;
-              setexpenseData({ ...expenseData, title: value })
-
-            }} />
-
-          </div>
-
-
-
-
-
-
-
-
-
-
-        </div>
-      </WidgetWrapper>
-
-
-      <WidgetWrapper collapsible={true} title="Expense Items">
-
-
-        <div className="flex gap-3 mb-4 px-3 items-center justify-between">
-          <div><ExpensesItemsPicker placeholder="Search items..." onPick={onAddProducts} /></div>
-
-          <div className="flex gap-2 items-center">
-            <div className={SECONDARY_BUTTON}
-              onClick={ev => {
-
-
-
-
-                var lineItemsX = [...lineItems]
-                lineItemsX.push({ "expense_id": expenseData?.id, "product_id": '', "product_name": "Custom Expense Title", "sku": "", "quantity": 1, "price": 0, "subtotal": 0, "tax": 0, "total": 0, "meta": null, })
-                setlineItems(lineItemsX)
-
-
-              }}
-            >
-
-              <IconBasketPlus />
-
-              Add Item
-            </div>
-
-            {lineItems?.length > 0 && (
-              <div className={SECONDARY_BUTTON}
-                onClick={ev => {
-                  seteditItems(!editItems)
-                }}
-              >
-                {editItems && (
-                  <div className="flex gap-2 items-center"><IconFilter2Check /> Done</div>
-                )}
-                {!editItems && (
-                  <div className="flex gap-2 items-center"><IconFilter2Edit /> Edit Order Items</div>
-                )}
-              </div>
-            )}
-
-          </div>
-
-        </div>
-
-        <div className="px-2">
-          {lineItems?.map((item, index) => {
-
-            return (
-              <div key={index} className="flex gap-2 px-2 items-center justify-between py-3 border-b border-solid border-gray-400">
-                <div className="flex gap-2 flex-1 items-center">
-
-                  <div className="flex flex-col gap-1 items-center   rounded-sm border-gray-500  ">
-
-
-                    <span onClick={() => {
-
-
-                      var lineItemsX = [...lineItems]
-                      lineItemsX[index].quantity = parseInt(item.quantity) + 1;
-                      setlineItems(lineItemsX)
-
-
-                    }} className="cursor-pointer hover:text-gray-600 bg-amazon-600 rounded-sm ">
-                      <IconChevronUp />
-                    </span>
-
-                    <span>{item.quantity}</span>
-                    <span onClick={() => {
-                      var lineItemsX = [...lineItems]
-                      lineItemsX[index].quantity = item.quantity == 1 ? 1 : parseInt(item.quantity) - 1;
-                      setlineItems(lineItemsX)
-
-
-                    }} className="cursor-pointer hover:text-gray-600 bg-amazon-600 rounded-sm ">
-                      <IconChevronDown />
-                    </span>
-                  </div>
-                  <div className="flex text-xs items-center gap-2">
-
-                    <div className="w-18 overflow-hidden bg-[#9a90ff]">
-                      {item.thumbnail && (
-                        <Image className="object-cover h-full w-full " src={item.thumbnail} width={200} height={200} alt={item?.product_name} />
-                      )}
-                      {!item.thumbnail && (
-                        <Image className="object-cover h-full w-full " src={`/thumb.png`} width={200} height={200} alt={item?.product_name} />
-                      )}
-                      {/* <Image className="w-full" src={item.thumbnail} alt="" /> */}
-
-                    </div>
-
-                    <div className="flex flex-col gap-3">
-                      {editItems && (
-                        <div className="flex">
-
-                          <div>
-                            <input className={`${FIELD_SM} w-full text-left lg:w-[400px]`} type="text" step="0.01" value={item.product_name} onChange={ev => {
-
-                              var lineItemsX = [...lineItems]
-                              lineItemsX[index].product_name = (ev.target.value);
-                              setlineItems(lineItemsX)
-
-
-                            }} />
-                          </div>
-                        </div>
-                      )}
-                      {!editItems && (
-                        <div className="text-sm" dangerouslySetInnerHTML={{ __html: item.product_name }}></div>
-                      )}
-
-
-                      <div className="flex  gap-3 items-center ">
-
-
-
-                        <div className="flex gap-3 items-center">
-
-
-                          {editItems && (
-                            <div className="flex gap-3">
-
-                              <div className="flex gap-2 items-center">
-                                <div>Price: </div>
-                                <div><input className={`${FIELD_SM} w-24 text-right tabular-nums`} type="number" step="0.01" value={item.price} onChange={ev => {
-
-                                  var lineItemsX = [...lineItems]
-                                  lineItemsX[index].price = parseFloat(ev.target.value);
-
-                                  setlineItems(lineItemsX)
-
-
-                                }} /></div>
-                              </div>
-                              <div className="flex gap-2 items-center">
-                                <div>Quantity: </div>
-                                <div><input className={`${FIELD_SM} w-24 text-right tabular-nums`} type="number" step="0.01" value={item.quantity} onChange={ev => {
-
-                                  var lineItemsX = [...lineItems]
-                                  lineItemsX[index].quantity = parseFloat(ev.target.value);
-                                  setlineItems(lineItemsX)
-
-
-                                }} /></div>
-                              </div>
-                            </div>
-
-                          )}
-                          {!editItems && (
-                            <div className="text-xs">{wrapCurrency(item.price)}</div>
-                          )}
-
-                          {item?.sale_price && (
-                            <>
-                              <div> - </div>
-                              <div className="text-xs line-through">{wrapCurrency(item.regular_price)}</div>
-                            </>
-                          )}
-                        </div>
-
-
-
-
-
-
-
-
-                        <div className=" text-red-500 cursor-pointer flex gap-1 items-center rounded-sm text-xs"
-                          onClick={ev => {
-                            var lineItemsX = [...lineItems]
-                            lineItemsX.splice(index, 1)
-
-                            setlineItems(lineItemsX)
-
-
-                            addNotification({ type: 'success', title: 'Item removed', content: `${item.product_name} removed from line items.` })
-
-                          }}
-                        ><IconTrash width={16} /> Remove</div>
-                      </div>
-
-                    </div>
-                  </div>
-                </div>
-                <div className="flex gap-1  justify-end text-xs items-center ">
-                  {wrapCurrency(item.price)} X {item.quantity} = {wrapCurrency(item.price * item.quantity)}
-
-
-
-
-                </div>
-
-              </div>
-            )
-
-          })}
-        </div>
-
-        <div className="flex justify-between px-4 py-4 border-b ">
-          <div className=" ">Sub Total</div>
-          <div className=" ">{wrapCurrency(expenseData?.subtotal_amount)}</div>
-        </div>
-
-        {expenseData?.shipping_amount > 0 && (
-          <div className="flex justify-between px-4 py-4 border-b ">
-            <div className=" ">Delivery Charge</div>
-            <div className=" ">+{wrapCurrency(expenseData?.shipping_amount)}</div>
-          </div>
-        )}
-        {expenseData?.advance_payment > 0 && (
-          <div className="flex justify-between px-4 py-4 border-b ">
-            <div className=" ">Advance Payment</div>
-            <div className="text-red-500">-{wrapCurrency(expenseData?.advance_payment)}</div>
-          </div>
-        )}
-
-
-
-
-
-        {expenseData?.discount_amount && (
-          <div className="flex justify-between px-4 py-4 border-b ">
-            <div className=" ">Discount</div>
-            <div className="  flex gap-2 items-center"> <div className="text-red-500">-{wrapCurrency(expenseData?.discount_amount)}</div></div>
-          </div>
-        )}
-
-
-
-
-
-
-
-
-
-        <div className="flex justify-between px-4 py-4 border-t-1 ">
-          <div className="text-lg font-bold ">Total Amount to Pay</div>
-          <div className="font-bold text-green-500">{wrapCurrency(expenseData?.total_amount)}</div>
-        </div>
-
-
-      </WidgetWrapper>
-
-      <WidgetWrapper title="Discount">
-
-        <div className="">
-
-          <div className=" lg:flex flex-wrap gap-3 py-3 items-center">
-            <div className="  py-2 lg:w-60 ">{("Discount amount")}</div>
-
-
-            <div className="">
-              <input type="text" className={FIELD} value={expenseData?.discount_amount} onChange={ev => {
-                var value = ev.target.value;
-                setexpenseData({ ...expenseData, discount_amount: value })
-
-              }} />
-
-            </div>
-
-          </div>
-
-
-
-
-
-
-
-
-
-
-        </div>
-      </WidgetWrapper>
-
-
-
-
-      <WidgetWrapper title="Expense for">
-
-        <div className="flex flex-col gap-5">
-
-          <div className="flex justify-between items-center">
-            <UsersPicker placeholder={"Search Supplier"} role={``} onPick={onPickSupplier} />
-          </div>
-
-
-          {/* {JSON.stringify(customerData)} */}
-          {!customerData?.id && (
-            <div className="text-red-500">No user assigned</div>
-          )}
-          {customerData?.id && (
-            <div className="grid grid-cols-1 gap-4 my-5">
-
-              <div>
-
-                <div className="flex gap-4 items-top">
-                  <div className="rounded-full overflow-hidden w-10 h-10">
-                    <img src={customerData?.avatar} alt="" width={50} height={50} />
-                  </div>
-                  <div>
-                    <div>{customerData?.name}</div>
-                    <div className="text-sm">ID: {customerData?.id}</div>
-                  </div>
-
-                </div>
-
-              </div>
-              <div className="flex flex-col gap-2 items-top">
-
-                {customerData?.email && (
-                  <div className="flex items-center gap-2"><IconMail width={20} height={20} />
-                    <div>{customerData?.email}</div>
-                    <div className="flex gap-2">
-                      <a href={`mailto:${customerData?.email}`} className="flex items-center gap-2 text-white bg-gray-600 text-sm px-3 py-1 rounded-sm cursor-pointer"><IconMailForward size={16} /> Send Mail</a>
-                      <div className="flex items-center gap-2 text-white bg-gray-600 text-sm px-3 py-1 rounded-sm cursor-pointer" onClick={() => {
-                        navigator.clipboard.writeText(customerData?.email)
-                        addNotification({ type: 'success', title: 'Email Copied', content: "Email Copied" })
-                      }}>
-                        <IconCopy size={16} /> Copy
-                      </div>
-                    </div>
-
-                  </div>
-                )}
-
-                {customerData?.phone && (
-                  <div className="flex items-center gap-2">
-                    <div className="flex gap-3 items-center">
-                      <div className="flex items-center gap-2"><IconPhone width={20} height={20} /></div>
-                      <div>{customerData?.phone}</div>
-                      <a href={`tel:${customerData?.phone}`} className="flex items-center gap-2 text-white bg-gray-600 text-sm px-3 py-1 rounded-sm cursor-pointer"><IconPhoneCall size={16} /> Call</a>
-                      <a href={`https://wa.me/${customerData?.phone}`} className="flex items-center gap-2 text-white bg-gray-600 text-sm px-3 py-1 rounded-sm cursor-pointer"><IconBrandWhatsapp size={16} /> WhatsApp</a>
-                      <div className="flex items-center gap-2 text-white bg-gray-600 text-sm px-3 py-1 rounded-sm cursor-pointer" onClick={() => {
-                        navigator.clipboard.writeText(customerData?.phone)
-                        addNotification({ type: 'success', title: 'Phone Copied', content: "Phone Copied" })
-                      }}>
-                        <IconCopy size={16} /> Copy
-                      </div>
-                    </div>
-                  </div>
-                )}
-                {customerData?.billing_address1 && (
-                  <div className="flex gap-2 flex-wrap text-sm">
-                    <div className="flex items-center gap-2"><IconMapPin width={20} height={20} /> {customerData?.billing_address1}</div>
-                    <div className="flex items-center gap-2"> {customerData?.billing_address2}</div>
-                    <div className="flex items-center gap-2"> {customerData?.city}</div>
-                    <div className="flex items-center gap-2"> {customerData?.country}</div>
-                    <div className="flex items-center gap-2 text-white bg-gray-600 text-sm px-3 py-1 rounded-sm cursor-pointer" onClick={() => {
-                      navigator.clipboard.writeText([customerData?.billing_address1, customerData?.billing_address2, customerData?.city, customerData?.country].filter(Boolean).join(" "))
-                      addNotification({ type: 'success', title: 'Address Copied', content: "Address Copied" })
-                    }}>
-                      <IconCopy size={16} /> Copy
-                    </div>
-                  </div>
-                )}
-
-
-
-              </div>
-
-
-
-            </div>
-          )}
-
-        </div>
-
-
-      </WidgetWrapper>
-
-
-      <WidgetWrapper title="Address">
-        <div className="grid grid-cols-1 gap-5">
-          <div>
-
-            <div className='flex justify-between items-center'>
-              <div className=" flex gap-3 items-center">
-                <div className="text-xl">Billing Address</div>
-              </div>
-            </div>
-
-
-
-
-
-
-            <div className="grid grid-cols-2 gap-5">
-
-              <div className=" flex flex-col gap-1  ">
-                <div className="  py-2 lg:w-60 ">{("Billing Name")}</div>
-                <div className="">
-                  <input type="text" className={FIELD} value={expenseData?.billing_name} onChange={ev => {
-                    var value = ev.target.value;
-                    setexpenseData({ ...expenseData, billing_name: value })
-                  }} />
-                </div>
-              </div>
-              <div className=" flex flex-col gap-1  ">
-                <div className="  py-2 lg:w-60 ">{("Billing Email")}</div>
-                <div className="">
-                  <input type="text" className={FIELD} value={expenseData?.billing_email} onChange={ev => {
-                    var value = ev.target.value;
-                    setexpenseData({ ...expenseData, billing_email: value })
-                  }} />
-                </div>
-              </div>
-              <div className=" flex flex-col gap-1  ">
-                <div className="  py-2 lg:w-60 ">{("Billing Phone")}</div>
-                <div className="">
-                  <input type="text" className={FIELD} value={expenseData?.billing_phone} onChange={ev => {
-                    var value = ev.target.value;
-                    setexpenseData({ ...expenseData, billing_phone: value })
-                  }} />
-                </div>
-              </div>
-              <div className=" flex flex-col gap-1  ">
-                <div className="  py-2 lg:w-60 ">{("Billing Address")}</div>
-                <div className="">
-                  <textarea className={`${FIELD} min-h-24`} value={expenseData?.billing_address} onChange={ev => {
-                    var value = ev.target.value;
-                    setexpenseData({ ...expenseData, billing_address: value })
-                  }} />
-                </div>
-              </div>
-
-
-            </div>
-
-          </div>
-          <div>
-
-
-
-
-
-          </div>
-        </div>
-      </WidgetWrapper>
-
-
-
-
-      <WidgetWrapper title="Expense Details">
-
-
-
-
-        <div className="border-0 border-b border-solid border-gray-200 lg:flex flex-wrap gap-3 py-3 items-center ">
-          <div className="  py-2 lg:w-60 font-bold">{('Payment status')}</div>
-
-
-          <select name="payment_status" className={SELECT} value={expenseData?.payment_status} id="" onChange={ev => {
-            var value = ev.target.value;
-            setexpenseData({ ...expenseData, payment_status: value })
-          }}>
-
-            <option value="">Choose</option>
-            <option value="paid">Paid</option>
-            <option value="pending">Pending</option>
-            <option value="failed">Failed</option>
-            <option value="delayed">Delayed</option>
-            <option value="refunded">Refunded</option>
-            <option value="due">Due</option>
-
-          </select>
-
-
-
-
-        </div>
-
-
-        <div className="border-0 border-b border-solid border-gray-200 lg:flex flex-wrap gap-3 py-3 items-center ">
-          <div className="  py-2 lg:w-60 font-bold">{('Payment Method')}</div>
-
-
-          <select name="payment_method" className={SELECT} value={expenseData?.payment_method} id="" onChange={ev => {
-            var value = ev.target.value;
-            setexpenseData({ ...expenseData, payment_method: value })
-          }}>
-
-            <option value="">Choose</option>
-
-            {Object.keys(inHousePaymentMethods).map(key => (
-              <option key={key} value={key}>{inHousePaymentMethods[key].label}</option>
-            ))}
-
-
-
-
-          </select>
-
-
-
-
-        </div>
-
-
-
-
-
-
-
-
-        <div className="border-0 border-b border-solid  border-gray-200 lg:flex flex-wrap gap-3 py-3 items-center">
-          <div className="  py-2 lg:w-60 font-bold">{("Transaction ID")}</div>
-
-
-          <div className="">
-            <input type="text" className={FIELD} value={expenseData?.transaction_id} onChange={ev => {
-              var value = ev.target.value;
-              setexpenseData({ ...expenseData, transaction_id: value })
-            }} />
-
-          </div>
-
-        </div>
-
-        {/* <div className="border-0 border-b border-solid  border-gray-200 lg:flex flex-wrap gap-3 py-3 items-center">
-          <div className="  py-2 lg:w-60 font-bold">{("Created Date")}</div>
-          <DatePicker
-            showTimeSelect
-            dateFormat="yyyy-MM-dd HH:mm:ss"
-            selected={expenseData?.created_at}
-            onChange={(date) => {
-              if (!date) return;
-
-              const formattedDate = format(date, "yyyy-MM-dd HH:mm:ss");
-
-              
-
-              setexpenseData({
-                ...expenseData,
-                created_at: formattedDate
-              });
-            }}
-          />
-        </div> */}
-
-
-
-      </WidgetWrapper>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     </div>
-
   );
 };
 

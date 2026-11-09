@@ -15,6 +15,7 @@ import { trackFacebookEvent } from '@/lib/facebook/pixel';
 import { generateFacebookEventId } from '@/lib/facebook/event-id';
 import { sendFacebookServerEvent } from '@/lib/facebook/capi';
 import { elementCssClasses } from "../ElementsDefinition";
+import { stockStatusFor, availableStock } from "./ProductStockStatusView";
 
 
 /*
@@ -119,6 +120,26 @@ const AddToCart = (props) => {
 	const purchaseBlocked = purchaseGate ? purchaseGate(productData)?.hideAddToCart === true : false;
 	var [addons, setaddons] = useState(productData?.addons);
 
+	/*
+		Stock. A sold-out product - or picked variation - used to go into the
+		cart like any other, and the stepper counted past what was left. The
+		rule is the stock badge's (stockStatusFor), so the button and the
+		"Out of stock" label never disagree; maxQuantity is the units left when
+		stock is counted, Infinity when it is not.
+	*/
+	var stockVariation = addons?.includes('variations') ? activeVariation : null;
+	var outOfStock = stockStatusFor(productData, stockVariation) === 'outofstock';
+	var maxQuantity = availableStock(productData, stockVariation);
+	var outOfStockText = options?.outOfStockText || "Out of stock";
+
+	function notifyStock(left) {
+		addNotification({
+			type: 'error',
+			title: left > 0 ? 'Not enough stock' : 'Out of stock',
+			content: left > 0 ? `Only ${left} left in stock.` : "Sorry, this product is out of stock.",
+		});
+	}
+
 	var hideButtonText = props?.hideButtonText
 	var quantitySyncwithCart = props?.quantitySyncwithCart
 	var onChangeCartBtn = props?.onChangeCartBtn
@@ -130,6 +151,11 @@ const AddToCart = (props) => {
 
 
 	async function addToCart() {
+
+		if (outOfStock) {
+			notifyStock(0);
+			return;
+		}
 
 
 
@@ -220,6 +246,11 @@ const AddToCart = (props) => {
 
 		quantity = (quantity == 0) ? 1 : quantity;
 
+		if (quantity > maxQuantity) {
+			notifyStock(maxQuantity);
+			return;
+		}
+
 
 
 		addCartItems({
@@ -246,7 +277,7 @@ const AddToCart = (props) => {
 
 		var trackPrams = { productId: productId, userid: userDataX?.id, event: "addToCart", source: "cartButton" }
 
-		//trackPageVisit(trackPrams);
+		trackPageVisit(trackPrams);
 		// sendMetaEvent()
 		sendTikTokEvent()
 
@@ -392,7 +423,26 @@ const AddToCart = (props) => {
 		<>
 
 
-			{canAddToCart && !purchaseBlocked && (
+			{/* Sold out: the button stays (so the layout holds) but cannot add, and the stepper goes. */}
+			{canAddToCart && !purchaseBlocked && outOfStock && !hideButton && (
+				<div id={id} type={type} className={cls('*')}>
+					<div className={`${cls('button-wrapper')} !cursor-not-allowed opacity-50`}
+						role="button"
+						aria-disabled="true"
+						tabIndex={0}
+						onClick={() => notifyStock(0)}
+						onKeyDown={ev => {
+							if (ev.key !== 'Enter' && ev.key !== ' ') return;
+							ev.preventDefault();
+							notifyStock(0);
+						}}
+					>
+						<div className={cls('button-label')}>{outOfStockText}</div>
+					</div>
+				</div>
+			)}
+
+			{canAddToCart && !purchaseBlocked && !outOfStock && (
 
 				<div id={id} type={type} className={cls('*')}
 				>
@@ -492,6 +542,11 @@ const AddToCart = (props) => {
 							<input type="text" inputMode="numeric" aria-label="Quantity" name="addToCart" className={cls('quantity-input')} value={quantity} onChange={ev => {
 								/* An emptied box used to store NaN as the quantity. */
 								var quantity = Math.max(0, parseInt(String(ev.target.value).replace(/\D/g, '')) || 0);
+								/* Typed past the stock: hold it at what is left. */
+								if (quantity > maxQuantity) {
+									notifyStock(maxQuantity);
+									quantity = maxQuantity;
+								}
 								setquantity(quantity)
 
 								if (onChangeCartBtn) {
@@ -512,6 +567,11 @@ const AddToCart = (props) => {
 									}
 
 									var quantityX = quantity + 1;
+
+									if (outOfStock || quantityX > maxQuantity) {
+										notifyStock(outOfStock ? 0 : maxQuantity);
+										return;
+									}
 
 									setquantity(quantityX)
 

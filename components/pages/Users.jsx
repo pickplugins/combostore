@@ -143,20 +143,30 @@ const Users = () => {
 			body: postData,
 		})
 			.then((response) => {
+				if (response.status === 403) {
+					throw new Error("You are not allowed to delete these accounts.");
+				}
 				if (!response.ok) {
-					throw new Error("Token validation failed");
+					throw new Error(`Server answered ${response.status}.`);
 				}
 
-				if (response.ok && response.status < 400) {
-					response.json().then((res) => {
-						setloading(false);
-						setselectedRows([]);
-						fetchPosts();
+				response.json().then((res) => {
+					setloading(false);
+					setselectedRows([]);
+					var deleted = parseInt(res?.deleted, 10);
+					var skipped = parseInt(res?.skipped, 10) || 0;
+					if (Number.isNaN(deleted)) deleted = ids.length;
+					addNotification({
+						type: deleted > 0 ? 'success' : 'error',
+						title: deleted > 0 ? `Users deleted` : 'Nothing deleted',
+						content: `${deleted} deleted.${skipped ? ` ${skipped} skipped: administrators, your own account, and (for store managers) staff accounts can't be deleted here.` : ""}`,
 					});
-				}
+					fetchPosts();
+				});
 			})
-			.catch((_error) => {
+			.catch((error) => {
 				setloading(false);
+				addNotification({ type: 'error', title: 'Delete failed', content: error?.message ?? '' });
 			});
 	}
 
@@ -252,7 +262,7 @@ const Users = () => {
 
 						<div className="p-1.5">
 							<div className="flex flex-col gap-0.5">
-								<Link className={MENU_ITEM} href={`/dashboard/customers/${entry?.id}`}>
+								<Link className={MENU_ITEM} href={`/dashboard/users/${entry?.id}`}>
 									<IconEyeShare size={16} /> View
 								</Link>
 								<div className={`${MENU_ITEM} !text-red-600 hover:!bg-red-50 hover:!text-red-700`} onClick={() => {
@@ -290,7 +300,7 @@ const Users = () => {
 
 				<div className="flex items-center gap-3">
 
-					<Link href={`/dashboard/customers/${entry?.id}`} className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-gray-200 bg-gray-50 text-xs font-semibold text-gray-500">
+					<Link href={`/dashboard/users/${entry?.id}`} className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-gray-200 bg-gray-50 text-xs font-semibold text-gray-500">
 						{entry?.thumbnail?.src ? (
 							<Image unoptimized className="h-10 w-10 object-cover" src={entry?.thumbnail?.src} width={80} height={80} alt={``} />
 						) : (
@@ -299,7 +309,7 @@ const Users = () => {
 					</Link>
 
 					<div className="flex min-w-0 flex-1 flex-col gap-1 text-left">
-						<Link className="truncate text-left text-sm font-medium text-gray-900 transition-colors hover:text-blue-600 hover:underline" href={`/dashboard/customers/${entry?.id}`}>
+						<Link className="truncate text-left text-sm font-medium text-gray-900 transition-colors hover:text-blue-600 hover:underline" href={`/dashboard/users/${entry?.id}`}>
 							{name || "—"}
 						</Link>
 
@@ -309,7 +319,7 @@ const Users = () => {
 							<PopoverButton buttonLabel={"Edit"} buttonIcon={null} title={"Edit User"} drawer={"right"} buttonClass={`inline-flex items-center rounded-md px-1.5 py-0.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-900 cursor-pointer`}>
 
 								<div className="p-5 bg-gray-50 text-left">
-									<UserEdit id={entry?.id} />
+									<UserEdit id={entry?.id} variant="drawer" />
 								</div>
 
 							</PopoverButton>

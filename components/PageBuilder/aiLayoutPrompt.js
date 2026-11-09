@@ -43,6 +43,68 @@ export const MODEL = 'claude-opus-5-5';
    timeout. */
 export const MAX_TOKENS = 32000;
 
+
+/* ------------------------------------------------------------------- cost */
+
+/*
+   Effort per AIPrompts mode. A request is billed almost entirely by what the
+   model writes - output is 5x input on Opus, thinking included - and every
+   mode used to run at `high`. Generate and Image decide a whole page's design
+   and keep it. Append works inside a page that already fixes the palette and
+   rhythm. Edit returns a patch for one block, which `high` was thinking about
+   at length.
+*/
+export const MODE_EFFORT = {
+	generate: 'high',
+	image: 'high',
+	append: 'medium',
+	edit: 'low',
+};
+
+/*
+   USD per million tokens, for the run meters in AIPrompts and AIThemeBuilder.
+   Cache writes are the 1-hour TTL the system prompt is sent with, which bills
+   at 2x input. A model that is not listed still runs; the meters show tokens.
+*/
+export const PRICES = {
+	'claude-opus-5-5': { input: 4, output: 20, cacheRead: 0.2, cacheWrite: 8 },
+	'claude-sonnet-5-5': { input: 2, output: 10, cacheRead: 0.2, cacheWrite: 4 },
+};
+
+export const EMPTY_SPEND = { calls: 0, input: 0, cacheWrite: 0, cacheRead: 0, output: 0, usd: 0 };
+
+/** What one response cost, from its own `usage`. */
+export function usageCost(usage, model = MODEL) {
+	const price = PRICES[model];
+	const input = usage?.input_tokens ?? 0;
+	const cacheWrite = usage?.cache_creation_input_tokens ?? 0;
+	const cacheRead = usage?.cache_read_input_tokens ?? 0;
+	const output = usage?.output_tokens ?? 0;
+
+	const usd = price
+		? (input * price.input + cacheWrite * price.cacheWrite + cacheRead * price.cacheRead + output * price.output) / 1e6
+		: 0;
+
+	return { calls: 1, input, cacheWrite, cacheRead, output, usd };
+}
+
+export const addSpend = (a, b) => Object.fromEntries(Object.keys(EMPTY_SPEND).map(key => [key, (a[key] ?? 0) + (b[key] ?? 0)]));
+
+export const formatUsd = (usd) => `$${usd.toFixed(usd < 1 ? 3 : 2)}`;
+
+export const formatTokens = (count) => (count >= 1000 ? `${(count / 1000).toFixed(1)}k` : String(count));
+
+/** "12.3k out, $0.251" - or tokens only for an unpriced model. */
+export const describeCost = (cost, model = MODEL) => (PRICES[model]
+	? `${formatTokens(cost.output)} out, ${formatUsd(cost.usd)}`
+	: `${formatTokens(cost.output)} out`);
+
+/* Said in the request, not the system prompt, so the cached prefix is the
+   same for every mode and both panels. */
+const MINIFIED = `Write the JSON minified: no indentation, no line breaks, no spaces outside
+strings. The examples you were shown are indented for reading only - every
+space you write is billed.`;
+
 const uid = () => Math.random().toString(36).slice(2, 10);
 
 const joinList = (value) => (Array.isArray(value) ? value.filter(Boolean).join(', ') : '');
@@ -631,7 +693,7 @@ export function buildUserPrompt({ mode, prompt, blocks, selectedBlock }) {
 
 The block, exactly as the page holds it now:
 
-${JSON.stringify(target, null, 2)}
+${JSON.stringify(target)}
 
 Where it sits on the page:
 
@@ -643,7 +705,9 @@ Answer with a single JSON object holding only what changes:
 { "options": { ... }, "cssSelectors": { ... } }
 Include a key only if it changes, and give each cssSelectors slot its complete
 class string rather than a fragment. Do not change the block's type and do not
-return its children.`;
+return its children.
+
+${MINIFIED}`;
 	}
 
 	if (mode === 'append') {
@@ -657,7 +721,9 @@ Build: ${request}
 
 Match the existing page - its accent colour, neutral family, section width and
 spacing rhythm - so the new work reads as part of the same design. Answer with
-a JSON array holding only the new top-level section blocks, usually one.`;
+a JSON array holding only the new top-level section blocks, usually one.
+
+${MINIFIED}`;
 	}
 
 	if (mode === 'image') {
@@ -671,13 +737,17 @@ transcribe the image's own copy where it is legible.
 
 ${request ? `Additional instructions: ${request}` : 'No additional instructions were given.'}
 
-Answer with a JSON array of top-level section blocks.`;
+Answer with a JSON array of top-level section blocks.
+
+${MINIFIED}`;
 	}
 
 	return `Build a page for: ${request}
 
 Decide which sections that request needs and in what order, then build each one
-properly. Answer with a JSON array of top-level section blocks.`;
+properly. Answer with a JSON array of top-level section blocks.
+
+${MINIFIED}`;
 }
 
 

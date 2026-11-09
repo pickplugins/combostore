@@ -5,9 +5,9 @@ import { useRouter } from "next/navigation";
 
 import EntriesTable from "../../components/EntriesTable";
 import { loadOrdersQuery, saveOrdersQuery } from "../../lib/ordersQuery";
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useRef } from "react";
 import Spinner from "../../components/Spinner";
-import { IconFilter, IconFileDollar, IconEyeShare, IconTrash, IconCopy, IconDotsVertical, IconPackages, IconX, IconEdit, IconPrinter, IconListNumbers, IconMapDollar, IconListDetails, IconNotes, IconPlus } from "@tabler/icons-react";
+import { IconFilter, IconFileDollar, IconEyeShare, IconTrash, IconCopy, IconDotsVertical, IconPackages, IconX, IconEdit, IconPrinter, IconListNumbers, IconMapDollar, IconListDetails, IconNotes, IconPlus, IconRefresh, IconReceipt } from "@tabler/icons-react";
 
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -133,6 +133,22 @@ const Orders = (props) => {
   var [sumData, setsumData] = useState(null);
   var [showProfit, setshowProfit] = useState(true);
 
+  const requestRef = useRef(0);
+
+  /* Remembered on this browser, like the saved filters. Read after mount: the
+     server has no storage, and the first render must match its HTML. */
+  useEffect(() => {
+    try {
+      if (window.localStorage.getItem("orders:showProfit") === "0") setshowProfit(false);
+    } catch { }
+  }, []);
+
+  function toggleProfit() {
+    var next = !showProfit;
+    setshowProfit(next);
+    try { window.localStorage.setItem("orders:showProfit", next ? "1" : "0"); } catch { }
+  }
+
 
   function onSelectRows(rows) {
 
@@ -174,6 +190,18 @@ const Orders = (props) => {
 
 
 
+  /*
+    One order's total, the way its row shows it: subtotal plus delivery, less
+    discount and advance payment. Tax is not part of it (OrderUpdate does not
+    add it to totals either). The page summary used the stored total_amount
+    instead, and took discount, tax and delivery off every order's net profit
+    a second time, so it never matched the rows above it.
+  */
+  function rowTotal(entry) {
+    return (parseFloat(entry?.subtotal_amount || 0) + parseFloat(entry?.shipping_amount || 0))
+      - (parseFloat(entry?.discount_amount || 0) + parseFloat(entry?.advance_payment || 0));
+  }
+
   function sumOrderAmounts(orders) {
 
 
@@ -191,14 +219,14 @@ const Orders = (props) => {
     }
 
     return orders.reduce((acc, post) => {
-      acc.total_amount += parseFloat(post.total_amount) || 0;
+      acc.total_amount += rowTotal(post) || 0;
       acc.subtotal_amount += parseFloat(post.subtotal_amount) || 0;
       acc.discount_amount += parseFloat(post.discount_amount) || 0;
       acc.tax_amount += parseFloat(post.tax_amount) || 0;
       acc.advance_payment += parseFloat(post.advance_payment) || 0;
       acc.shipping_amount += parseFloat(post.shipping_amount) || 0;
       acc.gross_profit += parseFloat(post.gross_profit) || 0;
-      acc.net_profit += parseFloat(post.net_profit) - (parseFloat(post.discount_amount) + parseFloat(post.tax_amount) + parseFloat(post.shipping_amount)) || 0;
+      acc.net_profit += parseFloat(post.net_profit) || 0;
 
 
       return acc;
@@ -253,31 +281,30 @@ const Orders = (props) => {
       body: postData,
     })
       .then((response) => {
+        if (response.status === 403) {
+          throw new Error("You are not allowed to delete orders.");
+        }
         if (!response.ok) {
-          throw new Error("Token validation failed");
+          throw new Error(`Server answered ${response.status}.`);
         }
-
-        if (response.ok && response.status < 400) {
-          response.json().then((res) => {
-            var errors = res?.errors;
-            var success = res?.success;
-
-            setloading(false);
-
-            addNotification({ type: 'success', title: 'Deleted', content: `${ids.length} order(s) deleted.` })
-
-            fetchPosts();
-
-            setselectedRows([]);
-
-
-
-          });
-        }
+        return response.json();
       })
-      .catch((_error) => {
+      .then((res) => {
         setloading(false);
-        addNotification({ type: 'error', title: 'Delete failed', content: "Could not delete the selected order(s)." })
+
+        if (res?.success === false) {
+          addNotification({ type: 'error', title: 'Delete failed', content: "The server did not delete the order(s)." })
+          return;
+        }
+
+        addNotification({ type: 'success', title: 'Deleted', content: ids.length === 1 ? `Order #${ids[0]} deleted.` : `${ids.length} orders deleted.` })
+        setselectedRows([]);
+        setselectedOrdersData(null);
+        fetchPosts();
+      })
+      .catch((error) => {
+        setloading(false);
+        addNotification({ type: 'error', title: 'Delete failed', content: error?.message ?? "Could not delete the selected order(s)." })
       });
   }
 
@@ -320,31 +347,30 @@ const Orders = (props) => {
       body: postData,
     })
       .then((response) => {
+        if (response.status === 403) {
+          throw new Error("You are not allowed to duplicate orders.");
+        }
         if (!response.ok) {
-          throw new Error("Token validation failed");
+          throw new Error(`Server answered ${response.status}.`);
         }
-
-        if (response.ok && response.status < 400) {
-          response.json().then((res) => {
-            var errors = res?.errors;
-            var success = res?.success;
-
-            setloading(false);
-
-            addNotification({ type: 'success', title: 'Duplicated', content: `Order #${id} duplicated.` })
-
-            fetchPosts();
-
-            setselectedRows([]);
-
-
-
-          });
-        }
+        return response.json();
       })
-      .catch((_error) => {
+      .then((res) => {
         setloading(false);
-        addNotification({ type: 'error', title: 'Duplicate failed', content: `Could not duplicate order #${id}.` })
+
+        /* duplicate_order answers { success, id } with the new order's id. */
+        if (!res?.success) {
+          addNotification({ type: 'error', title: 'Duplicate failed', content: `Could not duplicate order #${id}.` })
+          return;
+        }
+
+        addNotification({ type: 'success', title: 'Duplicated', content: res?.id ? `Order #${id} copied as #${res.id}. It is at the top of the newest-first list.` : `Order #${id} duplicated.` })
+        setselectedRows([]);
+        fetchPosts();
+      })
+      .catch((error) => {
+        setloading(false);
+        addNotification({ type: 'error', title: 'Duplicate failed', content: error?.message ?? `Could not duplicate order #${id}.` })
       });
   }
 
@@ -367,38 +393,29 @@ const Orders = (props) => {
       body: postData,
     })
       .then((response) => {
-
         if (!response.ok) {
-          throw new Error('Token validation failed');
+          throw new Error(`Server answered ${response.status}.`);
+        }
+        return response.json();
+      })
+      .then((res) => {
+        setloading(false)
+
+        /* A failure used to say "Order update failed" and still go to
+           /dashboard/orders/undefined. */
+        if (res?.status !== 'success' || !res?.order_id) {
+          addNotification({ type: 'error', title: 'Order not created', content: res?.message ?? "The order could not be created." })
+          return;
         }
 
-        if (response.ok && response.status < 400) {
-          response.json().then((res) => {
+        addNotification({ type: 'success', title: 'Order created', content: `Order #${res.order_id} created.` })
 
-
-
-            var status = res?.status;
-            var message = res?.message;
-
-            if (status == 'success') {
-
-              addNotification({ type: 'success', title: 'Order created', content: message })
-            }
-            if (status == 'failed') {
-              addNotification({ type: 'error', title: 'Order update failed', content: message })
-            }
-
-            if (redirect) {
-              router.push(`/dashboard/orders/${res?.order_id}`);
-
-            }
-
-            setTimeout(() => {
-              setloading(false)
-              fetchPosts()
-            }, 500);
-          });
+        if (redirect) {
+          router.push(`/dashboard/orders/${res.order_id}`);
+          return;
         }
+
+        fetchPosts()
       })
       .catch((_error) => {
         setloading(false);
@@ -423,6 +440,7 @@ const Orders = (props) => {
 
 
     var postData = JSON.stringify(queryPrams);
+    var requestId = ++requestRef.current;
     setloading(true);
 
     fetch(serverUrl + "wp-json/combo-store/v2/get_orders", {
@@ -434,30 +452,29 @@ const Orders = (props) => {
       body: postData,
     })
       .then((response) => {
-
         if (!response.ok) {
-          throw new Error('Token validation failed');
+          throw new Error(`Server answered ${response.status}.`);
         }
-
-        if (response.ok && response.status < 400) {
-          response.json().then((res) => {
-
-
-
-            /* With no matches the API can leave out `posts`, `total` and `max_pages`. */
-            var orders = res?.posts ?? [];
-            var total = parseInt(res?.total) || 0;
-            var max_pages = parseInt(res?.max_pages) || 1;
-
-            setordersData({ posts: orders, total: total, maxPages: max_pages })
-            setsumData(sumOrderAmounts(orders));
-            setloading(false);
-          });
-        }
+        return response.json();
       })
-      .catch((_error) => {
+      .then((res) => {
+        /* An older, slower request must not replace a newer one's results. */
+        if (requestId !== requestRef.current) return;
+
+        /* With no matches the API can leave out `posts`, `total` and `max_pages`. */
+        var orders = Array.isArray(res?.posts) ? res.posts : [];
+        var total = parseInt(res?.total) || 0;
+        var max_pages = parseInt(res?.max_pages) || 1;
+
+        setordersData({ posts: orders, total: total, maxPages: max_pages })
+        setsumData(sumOrderAmounts(orders));
         setloading(false);
-        addNotification({ type: 'error', title: 'Orders not loaded', content: "The list could not be loaded. Please try again." })
+      })
+      .catch((error) => {
+        if (requestId !== requestRef.current) return;
+
+        setloading(false);
+        addNotification({ type: 'error', title: 'Orders not loaded', content: error?.message ?? "The list could not be loaded. Please try again." })
       });
 
   }
@@ -477,7 +494,31 @@ const Orders = (props) => {
   useEffect(() => {
     const saved = loadOrdersQuery();
 
-    if (saved) {
+    /*
+      A link can open this list for one customer (the Orders count on the
+      Customers screen): /dashboard/orders?customer=<id>&customer_name=<name>.
+      It wins over the saved query, and the other filters are cleared so the
+      list really is all of their orders. The parameters are then taken out of
+      the address, so clearing the customer chip is not undone by a reload.
+    */
+    const params = new URLSearchParams(window.location.search);
+    const linkedCustomer = parseInt(params.get("customer"), 10);
+
+    if (linkedCustomer > 0) {
+      setqueryPrams((previous) => ({
+        ...previous,
+        ...(saved ?? {}),
+        keyword: "", status: "", payment_method: "", payment_status: "", billing_phone: "",
+        start_date: "", end_date: "", first_date: "", last_date: "", from_date: "", to_date: "", product: {},
+        customer: { id: linkedCustomer, display_name: params.get("customer_name") || `Customer #${linkedCustomer}` },
+        paged: 1,
+      }));
+
+      params.delete("customer");
+      params.delete("customer_name");
+      const rest = params.toString();
+      window.history.replaceState(window.history.state, "", window.location.pathname + (rest ? `?${rest}` : ""));
+    } else if (saved) {
       setqueryPrams((previous) => ({ ...previous, ...saved }));
     }
 
@@ -492,20 +533,12 @@ const Orders = (props) => {
   }, [queryRestored, queryPrams]);
 
   /*
-    Fetched through a debounced copy, as on Products. Without it every
-    keystroke in the search box sent its own get_orders request, and since
-    responses are not checked for being current an earlier, slower one could
-    land last and show results for half a word.
+    Typing in the search box waits a moment so each keystroke is not its own
+    request; every other change (a page, a filter, the sort) loads at once.
+    The whole query used to wait, so paging felt stuck for half a second.
+    Only the newest request's answer is shown (requestRef in fetchPosts).
   */
-  const [debouncedQuery, setDebouncedQuery] = useState(queryPrams);
-
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedQuery(queryPrams);
-    }, 500);
-
-    return () => clearTimeout(handler);
-  }, [queryPrams]);
+  const lastKeyword = useRef(queryPrams.keyword);
 
   useEffect(() => {
 
@@ -514,9 +547,18 @@ const Orders = (props) => {
       return;
     }
 
-    fetchPosts();
+    var typing = queryPrams.keyword !== lastKeyword.current;
+    lastKeyword.current = queryPrams.keyword;
 
-  }, [queryRestored, debouncedQuery, token]);
+    if (!typing) {
+      fetchPosts();
+      return;
+    }
+
+    const handler = setTimeout(fetchPosts, 400);
+    return () => clearTimeout(handler);
+
+  }, [queryRestored, queryPrams, token]);
 
 
   function onChangeQueryPrams(queryPrams) {
@@ -572,10 +614,10 @@ const Orders = (props) => {
 
 
 
-            <PopoverButton buttonLabel={""} buttonIcon={<IconEdit size={16} />} title={"Edit Order"} drawer={"right"} buttonClass={ICON_BUTTON}>
+            <PopoverButton buttonLabel={""} buttonIcon={<IconEdit size={16} />} title={`Edit order #${entry.id}`} drawer={"right"} buttonClass={ICON_BUTTON}>
 
               <div className="p-5 bg-gray-50 text-left">
-                <OrderEdit id={entry.id} />
+                <OrderEdit id={entry.id} variant="drawer" />
               </div>
 
             </PopoverButton>
@@ -716,7 +758,7 @@ const Orders = (props) => {
                   <IconCopy size={16} /> Duplicate
                 </div>
                 <div className={`${MENU_ITEM} !text-red-600 hover:!bg-red-50 hover:!text-red-700`} onClick={() => {
-                  if (confirm(`Delete order #${entry.id}? This cannot be undone.`)) {
+                  if (confirm(`Permanently delete order #${entry.id}? There is no trash for orders, so this cannot be undone.`)) {
                     delete_orders([entry.id]);
                   }
 
@@ -746,7 +788,7 @@ const Orders = (props) => {
 
   function callbackTotal(entry, columnIndex) {
 
-    var total = (parseFloat(entry.subtotal_amount || 0) + parseFloat(entry.shipping_amount || 0)) - (parseFloat(entry.discount_amount || 0) + parseFloat(entry.advance_payment || 0));
+    var total = rowTotal(entry);
 
 
 
@@ -957,6 +999,10 @@ const Orders = (props) => {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          <button type="button" className={TOOLBAR_BUTTON} disabled={loading} onClick={fetchPosts}>
+            <IconRefresh size={16} className={loading ? "animate-spin" : ""} /> {("Refresh")}
+          </button>
+
           <PopoverButton wrapperClass={``} buttonClass={TOOLBAR_BUTTON} buttonLabel={("Quick Order")} buttonIcon={<IconFileDollar size={16} />} title={"Quick Order"} position={"bottomRight"}>
             <div className="p-5 bg-gray-50">
               <OrderCreate onOrderCreated={onOrderCreated} />
@@ -1052,15 +1098,16 @@ const Orders = (props) => {
 
           </PopoverButton>
 
-          <button type="button" className={TOOLBAR_BUTTON} title={showProfit ? "Hide profit figures" : "Show profit figures"} onClick={() => setshowProfit(!showProfit)}>
+          <button type="button" className={TOOLBAR_BUTTON} title={showProfit ? "Hide profit figures" : "Show profit figures"} onClick={toggleProfit}>
             <IconMapDollar size={16} /> {showProfit ? ("Hide Profits") : ("Show Profits")}
           </button>
 
         </div>
 
         {selectedRows?.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-medium text-gray-500">{selectedRows.length} {("selected")}</span>
+          <div className="flex flex-wrap items-center gap-2 rounded-lg border border-[#634FE5]/30 bg-[#634FE5]/5 py-1 pl-3 pr-1">
+            <span className="text-sm font-medium text-gray-700">{selectedRows.length} {("selected")}</span>
+            <button type="button" className="!h-8 rounded-md !border-0 !bg-transparent px-2 text-sm !text-gray-500 !shadow-none hover:!bg-white hover:!text-gray-800" onClick={() => { setselectedRows([]); setselectedOrdersData(null); }}>{("Clear")}</button>
 
             <PopoverButton wrapperClass={``} buttonClass={TOOLBAR_BUTTON} buttonLabel={("Receipts")} buttonIcon={<IconPrinter size={16} />} title={"Print Receipts"} position={"bottomRight"}>
               <div className="p-5 bg-gray-50">
@@ -1083,15 +1130,16 @@ const Orders = (props) => {
               </div>
             </PopoverButton>
 
-            <div
-              className="inline-flex h-9 items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 text-sm font-semibold text-red-700 transition-colors hover:bg-red-100 cursor-pointer"
+            <button type="button"
+              className="inline-flex !h-9 items-center gap-2 !rounded-lg !border-0 !bg-red-600 !px-3 !py-0 !text-sm !font-medium !text-white !shadow-sm transition-colors hover:!bg-red-700 cursor-pointer disabled:opacity-50"
+              disabled={loading}
               onClick={() => {
-                if (confirm(`Delete ${selectedRows.length} selected order(s)? This cannot be undone.`)) {
+                if (confirm(`Permanently delete ${selectedRows.length} ${selectedRows.length === 1 ? "order" : "orders"}? There is no trash for orders, so this cannot be undone.`)) {
                   delete_orders()
                 }
               }}>
-              <IconTrash size={16} /> {("Delete")} ({selectedRows.length})
-            </div>
+              <IconTrash size={16} /> {("Delete")}
+            </button>
           </div>
         )}
       </div>
@@ -1147,18 +1195,28 @@ const Orders = (props) => {
       )}
 
 
-      <EntriesTable
-        queryPrams={queryPrams}
-        columns={columns}
-        entries={ordersData}
-        itemPath={""}
-        onChange={onChangeQueryPrams}
-        loading={loading}
-        selectedRows={selectedRows}
-        onSelectRows={onSelectRows}
-        onRefreshRequest={onRefreshRequest}
-
-      />
+      {ordersData && !loading && activeFilterCount === 0 && !queryPrams?.keyword && (ordersData?.total ?? 0) === 0 && (ordersData?.posts ?? []).length === 0 ? (
+        <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-gray-200 bg-white px-6 py-14 text-center">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 text-gray-400"><IconReceipt size={24} /></div>
+          <div className="text-sm font-semibold text-gray-800">{("No orders yet")}</div>
+          <p className="max-w-sm text-xs text-gray-500">{("Orders placed on the store show up here. You can also create one with Add Order or Quick Order.")}</p>
+          <button type="button" className={`${PRIMARY_BUTTON} mt-2`} disabled={loading} onClick={() => create_order({ redirect: true })}>
+            <IconPlus size={16} /> {("Add Order")}
+          </button>
+        </div>
+      ) : (
+        <EntriesTable
+          queryPrams={queryPrams}
+          columns={columns}
+          entries={ordersData}
+          itemPath={""}
+          onChange={onChangeQueryPrams}
+          loading={loading}
+          selectedRows={selectedRows}
+          onSelectRows={onSelectRows}
+          onRefreshRequest={onRefreshRequest}
+        />
+      )}
 
 
 
@@ -1175,7 +1233,10 @@ const Orders = (props) => {
             <div className="flex justify-between text-xs text-gray-500"><span>Sub Total</span><span className="tabular-nums text-gray-700">{wrapCurrency(sumData?.subtotal_amount)}</span></div>
             <div className="flex justify-between text-xs text-gray-500"><span>Discount</span><span className="tabular-nums text-rose-600">-{wrapCurrency(sumData?.discount_amount)}</span></div>
             <div className="flex justify-between text-xs text-gray-500"><span>Delivery Charge</span><span className="tabular-nums text-emerald-600">+{wrapCurrency(sumData?.shipping_amount)}</span></div>
-            <div className="flex justify-between text-xs text-gray-500"><span>Tax</span><span className="tabular-nums text-gray-700">+{wrapCurrency(sumData?.tax_amount)}</span></div>
+            {/* Shown as "+" before, though no total adds it. */}
+            {sumData?.tax_amount > 0 && (
+              <div className="flex justify-between text-xs text-gray-500"><span>Tax <span className="text-gray-400">(not in totals)</span></span><span className="tabular-nums text-gray-700">{wrapCurrency(sumData?.tax_amount)}</span></div>
+            )}
             <div className="flex justify-between text-xs text-gray-500"><span>Advance Payment</span><span className="tabular-nums text-rose-600">-{wrapCurrency(sumData?.advance_payment)}</span></div>
 
             <div className="mt-1 flex justify-between border-t border-dashed border-gray-200 pt-2 text-sm font-semibold text-gray-900">

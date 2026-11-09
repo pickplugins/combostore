@@ -148,6 +148,137 @@ buttons - back to home and to the shop.`,
 export const PAGE_BY_TYPE = Object.fromEntries(THEME_PAGES.map(page => [page.type, page]));
 
 
+/* ------------------------------------------------------------------- cost */
+
+/*
+   Where a theme run's money goes. Output tokens cost 5x input on Opus and the
+   element catalog in the system prompt is a cache read on every call after
+   the first, so a run is billed almost entirely by what the model WRITES -
+   thinking included. The levers below all cut output.
+
+   Effort. The design pages (brief, header, footer, home) are where the theme
+   is decided, so they keep `high`. Every other page is built from a brief that
+   already fixes the palette, type and layout, which is `medium` work. Only two
+   levels on purpose: changing effort can re-write the cached system prompt,
+   so each level pays that write once per run, not once per page.
+*/
+export const DESIGN_EFFORT = 'high';
+export const PAGE_EFFORT = 'medium';
+
+export const DESIGN_PAGES = ['header', 'footer', 'home'];
+
+export const effortFor = (page) => (DESIGN_PAGES.includes(page.type) ? DESIGN_EFFORT : PAGE_EFFORT);
+
+
+/* --------------------------------------------------------- shared archives */
+
+/*
+   Archive pages that share one layout. In all nine shipped templates the tag
+   and brand pages are the category pages with the taxonomy swapped:
+
+   - the index pages differ only in termsGrid.queryPrams.taxonomy
+     (product_cat / product_tag / product_brand);
+   - the single pages' postGrid has an empty taxQuery - the archive the page
+     is served on supplies the term, and archiveTitle prints its name - so
+     they need no change at all beyond the wording.
+
+   So one of each is generated and the others are copied from it locally:
+   four page calls a run that cost as much as any other page and only ever
+   produced the same layout again.
+*/
+export const ARCHIVE_GROUPS = [
+	['categories', 'tags', 'brands'],
+	['categories_single', 'tags_single', 'brands_single'],
+];
+
+const ARCHIVE_TERMS = {
+	categories: { taxonomy: 'product_cat', one: 'category', many: 'categories' },
+	tags: { taxonomy: 'product_tag', one: 'tag', many: 'tags' },
+	brands: { taxonomy: 'product_brand', one: 'brand', many: 'brands' },
+};
+
+const termsOf = (type) => ARCHIVE_TERMS[String(type).replace(/_single$/, '')];
+
+/**
+ * Which of the chosen pages need a call, and which are copied from another.
+ *
+ * In each archive group the first chosen page is generated and every other
+ * chosen page in that group is copied from it - so deselecting Categories
+ * makes Tags the one that is generated, rather than leaving Tags unbuilt.
+ */
+export function planPages(chosen) {
+	const chosenTypes = new Set(chosen.map(page => page.type));
+	const copyOf = {};
+
+	for (const group of ARCHIVE_GROUPS) {
+		const members = group.filter(type => chosenTypes.has(type));
+
+		members.slice(1).forEach(type => { copyOf[type] = members[0]; });
+	}
+
+	return {
+		build: chosen.filter(page => !copyOf[page.type]),
+		copies: chosen.filter(page => copyOf[page.type]).map(page => ({ page, from: copyOf[page.type] })),
+	};
+}
+
+/* Option keys whose strings are identifiers, URLs or classes, never copy. */
+const NOT_COPY = new Set([
+	'taxonomy', 'post_type', 'orderby', 'order', 'url', 'src', 'href', 'link', 'linkTo',
+	'icon', 'classes', 'image', 'thumbnail', 'meta_key', 'target', 'tag', 'htmlTag',
+]);
+
+const sameCase = (word, like) => (
+	like === like.toUpperCase() ? word.toUpperCase()
+		: like[0] === like[0].toUpperCase() ? word[0].toUpperCase() + word.slice(1)
+			: word
+);
+
+const blockId = () => Math.random().toString(36).slice(2, 10);
+
+/**
+ * Turn one archive page into its sibling: fresh ids, the termsGrid pointed at
+ * the other taxonomy, and "category"/"categories" in the copy reworded to
+ * "tag"/"tags" (or brand/brands), keeping the case it was written in.
+ */
+export function copyArchivePage(blocks, fromType, toType) {
+	const from = termsOf(fromType);
+	const to = termsOf(toType);
+
+	if (!from || !to) return blocks;
+
+	const words = new RegExp(`\\b(${from.many}|${from.one})\\b`, 'gi');
+	const reword = (text) => text.replace(words, (match) =>
+		sameCase(match.toLowerCase() === from.many ? to.many : to.one, match));
+
+	const copyValue = (value, key) => {
+		if (typeof value === 'string') {
+			if (key === 'taxonomy' && value === from.taxonomy) return to.taxonomy;
+			if (NOT_COPY.has(key) || /^(https?:|\/|#)/.test(value)) return value;
+
+			return reword(value);
+		}
+
+		if (Array.isArray(value)) return value.map(item => copyValue(item, key));
+
+		if (value && typeof value === 'object') {
+			return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, copyValue(v, k)]));
+		}
+
+		return value;
+	};
+
+	const copyBlock = (block) => ({
+		...block,
+		id: blockId(),
+		options: copyValue(block.options, 'options'),
+		children: (block.children ?? []).map(copyBlock),
+	});
+
+	return (blocks ?? []).map(copyBlock);
+}
+
+
 /* ----------------------------------------------------------- site summary */
 
 /**
@@ -393,7 +524,10 @@ const THEME_RULES = `Rules for this theme:
 - A tabs block needs exactly as many tabsItem children as it has entries in
   options.tabsItems.
 - Use placeholder images (https://placehold.co/...) for photography. Write real
-  copy, never lorem ipsum.`;
+  copy, never lorem ipsum.
+- Write the JSON minified: no indentation, no line breaks, no spaces outside
+  strings. The examples you were shown are indented for reading only - every
+  space you write is billed, and a page is tens of thousands of tokens.`;
 
 /**
  * Pass two and after: one page, built against the brief.

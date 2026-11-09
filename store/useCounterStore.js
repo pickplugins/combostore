@@ -327,6 +327,16 @@ export const useCounterStore = create((set) => ({
     },
   },
   couriersPrams: {
+
+
+    "combostore": {
+      "label": "ComboStore",
+      "id": 'combostore',
+      "enable": true,
+      args: {
+
+      }
+    },
     "steadfast": {
       "label": "Steadfast",
       "id": 'steadfast',

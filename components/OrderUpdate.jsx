@@ -19,7 +19,8 @@ import WidgetWrapper from '../components/WidgetWrapper';
 import DropDown from '../components/DropDown';
 import UsersPicker from '../components/shop-elements/UsersPicker';
 import ProductsPicker from '../components/shop-elements/ProductsPicker';
-
+import countries from '../lib/Countries'
+import states from '../lib/States'
 
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
@@ -29,6 +30,8 @@ const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 const CARD_CLASSES =
   "form-card !gap-0 !rounded-xl border border-gray-200 [&>div:first-child]:!px-5 [&>div:first-child]:!py-4 [&>div:nth-child(2)]:!p-5 [&>div:nth-child(2)]:!pt-3 [&_h2]:text-base [&_h2]:font-semibold [&_h2]:text-gray-900";
 
+
+const dropDownClass = "w-full flex items-center justify-between gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 shadow-xs cursor-pointer transition-colors hover:border-gray-400";
 
 
 
@@ -48,6 +51,78 @@ const OrderUpdate = (props) => {
   var [coupons, setCoupons] = useState({ applied: false, couponCode: "", discountAmount: 0, loading: false });
   var [shipping, setShipping] = useState(0);
   var [profits, setprofits] = useState({ grossProfit: 0, netProfit: 0, productCost: 0 });
+
+  var [shippingMethods, setshippingMethods] = useState([]);
+
+  var [countriesList, setcountriesList] = useState({});
+  var [statesList, setstatesList] = useState([]);
+  var defaultCountry = 'BD';
+
+
+  const countryLabel = (code) => countriesList[code]?.label ?? 'Choose Country';
+  const cityLabel = (code) => statesList[code]?.label ?? 'Choose City';
+
+
+
+  useEffect(() => {
+
+    var items = {};
+
+    countries.map(country => {
+      items[country.code2] = { label: country.name, value: country.code2, states: country.states }
+    })
+
+    setcountriesList(items)
+
+  }, [countries]);
+
+
+
+
+  useEffect(() => {
+    var country = orderData?.billing_country ?? defaultCountry;
+
+    var selectedStates = states[country] ? states[country] : {};
+
+
+
+    var statesListX = {};
+
+    Object.entries(selectedStates)?.map(args => {
+
+      var index = args[0]
+      var name = args[1]
+
+      statesListX[index] = { label: name, value: index, }
+
+    })
+    setstatesList(statesListX)
+
+    var city = orderData?.billing_city.length > 0 ? orderData?.billing_city : orderData?.billing_city
+
+    if (!city || city == null || city == undefined) {
+
+      return;
+
+    }
+
+    var prams = {}
+
+    prams.country = country
+    prams.city = city
+
+    console.log(prams);
+
+
+    find_shipping_methods(prams);
+
+  }, [orderData?.billing_country, orderData?.billing_city, defaultCountry]);
+
+
+
+
+
+
 
 
 
@@ -104,6 +179,68 @@ const OrderUpdate = (props) => {
     });
   }, [orderData?.userid]);
 
+
+  function find_shipping_methods(prams) {
+
+
+    setloading(true);
+
+
+    var postData = JSON.stringify(prams);
+
+
+
+
+
+    var url = serverUrl + "wp-json/combo-store/v2/find_shipping_methods";
+
+
+    var headers = {
+      'Content-Type': 'application/json',
+
+    }
+
+
+    fetch(url, {
+      method: "POST",
+      headers: headers,
+      body: postData,
+    })
+      .then((response) => {
+
+        if (!response.ok) {
+          throw new Error('Token validation failed');
+        }
+
+        if (response.ok && response.status < 400) {
+          response.json().then((res) => {
+
+
+            var methods = res?.methods;
+
+            console.log(res);
+
+
+
+            setshippingMethods(methods)
+
+            setloading(false);
+
+
+            setTimeout(() => {
+            }, 500);
+          });
+        }
+      })
+      .catch((_error) => {
+        //this.saveAsStatus = 'error';
+        // handle the error
+        setloading(false);
+      });
+
+    setloading(false);
+
+  }
 
 
   function calculateOrder() {
@@ -603,6 +740,29 @@ const OrderUpdate = (props) => {
 
 
 
+  /* A selectable card that behaves like a radio button for keyboard and
+     screen-reader users as well as for the mouse. */
+  function OptionTile({ selected, onSelect, children, className = "" }) {
+    return (
+      <div
+        role="radio"
+        aria-checked={selected}
+        tabIndex={0}
+        onClick={onSelect}
+        onKeyDown={ev => {
+          if (ev.key !== 'Enter' && ev.key !== ' ') return;
+          ev.preventDefault();
+          onSelect();
+        }}
+        className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2.5 text-sm transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1b0e9f]/30 ${selected ? 'border-[#1b0e9f] bg-[#1b0e9f]/5 ring-1 ring-[#1b0e9f]' : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'} ${className}`}
+      >
+        <span className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 ${selected ? 'border-[#1b0e9f]' : 'border-gray-300'}`}>
+          {selected && <span className="h-2 w-2 rounded-full bg-[#1b0e9f]" />}
+        </span>
+        {children}
+      </div>
+    );
+  }
 
 
   return (
@@ -1716,13 +1876,11 @@ const OrderUpdate = (props) => {
 
         <div className="">
 
-
-
           <div className="flex flex-col gap-1.5 border-b border-gray-100 py-3 last:border-0 lg:flex-row lg:items-center lg:gap-4 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
             <div className="block py-1 text-sm font-medium text-gray-700 lg:w-56 lg:shrink-0">{('Shipping Method')}</div>
 
 
-            <select name="shipping_method" className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 rounded-lg px-3 py-2 text-sm w-full" value={orderData?.shipping_method} id="" onChange={ev => {
+            {/* <select name="shipping_method" className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 rounded-lg px-3 py-2 text-sm w-full" value={orderData?.shipping_method} id="" onChange={ev => {
               var value = ev.target.value;
               setorderData({ ...orderData, shipping_method: value })
             }}>
@@ -1733,15 +1891,44 @@ const OrderUpdate = (props) => {
               <option value="pathao">Pathao Courier</option>
               <option value="karatoa">Karatoa Courier</option>
               <option value="sundarban">Sundarban Courier</option>
-            </select>
+            </select> */}
+
+            {shippingMethods.length == 0 ? (
+              <div tone="muted">
+                No shipping methods yet. Choose your country and city to see the available options.
+              </div>
+            ) : (
+              <div role="radiogroup" aria-label="Shipping method" className="flex flex-col gap-2">
+                {shippingMethods.map(method => {
+                  var id = method?.id;
+                  var amount = parseFloat(method?.amount);
+
+                  return (
+                    <OptionTile key={id} selected={orderData.shipping_method == id} onSelect={() => {
+                      //setcurrentshippingMethod(method)
+                      // setorderData({ ...orderData, shipping_method: id })
+                      setorderData({ ...orderData, shipping_method: id, shipping_amount: amount })
 
 
+                    }}>
+                      <div className="min-w-0 flex-1">
+                        <div className="font-medium text-gray-900">{method.name}</div>
+                        {method.description && (
+                          <div className="mt-0.5 text-xs text-gray-500">{method.description}</div>
+                        )}
+                      </div>
+                      <div className="shrink-0 font-semibold text-gray-900">{wrapCurrency(method?.amount)}</div>
+                    </OptionTile>
+                  )
+                })}
+              </div>
+            )}
 
 
           </div>
 
           <div className="flex flex-col gap-1.5 border-b border-gray-100 py-3 last:border-0 lg:flex-row lg:items-center lg:gap-4 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
-            <div className="block py-1 text-sm font-medium text-gray-700 lg:w-56 lg:shrink-0">{("Delivery Charge")}</div>
+            <div className="block py-1 text-sm font-medium text-gray-700 lg:w-56 lg:shrink-0">{("Shipping Charge")}</div>
 
 
             <div className="">
@@ -1811,19 +1998,35 @@ const OrderUpdate = (props) => {
               <div className="flex flex-col gap-1.5">
                 <div className="block py-1 text-sm font-medium text-gray-700 lg:w-56 lg:shrink-0">{("Country")}</div>
                 <div className="">
-                  <input type="text" className={`!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 rounded-lg px-3 py-2 text-sm !w-full ${privacyMode ? 'blur-[3px]' : ''}`} value={orderData?.billing_country} onChange={ev => {
-                    var value = ev.target.value;
-                    setorderData({ ...orderData, billing_country: value })
-                  }} />
+
+
+
+                  {Object.entries(countriesList).length > 0 && (
+                    <DropDown allowReset={false} multiple={false} labelClass={dropDownClass} value={orderData?.billing_country ?? defaultCountry} options={countriesList} label={countryLabel(orderData?.billing_country)} onOptionsChoose={(args) => {
+                      setorderData({ ...orderData, billing_country: args?.value })
+                    }} />
+                  )}
+
+
+
+
+
+
                 </div>
               </div>
               <div className="flex flex-col gap-1.5">
                 <div className="block py-1 text-sm font-medium text-gray-700 lg:w-56 lg:shrink-0">{("City")}</div>
                 <div className="">
-                  <input type="text" className={`!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 rounded-lg px-3 py-2 text-sm !w-full ${privacyMode ? 'blur-[3px]' : ''}`} value={orderData?.billing_city} onChange={ev => {
-                    var value = ev.target.value;
-                    setorderData({ ...orderData, billing_city: value })
-                  }} />
+
+
+                  {Object.entries(statesList).length > 0 && (
+                    <DropDown allowReset={false} multiple={false} labelClass={dropDownClass} value={orderData?.billing_city} options={statesList} label={cityLabel(orderData?.billing_city)} onOptionsChoose={(args) => {
+                      setorderData({ ...orderData, billing_city: args?.value })
+                    }} />
+                  )}
+
+
+
                 </div>
               </div>
 

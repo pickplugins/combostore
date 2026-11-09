@@ -128,8 +128,30 @@ const CustomerProfile = ({ userid }) => {
 			.catch(() => setloading(false));
 	}
 
+	/*
+		Whose password the box changes. It used to always send the logged-in
+		user's own id with a "current password" - on a customer's page that
+		would have been the admin's own password, had the endpoint existed
+		(update_user_password was never registered, so every try was a 404
+		and the spinner never stopped). Now:
+		 - on your own profile it changes your password, and needs the current one;
+		 - on someone else's, an administrator sets a new one for them;
+		 - anyone else does not get the box.
+	*/
+	const isSelf = String(userid) === String(userDataX?.id);
+	const isAdmin = (userDataX?.roles ?? []).includes("administrator");
+	const canSetPassword = isSelf || isAdmin;
+
 	function updateUserPassword() {
 		if (!token) throw new Error("No token found");
+		if (passwordData.newPass1.length < 8) {
+			addNotification({
+				type: "error",
+				title: "Password too short",
+				content: "Use at least 8 characters.",
+			});
+			return;
+		}
 		if (passwordData.newPass1 !== passwordData.newPass2) {
 			setpasswordData({ ...passwordData, passMatched: false, passUpdate: false });
 			addNotification({
@@ -144,8 +166,8 @@ const CustomerProfile = ({ userid }) => {
 		setloading(true);
 
 		const postData = JSON.stringify({
-			id: userDataX?.id,
-			old_password: passwordData.currentPass,
+			id: isSelf ? userDataX?.id : userid,
+			old_password: isSelf ? passwordData.currentPass : "",
 			new_password: passwordData.newPass1,
 		});
 
@@ -155,24 +177,29 @@ const CustomerProfile = ({ userid }) => {
 			body: postData,
 		})
 			.then((response) => {
-				if (response.ok && response.status < 400) {
-					response.json().then((res) => {
-						const success = res?.success;
-						const errors = res?.errors;
-
-						if (errors?.length > 0) {
-							setpasswordData({ ...passwordData, passUpdate: false, loading: false });
-							addNotification({ type: "error", title: "Update failed", content: errors });
-						}
-						if (success?.length > 0) {
-							setpasswordData({ ...passwordData, passUpdate: true, loading: false });
-							addNotification({ type: "success", title: "Password updated", content: success });
-						}
-						setTimeout(() => setloading(false), 500);
-					});
-				}
+				if (!response.ok) throw new Error(`Server answered ${response.status}.`);
+				return response.json();
 			})
-			.catch(() => setloading(false));
+			.then((res) => {
+				const success = res?.success;
+				const errors = res?.errors;
+
+				if (errors?.length > 0) {
+					setpasswordData((prev) => ({ ...prev, passUpdate: false, loading: false }));
+					addNotification({ type: "error", title: "Password not changed", content: errors });
+				} else if (success?.length > 0) {
+					setpasswordData({ currentPass: "", newPass1: "", newPass2: "", passMatched: false, passUpdate: true, loading: false });
+					addNotification({ type: "success", title: "Password changed", content: success });
+				} else {
+					setpasswordData((prev) => ({ ...prev, loading: false }));
+				}
+				setloading(false);
+			})
+			.catch((error) => {
+				setpasswordData((prev) => ({ ...prev, loading: false }));
+				setloading(false);
+				addNotification({ type: "error", title: "Password not changed", content: error?.message ?? "" });
+			});
 	}
 
 	/* ---------------- Effects ---------------- */
@@ -269,22 +296,34 @@ const CustomerProfile = ({ userid }) => {
 					</div>
 				</WidgetWrapper>
 
-				{/* ===== Change Password ===== */}
-				<WidgetWrapper collapsible title="Change Password">
+				{/* ===== Change / Set Password ===== */}
+				{canSetPassword && (
+				<WidgetWrapper collapsible title={isSelf ? "Change Password" : "Set a New Password"}>
 					<div className="flex flex-col gap-4">
-						<Field label="Current Password" htmlFor="pw-current">
-							<input
-								id="pw-current"
-								type="password"
-								className={inputBase}
-								value={passwordData.currentPass}
-								onChange={(e) =>
-									setpasswordData({ ...passwordData, currentPass: e.target.value })
-								}
-							/>
-						</Field>
+						{isSelf ? (
+							<Field label="Current Password" htmlFor="pw-current">
+								<input
+									id="pw-current"
+									type="password"
+									autoComplete="current-password"
+									className={inputBase}
+									value={passwordData.currentPass}
+									onChange={(e) =>
+										setpasswordData({ ...passwordData, currentPass: e.target.value })
+									}
+								/>
+							</Field>
+						) : (
+							<div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+								<IconInfoCircle size={16} className="mt-0.5 shrink-0" />
+								<span>
+									This sets a new password for this customer and signs them out. Tell them the new
+									password yourself; they are not emailed.
+								</span>
+							</div>
+						)}
 
-						<Field label="New Password" htmlFor="pw-new">
+						<Field label="New Password" htmlFor="pw-new" hint="At least 8 characters.">
 							<input
 								id="pw-new"
 								type="password"
@@ -345,17 +384,19 @@ const CustomerProfile = ({ userid }) => {
 
 						<div className="flex items-center justify-end gap-2 pt-2">
 							{passwordData.loading && <Spinner />}
-							<div
+							{/* A <div> cannot be disabled, so this ran with mismatched passwords before. */}
+							<button
 								type="button"
-								disabled={!passwordData.passMatched || passwordData.loading}
+								disabled={!passwordData.passMatched || passwordData.loading || (isSelf && !passwordData.currentPass)}
 								onClick={updateUserPassword}
 								className={btnPrimary}
 							>
-								Update Password
-							</div>
+								{isSelf ? "Change Password" : "Set Password"}
+							</button>
 						</div>
 					</div>
 				</WidgetWrapper>
+				)}
 
 				{/* ===== Billing Address ===== */}
 				<WidgetWrapper collapsible title="Billing Address">

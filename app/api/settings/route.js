@@ -3,6 +3,8 @@ import { redactEpsSettings } from "@/lib/eps-server";
 import { redactAamarPaySettings } from "@/lib/aamarpay-server";
 import { redactBkashSettings } from "@/lib/bkash-server";
 import { redactNagadSettings } from "@/lib/nagad-server";
+import { DEMO_MODE } from "@/lib/demo/config";
+import { settings as demoSettings } from "@/lib/demo/data";
 
 /**
  * The store's settings, for the storefront.
@@ -26,21 +28,27 @@ export async function GET() {
 
 
 
-  const res = await fetch(
-    `${serverUrl}wp-json/combo-store/v2/get_settings_public`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-API-KEY": API_TOKEN, // ✅ works here
-      },
-      body: JSON.stringify({}),
-    }
-  );
-
-
-
-  const data = await res.json();
+  let data;
+  try {
+    const res = await fetch(
+      `${serverUrl}wp-json/combo-store/v2/get_settings_public`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-API-KEY": API_TOKEN, // ✅ works here
+        },
+        body: JSON.stringify({}),
+        ...(DEMO_MODE ? { signal: AbortSignal.timeout(4000) } : {}),
+      }
+    );
+    data = await res.json();
+  } catch (e) {
+    /* Demo mode can run with no server: hand back the demo store's settings
+       (no secrets in them). Outside demo mode a dead server is still an error. */
+    if (DEMO_MODE) return Response.json(demoSettings);
+    throw e;
+  }
   // console.log("API data:", data); // 👈 add this
 
   /* Some installs answer with the blob wrapped in `settings`, some bare. */

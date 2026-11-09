@@ -57,8 +57,6 @@ const TermsPicker = (props) => {
 						var success = res?.success;
 						var terms = res?.terms;
 
-						console.log('terms', terms)
-
 						setcategories(terms);
 					});
 				}

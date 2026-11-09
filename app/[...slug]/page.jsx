@@ -3,6 +3,7 @@
 import { notFound } from 'next/navigation'
 import BlockRender from '../../components/PageBuilder/BlockRender';
 import PageBuilderContent from "../../components/PageBuilder/PageBuilderContent";
+import { getPageTemplate } from "@/lib/getPageTemplate";
 
 export const dynamic = 'force-dynamic'
 
@@ -103,7 +104,6 @@ export default async function DynamicPage({ params }) {
 
 	const slug = resolvedParams.slug || []
 
-
 	// Convert slug array to full route path
 	const path = slug.length > 0 ? '/' + slug.join('/') : '/'
 
@@ -112,29 +112,72 @@ export default async function DynamicPage({ params }) {
 
 
 
+
+	const pageTemplateData = await getPageTemplate({ slug: slug.join('') })
+	var pageTemplatecontent = pageTemplateData?.content ? JSON.parse(pageTemplateData?.content) : [];
+
+
+
 	// Show 404 if route not found
-	if (!page?.title) {
-		notFound()
+	if (pageTemplatecontent) {
+
+		var pageTemplateHeader = pageTemplateData?.header ? JSON.parse(pageTemplateData?.header?.content) : [];
+		var pageTemplateFooter = pageTemplateData?.footer ? JSON.parse(pageTemplateData?.footer?.content) : [];
+
+		var pageTemplate = [...pageTemplateHeader, ...pageTemplatecontent, ...pageTemplateFooter]
+
+		var blocks = pageTemplate
+
+		/*
+			Template Part Settings > Disable Header / Disable Footer (saved as
+			page.meta). A builder page carries its own siteHeader / siteFooter
+			blocks rather than getting the site template's, so these hide the
+			page's top-level ones. They were saved but never read.
+		*/
+		var meta = pageTemplateData?.meta ?? {}
+		if (Array.isArray(blocks) && (meta.disableHeader || meta.disableFooter)) {
+			blocks = blocks.filter(block =>
+				!(meta.disableHeader && block?.type === 'siteHeader') &&
+				!(meta.disableFooter && block?.type === 'siteFooter')
+			)
+		}
+	} else {
+
+
+		if (!page?.title) {
+			notFound()
+		} else {
+
+			var content = page?.content || null
+
+			var blocks = JSON.parse(content)
+
+			/*
+				Template Part Settings > Disable Header / Disable Footer (saved as
+				page.meta). A builder page carries its own siteHeader / siteFooter
+				blocks rather than getting the site template's, so these hide the
+				page's top-level ones. They were saved but never read.
+			*/
+			var meta = page?.meta ?? {}
+			if (Array.isArray(blocks) && (meta.disableHeader || meta.disableFooter)) {
+				blocks = blocks.filter(block =>
+					!(meta.disableHeader && block?.type === 'siteHeader') &&
+					!(meta.disableFooter && block?.type === 'siteFooter')
+				)
+			}
+
+		}
+
+
+
+
 	}
 
-	var content = page.content || null
-	var title = page.title || 'Untitled Page'
 
-	var blocks = JSON.parse(content)
 
-	/*
-		Template Part Settings > Disable Header / Disable Footer (saved as
-		page.meta). A builder page carries its own siteHeader / siteFooter
-		blocks rather than getting the site template's, so these hide the
-		page's top-level ones. They were saved but never read.
-	*/
-	var meta = page?.meta ?? {}
-	if (Array.isArray(blocks) && (meta.disableHeader || meta.disableFooter)) {
-		blocks = blocks.filter(block =>
-			!(meta.disableHeader && block?.type === 'siteHeader') &&
-			!(meta.disableFooter && block?.type === 'siteFooter')
-		)
-	}
+
+
+
 
 	return (
 		<>

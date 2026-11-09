@@ -2,50 +2,38 @@
 import React from 'react'
 import Link from "next/link";
 
-
-import { useState, useEffect, useContext } from "react";
-
-
-import { useCounterStore } from '../../store/useCounterStore'
-const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
-
-
 import CustomerProfile from '../../components/CustomerProfile';
-import { IconChevronDown, IconChevronUp, IconSquare, IconUsersPlus, IconTrash, IconTrolley, IconStar, IconClockPause, IconExclamationCircle, IconRosetteDiscountCheck, IconX, IconRouteSquare, IconTruckDelivery, IconRss, IconFileDollar } from "@tabler/icons-react";
+import { IconArrowLeft, IconArrowUpRight } from "@tabler/icons-react";
 
-const CustomerEdit = ({ id }) => {
+const TOOLBAR_BUTTON =
+  "inline-flex !h-9 items-center gap-2 !rounded-lg !border !border-gray-300 !bg-white !px-3 !py-0 !text-sm !font-medium !text-gray-700 !shadow-none transition-colors hover:!border-gray-400 hover:!bg-gray-50 cursor-pointer";
 
+/*
+  A customer: their profile editor. Used as a page (/dashboard/customers/[id])
+  and in the Customers list's Edit drawer (variant="drawer": no page padding,
+  and a link to the page instead of back to the list). The drawer used to get
+  the full page layout, padding and all, inside its own padding.
+*/
+const CustomerEdit = ({ id, variant = "page" }) => {
 
-
-
-  const { token, appData, notifications, addNotification, userDataX, setUserDataX } = useCounterStore()
-
-  var [currentObject, setcurrentObject] = useState(null);
-
-  var [loading, setloading] = useState(false);
-
-
-
-
-
+  var drawer = variant === "drawer";
 
   return (
-    <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-4 px-4 py-6 sm:px-6">
+    <div className={drawer ? "flex w-full flex-col gap-4" : "mx-auto flex w-full max-w-[1200px] flex-col gap-4 px-4 py-6 sm:px-6"}>
 
-      {/* Page heading: these detail screens showed no title at all. */}
-      <div className="flex flex-wrap items-end justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-xl font-semibold text-gray-900">
           {("Customer")} <span className="font-normal text-gray-400">#{id}</span>
         </h1>
+
+        {drawer ? (
+          <Link href={`/dashboard/customers/${id}`} className={TOOLBAR_BUTTON}><IconArrowUpRight size={16} /> {("Open page")}</Link>
+        ) : (
+          <Link href="/dashboard/customers" className={TOOLBAR_BUTTON}><IconArrowLeft size={16} /> {("All customers")}</Link>
+        )}
       </div>
 
-
-
       <CustomerProfile userid={id} />
-
-
-
-
 
     </div>
   )

@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 450" fill="none" role="img" aria-label="Rocket, teddy bear and building blocks">
+  <!-- The WonderJoy template's hero illustration, from wonderjoy_toys_modern_kids_toys_store.html. -->
+  <rect x="50" y="320" width="400" height="20" rx="10" fill="#E2E8F0"/>
+  <g transform="translate(180, 50)">
+    <path d="M70 0C70 0 110 50 110 130H30C30 50 70 0 70 0Z" fill="#FF6B6B"/>
+    <circle cx="70" cy="70" r="18" fill="#FFFFFF"/>
+    <circle cx="70" cy="70" r="12" fill="#00C9A7"/>
+    <path d="M30 130L0 180H30V130Z" fill="#FFD166"/>
+    <path d="M110 130L140 180H110V130Z" fill="#FFD166"/>
+    <path d="M40 130H100V160H40V130Z" fill="#1D1E2C"/>
+    <path d="M55 160C55 190 70 210 70 210C70 210 85 190 85 160H55Z" fill="#FF9F43"/>
+  </g>
+  <g transform="translate(60, 180)">
+    <circle cx="60" cy="60" r="50" fill="#D97706"/>
+    <circle cx="25" cy="20" r="18" fill="#B45309"/>
+    <circle cx="95" cy="20" r="18" fill="#B45309"/>
+    <ellipse cx="60" cy="70" rx="20" ry="15" fill="#FDE68A"/>
+    <circle cx="60" cy="62" r="7" fill="#1D1E2C"/>
+    <circle cx="48" cy="50" r="5" fill="#1D1E2C"/>
+    <circle cx="72" cy="50" r="5" fill="#1D1E2C"/>
+  </g>
+  <g transform="translate(310, 200)">
+    <rect x="0" y="60" width="70" height="70" rx="12" fill="#00C9A7"/>
+    <text x="25" y="110" font-family="Fredoka, sans-serif" font-size="40" fill="white" font-weight="bold">A</text>
+    <rect x="75" y="60" width="70" height="70" rx="12" fill="#FFD166"/>
+    <text x="100" y="110" font-family="Fredoka, sans-serif" font-size="40" fill="#1D1E2C" font-weight="bold">B</text>
+    <polygon points="35,0 0,60 70,60" fill="#FF6B6B"/>
+  </g>
+  <path d="M100 60L103 68L112 69L105 75L107 84L100 79L93 84L95 75L88 69L97 68Z" fill="#FFD166"/>
+  <path d="M400 100L402 105L408 106L403 110L405 116L400 112L395 116L397 110L392 106L398 105Z" fill="#FF6B6B"/>
+</svg>

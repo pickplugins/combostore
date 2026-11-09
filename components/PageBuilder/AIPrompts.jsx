@@ -26,6 +26,14 @@ import {
 	describeReport,
 	countBlocks,
 	patchBlockById,
+	MODE_EFFORT,
+	PRICES,
+	EMPTY_SPEND,
+	usageCost,
+	addSpend,
+	formatUsd,
+	formatTokens,
+	describeCost,
 } from './aiLayoutPrompt';
 
 // Converts a File object to a base64 string (data only, no prefix)
@@ -95,6 +103,11 @@ const AIPrompts = (props) => {
 
 	const [loading, setloading] = useState(false);
 	const [prompt, setPrompt] = useState('');
+
+	/* What this panel has spent since it was opened, from each response's own
+	   usage - so a change to effort or wording can be judged in dollars. */
+	const [spend, setSpend] = useState(EMPTY_SPEND);
+	const [lastCost, setLastCost] = useState(null);
 	const [mode, setmode] = useState('generate'); // 'generate' | 'append' | 'image' | 'edit'
 	/*
 		Open state is mirrored from the prop into local state. The panel's own
@@ -232,12 +245,20 @@ const AIPrompts = (props) => {
 			const stream = client.messages.stream({
 				model: MODEL,
 				max_tokens: MAX_TOKENS,
-				output_config: { effort: 'high' },
+				/* Was `high` for every mode - see MODE_EFFORT. */
+				output_config: { effort: MODE_EFFORT[mode] ?? 'high' },
 				system: [{ type: "text", text: systemPrompt, cache_control: { type: "ephemeral", ttl: "1h" } }],
 				messages: [{ role: "user", content }],
 			});
 
 			const message = await stream.finalMessage();
+
+			/* Counted before anything can throw: a refused or unparseable reply
+			   was still billed. */
+			const cost = usageCost(message.usage);
+
+			setSpend(prev => addSpend(prev, cost));
+			setLastCost(cost);
 
 			if (message.stop_reason === 'refusal') {
 				throw new Error("The model declined this request.");
@@ -262,7 +283,7 @@ const AIPrompts = (props) => {
 				}
 
 				setBlocks(prev => patchBlockById(prev, selectedBlock.id, parsed));
-				say(`Updated the ${selectedBlock.type} block.`);
+				say(`Updated the ${selectedBlock.type} block (${describeCost(cost)}).`);
 
 				return;
 			}
@@ -296,7 +317,9 @@ const AIPrompts = (props) => {
 					? `Rebuilt the image as ${sanitized.length} section${plural} (${total} blocks).`
 					: `Built ${sanitized.length} section${plural} (${total} blocks) - the page was replaced.`;
 
-			say(notes ? `${headline} Note: ${notes}.` : headline);
+			const priced = `${headline.replace(/\.$/, '')} (${describeCost(cost)}).`;
+
+			say(notes ? `${priced} Note: ${notes}.` : priced);
 
 			if (mode === "image") clearImage();
 		} catch (err) {
@@ -506,7 +529,20 @@ const AIPrompts = (props) => {
 								: mode === 'edit'
 									? "Only the selected block changes - its children are left alone."
 									: "Ctrl/Cmd + Enter to submit."}
+					{` Runs at ${MODE_EFFORT[mode] ?? 'high'} effort.`}
 				</p>
+
+				{/* Spend since the panel opened, from the responses' own usage. */}
+				{spend.calls > 0 && (
+					<div className="-mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-gray-500">
+						<span className="font-semibold text-gray-800">
+							{PRICES[MODEL] ? formatUsd(spend.usd) : '-'} {("this session")}
+						</span>
+						<span>{spend.calls} {spend.calls === 1 ? "request" : "requests"}</span>
+						<span>{formatTokens(spend.output)} {("output")}</span>
+						{lastCost && <span>{("last")}: {describeCost(lastCost)}</span>}
+					</div>
+				)}
 			</div>
 		</div>
 	);

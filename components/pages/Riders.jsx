@@ -31,7 +31,18 @@ const FORM_LABEL = "mb-1 block text-xs font-medium text-gray-600";
 
 const EMPTY = <span className="text-sm text-gray-300">—</span>;
 
-const EMPTY_NEW_RIDER = { role: "rider", name: "", email: "", mobile: "", registerBy: "mobile" };
+/*
+	One list for the staff roles that share it. /dashboard/store-managers and
+	/dashboard/support-agents rendered this with the role fixed to "rider", so
+	both showed the riders, and adding someone there created a rider.
+*/
+const ROLE_LISTS = {
+	rider: { singular: "Rider", plural: "Riders", path: "riders", deliveries: true, blurb: "People who deliver orders." },
+	store_manager: { singular: "Store manager", plural: "Store managers", path: "store-managers", deliveries: false, blurb: "Staff who manage products, orders and coupons." },
+	support_agent: { singular: "Support agent", plural: "Support agents", path: "support-agents", deliveries: false, blurb: "Staff who answer support tickets." },
+};
+
+const emptyNewMember = (role) => ({ role: role, name: "", email: "", mobile: "", registerBy: "mobile" });
 
 /* Accounts registered by phone get a generated `<phone>@mo.lo` address. */
 const PHONE_EMAIL = /@mo\.lo$/i;
@@ -64,13 +75,17 @@ function initialsOf(name) {
 }
 
 
-const Riders = () => {
+const Riders = ({ role = "rider" }) => {
 
 	const { token, addNotification } = useCounterStore()
 
+	var list = ROLE_LISTS[role] ?? ROLE_LISTS.rider;
+	var one = list.singular.toLowerCase();
+	var many = list.plural.toLowerCase();
+
 	var [ridersData, setridersData] = useState({ posts: [], total: 0, maxPages: 1 });
-	var [queryPrams, setqueryPrams] = useState({ role: "rider", keyword: "", paged: 1, order: "DESC", per_page: 20, });
-	var [newRider, setnewRider] = useState(EMPTY_NEW_RIDER);
+	var [queryPrams, setqueryPrams] = useState({ role: role, keyword: "", paged: 1, order: "DESC", per_page: 20, });
+	var [newRider, setnewRider] = useState(() => emptyNewMember(role));
 
 	var [loading, setloading] = useState(false);
 	var [adding, setadding] = useState(false);
@@ -83,9 +98,9 @@ const Riders = () => {
 
 	var columns = {
 		check: { id: "check", label: ("Check"), },
-		id: { id: "id", label: ("Rider"), callback: callbackRider, classes: "w-96 text-left text-gray-600" },
+		id: { id: "id", label: list.singular, callback: callbackRider, classes: "w-96 text-left text-gray-600" },
 		contact: { id: "contact", label: ("Contact"), callback: callbackContact, classes: "text-left text-gray-600" },
-		total_order: { id: "total_order", label: ("Deliveries"), callback: callbackDeliveries, classes: "text-center text-gray-600" },
+		...(list.deliveries ? { total_order: { id: "total_order", label: ("Deliveries"), callback: callbackDeliveries, classes: "text-center text-gray-600" } } : {}),
 		actions: { label: ("Actions"), callback: callbackActions, classes: "text-right pr-2 text-gray-600" },
 	};
 
@@ -130,7 +145,7 @@ const Riders = () => {
 			})
 			.catch((_error) => {
 				setloading(false);
-				addNotification({ type: 'error', title: 'Riders not loaded', content: "The list could not be loaded. Please try again." })
+				addNotification({ type: 'error', title: `${list.plural} not loaded`, content: "The list could not be loaded. Please try again." })
 			});
 	}
 
@@ -155,19 +170,29 @@ const Riders = () => {
 			body: JSON.stringify({ ids: ids }),
 		})
 			.then((response) => {
+				if (response.status === 403) {
+					throw new Error("You are not allowed to delete these accounts.");
+				}
 				if (!response.ok) {
-					throw new Error("Token validation failed");
+					throw new Error(`Server answered ${response.status}.`);
 				}
 
-				response.json().then(() => {
+				response.json().then((res) => {
 					setselectedRows([]);
-					addNotification({ type: 'success', title: 'Riders deleted', content: `${ids.length} rider(s) deleted.` })
+					var deleted = parseInt(res?.deleted, 10);
+					var skipped = parseInt(res?.skipped, 10) || 0;
+					if (Number.isNaN(deleted)) deleted = ids.length;
+					addNotification({
+						type: deleted > 0 ? 'success' : 'error',
+						title: deleted > 0 ? `${list.plural} deleted` : 'Nothing deleted',
+						content: `${deleted} deleted.${skipped ? ` ${skipped} skipped: administrators, your own account, and (for store managers) staff accounts can't be deleted here.` : ""}`,
+					});
 					fetchPosts();
 				});
 			})
-			.catch((_error) => {
+			.catch((error) => {
 				setloading(false);
-				addNotification({ type: 'error', title: 'Delete failed', content: "The riders could not be deleted. Please try again." })
+				addNotification({ type: 'error', title: 'Delete failed', content: error?.message?.startsWith("You are not allowed") ? error.message : `The ${many} could not be deleted. Please try again.` })
 			});
 	}
 
@@ -196,10 +221,10 @@ const Riders = () => {
 					var resObj = typeof res === "string" ? JSON.parse(res) : res;
 
 					if (resObj?.error) {
-						addNotification({ type: 'error', title: 'Rider not added', content: `Sorry, the rider could not be added. ${JSON.stringify(resObj?.messages ?? "")}` })
+						addNotification({ type: 'error', title: `${list.singular} not added`, content: `Sorry, the ${one} could not be added. ${JSON.stringify(resObj?.messages ?? "")}` })
 					} else {
-						addNotification({ type: 'success', title: 'Rider added', content: "Rider added successfully." })
-						setnewRider(EMPTY_NEW_RIDER);
+						addNotification({ type: 'success', title: `${list.singular} added`, content: `${list.singular} added successfully.` })
+						setnewRider(emptyNewMember(role));
 						fetchPosts();
 					}
 
@@ -208,7 +233,7 @@ const Riders = () => {
 			})
 			.catch((_error) => {
 				setadding(false);
-				addNotification({ type: 'error', title: 'Rider not added', content: "The request failed. Please try again." })
+				addNotification({ type: 'error', title: `${list.singular} not added`, content: "The request failed. Please try again." })
 			});
 	}
 
@@ -260,16 +285,16 @@ const Riders = () => {
 	function callbackRider(entry, columnIndex) {
 
 		var id = riderId(entry);
-		var name = entry?.display_name || entry?.user_login || ("Unknown rider");
+		var name = entry?.display_name || entry?.user_login || `Unknown ${one}`;
 		var hasSeparateLogin = entry?.user_login && entry.user_login !== name;
 
 		return (
-			<td data-label="Rider" className="!px-5 py-3 text-left"
+			<td data-label={list.singular} className="!px-5 py-3 text-left"
 				key={`rider-${id}`}>
 
 				<div className="flex min-w-0 flex-1 items-center gap-3">
 
-					<Link href={`/dashboard/riders/${id}`} className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-gray-200 bg-gray-50 text-xs font-semibold text-gray-500">
+					<Link href={`/dashboard/${list.path}/${id}`} className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-gray-200 bg-gray-50 text-xs font-semibold text-gray-500">
 						{entry?.thumbnail?.src ? (
 							<Image unoptimized className="h-10 w-10 object-cover" src={entry.thumbnail.src} width={80} height={80} alt={``} />
 						) : (
@@ -282,7 +307,7 @@ const Riders = () => {
 							{entry?.featured && (
 								<span className="shrink-0 text-amber-500" title="Featured"><IconStarFilled size={14} /></span>
 							)}
-							<Link className="truncate text-left text-sm font-medium text-gray-900 transition-colors hover:text-blue-600 hover:underline" href={`/dashboard/riders/${id}`}>
+							<Link className="truncate text-left text-sm font-medium text-gray-900 transition-colors hover:text-blue-600 hover:underline" href={`/dashboard/${list.path}/${id}`}>
 								{name}
 							</Link>
 						</div>
@@ -293,10 +318,10 @@ const Riders = () => {
 								<span className="font-mono text-[11px]">{entry.user_login}</span>
 							)}
 
-							<PopoverButton buttonLabel={"Edit"} buttonIcon={null} title={"Edit Rider"} drawer={"right"} buttonClass={`inline-flex items-center rounded-md px-1.5 py-0.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-900 cursor-pointer`}>
+							<PopoverButton buttonLabel={"Edit"} buttonIcon={null} title={`Edit ${one}`} drawer={"right"} buttonClass={`inline-flex items-center rounded-md px-1.5 py-0.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-900 cursor-pointer`}>
 
 								<div className="p-5 bg-gray-50 text-left">
-									<RiderEdit id={id} />
+									<RiderEdit id={id} variant="drawer" role={role} />
 								</div>
 
 							</PopoverButton>
@@ -374,11 +399,11 @@ const Riders = () => {
 
 						<div className="p-1.5">
 							<div className="flex flex-col gap-0.5">
-								<Link className={MENU_ITEM} href={`/dashboard/riders/${id}`}>
+								<Link className={MENU_ITEM} href={`/dashboard/${list.path}/${id}`}>
 									<IconEyeShare size={16} /> View
 								</Link>
 								<div className={`${MENU_ITEM} !text-red-600 hover:!bg-red-50 hover:!text-red-700`} onClick={() => {
-									if (confirm("Please confirm?")) {
+									if (confirm(`Delete ${one} #${id}? This permanently deletes their account.`)) {
 										delete_riders([id]);
 									}
 								}}>
@@ -401,23 +426,23 @@ const Riders = () => {
 
 			<div className="flex flex-wrap items-end justify-between gap-3">
 				<div>
-					<h1 className="text-xl font-semibold text-gray-900">{("Riders")}</h1>
+					<h1 className="text-xl font-semibold text-gray-900">{list.plural}</h1>
 					<p className="mt-0.5 text-xs text-gray-500">
-						{ridersData?.total ?? 0} {("riders")}
+						{ridersData?.total ?? 0} {(ridersData?.total ?? 0) === 1 ? one : many} · {list.blurb}
 					</p>
 				</div>
 
 				<PopoverButton
 					enableCloseBtn={false}
-					buttonLabel={("Add Rider")}
+					buttonLabel={`Add ${list.singular}`}
 					buttonIcon={<IconUserPlus size={16} />}
-					title={"Add Rider"}
+					title={`Add ${one}`}
 					position={"bottomRight"}
 					buttonClass={`inline-flex items-center gap-2 !rounded-lg !border-0 !bg-[#634FE5] !px-4 !py-2 !text-sm !font-semibold !text-white !shadow-sm transition-colors hover:!bg-[#5540d4] cursor-pointer`}
 					popoverClass={`absolute z-[999] mt-2 w-[360px] sm:w-[440px] overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg`}>
 
 					<div className="p-4">
-						<div className="mb-3 text-sm font-semibold text-gray-900">New rider</div>
+						<div className="mb-3 text-sm font-semibold text-gray-900">New {one}</div>
 
 						<div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
 							<div className="sm:col-span-2">
@@ -466,7 +491,7 @@ const Riders = () => {
 								disabled={adding}
 								onClick={() => add_rider()}
 								className="sm:col-span-2 mt-1 inline-flex items-center justify-center gap-2 !rounded-lg !border-0 !bg-[#634FE5] px-4 py-2 text-sm font-semibold !text-white !shadow-sm transition-colors hover:!bg-[#5540d4] disabled:opacity-60 cursor-pointer">
-								{adding ? "Please wait…" : ("Create rider")}
+								{adding ? "Please wait…" : `Create ${one}`}
 							</button>
 						</div>
 					</div>
@@ -490,12 +515,12 @@ const Riders = () => {
 						<div
 							className="inline-flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700 transition-colors hover:bg-red-100 cursor-pointer"
 							onClick={() => {
-								if (confirm(`Delete ${selectedRows.length} rider(s)?`)) {
+								if (confirm(`Delete ${selectedRows.length} ${selectedRows.length === 1 ? one : many}? This permanently deletes their accounts.`)) {
 									delete_riders();
 								}
 							}}>
 							<IconTrash size={16} />
-							{("Delete Riders")} ({selectedRows.length})
+							{`Delete ${list.plural}`} ({selectedRows.length})
 						</div>
 					)}
 				</div>

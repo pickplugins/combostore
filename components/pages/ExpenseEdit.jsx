@@ -5,7 +5,11 @@ import { useState, useEffect } from "react";
 import { useCounterStore } from '../../store/useCounterStore'
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
-import { IconFileDollar, IconReceipt, IconCreditCard, IconTag } from "@tabler/icons-react";
+import Link from "next/link";
+import { IconFileDollar, IconReceipt, IconCreditCard, IconTag, IconArrowLeft, IconArrowUpRight, IconRefresh } from "@tabler/icons-react";
+
+const TOOLBAR_BUTTON =
+  "inline-flex !h-9 items-center gap-2 !rounded-lg !border !border-gray-300 !bg-white !px-3 !py-0 !text-sm !font-medium !text-gray-700 !shadow-none transition-colors hover:!border-gray-400 hover:!bg-gray-50 cursor-pointer";
 import { useUtilsStore } from '../../store/useUtilsStore';
 import Tabs from '../../components/Tabs';
 import Tab from '../../components/Tab';
@@ -37,7 +41,8 @@ const Figure = ({ label, value, strong }) => (
   </div>
 );
 
-const ExpenseEdit = ({ id }) => {
+/* variant="drawer" (the Expenses list's Edit drawer): no page padding. */
+const ExpenseEdit = ({ id, variant = "page" }) => {
 
 
   const { wrapCurrency, formatDate } = useUtilsStore()
@@ -58,16 +63,14 @@ const ExpenseEdit = ({ id }) => {
 
 
 
+  /*
+    get_expense sends the lines as `lineItems` beside the expense. This read
+    JSON.parse(expense.items) - a field expenses do not have - which threw, so
+    the summary always said "This expense could not be loaded".
+  */
   function get_expense() {
 
-
-    // if (!token) {
-    //   //throw new Error("No token found");
-    // }
-    var postData = {
-      id: id,
-    };
-    postData = JSON.stringify(postData);
+    if (!id) return;
 
     setloading(true);
     fetch(serverUrl + "wp-json/combo-store/v2/get_expense", {
@@ -76,80 +79,41 @@ const ExpenseEdit = ({ id }) => {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },
-      body: postData,
+      body: JSON.stringify({ id: id }),
     })
       .then((response) => {
-
         if (!response.ok) {
-          throw new Error('Token validation failed');
+          throw new Error(`Server answered ${response.status}.`);
         }
-
-        if (response.ok && response.status < 400) {
-          response.json().then((res) => {
-
-
-
-
-
-            var expense = res?.expense;
-            var subscription = res?.subscription;
-            var delivery = res?.delivery;
-            var lineItems = JSON.parse(expense?.items);
-
-
-
-
-            setexpenseData(expense)
-            setlineItems(lineItems)
-            setloading(false)
-
-
-
-
-            setTimeout(() => {
-            }, 500);
-          });
-        }
+        return response.json();
+      })
+      .then((res) => {
+        setexpenseData(res?.expense?.id ? res.expense : null)
+        setlineItems(Array.isArray(res?.lineItems) ? res.lineItems : [])
+        setloading(false)
       })
       .catch((_error) => {
-        //this.saveAsStatus = 'error';
-        // handle the error
         setloading(false)
       });
-
   }
 
-  // useEffect(() => {
-  // 	get_expense();
-  // }, []);
-
   useEffect(() => {
+    if (!token) return;
     get_expense();
-  }, [id]);
+  }, [id, token]);
 
 
 
   useEffect(() => {
 
-    var items = []
+    var items = (lineItems ?? []).map(item => ({ id: item.id, desc: item.product_name, qty: item.quantity, price: item.price }))
 
-    lineItems?.map(item => {
-
-      items.push({ id: item.id, desc: item.product_name, qty: item.quantity, price: item.price })
-
-    })
-
-
+    /* No `from`: InvoiceWithPDF fills the sender from the shop's Settings.
+       A hard-coded "KidoBazar.com, Rangpur" used to override it. */
     var data = {
-      from: {
-        name: "KidoBazar.com",
-        address: "New Shalbon, House 145 Road 01",
-        city: "Rangpur",
-      },
       to: {
         name: expenseData?.billing_name,
         address: expenseData?.billing_address,
-        city: expenseData?.city,
         phone: expenseData?.billing_phone,
       },
       items: items,
@@ -184,7 +148,7 @@ const ExpenseEdit = ({ id }) => {
 
 
   return (
-    <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-4 px-4 py-6 sm:px-6">
+    <div className={variant === "drawer" ? "flex w-full flex-col gap-4" : "mx-auto flex w-full max-w-[1200px] flex-col gap-4 px-4 py-6 sm:px-6"}>
 
       {/*
         Summary card. The screen used to open on a bare "Expense #id" with
@@ -205,8 +169,16 @@ const ExpenseEdit = ({ id }) => {
             )}
           </div>
 
+          <div className="flex flex-wrap items-center gap-2">
+            {variant === "drawer" ? (
+              <Link href={`/dashboard/expenses/${id}`} className={TOOLBAR_BUTTON}><IconArrowUpRight size={16} /> {("Open page")}</Link>
+            ) : (
+              <Link href="/dashboard/expenses" className={TOOLBAR_BUTTON}><IconArrowLeft size={16} /> {("All expenses")}</Link>
+            )}
+          </div>
+
           {expenseData && (
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex w-full flex-wrap items-center gap-2">
 
               <span className={`${BADGE_BASE} ${paymentBadge.classes}`}>{paymentBadge.label}</span>
 
@@ -235,8 +207,9 @@ const ExpenseEdit = ({ id }) => {
         )}
 
         {!loading && !expenseData && (
-          <div className="mt-4 border-t border-gray-100 pt-4 text-sm text-gray-500">
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 pt-4 text-sm text-gray-500">
             {("This expense could not be loaded.")}
+            <button type="button" className={TOOLBAR_BUTTON} onClick={get_expense}><IconRefresh size={16} /> {("Try again")}</button>
           </div>
         )}
 
@@ -267,14 +240,15 @@ const ExpenseEdit = ({ id }) => {
       </div>
 
 
+      {/* Same rail as the order page. */}
       <Tabs activeTab={'expense'}
         orientation="vertical"
         activeClass="active-tab "
         navsItemClass="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900"
-        navsItemActiveClass="bg-[#634FE5] text-white shadow-sm"
+        navsItemActiveClass="!bg-[#634FE5] !text-white shadow-sm"
 
-        navsWrapperClass="mb-5 flex w-full gap-1 lg:w-[250px]"
-        wrapperClass="flex gap-5"
+        navsWrapperClass="gap-1 rounded-xl border border-gray-200 bg-white p-2 lg:mb-0 lg:w-52 lg:shrink-0 lg:self-start"
+        wrapperClass="gap-5"
 
         tabs={[
           { label: "Expense", id: 'expense', icon: <IconFileDollar size={18} /> },
@@ -286,7 +260,8 @@ const ExpenseEdit = ({ id }) => {
 
         <Tab index={0} id="expense">
 
-          <EditExpenses id={id} />
+          {/* Re-reads the summary above after a save. */}
+          <EditExpenses id={id} onSaved={get_expense} />
 
         </Tab>
         <Tab index={1} id="invoice">

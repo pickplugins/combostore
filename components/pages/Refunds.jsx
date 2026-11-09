@@ -3,8 +3,8 @@ import Link from "next/link";
 import React from "react";
 
 import EntriesTable from "../../components/EntriesTable";
-import { useState, useEffect } from "react";
-import { IconFilter, IconEyeShare, IconTrash, IconCopy, IconDotsVertical, IconPackages, IconX, IconEdit } from "@tabler/icons-react";
+import { useState, useEffect, useRef } from "react";
+import { IconFilter, IconEyeShare, IconTrash, IconCopy, IconDotsVertical, IconPackages, IconX, IconEdit, IconRefresh, IconReceiptRefund } from "@tabler/icons-react";
 
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -28,19 +28,15 @@ import { useUtilsStore } from '../../store/useUtilsStore';
 const BADGE_BASE =
   "inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1 ring-inset";
 
-const ORDER_STATUS_BADGES = {
-  confirmed: { label: "Confirmed", classes: "bg-indigo-50 text-indigo-700 ring-indigo-200" },
+/* Same as the Incomplete screen. */
+const PAYMENT_STATUS_BADGES = {
   pending: { label: "Pending", classes: "bg-amber-50 text-amber-700 ring-amber-200" },
-  completed: { label: "Completed", classes: "bg-emerald-50 text-emerald-700 ring-emerald-200" },
-  incomplete: { label: "Incomplete", classes: "bg-orange-50 text-orange-700 ring-orange-200" },
-  scheduled: { label: "Scheduled", classes: "bg-fuchsia-50 text-fuchsia-700 ring-fuchsia-200" },
-  cancelled: { label: "Cancelled", classes: "bg-rose-50 text-rose-700 ring-rose-200" },
-  canceled: { label: "Canceled", classes: "bg-rose-50 text-rose-700 ring-rose-200" },
-  refunded: { label: "Refunded", classes: "bg-rose-50 text-rose-700 ring-rose-200" },
+  paid: { label: "Paid", classes: "bg-emerald-50 text-emerald-700 ring-emerald-200" },
   failed: { label: "Failed", classes: "bg-rose-50 text-rose-700 ring-rose-200" },
-  processing: { label: "Processing", classes: "bg-blue-50 text-blue-700 ring-blue-200" },
-  hold: { label: "Hold", classes: "bg-orange-50 text-orange-700 ring-orange-200" },
-  delivered: { label: "Delivered", classes: "bg-lime-50 text-lime-700 ring-lime-200" },
+  delayed: { label: "Delayed", classes: "bg-amber-50 text-amber-700 ring-amber-200" },
+  due: { label: "Due", classes: "bg-rose-50 text-rose-700 ring-rose-200" },
+  partial: { label: "Partial", classes: "bg-blue-50 text-blue-700 ring-blue-200" },
+  refunded: { label: "Refunded", classes: "bg-rose-50 text-rose-700 ring-rose-200" },
 };
 
 const FALLBACK_BADGE_CLASSES = "bg-gray-100 text-gray-600 ring-gray-200";
@@ -81,16 +77,18 @@ const Refunds = () => {
 
   const { wrapCurrency, formatDate } = useUtilsStore()
 
-  const { token, paymentGateways, addNotification, privacyMode, orderStatusArgs } = useCounterStore()
+  const { token, paymentGateways, addNotification, privacyMode, paymentStatusArgs } = useCounterStore()
 
   /*
-    This page is the orders list pinned to `payment_status: refunded`. The pin
-    is not a filter the operator can change: the old filter popover let it be
-    switched or cleared, and clearing its chip turned the page into a second,
-    unfiltered Orders list under a "Refunds" heading.
+    This page is the orders list pinned to order `status: refunded` - the
+    status staff set when they refund an order. It used to be pinned to
+    `payment_status: refunded`, which no order has (refunded orders keep a
+    payment status of paid, pending or none), so the page was always empty
+    while every refunded order sat unseen in Orders. The pin is not a filter
+    the operator can change; payment status is, since it is what varies here.
   */
   var [ordersData, setordersData] = useState(null);
-  var [queryPrams, setqueryPrams] = useState({ keyword: "", payment_method: '', payment_status: 'refunded', start_date: '', end_date: '', billing_phone: '', customer: {}, product: {}, status: '', paged: 1, order: "DESC", per_page: 10, first_date: "", last_date: "" });
+  var [queryPrams, setqueryPrams] = useState({ keyword: "", payment_method: '', payment_status: '', start_date: '', end_date: '', billing_phone: '', customer: {}, product: {}, status: 'refunded', paged: 1, order: "DESC", per_page: 10, first_date: "", last_date: "" });
 
   var [loading, setloading] = useState(false);
   var [selectedRows, setselectedRows] = useState([]);
@@ -105,9 +103,12 @@ const Refunds = () => {
     check: { label: ("Check"), },
     id: { label: ("ID"), callback: callbackTitle, classes: "px-5 py-2 text-gray-600 w-64" },
     billing_name: { label: ("Customer"), callback: callbackUserName, classes: "text-left text-gray-600 w-48" },
-    status: { label: ("Status"), callback: callbackStatus, classes: "text-left text-gray-600 w-32" },
-    total_amount: { label: "Refunded", callback: callbackTotal, classes: "text-left text-gray-600 w-64" },
-    payment_method: { label: ("Method"), callback: callbackPaymentMethod, classes: "text-left text-gray-600 w-40" },
+    /* No refund amount is stored anywhere, so this is the order's total - it
+       was headed "Refunded", which it is not necessarily. */
+    total_amount: { label: "Order total", callback: callbackTotal, classes: "text-left text-gray-600 w-64" },
+    /* Every row's status is "refunded"; payment is what varies (a paid one may
+       not have had the money sent back yet). */
+    payment_status: { label: ("Payment"), callback: callbackPaymentStatus, classes: "text-left text-gray-600 w-48" },
     actions: { label: ("Actions"), callback: callbackActions, classes: "text-right pr-2 text-gray-600" },
   };
 
@@ -135,19 +136,32 @@ const Refunds = () => {
       body: JSON.stringify({ ids: ids }),
     })
       .then((response) => {
+        if (response.status === 403) {
+          throw new Error("Only administrators and store managers can delete orders.");
+        }
         if (!response.ok) {
-          throw new Error("Token validation failed");
+          throw new Error(`Server answered ${response.status}.`);
+        }
+        return response.json();
+      })
+      .then((res) => {
+        setloading(false);
+
+        if (res?.success === false) {
+          addNotification({ type: 'error', title: 'Delete failed', content: "The server did not delete the order(s)." })
+          return;
         }
 
-        response.json().then(() => {
-          addNotification({ type: 'success', title: 'Deleted', content: `${ids.length} order(s) deleted.` })
-          setselectedRows([]);
-          fetchPosts();
-        });
+        var deleted = parseInt(res?.deleted, 10);
+        if (Number.isNaN(deleted)) deleted = ids.length;
+
+        addNotification({ type: 'success', title: 'Deleted', content: deleted === 1 ? (ids.length === 1 ? `Order #${ids[0]} deleted.` : "1 order deleted.") : `${deleted} orders deleted.` })
+        setselectedRows([]);
+        fetchPosts();
       })
-      .catch((_error) => {
+      .catch((error) => {
         setloading(false);
-        addNotification({ type: 'error', title: 'Delete failed', content: "Could not delete the selected order(s)." })
+        addNotification({ type: 'error', title: 'Delete failed', content: error?.message ?? "Could not delete the selected order(s)." })
       });
   }
 
@@ -158,6 +172,7 @@ const Refunds = () => {
       return;
     }
 
+    var requestId = ++requestRef.current;
     setloading(true);
 
     fetch(serverUrl + "wp-json/combo-store/v2/get_orders", {
@@ -167,50 +182,46 @@ const Refunds = () => {
         'Authorization': `Bearer ${token}`
       },
       /* Re-pinned on every request, so no query change can drop it. */
-      body: JSON.stringify({ ...queryPrams, payment_status: 'refunded' }),
+      body: JSON.stringify({ ...queryPrams, status: 'refunded' }),
     })
       .then((response) => {
-
         if (!response.ok) {
-          throw new Error('Token validation failed');
+          throw new Error(`Server answered ${response.status}.`);
         }
-
-        response.json().then((res) => {
-
-          /* With no matches the API can leave out `posts`, `total` and `max_pages`. */
-          var orders = res?.posts ?? [];
-          var total = parseInt(res?.total) || 0;
-          var max_pages = parseInt(res?.max_pages) || 1;
-
-          setordersData({ posts: orders, total: total, maxPages: max_pages })
-          setsumData({
-            count: orders.length,
-            refunded: orders.reduce((sum, entry) => sum + orderTotal(entry), 0),
-          });
-          setloading(false);
-        });
+        return response.json();
       })
-      .catch((_error) => {
+      .then((res) => {
+        /* An older, slower request must not replace a newer one's results. */
+        if (requestId !== requestRef.current) return;
+
+        /* With no matches the API can leave out `posts`, `total` and `max_pages`. */
+        var orders = Array.isArray(res?.posts) ? res.posts : [];
+        var total = parseInt(res?.total) || 0;
+        var max_pages = parseInt(res?.max_pages) || 1;
+
+        setordersData({ posts: orders, total: total, maxPages: max_pages })
+        setsumData({
+          count: orders.length,
+          value: orders.reduce((sum, entry) => sum + orderTotal(entry), 0),
+        });
         setloading(false);
-        addNotification({ type: 'error', title: 'Refunds not loaded', content: "The list could not be loaded. Please try again." })
+      })
+      .catch((error) => {
+        if (requestId !== requestRef.current) return;
+
+        setloading(false);
+        addNotification({ type: 'error', title: 'Refunds not loaded', content: error?.message ?? "The list could not be loaded. Please try again." })
       });
   }
 
 
   /*
-    Fetched through a debounced copy, as on Products and Orders. The old page
-    fetched on every query change and again from onChange with the previous
-    query, so each page turn sent two requests and the stale one could land last.
+    Typing in the search box waits a moment; every other change (a page, a
+    filter) loads at once. The whole query used to wait half a second, so
+    paging felt stuck. Only the newest request's answer is shown.
   */
-  const [debouncedQuery, setDebouncedQuery] = useState(queryPrams);
-
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedQuery(queryPrams);
-    }, 500);
-
-    return () => clearTimeout(handler);
-  }, [queryPrams]);
+  const requestRef = useRef(0);
+  const lastKeyword = useRef(queryPrams.keyword);
 
   useEffect(() => {
 
@@ -219,9 +230,18 @@ const Refunds = () => {
       return;
     }
 
-    fetchPosts();
+    var typing = queryPrams.keyword !== lastKeyword.current;
+    lastKeyword.current = queryPrams.keyword;
 
-  }, [debouncedQuery, token]);
+    if (!typing) {
+      fetchPosts();
+      return;
+    }
+
+    const handler = setTimeout(fetchPosts, 400);
+    return () => clearTimeout(handler);
+
+  }, [queryPrams, token]);
 
 
   function onChangeQueryPrams(queryPrams) {
@@ -247,10 +267,10 @@ const Refunds = () => {
               {"#" + entry.id}
             </Link>
 
-            <PopoverButton buttonLabel={""} buttonIcon={<IconEdit size={16} />} title={"Edit Order"} drawer={"right"} buttonClass={ICON_BUTTON}>
+            <PopoverButton buttonLabel={""} buttonIcon={<IconEdit size={16} />} title={`Edit order #${entry.id}`} drawer={"right"} buttonClass={ICON_BUTTON}>
 
               <div className="p-5 bg-gray-50 text-left">
-                <OrderEdit id={entry.id} />
+                <OrderEdit id={entry.id} variant="drawer" />
               </div>
 
             </PopoverButton>
@@ -343,7 +363,7 @@ const Refunds = () => {
                   <IconEyeShare size={16} /> Open order
                 </Link>
                 <div className={`${MENU_ITEM} !text-red-600 hover:!bg-red-50 hover:!text-red-700`} onClick={() => {
-                  if (confirm(`Delete order #${entry.id}? This cannot be undone.`)) {
+                  if (confirm(`Permanently delete refunded order #${entry.id}? There is no trash for orders, and the refund record goes with it.`)) {
                     delete_orders([entry.id]);
                   }
                 }}>
@@ -388,34 +408,23 @@ const Refunds = () => {
   }
 
 
-  function callbackStatus(entry, columnIndex) {
+  function callbackPaymentStatus(entry, columnIndex) {
 
-    var badge = ORDER_STATUS_BADGES[entry.status]
-      ?? (entry.status ? { label: orderStatusArgs?.[entry.status]?.label ?? titleCase(entry.status), classes: FALLBACK_BADGE_CLASSES } : null);
+    var paymentKey = entry.payment_status || "";
+    var badge = paymentKey
+      ? (PAYMENT_STATUS_BADGES[paymentKey] ?? { label: paymentStatusArgs?.[paymentKey]?.label ?? titleCase(paymentKey), classes: FALLBACK_BADGE_CLASSES })
+      : null;
+    var method = entry.payment_method ? (paymentGateways?.[entry.payment_method]?.label ?? entry.payment_method) : "";
 
     return (
-      <td data-label="Status" className="!px-5 py-3 text-left text-sm"
+      <td data-label="Payment" className="!px-5 py-3 text-left text-sm"
         key={columnIndex}>
-        <div className="text-xs">
-          {badge ? (
-            <span className={`${BADGE_BASE} ${badge.classes}`}>{badge.label}</span>
-          ) : (
-            <span className="text-gray-300">—</span>
-          )}
+        <div className="flex flex-col items-start gap-1.5">
+          <div className="text-xs">
+            {badge ? <span className={`${BADGE_BASE} ${badge.classes}`}>{badge.label}</span> : <span className="text-gray-400">{("Not set")}</span>}
+          </div>
+          {method && <div className="text-[11px] text-gray-500">{method}</div>}
         </div>
-      </td>
-    );
-  }
-
-  /* Every row's payment status is "refunded", so the column shows the method. */
-  function callbackPaymentMethod(entry, columnIndex) {
-
-    var label = entry.payment_method ? (paymentGateways?.[entry.payment_method]?.label ?? entry.payment_method) : "";
-
-    return (
-      <td data-label="Method" className="!px-5 py-3 text-left text-sm"
-        key={columnIndex}>
-        {label ? <span className="text-xs text-gray-600">{label}</span> : <span className="text-gray-300">—</span>}
       </td>
     );
   }
@@ -443,7 +452,7 @@ const Refunds = () => {
     queryPrams?.from_date,
     queryPrams?.to_date,
   ].filter(Boolean).length;
-  const activeFilterCount = moreFilterCount + [queryPrams?.status].filter(Boolean).length;
+  const activeFilterCount = moreFilterCount + [queryPrams?.payment_status].filter(Boolean).length;
 
 
   return (
@@ -454,19 +463,26 @@ const Refunds = () => {
           <h1 className="text-xl font-semibold text-gray-900">{("Refunds")}</h1>
           <p className="mt-0.5 text-xs text-gray-500">
             {ordersData?.total ?? 0} {activeFilterCount > 0 ? ("refunded orders match the filters") : ("refunded orders")}
+            {" · "}{("Orders whose status is Refunded. Check the payment status to see whether the money has gone back.")}
           </p>
         </div>
+
+        <button type="button" className={TOOLBAR_BUTTON} disabled={loading} onClick={fetchPosts}>
+          <IconRefresh size={16} className={loading ? "animate-spin" : ""} /> {("Refresh")}
+        </button>
       </div>
 
       <div className="flex flex-wrap justify-between gap-3">
 
         <div className="flex flex-wrap items-center gap-2">
 
-          <select className={FILTER_SELECT} value={queryPrams?.status ?? ""} onChange={ev => {
-            setqueryPrams({ ...queryPrams, status: ev.target.value, paged: 1 });
+          {/* Order status is pinned to "refunded", so choosing another one here
+              used to empty the list. Payment status is what tells refunds apart. */}
+          <select aria-label="Payment status" className={FILTER_SELECT} value={queryPrams?.payment_status ?? ""} onChange={ev => {
+            setqueryPrams({ ...queryPrams, payment_status: ev.target.value, paged: 1 });
           }}>
-            <option value="">{("All Statuses")}</option>
-            {Object.values(orderStatusArgs ?? {}).map(item => (
+            <option value="">{("All Payments")}</option>
+            {Object.values(paymentStatusArgs ?? {}).map(item => (
               <option key={item.value} value={item.value}>{item.label}</option>
             ))}
           </select>
@@ -534,28 +550,29 @@ const Refunds = () => {
         </div>
 
         {selectedRows?.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-medium text-gray-500">{selectedRows.length} {("selected")}</span>
-
-            <div
-              className="inline-flex h-9 items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 text-sm font-semibold text-red-700 transition-colors hover:bg-red-100 cursor-pointer"
+          <div className="flex flex-wrap items-center gap-2 rounded-lg border border-[#634FE5]/30 bg-[#634FE5]/5 py-1 pl-3 pr-1">
+            <span className="text-sm font-medium text-gray-700">{selectedRows.length} {("selected")}</span>
+            <button type="button" className="!h-8 rounded-md !border-0 !bg-transparent px-2 text-sm !text-gray-500 !shadow-none hover:!bg-white hover:!text-gray-800" onClick={() => setselectedRows([])}>{("Clear")}</button>
+            <button type="button"
+              className="inline-flex !h-8 items-center gap-2 !rounded-lg !border-0 !bg-red-600 !px-3 !py-0 !text-sm !font-medium !text-white !shadow-sm transition-colors hover:!bg-red-700 cursor-pointer disabled:opacity-50"
+              disabled={loading}
               onClick={() => {
-                if (confirm(`Delete ${selectedRows.length} selected order(s)? This cannot be undone.`)) {
+                if (confirm(`Permanently delete ${selectedRows.length} refunded ${selectedRows.length === 1 ? "order" : "orders"}? There is no trash for orders, and the refund record goes with them.`)) {
                   delete_orders()
                 }
               }}>
-              <IconTrash size={16} /> {("Delete")} ({selectedRows.length})
-            </div>
+              <IconTrash size={15} /> {("Delete")}
+            </button>
           </div>
         )}
       </div>
 
       {activeFilterCount > 0 && (
         <div className="flex flex-wrap items-center gap-2">
-          {queryPrams?.status?.length > 0 && (
+          {queryPrams?.payment_status?.length > 0 && (
             <div className={FILTER_CHIP}>
-              <span>{('Status')}: {orderStatusArgs?.[queryPrams.status]?.label ?? titleCase(queryPrams.status)}</span>
-              <span className={FILTER_CHIP_X} onClick={() => setqueryPrams({ ...queryPrams, status: "", paged: 1 })}><IconX size={13} /></span>
+              <span>{('Payment')}: {paymentStatusArgs?.[queryPrams.payment_status]?.label ?? titleCase(queryPrams.payment_status)}</span>
+              <span className={FILTER_CHIP_X} onClick={() => setqueryPrams({ ...queryPrams, payment_status: "", paged: 1 })}><IconX size={13} /></span>
             </div>
           )}
           {queryPrams?.payment_method?.length > 0 && (
@@ -589,23 +606,31 @@ const Refunds = () => {
             </div>
           )}
           <button type="button" className="!border-0 !bg-transparent !p-0 !text-xs !font-medium !text-gray-500 !shadow-none hover:!text-red-600" onClick={() => {
-            setqueryPrams({ ...queryPrams, status: "", payment_method: "", customer: {}, product: {}, from_date: "", to_date: "", paged: 1 });
+            setqueryPrams({ ...queryPrams, payment_status: "", payment_method: "", customer: {}, product: {}, from_date: "", to_date: "", paged: 1 });
           }}>{("Clear all")}</button>
         </div>
       )}
 
 
-      <EntriesTable
-        queryPrams={queryPrams}
-        columns={columns}
-        entries={ordersData}
-        itemPath={""}
-        onChange={onChangeQueryPrams}
-        loading={loading}
-        selectedRows={selectedRows}
-        onSelectRows={onSelectRows}
-        onRefreshRequest={onRefreshRequest}
-      />
+      {ordersData && !loading && activeFilterCount === 0 && !queryPrams?.keyword && (ordersData?.total ?? 0) === 0 && (ordersData?.posts ?? []).length === 0 ? (
+        <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-gray-200 bg-white px-6 py-14 text-center">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 text-gray-400"><IconReceiptRefund size={24} /></div>
+          <div className="text-sm font-semibold text-gray-800">{("No refunded orders")}</div>
+          <p className="max-w-sm text-xs text-gray-500">{("An order shows up here when its status is set to Refunded on the order's page.")}</p>
+        </div>
+      ) : (
+        <EntriesTable
+          queryPrams={queryPrams}
+          columns={columns}
+          entries={ordersData}
+          itemPath={""}
+          onChange={onChangeQueryPrams}
+          loading={loading}
+          selectedRows={selectedRows}
+          onSelectRows={onSelectRows}
+          onRefreshRequest={onRefreshRequest}
+        />
+      )}
 
 
       {sumData && ordersData?.posts?.length > 0 && (
@@ -616,7 +641,8 @@ const Refunds = () => {
               {("This page")} · {sumData.count} {("refunded orders")}
             </div>
             <div className="mt-1 flex justify-between border-t border-dashed border-gray-200 pt-2 text-sm font-semibold text-gray-900">
-              <span>Total refunded</span><span className="tabular-nums">{wrapCurrency(sumData.refunded)}</span>
+              {/* "Total refunded" before; no refund amount is recorded, only the order totals. */}
+              <span>Order value</span><span className="tabular-nums">{wrapCurrency(sumData.value)}</span>
             </div>
           </div>
         </div>

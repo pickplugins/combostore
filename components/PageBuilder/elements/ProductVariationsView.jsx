@@ -7,6 +7,7 @@ import { useUtilsStore } from "../../../store/useUtilsStore";
 import { IconLibraryPhoto, IconCheckbox, IconSquare, IconFidgetSpinner, IconTrash, IconStarFilled, IconStar, IconX } from "@tabler/icons-react";
 import { useProductStore } from "../../../store/productStore";
 import { elementCssClasses } from "../ElementsDefinition";
+import { isDefaultVariation, isVariationEnabled } from "../../../lib/variationDefaults";
 
 
 const NO_ITEMS = [];
@@ -394,8 +395,11 @@ const ProductVariationsView = (props) => {
 		setActiveVariation,
 	]);
 	/**
-	 * Automatically select a variation when there is only
-	 * one available combination.
+	 * Select a variation when the page opens: the product's default
+	 * variation (set in the product editor, meta.isDefault) when it is
+	 * enabled and in stock, otherwise the only available one if there is
+	 * just one. The price, the add-to-cart button and the gallery follow,
+	 * through the active variation this sets.
 	 */
 	useEffect(() => {
 		if (!attributes.length || !variations.length) {
@@ -408,14 +412,16 @@ const ProductVariationsView = (props) => {
 		}
 
 		const availableVariations = variations.filter(
-			isVariationAvailable
+			(variation) => isVariationEnabled(variation) && isVariationAvailable(variation)
 		);
 
-		if (availableVariations.length !== 1) {
+		const variation =
+			availableVariations.find(isDefaultVariation) ??
+			(availableVariations.length === 1 ? availableVariations[0] : null);
+
+		if (!variation) {
 			return;
 		}
-
-		const variation = availableVariations[0];
 		const variationAttributes =
 			getVariationAttributes(variation);
 

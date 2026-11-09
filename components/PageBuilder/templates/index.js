@@ -11,19 +11,21 @@
  * the way out.
  */
 
-import Organic from './Organic';
-import HomeKitchen from './HomeKitchen';
-import BeautyCosmetics from './BeautyCosmetics';
-import Grocery from './Grocery';
-import KitchenAccessories from './KitchenAccessories';
-import IslamicLifestyle from './IslamicLifestyle';
-import GhorerBazar from './GhorerBazar';
+// import Organic from './Organic';
+// import HomeKitchen from './HomeKitchen';
+// import BeautyCosmetics from './BeautyCosmetics';
+// import Grocery from './Grocery';
+// import KitchenAccessories from './KitchenAccessories';
+// import IslamicLifestyle from './IslamicLifestyle';
+// import GhorerBazar from './GhorerBazar';
 import BikeParts from './BikeParts';
-import OrganicFruits from './OrganicFruits';
-import ComboStore from './ComboStore';
-import EhansMart from './EhansMart';
-import EhansMartV2 from './EhansMartV2';
+// import OrganicFruits from './OrganicFruits';
+// import ComboStore from './ComboStore';
+// import AuraGem from './AuraGem';
+import WonderJoy from './WonderJoy';
+// import EhansMart from './EhansMart';
+// import EhansMartV2 from './EhansMartV2';
 
-var templates = [...Organic, ...HomeKitchen, ...BeautyCosmetics, ...Grocery, ...KitchenAccessories, ...IslamicLifestyle, ...GhorerBazar, ...BikeParts, ...OrganicFruits, ...ComboStore, ...EhansMart, ...EhansMartV2];
+var templates = [...BikeParts, ...WonderJoy];
 
 export default templates;

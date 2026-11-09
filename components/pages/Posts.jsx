@@ -2,38 +2,59 @@
 
 import Link from "next/link";
 import React from "react";
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect } from "react";
 import EntriesTable from "../../components/EntriesTable";
 import { useCounterStore } from '../../store/useCounterStore'
 import { loadPostsQuery, savePostsQuery } from "../../lib/postsQuery";
-const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
-
 import PopoverButton from '../../components/PopoverButton';
 import PostEdit from '../../components/pages/PostEdit';
-import Image from "next/image";
+import { StatusBadge } from "./deliveryUi";
 
-import { IconChevronDown, IconChevronUp, IconSquare, IconFidgetSpinner, IconTrash, IconStarFilled, IconStar, IconClockPause, IconExclamationCircle, IconRosetteDiscountCheck, IconX } from "@tabler/icons-react";
+import { IconTrash, IconRefresh, IconPencil, IconStarFilled, IconStar, IconArticle, IconExternalLink, IconPlus, IconPhoto } from "@tabler/icons-react";
+
+const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
+
+/* Same toolbar, badge and link styles as the Deliveries and Orders screens. */
+const TOOLBAR_BUTTON =
+	"inline-flex !h-9 items-center gap-2 !rounded-lg !border !border-gray-300 !bg-white !px-3 !py-0 !text-sm !font-medium !text-gray-700 !shadow-none transition-colors hover:!border-gray-400 hover:!bg-gray-50 cursor-pointer disabled:opacity-50";
+const PRIMARY_BUTTON =
+	"inline-flex !h-9 items-center gap-2 !rounded-lg !border-0 !bg-[#634FE5] !px-4 !py-0 !text-sm !font-semibold !text-white !shadow-sm transition-colors hover:!bg-[#5540d4] cursor-pointer disabled:opacity-50";
+const DANGER_BUTTON =
+	"inline-flex !h-9 items-center gap-2 !rounded-lg !border-0 !bg-red-600 !px-3 !py-0 !text-sm !font-medium !text-white !shadow-sm transition-colors hover:!bg-red-700 cursor-pointer disabled:opacity-50";
+const FILTER_SELECT =
+	"w-full sm:w-auto !h-9 !rounded-lg !border !border-gray-300 !bg-white !py-0 !pl-3 !pr-8 !text-sm !text-gray-600 !shadow-none transition-colors hover:!border-gray-400 focus:!border-gray-500 focus:!outline-none";
+const LINK = "font-medium text-gray-800 hover:text-[#634FE5] hover:underline";
+/* get_posts lists other statuses only for administrators who ask for them. */
+const STATUS_FILTERS = [["any", "All statuses"], ["publish", "Published"], ["draft", "Drafts"], ["pending", "Pending review"], ["future", "Scheduled"], ["private", "Private"]];
+const TERM_CHIP = "inline-flex items-center whitespace-nowrap rounded-md bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-600";
 
 
+/* A list of terms as chips, capped so a post with fifteen tags does not
+   stretch its row. */
+function Terms({ items, href }) {
+	var list = Array.isArray(items) ? items : [];
+	if (!list.length) return <span className="text-gray-300">—</span>;
 
+	var shown = list.slice(0, 3);
+	var rest = list.length - shown.length;
 
-
-
-
+	return (
+		<div className="flex max-w-[220px] flex-wrap gap-1">
+			{shown.map((item, index) => (
+				<Link key={item?.term_id ?? index} href={href} className={`${TERM_CHIP} hover:bg-[#634FE5]/10 hover:text-[#634FE5]`}>{item?.name}</Link>
+			))}
+			{rest > 0 && <span className={TERM_CHIP} title={list.slice(3).map(item => item?.name).join(", ")}>+{rest}</span>}
+		</div>
+	);
+}
 
 
 const Posts = () => {
 
+	const { token, addNotification } = useCounterStore()
 
-
-	const { token, appData, notifications, addNotification, userDataX, setUserDataX } = useCounterStore()
-
-
-
-	// 
-
-	var [productsData, setproductsData] = useState({ posts: [], total: 20, maxPages: 1 });
-	var [queryPrams, setqueryPrams] = useState({ keyword: "", paged: 1, order: "DESC", per_page: 10, });
+	var [productsData, setproductsData] = useState({ posts: [], total: 0, maxPages: 1 });
+	var [queryPrams, setqueryPrams] = useState({ keyword: "", paged: 1, order: "DESC", per_page: 10, post_status: "any", });
 
 	var [loading, setloading] = useState(false);
 	var [selectedRows, setselectedRows] = useState([]);
@@ -41,191 +62,94 @@ const Posts = () => {
 		setselectedRows(rows);
 	}
 
-
 	var columns = {
 		check: { id: "check", label: ("Check"), },
-		id: { id: "id", label: ("Post Title"), callback: callbackTitle, classes: "w-120 text-gray-600" },
-		categories: { id: "categories", label: ("Categories"), callback: callbackCategories, classes: " text-gray-600" },
-		tags: { id: "tags", label: ("Tags"), callback: callbackTags, classes: " text-gray-600" },
-
-		// refunded_total: { id:"check",label: "Refunded" },
-		status: { id: "status", label: ("Status"), callback: callbackStatus, classes: " text-gray-600" },
+		id: { id: "id", label: ("Post"), callback: callbackTitle, classes: "text-left" },
+		author: { id: "author", label: ("Author"), callback: callbackAuthor, classes: "text-left" },
+		categories: { id: "categories", label: ("Categories"), callback: callbackCategories, classes: "text-left" },
+		tags: { id: "tags", label: ("Tags"), callback: callbackTags, classes: "text-left" },
+		status: { id: "status", label: ("Status"), callback: callbackStatus, classes: "text-left" },
 	};
 
 
-
-	async function fetchPosts() {
-
-
-
-		// if (!token) {
-		// 	//throw new Error("No token found");
-		// }
-
+	function fetchPosts() {
 
 		if (queryPrams.paged < 0) {
 			return;
 		}
 
-
-		var postData = JSON.stringify(queryPrams);
 		setloading(true);
 
+		/* get_posts reads `posts_per_page`; `per_page` alone was ignored, so the
+		   list always came back 20 at a time whatever the picker said. */
 		fetch(serverUrl + "wp-json/combo-store/v2/get_posts", {
 			method: "POST",
 			headers: {
 				'Content-Type': 'application/json',
 				'Authorization': `Bearer ${token}`
 			},
-			body: postData,
+			body: JSON.stringify({ ...queryPrams, post_status: queryPrams.post_status || "any", posts_per_page: parseInt(queryPrams.per_page, 10) || 10 }),
 		})
 			.then((response) => {
-
 				if (!response.ok) {
-					throw new Error('Token validation failed');
+					throw new Error(`Server answered ${response.status}.`);
 				}
-
-				if (response.ok && response.status < 400) {
-					response.json().then((res) => {
-
-
-						var posts = res?.posts;
-						var total = res?.total;
-						var max_pages = res?.max_pages;
-
-
-
-
-						setproductsData({ posts: posts, total: total, maxPages: max_pages })
-						//setqueryPrams({ ...queryPrams, loading: false })
-						setloading(false);
-
-
-						setTimeout(() => {
-						}, 500);
-					});
-				}
+				return response.json();
 			})
-			.catch((_error) => {
-				//this.saveAsStatus = 'error';
-				// handle the error
+			.then((res) => {
+				setproductsData({ posts: Array.isArray(res?.posts) ? res.posts : [], total: parseInt(res?.total, 10) || 0, maxPages: parseInt(res?.max_pages, 10) || 1 })
+				setloading(false);
+			})
+			.catch((error) => {
+				setloading(false);
+				addNotification({ type: 'error', title: 'Could not load posts', content: error?.message ?? '' });
 			});
-
 	}
 
-	async function delete_products(ids) {
 
+	/*
+		Posts are removed through delete_products, which is wp_delete_post and
+		so works for any post type - posts go to the trash. It needs the token,
+		which this screen never sent, so every delete was refused with a 401
+		and nothing said so.
+	*/
+	function delete_posts(ids) {
 
-		if (!token) {
-			//throw new Error("No token found");
-		}
+		ids = ids != undefined ? ids : selectedRows;
+		if (!ids?.length) return;
 
-		if (queryPrams.paged < 0) {
+		if (!confirm(ids.length === 1 ? `Move post #${ids[0]} to the trash?` : `Move ${ids.length} posts to the trash?`)) {
 			return;
 		}
 
-		ids = ids != undefined ? ids : selectedRows;
-
-
-		var postData = {
-			ids: ids,
-		};
-		postData = JSON.stringify(postData);
 		setloading(true);
 		fetch(serverUrl + "wp-json/combo-store/v2/delete_products", {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
-				// Authorization: `Bearer ${token}`,
-			},
-			body: postData,
-		})
-			.then((response) => {
-				if (!response.ok) {
-					throw new Error("Token validation failed");
-				}
-
-				if (response.ok && response.status < 400) {
-					response.json().then((res) => {
-						var errors = res?.errors;
-						var success = res?.success;
-
-						setloading(false);
-
-						fetchPosts();
-
-
-
-
-					});
-				}
-			})
-			.catch((_error) => {
-				//this.saveAsStatus = 'error';
-				// handle the error
-			});
-	}
-
-	async function add_product() {
-
-
-		// if (!token) {
-		// 	//throw new Error("No token found");
-		// }
-
-		if (queryPrams.paged < 0) {
-			return;
-		}
-
-		var postData = {
-			ids: selectedRows,
-		};
-		postData = JSON.stringify(postData);
-		setloading(true);
-		fetch(serverUrl + "wp-json/combo-store/v2/add_product", {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
 				Authorization: `Bearer ${token}`,
 			},
-			body: postData,
+			body: JSON.stringify({ ids: ids }),
 		})
 			.then((response) => {
+				if (response.status === 403) {
+					throw new Error("Only administrators and store managers can delete posts.");
+				}
 				if (!response.ok) {
-					throw new Error("Token validation failed");
+					throw new Error(`Server answered ${response.status}.`);
 				}
-
-				if (response.ok && response.status < 400) {
-					response.json().then((res) => {
-						var errors = res?.errors;
-						var success = res?.success;
-
-						setloading(false);
-
-						fetchPosts();
-
-
-
-
-					});
-				}
+				return response.json();
 			})
-			.catch((_error) => {
-				//this.saveAsStatus = 'error';
-				// handle the error
+			.then(() => {
+				addNotification({ type: 'success', title: 'Moved to trash', content: ids.length === 1 ? `Post #${ids[0]} moved to the trash.` : `${ids.length} posts moved to the trash.` });
+				setselectedRows([]);
+				fetchPosts();
+			})
+			.catch((error) => {
+				setloading(false);
+				addNotification({ type: 'error', title: 'Not deleted', content: error?.message ?? '' });
 			});
 	}
-
-
-
-
-
-
-
-
-
-
-
 
 
 	/*
@@ -262,278 +186,181 @@ const Posts = () => {
 	}, [queryRestored, queryPrams, token]);
 
 
-	function onChangeQueryPrams(queryPrams) {
-		if (queryPrams) {
-			setqueryPrams(queryPrams)
-			//fetchPosts();
+	function onChangeQueryPrams(next) {
+		if (next) {
+			setqueryPrams(next)
 		}
-
 	}
 
-	function onRefreshRequest(rows) {
+	function onRefreshRequest() {
 		fetchPosts();
 	}
 
 
-
-	function callbackFormatDate(entry, columnIndex) {
-
-		var format = "d/m/Y";
-		var dateInput = entry.order_date;
-		// Ensure date is in a proper format for parsing
-		const dateObj = new Date(dateInput.replace(" ", "T"));
-
-		if (isNaN(dateObj)) {
-			throw new Error("Invalid date format");
-		}
-
-		// Extract date components
-		const day = String(dateObj.getDate()).padStart(2, '0');
-		const month = String(dateObj.getMonth() + 1).padStart(2, '0'); // Months are zero-based
-		const year = dateObj.getFullYear();
-
-		// Replace format placeholders with actual values
-		//return ;
-
-		return (
-			<td
-				key={columnIndex}>
-				{format.replace("d", day).replace("m", month).replace("Y", year)}
-			</td>
-
-		);
-
-	}
-
-
+	/* ---------------- cells ---------------- */
 
 	function callbackTitle(entry, columnIndex) {
 
 		return (
-			<td className="text-center pl-5 py-3"
-				key={`title-${entry?.id}`}>
+			<td data-label="Post" className="!px-5 py-3 text-left" key={`title-${entry?.id}`}>
 
-				<div className="flex gap-2 items-center">
+				<div className="flex items-start gap-3">
 
-					{entry?.featured && (
-						<div className="text-amber-500"><IconStarFilled /></div>
-					)}
-					{!entry?.featured && (
-						<div className="text-gray-400"><IconStar /></div>
-					)}
+					<div className="hidden h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-gray-200 bg-gray-50 text-gray-300 sm:flex">
+						{entry?.post_thumbnail_url
+							? <img className="h-full w-full object-cover" src={entry.post_thumbnail_url} alt="" width={48} height={48} loading="lazy" />
+							: <IconPhoto size={20} />}
+					</div>
 
-					{entry?.post_thumbnail_url && (
-						<div className="w-18 h-18 overflow-hidden border">
-							<Image src={entry?.post_thumbnail_url} width={80} height={80} alt={``} />
-						</div>
-					)}
-
-
-
-					<div className="text-left">
-						<Link className="text-left text-gray-600 font-medium text-sm" href={`/dashboard/posts/${entry?.id}`}>
-							{entry?.title}
-						</Link>
-
-						<div className="flex gap-3 text-xs text-gray-500">
-
-							<div>#{entry?.id}</div>
-							<Link className="" href={`/dashboard/posts/${entry?.id}`}>
-								View
+					<div className="flex min-w-0 flex-col gap-1">
+						<div className="flex items-center gap-1.5">
+							{entry?.featured
+								? <IconStarFilled size={14} className="shrink-0 text-amber-500" aria-label="Featured" />
+								: <IconStar size={14} className="shrink-0 text-gray-300" aria-hidden="true" />}
+							{/* WordPress titles carry entities (&#8217; and friends), so they are rendered as HTML, as the Order items list does. */}
+							<Link className={`${LINK} line-clamp-2 text-sm`} href={`/dashboard/posts/${entry?.id}`}>
+								<span dangerouslySetInnerHTML={{ __html: entry?.title || "(no title)" }} />
 							</Link>
+						</div>
 
-							<PopoverButton buttonLabel={"Edit"} buttonIcon={null} title={"Edit Post"} drawer={"right"} buttonClass={`cursor-pointer hover:text-gray-700`}>
+						<div className="flex flex-wrap items-center gap-3 text-xs text-gray-500">
+							<span className="tabular-nums text-gray-400">#{entry?.id}</span>
 
+							<PopoverButton buttonLabel={"Edit"} buttonIcon={<IconPencil size={13} />} title={`Edit post #${entry?.id}`} drawer={"right"} buttonClass={`inline-flex items-center gap-1 text-gray-500 transition-colors hover:text-gray-900 cursor-pointer`}>
 								<div className="p-5 bg-gray-50 text-left">
 									<PostEdit id={entry?.id} />
 								</div>
-
 							</PopoverButton>
-							{/* <div className=" ">{entry?.sku}</div> */}
-							<div className="text-red-400 hover:text-red-500 cursor-pointer" onClick={() => {
-								delete_products([entry?.id]);
-							}}>Delete</div>
 
+							<Link className="inline-flex items-center gap-1 transition-colors hover:text-gray-900" href={`/dashboard/posts/${entry?.id}`}>
+								<IconExternalLink size={13} /> {("Open")}
+							</Link>
 
+							<button type="button" className="inline-flex items-center gap-1 text-red-500 transition-colors hover:text-red-700" onClick={() => delete_posts([entry?.id])}>
+								<IconTrash size={13} /> {("Delete")}
+							</button>
 						</div>
 					</div>
 				</div>
 			</td>
-
 		);
 	}
 
+	function callbackAuthor(entry, columnIndex) {
+		var author = entry?.author;
 
-
-
+		return (
+			<td data-label="Author" className="!px-5 py-3 text-left text-sm" key={`author-${entry?.id}`}>
+				{author?.name ? (
+					<div className="flex items-center gap-2">
+						{author?.avatar && <img className="h-6 w-6 shrink-0 rounded-full" src={author.avatar} alt="" width={24} height={24} loading="lazy" />}
+						<span className="whitespace-nowrap text-gray-700">{author.name}</span>
+					</div>
+				) : <span className="text-gray-300">—</span>}
+			</td>
+		);
+	}
 
 	function callbackCategories(entry, columnIndex) {
-
-
 		return (
-			<td className="text-center pl-5"
-				key={`category-${entry?.id}`}
-			>
-
-
-				{entry?.categories && (
-					<div className="flex text-xs justify-center flex-wrap">
-						{entry?.categories?.map((item, index) => {
-							return (
-								<div key={index}>
-									<span>{item.name}</span>
-									{entry?.categories.length > (index + 1) && (
-										<span className="pr-1">, </span>
-									)}
-								</div>
-							)
-						})}
-					</div>
-				)}
-
-
+			<td data-label="Categories" className="!px-5 py-3 text-left" key={`category-${entry?.id}`}>
+				<Terms items={entry?.categories} href="/dashboard/post-categories" />
 			</td>
-
 		);
 	}
+
 	function callbackTags(entry, columnIndex) {
-
-
 		return (
-			<td className="text-center pl-5"
-				key={`tags-${entry?.id}`}
-
-			>
-
-				<div className="flex text-xs justify-center flex-wrap">
-					{entry?.tags.map((item, index) => {
-						return (
-							<div key={index}>
-								<span>{item.name}</span>
-								{entry?.tags.length > (index + 1) && (
-									<span className="pr-1">, </span>
-								)}
-							</div>
-						)
-					})}
-				</div>
+			<td data-label="Tags" className="!px-5 py-3 text-left" key={`tags-${entry?.id}`}>
+				<Terms items={entry?.tags} href="/dashboard/posts-tags" />
 			</td>
-
 		);
 	}
-
-
-
-
 
 	function callbackStatus(entry, columnIndex) {
-
 		return (
-			<td className="text-center pl-5 text-xs"
-				key={`status-${entry?.id}`}
-			>
-				{/* {JSON.stringify(entry.status)} */}
-
-
-				{entry.status == 'publish' && (
-					<span className="inline-flex items-center whitespace-nowrap rounded-full bg-green-50 px-2.5 py-1 text-[11px] font-semibold text-green-700 ring-1 ring-inset ring-green-200">Published</span>
-				)}
-
-				{entry.status == 'draft' && (
-					<span className="inline-flex items-center whitespace-nowrap rounded-full bg-gray-50 px-2.5 py-1 text-[11px] font-semibold text-gray-700 ring-1 ring-inset ring-gray-200">Draft</span>
-				)}
+			<td data-label="Status" className="!px-5 py-3 text-left" key={`status-${entry?.id}`}>
+				<StatusBadge status={entry?.status} />
 			</td>
-
-		);
-	}
-	// function callbackStock(entry, columnIndex) {
-
-	// 	return (
-	// 		<td className="text-center pl-5"
-	// 			key={columnIndex}>
-
-	// 			{entry?.stock_count}
-	// 		</td>
-
-	// 	);
-	// }
-	function callbackType(entry, columnIndex) {
-
-		return (
-			<td className="text-center pl-5"
-				key={columnIndex}>
-
-				{entry.type == 'physical' && (
-					<span className="">Physical</span>
-				)}
-
-				{entry.type == 'digital' && (
-					<span className="">Digital</span>
-				)}
-			</td>
-
 		);
 	}
 
 
-
-
-
-
-
-
-
-
+	var total = productsData?.total ?? 0;
+	var searching = Boolean(queryPrams?.keyword);
 
 	return (
 
 		<div className="page-shell">
 
-			{/* Page heading: this screen had no title, only a row of controls. */}
 			<div className="flex flex-wrap items-end justify-between gap-3">
 				<div>
 					<h1 className="text-xl font-semibold text-gray-900">{("Posts")}</h1>
 					<p className="mt-0.5 text-xs text-gray-500">
-						{productsData?.total ?? 0} {("posts")}
+						{total} {total === 1 ? ("post") : ("posts")}{queryPrams?.post_status && queryPrams.post_status !== "any" ? ` · ${STATUS_FILTERS.find(item => item[0] === queryPrams.post_status)?.[1] ?? ""}` : ""}
 					</p>
 				</div>
 
-				<div className="inline-flex items-center gap-2 rounded-lg bg-[#634FE5] px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#5540d4] cursor-pointer" onClick={ev => {
-					add_product();
-				}}>Add Post</div>
-			</div>
-
-			<div className="flex justify-end ">
-				<div className="flex gap-3">
-					{selectedRows.length > 0 && (
-						<div
-							className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-red-700 cursor-pointer"
-							onClick={() => {
-								delete_products();
-							}}>
-							{("Delete Products")}
-						</div>
-					)}
-
-
+				<div className="flex flex-wrap items-center gap-2">
+					<Link href="/dashboard/post-categories" className={TOOLBAR_BUTTON}>{("Categories")}</Link>
+					<Link href="/dashboard/posts-tags" className={TOOLBAR_BUTTON}>{("Tags")}</Link>
+					<button type="button" className={TOOLBAR_BUTTON} disabled={loading} onClick={fetchPosts}>
+						<IconRefresh size={16} className={loading ? "animate-spin" : ""} /> {("Refresh")}
+					</button>
+					{/* The API has no way to create a post (this used to call add_product
+					    and make a draft product), so new posts are written in WordPress. */}
+					<a href={`${serverUrl}wp-admin/post-new.php`} target="_blank" rel="noopener noreferrer" className={PRIMARY_BUTTON}>
+						<IconPlus size={16} /> {("Add Post")}
+					</a>
 				</div>
 			</div>
-			<EntriesTable
-				queryPrams={queryPrams}
-				columns={columns}
-				entries={productsData}
-				itemPath={""}
-				onChange={onChangeQueryPrams}
-				loading={loading}
-				selectedRows={selectedRows}
-				onSelectRows={onSelectRows}
-				onRefreshRequest={onRefreshRequest}
 
-			/>
+			<div className="flex flex-wrap items-center justify-between gap-3">
+				<div className="flex flex-wrap items-center gap-2">
+					<select aria-label="Sort" className={FILTER_SELECT} value={queryPrams?.order ?? "DESC"} onChange={ev => setqueryPrams({ ...queryPrams, order: ev.target.value, paged: 1 })}>
+						<option value="DESC">{("Newest first")}</option>
+						<option value="ASC">{("Oldest first")}</option>
+					</select>
+					<select aria-label="Status" className={FILTER_SELECT} value={queryPrams?.post_status || "any"} onChange={ev => setqueryPrams({ ...queryPrams, post_status: ev.target.value, paged: 1 })}>
+						{STATUS_FILTERS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+					</select>
+				</div>
+
+				{selectedRows.length > 0 && (
+					<div className="flex items-center gap-2 rounded-lg border border-[#634FE5]/30 bg-[#634FE5]/5 py-1 pl-3 pr-1">
+						<span className="text-sm font-medium text-gray-700">{selectedRows.length} {("selected")}</span>
+						<button type="button" className="!h-8 rounded-md px-2 text-sm text-gray-500 hover:bg-white hover:text-gray-800" onClick={() => setselectedRows([])}>{("Clear")}</button>
+						{/* Labelled "Delete Products" before. */}
+						<button type="button" className={`${DANGER_BUTTON} !h-8`} disabled={loading} onClick={() => delete_posts()}>
+							<IconTrash size={15} /> {("Delete")}
+						</button>
+					</div>
+				)}
+			</div>
+
+			{!loading && !searching && (queryPrams?.post_status || "any") === "any" && total === 0 && (productsData?.posts ?? []).length === 0 ? (
+				<div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-gray-200 bg-white px-6 py-14 text-center">
+					<div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 text-gray-400"><IconArticle size={24} /></div>
+					<div className="text-sm font-semibold text-gray-800">{("No posts yet")}</div>
+					<p className="max-w-sm text-xs text-gray-500">{("Write a post in WordPress; drafts and published posts both show up here to edit.")}</p>
+					<a href={`${serverUrl}wp-admin/post-new.php`} target="_blank" rel="noopener noreferrer" className={`${PRIMARY_BUTTON} mt-2`}>
+						<IconPlus size={16} /> {("Add Post")}
+					</a>
+				</div>
+			) : (
+				<EntriesTable
+					queryPrams={queryPrams}
+					columns={columns}
+					entries={productsData}
+					itemPath={""}
+					onChange={onChangeQueryPrams}
+					loading={loading}
+					selectedRows={selectedRows}
+					onSelectRows={onSelectRows}
+					onRefreshRequest={onRefreshRequest}
+				/>
+			)}
 		</div>
-
-
-
 	);
 };
 

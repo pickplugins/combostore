@@ -3,8 +3,9 @@ import Link from "next/link";
 import React from "react";
 
 import EntriesTable from "../../components/EntriesTable";
-import { useState, useEffect } from "react";
-import { IconPlus, IconFilter, IconDotsVertical, IconTrash, IconX, IconEdit, IconEyeShare, IconCircleCheck } from "@tabler/icons-react";
+import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { IconPlus, IconFilter, IconDotsVertical, IconTrash, IconX, IconEdit, IconEyeShare, IconCircleCheck, IconRefresh, IconReportMoney } from "@tabler/icons-react";
 
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -64,7 +65,7 @@ const MENU_ITEM =
   "flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900 cursor-pointer";
 
 const TOOLBAR_BUTTON =
-  "inline-flex !h-9 items-center gap-2 !rounded-lg !border !border-gray-300 !bg-white !px-3 !py-0 !text-sm !font-medium !text-gray-700 !shadow-none transition-colors hover:!border-gray-400 hover:!bg-gray-50 cursor-pointer";
+  "inline-flex !h-9 items-center gap-2 !rounded-lg !border !border-gray-300 !bg-white !px-3 !py-0 !text-sm !font-medium !text-gray-700 !shadow-none transition-colors hover:!border-gray-400 hover:!bg-gray-50 cursor-pointer disabled:opacity-50";
 
 /*  because the global `button` rule in globals.css is unlayered and
    otherwise wins (grey text, border) - same as the Products screen. */
@@ -89,6 +90,8 @@ const Expenses = (props) => {
 
   const { token, paymentGateways, addNotification } = useCounterStore()
 
+  const router = useRouter()
+
   var [expensesData, setexpensesData] = useState(null);
   var [queryPrams, setqueryPrams] = useState({ keyword: "", payment_method: '', payment_status: '', start_date: '', end_date: '', billing_phone: '', customer: {}, product: {}, status: '', paged: 1, order: "DESC", per_page: 10, first_date: "", last_date: "" });
 
@@ -103,7 +106,7 @@ const Expenses = (props) => {
 
   var columns = {
     check: { label: ("Check"), },
-    id: { label: ("ID"), callback: callbackID, classes: "px-5 py-2 text-gray-600 w-56" },
+    id: { label: ("ID"), callback: callbackID, classes: "px-5 py-2 text-gray-600 w-64" },
     title: { label: ("Expense"), callback: callbackTitle, classes: "text-left text-gray-600" },
     billing_name: { label: ("Created By"), callback: callbackUserName, classes: "text-left text-gray-600 w-40" },
     payment_status: { label: ("Payment"), callback: callbackPaymentStatus, classes: "text-left text-gray-600 w-40" },
@@ -131,19 +134,28 @@ const Expenses = (props) => {
           throw new Error("Token validation failed");
         }
 
-        response.json().then((res) => {
+        return response.json();
+      })
+      .then((res) => {
+        setloading(false);
 
-          if (res?.status == 'failed') {
-            addNotification({ type: 'error', title: 'Expense not added', content: `Sorry, the expense could not be added. ${JSON.stringify(res?.messages ?? "")}` })
-          }
+        if (res?.status !== 'success') {
+          addNotification({ type: 'error', title: 'Expense not added', content: res?.message ?? "The expense could not be added." })
+          return;
+        }
 
-          if (res?.status == 'success') {
-            addNotification({ type: 'success', title: 'Expense added', content: "Expense added successfully." })
-          }
+        /* create_expense answers with the new expense's id: open it to fill in,
+           rather than leaving an empty row somewhere in the list. */
+        var newId = parseInt(res?.id, 10);
 
-          setloading(false);
-          fetchPosts();
-        });
+        if (newId > 0) {
+          addNotification({ type: 'success', title: 'Expense added', content: `Expense #${newId} created. Add its amount, category and payment, then save.` })
+          router.push(`/dashboard/expenses/${newId}`);
+          return;
+        }
+
+        addNotification({ type: 'success', title: 'Expense added', content: "Expense added." })
+        fetchPosts();
       })
       .catch((_error) => {
         setloading(false);
@@ -170,19 +182,29 @@ const Expenses = (props) => {
       body: JSON.stringify({ ids: ids }),
     })
       .then((response) => {
+        if (response.status === 403) {
+          throw new Error("You are not allowed to delete expenses.");
+        }
         if (!response.ok) {
-          throw new Error("Token validation failed");
+          throw new Error(`Server answered ${response.status}.`);
+        }
+        return response.json();
+      })
+      .then((res) => {
+        setloading(false);
+
+        if (res?.success === false) {
+          addNotification({ type: 'error', title: 'Delete failed', content: "The server did not delete the expense(s)." })
+          return;
         }
 
-        response.json().then(() => {
-          addNotification({ type: 'success', title: 'Deleted', content: `${ids.length} expense(s) deleted.` })
-          setselectedRows([]);
-          fetchPosts();
-        });
+        addNotification({ type: 'success', title: 'Deleted', content: ids.length === 1 ? `Expense #${ids[0]} deleted.` : `${ids.length} expenses deleted.` })
+        setselectedRows([]);
+        fetchPosts();
       })
-      .catch((_error) => {
+      .catch((error) => {
         setloading(false);
-        addNotification({ type: 'error', title: 'Delete failed', content: "Could not delete the selected expense(s)." })
+        addNotification({ type: 'error', title: 'Delete failed', content: error?.message ?? "Could not delete the selected expense(s)." })
       });
   }
 
@@ -193,6 +215,7 @@ const Expenses = (props) => {
       return;
     }
 
+    var requestId = ++requestRef.current;
     setloading(true);
 
     fetch(serverUrl + "wp-json/combo-store/v2/get_expenses", {
@@ -201,47 +224,64 @@ const Expenses = (props) => {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },
-      body: JSON.stringify(queryPrams),
+      body: JSON.stringify(serverQuery(queryPrams)),
     })
       .then((response) => {
-
         if (!response.ok) {
-          throw new Error('Token validation failed');
+          throw new Error(`Server answered ${response.status}.`);
         }
-
-        response.json().then((res) => {
-
-          /* With no matches the API can leave out `posts`, `total` and `max_pages`. */
-          var expenses = res?.posts ?? [];
-          var total = parseInt(res?.total) || 0;
-          var max_pages = parseInt(res?.max_pages) || 1;
-
-          setexpensesData({ posts: expenses, total: total, maxPages: max_pages })
-          setsumData(sumExpenseAmounts(expenses));
-          setloading(false);
-        });
+        return response.json();
       })
-      .catch((_error) => {
+      .then((res) => {
+        /* An older, slower request must not replace a newer one's results. */
+        if (requestId !== requestRef.current) return;
+
+        /* With no matches the API can leave out `posts`, `total` and `max_pages`. */
+        var expenses = Array.isArray(res?.posts) ? res.posts : [];
+        var total = parseInt(res?.total) || 0;
+        var max_pages = parseInt(res?.max_pages) || 1;
+
+        setexpensesData({ posts: expenses, total: total, maxPages: max_pages })
+        setsumData(sumExpenseAmounts(expenses));
         setloading(false);
-        addNotification({ type: 'error', title: 'Expenses not loaded', content: "The list could not be loaded. Please try again." })
+      })
+      .catch((error) => {
+        if (requestId !== requestRef.current) return;
+
+        setloading(false);
+        addNotification({ type: 'error', title: 'Expenses not loaded', content: error?.message ?? "The list could not be loaded. Please try again." })
       });
   }
 
 
   /*
-    Fetched through a debounced copy, as on Products, Orders and Purchases. The
-    old page fetched on mount, on every query change, and again from onChange
-    with the previous query - up to three requests per page turn.
+    What get_expenses actually reads, from what the page keeps:
+    - the product filter as `product_id` (the page kept `product: {id, title}`,
+      which the server ignores, so picking a product filtered nothing);
+    - dates as plain days: the server adds 00:00:00 / 23:59:59 itself and only
+      filters when both ends are set, so a missing end is filled in. Full
+      date-times used to be sent, and a lone From or To did nothing.
   */
-  const [debouncedQuery, setDebouncedQuery] = useState(queryPrams);
+  function serverQuery(query) {
+    var from = query?.from_date ? String(query.from_date).slice(0, 10) : "";
+    var to = query?.to_date ? String(query.to_date).slice(0, 10) : "";
 
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedQuery(queryPrams);
-    }, 500);
+    if (from || to) {
+      from = from || "1970-01-01";
+      to = to || "2999-12-31";
+    }
 
-    return () => clearTimeout(handler);
-  }, [queryPrams]);
+    return { ...query, product_id: query?.product?.id ?? "", from_date: from, to_date: to };
+  }
+
+
+  /*
+    Typing in the search box waits a moment; every other change (a page, a
+    filter) loads at once. The whole query used to wait half a second, so
+    paging felt stuck. Only the newest request's answer is shown.
+  */
+  const requestRef = useRef(0);
+  const lastKeyword = useRef(queryPrams.keyword);
 
   useEffect(() => {
 
@@ -250,9 +290,18 @@ const Expenses = (props) => {
       return;
     }
 
-    fetchPosts();
+    var typing = queryPrams.keyword !== lastKeyword.current;
+    lastKeyword.current = queryPrams.keyword;
 
-  }, [debouncedQuery, token]);
+    if (!typing) {
+      fetchPosts();
+      return;
+    }
+
+    const handler = setTimeout(fetchPosts, 400);
+    return () => clearTimeout(handler);
+
+  }, [queryPrams, token]);
 
 
   function onChangeQueryPrams(queryPrams) {
@@ -291,10 +340,10 @@ const Expenses = (props) => {
               {"#" + entry.id}
             </Link>
 
-            <PopoverButton buttonLabel={""} buttonIcon={<IconEdit size={16} />} title={"Edit Expense"} drawer={"right"} buttonClass={ICON_BUTTON}>
+            <PopoverButton buttonLabel={""} buttonIcon={<IconEdit size={16} />} title={`Edit expense #${entry.id}`} drawer={"right"} buttonClass={ICON_BUTTON}>
 
               <div className="p-5 bg-gray-50 text-left">
-                <ExpenseEdit id={entry.id} />
+                <ExpenseEdit id={entry.id} variant="drawer" />
               </div>
 
             </PopoverButton>
@@ -377,7 +426,7 @@ const Expenses = (props) => {
                   <IconEyeShare size={16} /> Open
                 </Link>
                 <div className={`${MENU_ITEM} !text-red-600 hover:!bg-red-50 hover:!text-red-700`} onClick={() => {
-                  if (confirm(`Delete expense #${entry.id}? This cannot be undone.`)) {
+                  if (confirm(`Permanently delete expense #${entry.id}? There is no trash, so this cannot be undone.`)) {
                     delete_expenses([entry.id]);
                   }
                 }}>
@@ -472,9 +521,14 @@ const Expenses = (props) => {
           </p>
         </div>
 
-        <button type="button" className={PRIMARY_BUTTON} disabled={loading} onClick={() => add_expense()}>
-          <IconPlus size={16} /> {("Add Expense")}
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button type="button" className={TOOLBAR_BUTTON} disabled={loading} onClick={fetchPosts}>
+            <IconRefresh size={16} className={loading ? "animate-spin" : ""} /> {("Refresh")}
+          </button>
+          <button type="button" className={PRIMARY_BUTTON} disabled={loading} onClick={() => add_expense()}>
+            <IconPlus size={16} /> {("Add Expense")}
+          </button>
+        </div>
       </div>
 
       <div className="flex flex-wrap justify-between gap-3">
@@ -509,15 +563,16 @@ const Expenses = (props) => {
                 <div className="flex items-center justify-between gap-3">
                   <div className="text-sm font-medium text-gray-700">From</div>
                   <div>
+                    {/* Whole days: the server ignores the time and covers the full day. */}
                     <DatePicker
-                      showTimeSelect
                       isClearable
                       placeholderText="Any date"
-                      dateFormat="yyyy-MM-dd HH:mm"
+                      dateFormat="yyyy-MM-dd"
                       className={DATE_INPUT}
                       selected={toPickerDate(queryPrams?.from_date)}
+                      maxDate={toPickerDate(queryPrams?.to_date)}
                       onChange={(date) => {
-                        setqueryPrams({ ...queryPrams, from_date: date ? format(date, "yyyy-MM-dd HH:mm:ss") : "", paged: 1 });
+                        setqueryPrams({ ...queryPrams, from_date: date ? format(date, "yyyy-MM-dd") : "", paged: 1 });
                       }}
                     />
                   </div>
@@ -526,15 +581,14 @@ const Expenses = (props) => {
                   <div className="text-sm font-medium text-gray-700">To</div>
                   <div>
                     <DatePicker
-                      showTimeSelect
                       isClearable
                       placeholderText="Any date"
-                      dateFormat="yyyy-MM-dd HH:mm"
+                      dateFormat="yyyy-MM-dd"
                       className={DATE_INPUT}
                       selected={toPickerDate(queryPrams?.to_date)}
                       minDate={toPickerDate(queryPrams?.from_date)}
                       onChange={(date) => {
-                        setqueryPrams({ ...queryPrams, to_date: date ? format(date, "yyyy-MM-dd HH:mm:ss") : "", paged: 1 });
+                        setqueryPrams({ ...queryPrams, to_date: date ? format(date, "yyyy-MM-dd") : "", paged: 1 });
                       }}
                     />
                   </div>
@@ -547,18 +601,19 @@ const Expenses = (props) => {
         </div>
 
         {selectedRows?.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-medium text-gray-500">{selectedRows.length} {("selected")}</span>
-
-            <div
-              className="inline-flex h-9 items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 text-sm font-semibold text-red-700 transition-colors hover:bg-red-100 cursor-pointer"
+          <div className="flex flex-wrap items-center gap-2 rounded-lg border border-[#634FE5]/30 bg-[#634FE5]/5 py-1 pl-3 pr-1">
+            <span className="text-sm font-medium text-gray-700">{selectedRows.length} {("selected")}</span>
+            <button type="button" className="!h-8 rounded-md !border-0 !bg-transparent px-2 text-sm !text-gray-500 !shadow-none hover:!bg-white hover:!text-gray-800" onClick={() => setselectedRows([])}>{("Clear")}</button>
+            <button type="button"
+              className="inline-flex !h-8 items-center gap-2 !rounded-lg !border-0 !bg-red-600 !px-3 !py-0 !text-sm !font-medium !text-white !shadow-sm transition-colors hover:!bg-red-700 cursor-pointer disabled:opacity-50"
+              disabled={loading}
               onClick={() => {
-                if (confirm(`Delete ${selectedRows.length} selected expense(s)? This cannot be undone.`)) {
+                if (confirm(`Permanently delete ${selectedRows.length} ${selectedRows.length === 1 ? "expense" : "expenses"}? There is no trash, so this cannot be undone.`)) {
                   delete_expenses()
                 }
               }}>
-              <IconTrash size={16} /> {("Delete")} ({selectedRows.length})
-            </div>
+              <IconTrash size={15} /> {("Delete")}
+            </button>
           </div>
         )}
       </div>
@@ -585,13 +640,13 @@ const Expenses = (props) => {
           )}
           {queryPrams?.from_date && (
             <div className={FILTER_CHIP}>
-              <span>{('From')}: {String(queryPrams.from_date).slice(0, 16)}</span>
+              <span>{('From')}: {String(queryPrams.from_date).slice(0, 10)}</span>
               <span className={FILTER_CHIP_X} onClick={() => setqueryPrams({ ...queryPrams, from_date: "", paged: 1 })}><IconX size={13} /></span>
             </div>
           )}
           {queryPrams?.to_date && (
             <div className={FILTER_CHIP}>
-              <span>{('To')}: {String(queryPrams.to_date).slice(0, 16)}</span>
+              <span>{('To')}: {String(queryPrams.to_date).slice(0, 10)}</span>
               <span className={FILTER_CHIP_X} onClick={() => setqueryPrams({ ...queryPrams, to_date: "", paged: 1 })}><IconX size={13} /></span>
             </div>
           )}
@@ -602,17 +657,28 @@ const Expenses = (props) => {
       )}
 
 
-      <EntriesTable
-        queryPrams={queryPrams}
-        columns={columns}
-        entries={expensesData}
-        itemPath={""}
-        onChange={onChangeQueryPrams}
-        loading={loading}
-        selectedRows={selectedRows}
-        onSelectRows={onSelectRows}
-        onRefreshRequest={onRefreshRequest}
-      />
+      {expensesData && !loading && activeFilterCount === 0 && !queryPrams?.keyword && (expensesData?.total ?? 0) === 0 && (expensesData?.posts ?? []).length === 0 ? (
+        <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-gray-200 bg-white px-6 py-14 text-center">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 text-gray-400"><IconReportMoney size={24} /></div>
+          <div className="text-sm font-semibold text-gray-800">{("No expenses yet")}</div>
+          <p className="max-w-sm text-xs text-gray-500">{("Record what the shop spends - rent, delivery, packaging, salaries - so profit reports show the real picture.")}</p>
+          <button type="button" className={`${PRIMARY_BUTTON} mt-2`} disabled={loading} onClick={() => add_expense()}>
+            <IconPlus size={16} /> {("Add Expense")}
+          </button>
+        </div>
+      ) : (
+        <EntriesTable
+          queryPrams={queryPrams}
+          columns={columns}
+          entries={expensesData}
+          itemPath={""}
+          onChange={onChangeQueryPrams}
+          loading={loading}
+          selectedRows={selectedRows}
+          onSelectRows={onSelectRows}
+          onRefreshRequest={onRefreshRequest}
+        />
+      )}
 
 
       {sumData && expensesData?.posts?.length > 0 && (

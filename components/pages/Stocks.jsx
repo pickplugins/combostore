@@ -2,12 +2,27 @@
 
 import Link from "next/link";
 import React from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import EntriesTable from "../../components/EntriesTable";
 import DropDown from "../../components/DropDown";
+import Spinner from "../../components/Spinner";
 import { useCounterStore } from '../../store/useCounterStore'
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
+import { IconCopy, IconEdit, IconEyeShare, IconDotsVertical, IconTrash, IconStarFilled, IconStar, IconFilter, IconZoomExclamationFilled, IconPlaylistX, IconPhoto, IconAdjustments, IconHistory, IconRefresh, IconStack2, IconPlus, IconMinus, IconEqual } from "@tabler/icons-react";
+import PopoverButton from "../../components/PopoverButton";
+import ProductEdit from "../../components/pages/ProductEdit";
+import ProductBulkUpdate from "../../components/shop-elements/ProductBulkUpdate";
+
+import Image from "next/image";
+
+
+/* Same toolbar, menu and chip styles as the Orders and Products screens. */
+const TOOLBAR_BUTTON =
+  "inline-flex !h-9 items-center gap-2 !rounded-lg !border !border-gray-300 !bg-white !px-3 !py-0 !text-sm !font-medium !text-gray-700 !shadow-none transition-colors hover:!border-gray-400 hover:!bg-gray-50 cursor-pointer disabled:opacity-50";
+
+const PRIMARY_BUTTON =
+  "inline-flex !h-9 items-center justify-center gap-2 !rounded-lg !border-0 !bg-[#634FE5] !px-4 !py-0 !text-sm !font-semibold !text-white !shadow-sm transition-colors hover:!bg-[#5540d4] cursor-pointer disabled:cursor-not-allowed disabled:opacity-50";
 
 const ICON_BUTTON =
   "inline-flex h-8 w-8 items-center justify-center rounded-lg border border-transparent text-gray-400 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:text-gray-900";
@@ -21,19 +36,22 @@ const FILTER_SELECT =
 const FILTER_INPUT =
   "!w-40 !h-9 !rounded-lg !border !border-gray-300 !bg-white !py-0 !px-3 !text-sm !text-gray-600 !shadow-none transition-colors hover:!border-gray-400 focus:!border-gray-500 focus:!outline-none";
 
+const FIELD = "!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 rounded-lg px-3 py-2 text-sm w-full bg-white";
+
 const CHIP = "inline-flex max-w-full items-center truncate rounded-md bg-gray-100 px-2 py-0.5 text-xs text-gray-700";
 
 const META_PILL = "rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide";
 
 const EMPTY = <span className="text-sm text-gray-300">—</span>;
 
-/* The same point at which Products turns a stock count amber. */
+/* The same point at which Products turns a stock count amber, and at which
+   the server sends its low-stock alert. */
 const LOW_STOCK = 5;
 
-const ORDER_STATUS_OPTIONS = {
+const PRODUCT_STATUS_OPTIONS = {
   draft: { label: 'Draft', value: 'draft' },
   pending: { label: 'Pending', value: 'pending' },
-  publish: { label: 'Publish', value: 'publish' },
+  publish: { label: 'Published', value: 'publish' },
   hold: { label: 'Hold', value: 'hold' }
 }
 
@@ -42,13 +60,10 @@ const STOCK_STATUS_OPTIONS = {
   outofstock: { label: 'Out of Stock', value: 'outofstock' }
 }
 
-import { IconCopy, IconEdit, IconEyeShare, IconDotsVertical, IconTrash, IconStarFilled, IconStar, IconFileDollar, IconZoomExclamationFilled, IconPlaylistX, IconPhoto } from "@tabler/icons-react";
-import PopoverButton from "../../components/PopoverButton";
-import ProductEdit from "../../components/pages/ProductEdit";
-import ProductBulkUpdate from "../../components/shop-elements/ProductBulkUpdate";
 
-import Image from "next/image";
-
+/* Whether stock is tracked: in stock or out of stock. An empty status is not
+   tracked - which is not the same as out of stock, or low. */
+const isTracked = (entry) => entry?.stock_status === 'instock' || entry?.stock_status === 'outofstock';
 
 function stockLevel(entry) {
 
@@ -57,19 +72,126 @@ function stockLevel(entry) {
   }
 
   if (entry?.stock_status != 'instock') {
-    return null;
+    return { label: "Not tracked", classes: "bg-gray-100 text-gray-500" };
   }
 
-  /* An empty count means stock is not being tracked, which is not the same as low. */
-  var count = entry?.stock_count;
-  var isLow = count !== "" && count !== null && count !== undefined && Number(count) <= LOW_STOCK;
+  var count = Number(entry?.stock_count ?? 0);
 
-  return isLow
+  return count <= LOW_STOCK
     ? { label: "Low stock", classes: "bg-amber-50 text-amber-700" }
     : { label: "In stock", classes: "bg-emerald-50 text-emerald-700" };
 }
 
 
+/*
+  Change one product's stock: add, remove, or set a count, with a note.
+  Goes through adjust_stock, so it is in Stocks History with who did it.
+  A product that does not track stock can only be set - that starts tracking.
+*/
+function StockAdjust({ entry, token, onDone, addNotification }) {
+
+  var tracked = isTracked(entry);
+  var current = Number(entry?.stock_count ?? 0) || 0;
+
+  var [mode, setmode] = useState(tracked ? "increase" : "set");
+  var [quantity, setquantity] = useState("");
+  var [note, setnote] = useState("");
+  var [saving, setsaving] = useState(false);
+
+  var q = parseInt(quantity, 10);
+  var valid = Number.isInteger(q) && q >= 0 && (mode === "set" || q > 0) && !(mode === "decrease" && q > current);
+  var after = !Number.isInteger(q) ? null : mode === "increase" ? current + q : mode === "decrease" ? current - q : q;
+
+  function save() {
+    if (!valid || saving) return;
+    setsaving(true);
+
+    fetch(serverUrl + "wp-json/combo-store/v2/adjust_stock", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ product_id: entry.id, action: mode, quantity: q, note: note }),
+    })
+      .then((response) => {
+        if (response.status === 403) throw new Error("You are not allowed to change stock.");
+        if (!response.ok) throw new Error(`Server answered ${response.status}.`);
+        return response.json();
+      })
+      .then((res) => {
+        setsaving(false);
+
+        if (res?.status !== "success") {
+          addNotification({ type: 'error', title: 'Stock not changed', content: res?.message ?? "" });
+          return;
+        }
+
+        addNotification({ type: 'success', title: 'Stock updated', content: `${entry?.title}: ${res.stock_before} → ${res.stock_after}` });
+        onDone({ stock_count: res.stock_after, stock_status: res.stock_status });
+      })
+      .catch((error) => {
+        setsaving(false);
+        addNotification({ type: 'error', title: 'Stock not changed', content: error?.message ?? "" });
+      });
+  }
+
+  var MODES = [["increase", "Add", IconPlus], ["decrease", "Remove", IconMinus], ["set", "Set to", IconEqual]];
+
+  return (
+    <div className="flex w-[min(340px,calc(100vw-2rem))] flex-col gap-3 p-4 text-left">
+      <div className="text-sm font-semibold text-gray-900">
+        <span dangerouslySetInnerHTML={{ __html: entry?.title ?? "" }} />
+        <span className="ml-2 font-normal text-gray-500">{tracked ? `${("now")} ${current}` : ("not tracked yet")}</span>
+      </div>
+
+      <div role="tablist" aria-label="How to change" className="grid grid-cols-3 gap-1 rounded-lg border border-gray-200 bg-gray-50 p-1">
+        {MODES.map(([value, label, Icon]) => {
+          var disabled = !tracked && value !== "set";
+          return (
+            <button key={value} type="button" role="tab" aria-selected={mode === value} disabled={disabled}
+              onClick={() => setmode(value)}
+              className={`inline-flex !h-8 items-center justify-center gap-1 rounded-md !px-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${mode === value ? '!bg-white !text-gray-900 shadow-sm' : '!bg-transparent text-gray-500 hover:text-gray-800'}`}>
+              <Icon size={14} /> {label}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="flex items-center gap-3">
+        <input type="number" min="0" step="1" autoFocus aria-label={("Quantity")} className={`${FIELD} w-28 text-right tabular-nums`}
+          value={quantity} placeholder="0" onChange={ev => setquantity(ev.target.value)}
+          onKeyDown={ev => { if (ev.key === "Enter") save(); }} />
+        <span className="text-sm text-gray-500">
+          {after !== null && quantity !== "" ? <>{tracked ? current : ("untracked")} → <span className={`font-semibold tabular-nums ${after < 0 ? "text-rose-600" : "text-gray-900"}`}>{after}</span></> : ("units")}
+        </span>
+      </div>
+
+      {mode === "decrease" && Number.isInteger(q) && q > current && (
+        <p className="text-xs text-rose-600">{("Only")} {current} {("in stock.")}</p>
+      )}
+      {!tracked && (
+        <p className="text-xs text-gray-500">{("Setting a count starts tracking stock for this product.")}</p>
+      )}
+
+      <input type="text" aria-label={("Reason")} className={FIELD} placeholder={("Reason, e.g. damaged, recount, gift")}
+        value={note} onChange={ev => setnote(ev.target.value)} onKeyDown={ev => { if (ev.key === "Enter") save(); }} />
+
+      <button type="button" className={PRIMARY_BUTTON} disabled={!valid || saving} onClick={save}>
+        {saving ? <Spinner /> : null} {("Save")}
+      </button>
+    </div>
+  );
+}
+
+
+/*
+  The stock list.
+
+  It had no way to change stock - only Duplicate and Delete *product*, behind
+  a bare "Please confirm?" - and the API had no route for a stock change that
+  is recorded in history. Every change of filter or page waited a full second.
+  "View" went to /products/{id}, which the store does not have (it is
+  /product/{slug}). An untracked product looked the same as one with no
+  status at all.
+*/
 const Stocks = (props) => {
 
   const { token, addNotification } = useCounterStore()
@@ -81,8 +203,11 @@ const Stocks = (props) => {
   var [loading, setloading] = useState(false);
   var [selectedRows, setselectedRows] = useState([]);
 
-  var [queryTerms, setqueryTerms] = useState({ taxonomy: 'product_cat', order: "DESC", per_page: 99, });
-  var [querybrands, setquerybrands] = useState({ taxonomy: 'product_brand', order: "DESC", per_page: 99, });
+  /* PopoverButton cannot be closed from outside; remounting a row's popover closes it. */
+  var [adjustKeys, setadjustKeys] = useState({});
+
+  var [queryTerms] = useState({ taxonomy: 'product_cat', order: "DESC", per_page: 99, });
+  var [querybrands] = useState({ taxonomy: 'product_brand', order: "DESC", per_page: 99, });
   var [terms, setterms] = useState([]);
   var [brands, setbrands] = useState([]);
 
@@ -102,11 +227,15 @@ const Stocks = (props) => {
   };
 
 
-  async function fetchPosts() {
+  const requestRef = useRef(0);
+
+  function fetchPosts() {
 
     if (queryPrams.paged < 0) {
       return;
     }
+
+    var requestId = ++requestRef.current;
 
     /* This endpoint reads `posts_per_page`, and EntriesTable's selector sets `per_page`. */
     var postData = JSON.stringify({ ...queryPrams, posts_per_page: queryPrams.per_page });
@@ -121,80 +250,50 @@ const Stocks = (props) => {
       body: postData,
     })
       .then((response) => {
-
         if (!response.ok) {
-          throw new Error('Token validation failed');
+          throw new Error(`Server answered ${response.status}.`);
         }
-
-        if (response.ok && response.status < 400) {
-          response.json().then((res) => {
-
-            var posts = res?.posts;
-            var total = res?.total;
-            var max_pages = res?.max_pages;
-
-            setproductsData({ posts: posts, total: total, maxPages: max_pages })
-            setloading(false);
-          });
-        }
+        return response.json();
       })
-      .catch((_error) => {
-        setloading(false);
-        addNotification({ type: 'error', title: 'Stocks not loaded', content: "The list could not be loaded. Please try again." })
-      });
+      .then((res) => {
+        /* An older, slower request must not replace a newer one's results. */
+        if (requestId !== requestRef.current) return;
 
+        setproductsData({ posts: Array.isArray(res?.posts) ? res.posts : [], total: parseInt(res?.total, 10) || 0, maxPages: parseInt(res?.max_pages, 10) || 1 })
+        setloading(false);
+      })
+      .catch((error) => {
+        if (requestId !== requestRef.current) return;
+
+        setloading(false);
+        addNotification({ type: 'error', title: 'Stocks not loaded', content: error?.message ?? "The list could not be loaded. Please try again." })
+      });
   }
 
 
   function fetchTaxonomy(query, onLoaded) {
-
-    var postData = {
-      taxonomy: query.taxonomy,
-      per_page: query.per_page,
-      paged: query.paged,
-      order: query.order,
-      hierarchical: true,
-    };
-    postData = JSON.stringify(postData);
 
     fetch(serverUrl + "wp-json/combo-store/v2/get_terms", {
       method: "POST",
       headers: {
         'Content-Type': 'application/json',
       },
-      body: postData,
+      body: JSON.stringify({ taxonomy: query.taxonomy, per_page: query.per_page, paged: query.paged, order: query.order, hierarchical: true }),
     })
-      .then((response) => {
-
-        if (!response.ok) {
-          throw new Error('Token validation failed');
-        }
-
-        if (response.ok && response.status < 400) {
-          response.json().then((res) => {
-            onLoaded(Object.values(res?.terms ?? {}));
-          });
-        }
-      })
-      .catch((_error) => {
+      .then((response) => response.ok ? response.json() : null)
+      .then((res) => onLoaded(Object.values(res?.terms ?? {})))
+      .catch(() => {
         // The filter simply stays empty.
       });
-
   }
 
 
-  async function delete_products(ids) {
-
-    if (queryPrams.paged < 0) {
-      return;
-    }
+  /* Products go to the trash (delete_products is wp_delete_post). */
+  function delete_products(ids) {
 
     ids = ids != undefined ? ids : selectedRows;
+    if (!ids?.length) return;
 
-    var postData = {
-      ids: ids,
-    };
-    postData = JSON.stringify(postData);
     setloading(true);
     fetch(serverUrl + "wp-json/combo-store/v2/delete_products", {
       method: "POST",
@@ -202,36 +301,33 @@ const Stocks = (props) => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: postData,
+      body: JSON.stringify({ ids: ids }),
     })
       .then((response) => {
+        if (response.status === 403) {
+          throw new Error("You are not allowed to delete products.");
+        }
         if (!response.ok) {
-          throw new Error("Token validation failed");
+          throw new Error(`Server answered ${response.status}.`);
         }
-
-        if (response.ok && response.status < 400) {
-          response.json().then((res) => {
-            setloading(false);
-            fetchPosts();
-          });
-        }
+        return response.json();
       })
-      .catch((_error) => {
+      .then((res) => {
+        var deleted = parseInt(res?.deleted, 10);
+        if (Number.isNaN(deleted)) deleted = ids.length;
+
+        addNotification({ type: 'success', title: 'Moved to trash', content: `${deleted} ${deleted === 1 ? "product" : "products"} moved to the trash.` })
+        setselectedRows([]);
+        fetchPosts();
+      })
+      .catch((error) => {
         setloading(false);
-        addNotification({ type: 'error', title: 'Products not deleted', content: "Your change could not be saved. Please try again." })
+        addNotification({ type: 'error', title: 'Products not deleted', content: error?.message ?? "" })
       });
   }
 
-  async function duplicate_product(id) {
+  function duplicate_product(id) {
 
-    if (queryPrams.paged < 0) {
-      return;
-    }
-
-    var postData = {
-      id: id,
-    };
-    postData = JSON.stringify(postData);
     setloading(true);
     fetch(serverUrl + "wp-json/combo-store/v2/duplicate_product", {
       method: "POST",
@@ -239,38 +335,28 @@ const Stocks = (props) => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: postData,
+      body: JSON.stringify({ id: id }),
     })
       .then((response) => {
         if (!response.ok) {
-          throw new Error("Token validation failed");
+          throw new Error(`Server answered ${response.status}.`);
         }
-
-        if (response.ok && response.status < 400) {
-          response.json().then((res) => {
-            setloading(false);
-            fetchPosts();
-          });
-        }
+        return response.json();
       })
-      .catch((_error) => {
+      .then(() => {
+        addNotification({ type: 'success', title: 'Product duplicated', content: `A copy of #${id} was added as a draft.` })
+        fetchPosts();
+      })
+      .catch((error) => {
         setloading(false);
-        addNotification({ type: 'error', title: 'Product not duplicated', content: "Your change could not be saved. Please try again." })
+        addNotification({ type: 'error', title: 'Product not duplicated', content: error?.message ?? "" })
       });
   }
 
 
-  const [debouncedQuery, setDebouncedQuery] = useState(queryPrams);
-
-
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedQuery(queryPrams);
-    }, 1000);
-
-    return () => clearTimeout(handler);
-  }, [queryPrams]);
-
+  /* Typing (search, or the stock threshold) waits a moment; picking a filter
+     or a page loads at once. Everything used to wait a full second. */
+  const lastTyped = useRef({ keyword: queryPrams.keyword, min_stock: queryPrams.min_stock });
 
   useEffect(() => {
 
@@ -279,18 +365,27 @@ const Stocks = (props) => {
       return;
     }
 
-    fetchPosts();
+    var typing = queryPrams.keyword !== lastTyped.current.keyword || queryPrams.min_stock !== lastTyped.current.min_stock;
+    lastTyped.current = { keyword: queryPrams.keyword, min_stock: queryPrams.min_stock };
 
-  }, [debouncedQuery, token]);
+    if (!typing) {
+      fetchPosts();
+      return;
+    }
+
+    const handler = setTimeout(fetchPosts, 400);
+    return () => clearTimeout(handler);
+
+  }, [queryPrams, token]);
 
 
-  function onChangeQueryPrams(queryPrams) {
-    if (queryPrams) {
-      setqueryPrams(queryPrams)
+  function onChangeQueryPrams(next) {
+    if (next) {
+      setqueryPrams(next)
     }
   }
 
-  function onRefreshRequest(rows) {
+  function onRefreshRequest() {
     fetchPosts();
   }
 
@@ -299,6 +394,15 @@ const Stocks = (props) => {
     fetchTaxonomy(querybrands, setbrands);
   }, []);
 
+
+  /* After an adjustment, the row shows the new count without reloading the page. */
+  function applyAdjustment(id, change) {
+    setproductsData(prev => ({ ...prev, posts: prev.posts.map(post => post.id === id ? { ...post, ...change } : post) }));
+    setadjustKeys(prev => ({ ...prev, [id]: (prev[id] ?? 0) + 1 }));
+  }
+
+
+  /* ---------------- cells ---------------- */
 
   function callbackActions(entry, columnIndex) {
 
@@ -312,6 +416,7 @@ const Stocks = (props) => {
 
     const excludeInSearch = entry?.visibility?.some(item => item.slug === "exclude-from-search");
     const excludeInShop = entry?.visibility?.some(item => item.slug === "exclude-from-catalog");
+    const hasVariations = Array.isArray(entry?.variations) ? entry.variations.length > 0 : Boolean(entry?.variations && Object.keys(entry.variations).length);
 
     return (
       <td data-label="Actions" className="!px-5 py-3 text-sm"
@@ -325,7 +430,20 @@ const Stocks = (props) => {
             <div title="Excluded from catalog" className={ICON_BUTTON}><IconPlaylistX size={18} /></div>
           )}
 
-          <PopoverButton buttonLabel={" "} buttonIcon={<IconEdit size={18} />} title={"Edit Product"} drawer={"right"} buttonClass={ICON_BUTTON}>
+          {/* Variable products keep their stock on the variations, which are
+              changed in the product editor. */}
+          {hasVariations ? (
+            <span title="Stock is kept on each variation - change it in the product editor" className="text-xs text-gray-400">{("Per variation")}</span>
+          ) : (
+            <PopoverButton key={`adjust-${entry.id}-${adjustKeys[entry.id] ?? 0}`} closeOnOutsideClick={true} enableCloseBtn={false}
+              buttonLabel={("Adjust")} buttonIcon={<IconAdjustments size={16} />} title={"Adjust stock"} position={"bottomRight"}
+              buttonClass={`inline-flex !h-8 items-center gap-1.5 !rounded-lg !border !border-gray-300 !bg-white !px-2.5 !py-0 !text-xs !font-medium !text-gray-700 !shadow-none transition-colors hover:!border-[#634FE5]/50 hover:!text-[#634FE5] cursor-pointer`}
+              popoverClass={`absolute z-[999] mt-1 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg`}>
+              <StockAdjust entry={entry} token={token} addNotification={addNotification} onDone={(change) => applyAdjustment(entry.id, change)} />
+            </PopoverButton>
+          )}
+
+          <PopoverButton buttonLabel={" "} buttonIcon={<IconEdit size={18} />} title={`Edit ${entry?.title ?? "product"}`} drawer={"right"} buttonClass={ICON_BUTTON}>
 
             <div className="p-5 bg-gray-50 text-left">
               <ProductEdit id={entry?.id} />
@@ -337,22 +455,27 @@ const Stocks = (props) => {
 
             <div className="p-1.5">
               <div className="flex flex-col gap-0.5">
+                <Link className={MENU_ITEM} href={`/dashboard/stocks-history?product_id=${entry.id}&product_name=${encodeURIComponent(entry?.title ?? "")}`}>
+                  <IconHistory size={16} /> {("Stock history")}
+                </Link>
+                {entry?.slug && (
+                  <Link className={MENU_ITEM} href={`/product/${entry.slug}/`} target="_blank">
+                    <IconEyeShare size={16} /> {("View in shop")}
+                  </Link>
+                )}
                 <div className={MENU_ITEM} onClick={() => {
-                  if (confirm("Please confirm?")) {
+                  if (confirm(`Duplicate "${entry?.title}"? The copy is added as a draft.`)) {
                     duplicate_product(entry.id);
                   }
                 }}>
-                  <IconCopy size={16} /> Duplicate
+                  <IconCopy size={16} /> {("Duplicate")}
                 </div>
-                <Link className={MENU_ITEM} href={`/products/${entry.id}`}>
-                  <IconEyeShare size={16} /> View
-                </Link>
                 <div className={`${MENU_ITEM} !text-red-600 hover:!bg-red-50 hover:!text-red-700`} onClick={() => {
-                  if (confirm("Please confirm?")) {
+                  if (confirm(`Move "${entry?.title}" to the trash? It disappears from the shop.`)) {
                     delete_products([entry.id]);
                   }
                 }}>
-                  <IconTrash size={16} /> Delete
+                  <IconTrash size={16} /> {("Delete product")}
                 </div>
               </div>
             </div>
@@ -398,8 +521,8 @@ const Stocks = (props) => {
           </div>
 
           <div className="flex min-w-0 flex-1 flex-col gap-1 text-left">
-            <Link className="text-left text-sm font-medium text-gray-900 transition-colors hover:text-blue-600 hover:underline" href={`/dashboard/products/${entry?.id}`}>
-              {entry?.title}
+            <Link className="text-left text-sm font-medium text-gray-900 transition-colors hover:text-[#634FE5] hover:underline" href={`/dashboard/products/${entry?.id}`}>
+              <span dangerouslySetInnerHTML={{ __html: entry?.title ?? "" }} />
             </Link>
 
             <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
@@ -432,13 +555,11 @@ const Stocks = (props) => {
 
         {entry?.categories?.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
-            {entry.categories.map((item, index) => {
-              return (
-                <span key={index} className={CHIP}>
-                  <span dangerouslySetInnerHTML={{ __html: item.name }}></span>
-                </span>
-              )
-            })}
+            {entry.categories.map((item, index) => (
+              <span key={index} className={CHIP}>
+                <span dangerouslySetInnerHTML={{ __html: item.name }}></span>
+              </span>
+            ))}
           </div>
         )}
       </td>
@@ -449,13 +570,12 @@ const Stocks = (props) => {
 
   function callbackStock(entry, columnIndex) {
 
-    var count = entry?.stock_count;
-    var hasCount = count !== "" && count !== null && count !== undefined;
-
     return (
       <td data-label="Stock" className="!px-5 py-3 text-center"
         key={`stock-${entry?.id}-${entry?.variation_id ?? ""}`}>
-        {hasCount ? <span className="text-sm font-semibold tabular-nums text-gray-900">{count}</span> : EMPTY}
+        {isTracked(entry)
+          ? <span className={`text-sm font-semibold tabular-nums ${Number(entry?.stock_count ?? 0) <= LOW_STOCK ? "text-amber-700" : "text-gray-900"}`}>{Number(entry?.stock_count ?? 0)}</span>
+          : EMPTY}
       </td>
 
     );
@@ -470,10 +590,7 @@ const Stocks = (props) => {
       <td data-label="Status" className="!px-5 py-3 text-center"
         key={`status-${entry?.id}-${entry?.variation_id ?? ""}`}>
         <div className="flex justify-center">
-          {level && (
-            <span className={`inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold ${level.classes}`}>{level.label}</span>
-          )}
-          {!level && EMPTY}
+          <span className={`inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold ${level.classes}`}>{level.label}</span>
         </div>
       </td>
 
@@ -503,13 +620,11 @@ const Stocks = (props) => {
               {item.name}({item.count})
             </option>
 
-            {children?.map(childItem => {
-              return (
-                <option value={childItem.slug} key={childItem.term_id}>
-                  {childItem.name}({childItem.count})
-                </option>
-              )
-            })}
+            {children?.map(childItem => (
+              <option value={childItem.slug} key={childItem.term_id}>
+                {childItem.name}({childItem.count})
+              </option>
+            ))}
           </optgroup>
         )
       }
@@ -523,16 +638,25 @@ const Stocks = (props) => {
   }
 
 
+  var total = productsData?.total ?? 0;
+  var moreFilterCount = [queryPrams?.status, queryPrams?.stock_status].filter(Boolean).length;
+
   return (
     <div className="page-shell">
 
-      {/* Page heading: this screen had no title, only a row of controls. */}
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold text-gray-900">{("Stocks")}</h1>
           <p className="mt-0.5 text-xs text-gray-500">
-            {productsData?.total ?? 0} {("products")}
+            {total} {total === 1 ? ("product") : ("products")} · {("Adjust a count to record a recount, damage or a gift - every change shows in Stocks History.")}
           </p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <Link href="/dashboard/stocks-history" className={TOOLBAR_BUTTON}><IconHistory size={16} /> {("Stocks History")}</Link>
+          <button type="button" className={TOOLBAR_BUTTON} disabled={loading} onClick={fetchPosts}>
+            <IconRefresh size={16} className={loading ? "animate-spin" : ""} /> {("Refresh")}
+          </button>
         </div>
       </div>
 
@@ -567,20 +691,20 @@ const Stocks = (props) => {
             }}
           />
 
-          <PopoverButton wrapperClass={``} enableCloseBtn={false} buttonLabel={("Filter Products")} buttonIcon={<IconFileDollar size={16} />} title={"Filter Products"} position={"leftTop"} buttonClass={`inline-flex h-9 items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 text-sm font-medium text-gray-700 transition-colors hover:border-gray-400 hover:bg-gray-50 cursor-pointer`} popoverClass={`absolute z-[999] w-[360px] overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg`}>
+          <PopoverButton wrapperClass={``} enableCloseBtn={false} buttonLabel={moreFilterCount > 0 ? `${("More Filters")} (${moreFilterCount})` : ("More Filters")} buttonIcon={<IconFilter size={16} />} title={"More Filters"} position={"bottomLeft"} buttonClass={TOOLBAR_BUTTON} popoverClass={`absolute z-[999] w-[360px] overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg`}>
 
             <div className="p-4">
               <div className="flex flex-col gap-3">
                 <div className="flex items-center justify-between gap-3">
-                  <div className="text-sm font-medium text-gray-700">Status</div>
+                  <div className="text-sm font-medium text-gray-700">{("Product status")}</div>
                   <div>
-                    <DropDown multiple={false} value={queryPrams?.status} options={ORDER_STATUS_OPTIONS} label={`Choose Status`} onOptionsChoose={onFilterByStatus} />
+                    <DropDown multiple={false} allowReset={true} value={queryPrams?.status} options={PRODUCT_STATUS_OPTIONS} label={`Any status`} onOptionsChoose={onFilterByStatus} />
                   </div>
                 </div>
                 <div className="flex items-center justify-between gap-3">
-                  <div className="text-sm font-medium text-gray-700">Stock Status</div>
+                  <div className="text-sm font-medium text-gray-700">{("Stock status")}</div>
                   <div>
-                    <DropDown multiple={false} value={queryPrams?.stock_status} options={STOCK_STATUS_OPTIONS} label={`Choose Stock Status`} onOptionsChoose={onFilterByStockStatus} />
+                    <DropDown multiple={false} allowReset={true} value={queryPrams?.stock_status} options={STOCK_STATUS_OPTIONS} label={`Any stock`} onOptionsChoose={onFilterByStockStatus} />
                   </div>
                 </div>
               </div>
@@ -591,30 +715,29 @@ const Stocks = (props) => {
         </div>
 
 
-        <div className="flex items-center justify-end gap-3">
-          {selectedRows.length > 0 && (
-            <div
-              className="inline-flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700 transition-colors hover:bg-red-100 cursor-pointer"
-              onClick={() => {
-                if (confirm("Please confirm?")) {
-                  delete_products();
-                }
-              }}>
-              {("Delete Products")}
-            </div>
-          )}
+        {selectedRows.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2 rounded-lg border border-[#634FE5]/30 bg-[#634FE5]/5 py-1 pl-3 pr-1">
+            <span className="text-sm font-medium text-gray-700">{selectedRows.length} {("selected")}</span>
+            <button type="button" className="!h-8 rounded-md !border-0 !bg-transparent px-2 text-sm !text-gray-500 !shadow-none hover:!bg-white hover:!text-gray-800" onClick={() => setselectedRows([])}>{("Clear")}</button>
 
-          {selectedRows.length > 0 && (
-
-            <PopoverButton buttonLabel={("Bulk Update")} buttonClass={`inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:border-gray-400 hover:bg-gray-50 cursor-pointer`} buttonIcon={``} title={"Bulk Update"} drawer={"left"}>
-
+            <PopoverButton buttonLabel={("Bulk Update")} buttonClass={`${TOOLBAR_BUTTON} !h-8`} buttonIcon={<IconStack2 size={15} />} title={"Bulk Update"} drawer={"left"}>
               <div className="p-5 bg-gray-50">
                 <ProductBulkUpdate ids={selectedRows} />
               </div>
-
             </PopoverButton>
-          )}
-        </div>
+
+            <button type="button"
+              className="inline-flex !h-8 items-center gap-2 !rounded-lg !border-0 !bg-red-600 !px-3 !py-0 !text-sm !font-medium !text-white !shadow-sm transition-colors hover:!bg-red-700 cursor-pointer disabled:opacity-50"
+              disabled={loading}
+              onClick={() => {
+                if (confirm(`Move ${selectedRows.length} ${selectedRows.length === 1 ? "product" : "products"} to the trash? They disappear from the shop.`)) {
+                  delete_products();
+                }
+              }}>
+              <IconTrash size={15} /> {("Delete products")}
+            </button>
+          </div>
+        )}
       </div>
 
 

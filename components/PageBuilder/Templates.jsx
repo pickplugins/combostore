@@ -1,7 +1,7 @@
 import PropTypes from "prop-types";
 import React from "react";
 import { useState, useEffect } from "react";
-import { IconCircleCheck, IconFileDollar, IconSettings, IconCopy, IconTrash, IconBrowserPlus, IconStack, IconSparkles, } from "@tabler/icons-react";
+import { IconCircleCheck, IconFileDollar, IconSettings, IconCopy, IconTrash, IconBrowserPlus, IconStack, IconSparkles, IconPlus } from "@tabler/icons-react";
 import { useCounterStore } from '../../store/useCounterStore';
 import { useDraggable } from '@dnd-kit/react';
 import PopoverButton from '../../components/PopoverButton';
@@ -38,7 +38,7 @@ const Templates = (props) => {
 	var [queryPrams, setqueryPrams] = useState({ type: type, keyword: "", template_id: null, });
 	const [loading, setloading] = useState(false);
 	var [ordersData, setordersData] = useState(null);
-	var [newPage, setnewPage] = useState({ name: '', type: type });
+	var [newTemplate, setnewTemplate] = useState({ name: '', type: type });
 	var [activeTemplate, setactiveTemplate] = useState(null);
 	var [newTemplatePart, setnewTemplatePart] = useState({ type: type, title: "", template_id: activeTemplate?.id, });
 
@@ -91,9 +91,67 @@ const Templates = (props) => {
 
 
 
-		var postData = JSON.stringify(newPage);
+		var postData = JSON.stringify(newTemplate);
 		setloading(true);
 		fetch(serverUrl + "wp-json/combo-store/v2/create_template", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+				Authorization: `Bearer ${token}`,
+			},
+			body: postData,
+		})
+			.then((response) => {
+				if (!response.ok) {
+					throw new Error("Token validation failed");
+				}
+
+				if (response.ok && response.status < 400) {
+					response.json().then((res) => {
+
+
+
+						//var resObj = JSON.parse(res)
+
+						var status = res?.status;
+						var messages = res?.messages;
+
+
+
+						if (status == 'failed') {
+							addNotification({ type: 'error', title: 'Added failed', content: `Sorry,  added failed.${JSON.stringify(messages)}` })
+						}
+
+						if (status == 'success') {
+							addNotification({ type: 'success', title: 'Added', content: "Added scuccessful." })
+						}
+
+
+						setloading(false);
+
+						get_templates();
+
+
+
+
+
+					});
+				}
+			})
+			.catch((_error) => {
+				//this.saveAsStatus = 'error';
+				// handle the error
+			});
+	}
+	async function create_template_part(newTemplatePart) {
+
+
+
+
+
+		var postData = JSON.stringify(newTemplatePart);
+		setloading(true);
+		fetch(serverUrl + "wp-json/combo-store/v2/create_template_part", {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
@@ -253,8 +311,6 @@ const Templates = (props) => {
 			scope: 'builder',
 		};
 
-		console.log(postData);
-
 
 		postData = JSON.stringify(postData);
 		setloading(true);
@@ -279,9 +335,10 @@ const Templates = (props) => {
 						var meta = res?.meta;
 
 
+						console.log(res);
 						// return;
 
-						if (content?.length == 0) {
+						if (content == undefined ) {
 
 
 							addNotification({ type: 'error', title: 'Content not valid JSON', content: `Dummy content added, Existing content will replace.` })
@@ -633,22 +690,22 @@ const Templates = (props) => {
 					<div className="flex items-center mb-5 justify-between">
 
 						<div className="flex items-center gap-2">
-							<PopoverButton wrapperClass={` flex justify-end`} buttonLabel={null} buttonIcon={<IconBrowserPlus size={16} />} title={"Create"} position={"bottomLeft"} buttonClass={`inline-flex items-center justify-center gap-1.5 rounded-lg border border-gray-200 bg-white p-1.5 text-xs font-medium text-gray-500 cursor-pointer transition-colors hover:border-gray-300 hover:bg-gray-100 hover:text-gray-900`}>
+							<PopoverButton wrapperClass={` flex justify-end`} buttonLabel={null} buttonIcon={<IconBrowserPlus size={16} />} title={"Create Template"} position={"bottomLeft"} buttonClass={`inline-flex items-center justify-center gap-1.5 rounded-lg border border-gray-200 bg-white p-1.5 text-xs font-medium text-gray-500 cursor-pointer transition-colors hover:border-gray-300 hover:bg-gray-100 hover:text-gray-900`}>
 
 
 								<div className="p-2 flex flex-col gap-3 w-full bg-gray-200">
 
-									<input className="" type="text" placeholder="Name" value={newPage?.name} onChange={ev => {
+									<input className="" type="text" placeholder="Name" value={newTemplate?.name} onChange={ev => {
 
 										var value = ev.target.value;
 
-										setnewPage({ ...newPage, name: value })
+										setnewTemplate({ ...newTemplate, name: value })
 									}} />
 
 									<div className="flex items-center gap-3">
 										<div className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2 py-1 text-xs font-medium text-gray-600 cursor-pointer transition-colors hover:border-brand/40 hover:bg-brand/5 hover:text-brand-700 w-fit" onClick={ev => {
 
-											if (newPage.name.length == 0) {
+											if (newTemplate.name.length == 0) {
 												addNotification({ type: 'error', title: 'Title is empty', content: `Please add title text.` })
 												return;
 
@@ -779,6 +836,108 @@ const Templates = (props) => {
 
 									<ToggleContent iconPosition='left' title={`Pages`} headerClass={HEADER_CLASSES} headerTitleClass={`flex justify-between w-full items-center gap-2`} contentClass={CONTENT_CLASSES}>
 										<div className="flex flex-col gap-2">
+
+											<div className="flex items-center gap-2">
+
+
+												<PopoverButton wrapperClass={` flex justify-end`} buttonLabel={null} buttonIcon={<IconPlus size={16} />} title={`Add Page`} position={null} buttonClass={`inline-flex items-center justify-center gap-1.5 rounded-lg border border-gray-200 bg-white p-1.5 text-xs font-medium text-gray-500 cursor-pointer transition-colors hover:border-gray-300 hover:bg-gray-100 hover:text-gray-900`}>
+
+
+													<div className="p-2 flex flex-col gap-3 w-full bg-gray-200">
+
+														<div className="flex items-center gap-2">
+															<div className="text-sm font-medium text-gray-700">Page Name</div>
+															<input className="" type="text" placeholder="Name" value={newTemplatePart?.title} onChange={ev => {
+
+																var value = ev.target.value;
+
+																setnewTemplatePart({ ...newTemplatePart, title: value, slug: value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '') })
+															}} />
+
+														</div>
+														<div className="flex items-center gap-2">
+															<div className="text-sm font-medium text-gray-700">Page Slug</div>
+															<input className="" type="text" placeholder="slug" value={newTemplatePart?.slug} onChange={ev => {
+
+																var value = ev.target.value;
+
+																setnewTemplatePart({ ...newTemplatePart, slug: value })
+															}} />
+
+														</div>
+
+
+
+
+
+
+														<div className="flex items-center gap-2">
+															<div className="text-sm font-medium text-gray-700">Page type</div>
+															<select className="" type="text" placeholder="Name" value={newTemplatePart?.type} onChange={ev => {
+
+																var value = ev.target.value;
+
+																setnewTemplatePart({ ...newTemplatePart, type: value })
+															}} >
+																<option value="">Custom</option>
+																<option value="header">Header</option>
+																<option value="footer">Footer</option>
+																<option value="shop">Shop</option>
+																<option value="product">Product</option>
+																<option value="categories">Categories</option>
+																<option value="categories_single">Categories Single</option>
+																<option value="tags">Tags</option>
+																<option value="tags_single">Tags Single</option>
+																<option value="brands">Brands</option>
+																<option value="brands_single">Brands Single</option>
+																<option value="thank_you">Thank You</option>
+																<option value="account">Account</option>
+																<option value="home">Home</option>
+																<option value="404">404</option>
+																<option value="blog">Blog</option>
+																<option value="blog_single">Blog Single</option>
+															</select>
+
+															<input className="" type="text" placeholder="Type" value={newTemplatePart?.type} onChange={ev => {
+
+																var value = ev.target.value;
+
+																setnewTemplatePart({ ...newTemplatePart, type: value })
+															}} />
+
+														</div>
+
+
+
+
+														<div className="flex items-center gap-3">
+															<div className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2 py-1 text-xs font-medium text-gray-600 cursor-pointer transition-colors hover:border-brand/40 hover:bg-brand/5 hover:text-brand-700 w-fit" onClick={ev => {
+
+																if (newTemplatePart.name.length == 0) {
+																	addNotification({ type: 'error', title: 'Title is empty', content: `Please add title text.` })
+																	return;
+
+																}
+
+																create_template_part({ ...newTemplatePart, template_id: template?.id })
+															}}>
+
+																Create
+															</div>
+
+															{loading && (
+																<Spinner />
+															)}
+														</div>
+
+													</div>
+
+												</PopoverButton>
+
+
+
+
+											</div>
 
 											{template?.pages.map(page => {
 

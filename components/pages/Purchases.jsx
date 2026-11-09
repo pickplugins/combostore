@@ -3,8 +3,9 @@ import Link from "next/link";
 import React from "react";
 
 import EntriesTable from "../../components/EntriesTable";
-import { useState, useEffect } from "react";
-import { IconPlus, IconFilter, IconDotsVertical, IconTrash, IconX, IconEdit, IconEyeShare, IconCopy, IconPackages } from "@tabler/icons-react";
+import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { IconPlus, IconFilter, IconDotsVertical, IconTrash, IconX, IconEdit, IconEyeShare, IconCopy, IconPackages, IconRefresh, IconTruckLoading } from "@tabler/icons-react";
 
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -87,7 +88,7 @@ const MENU_ITEM =
   "flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900 cursor-pointer";
 
 const TOOLBAR_BUTTON =
-  "inline-flex !h-9 items-center gap-2 !rounded-lg !border !border-gray-300 !bg-white !px-3 !py-0 !text-sm !font-medium !text-gray-700 !shadow-none transition-colors hover:!border-gray-400 hover:!bg-gray-50 cursor-pointer";
+  "inline-flex !h-9 items-center gap-2 !rounded-lg !border !border-gray-300 !bg-white !px-3 !py-0 !text-sm !font-medium !text-gray-700 !shadow-none transition-colors hover:!border-gray-400 hover:!bg-gray-50 cursor-pointer disabled:opacity-50";
 
 /*  because the global `button` rule in globals.css is unlayered and
    otherwise wins (grey text, border) - same as the Products screen. */
@@ -111,6 +112,8 @@ const Purchases = (props) => {
   const { wrapCurrency, formatDate } = useUtilsStore()
 
   const { token, paymentGateways, addNotification, privacyMode } = useCounterStore()
+
+  const router = useRouter()
 
   var [ordersData, setordersData] = useState(null);
   var [queryPrams, setqueryPrams] = useState({ keyword: "", payment_method: '', payment_status: '', start_date: '', end_date: '', billing_phone: '', customer: {}, product: {}, status: '', paged: 1, order: "DESC", per_page: 10, first_date: "", last_date: "" });
@@ -150,27 +153,39 @@ const Purchases = (props) => {
       body: JSON.stringify(newPurchasePrams),
     })
       .then((response) => {
+        if (response.status === 403) {
+          throw new Error("You are not allowed to create purchases.");
+        }
         if (!response.ok) {
-          throw new Error("Token validation failed");
+          throw new Error(`Server answered ${response.status}.`);
         }
 
-        response.json().then((res) => {
-
-          if (res?.status == 'failed') {
-            addNotification({ type: 'error', title: 'Purchase not added', content: `Sorry, the purchase could not be added. ${JSON.stringify(res?.messages ?? "")}` })
-          }
-
-          if (res?.status == 'success') {
-            addNotification({ type: 'success', title: 'Purchase added', content: "Purchase added successfully." })
-          }
-
-          setloading(false);
-          fetchPosts();
-        });
+        return response.json();
       })
-      .catch((_error) => {
+      .then((res) => {
         setloading(false);
-        addNotification({ type: 'error', title: 'Purchase not added', content: "The request failed. Please try again." })
+
+        if (res?.status !== 'success') {
+          addNotification({ type: 'error', title: 'Purchase not added', content: res?.message ?? "The purchase could not be added." })
+          return;
+        }
+
+        /* create_purchase answers with the new purchase's id: open it to fill in,
+           rather than leaving an empty row somewhere in the list. */
+        var newId = parseInt(res?.id, 10);
+
+        if (newId > 0) {
+          addNotification({ type: 'success', title: 'Purchase added', content: `Purchase #${newId} created. Add its supplier, items and payment, then save.` })
+          router.push(`/dashboard/purchases/${newId}`);
+          return;
+        }
+
+        addNotification({ type: 'success', title: 'Purchase added', content: "Purchase added." })
+        fetchPosts();
+      })
+      .catch((error) => {
+        setloading(false);
+        addNotification({ type: 'error', title: 'Purchase not added', content: error?.message ?? "The request failed. Please try again." })
       });
   }
 
@@ -193,19 +208,32 @@ const Purchases = (props) => {
       body: JSON.stringify({ ids: ids }),
     })
       .then((response) => {
+        if (response.status === 403) {
+          throw new Error("You are not allowed to delete purchases.");
+        }
         if (!response.ok) {
-          throw new Error("Token validation failed");
+          throw new Error(`Server answered ${response.status}.`);
+        }
+        return response.json();
+      })
+      .then((res) => {
+        setloading(false);
+
+        if (res?.success === false) {
+          addNotification({ type: 'error', title: 'Delete failed', content: "The server did not delete the purchase(s)." })
+          return;
         }
 
-        response.json().then(() => {
-          addNotification({ type: 'success', title: 'Deleted', content: `${ids.length} purchase(s) deleted.` })
-          setselectedRows([]);
-          fetchPosts();
-        });
+        var deleted = parseInt(res?.deleted, 10);
+        if (Number.isNaN(deleted)) deleted = ids.length;
+
+        addNotification({ type: 'success', title: 'Deleted', content: deleted === 1 && ids.length === 1 ? `Purchase #${ids[0]} deleted.` : `${deleted} ${deleted === 1 ? "purchase" : "purchases"} deleted.` })
+        setselectedRows([]);
+        fetchPosts();
       })
-      .catch((_error) => {
+      .catch((error) => {
         setloading(false);
-        addNotification({ type: 'error', title: 'Delete failed', content: "Could not delete the selected purchase(s)." })
+        addNotification({ type: 'error', title: 'Delete failed', content: error?.message ?? "Could not delete the selected purchase(s)." })
       });
   }
 
@@ -216,6 +244,7 @@ const Purchases = (props) => {
       return;
     }
 
+    var requestId = ++requestRef.current;
     setloading(true);
 
     fetch(serverUrl + "wp-json/combo-store/v2/get_purchases", {
@@ -224,48 +253,64 @@ const Purchases = (props) => {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },
-      body: JSON.stringify(queryPrams),
+      body: JSON.stringify(serverQuery(queryPrams)),
     })
       .then((response) => {
-
         if (!response.ok) {
-          throw new Error('Token validation failed');
+          throw new Error(`Server answered ${response.status}.`);
         }
-
-        response.json().then((res) => {
-
-          /* With no matches the API can leave out `posts`, `total` and `max_pages`. */
-          var orders = res?.posts ?? [];
-          var total = parseInt(res?.total) || 0;
-          var max_pages = parseInt(res?.max_pages) || 1;
-
-          setordersData({ posts: orders, total: total, maxPages: max_pages })
-          setsumData(sumPurchaseAmounts(orders));
-          setloading(false);
-        });
+        return response.json();
       })
-      .catch((_error) => {
+      .then((res) => {
+        /* An older, slower request must not replace a newer one's results. */
+        if (requestId !== requestRef.current) return;
+
+        /* With no matches the API can leave out `posts`, `total` and `max_pages`. */
+        var orders = Array.isArray(res?.posts) ? res.posts : [];
+        var total = parseInt(res?.total) || 0;
+        var max_pages = parseInt(res?.max_pages) || 1;
+
+        setordersData({ posts: orders, total: total, maxPages: max_pages })
+        setsumData(sumPurchaseAmounts(orders));
         setloading(false);
-        addNotification({ type: 'error', title: 'Purchases not loaded', content: "The list could not be loaded. Please try again." })
+      })
+      .catch((error) => {
+        if (requestId !== requestRef.current) return;
+
+        setloading(false);
+        addNotification({ type: 'error', title: 'Purchases not loaded', content: error?.message ?? "The list could not be loaded. Please try again." })
       });
   }
 
 
   /*
-    Fetched through a debounced copy, as on Products and Orders. The old page
-    fetched on mount, on every query change, and again from onChange with the
-    previous query - up to three requests per page turn, any of which could
-    land last.
+    What get_purchases reads, from what the page keeps:
+    - the supplier filter as `supplier_id` (it was a customer picker, and the
+      server filtered on a column purchases do not have);
+    - the product filter as `product_id` (`product: {id, title}` was ignored);
+    - dates as plain days, with a missing end filled in: the server adds the
+      times itself and only filters when both ends are set.
   */
-  const [debouncedQuery, setDebouncedQuery] = useState(queryPrams);
+  function serverQuery(query) {
+    var from = query?.from_date ? String(query.from_date).slice(0, 10) : "";
+    var to = query?.to_date ? String(query.to_date).slice(0, 10) : "";
 
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedQuery(queryPrams);
-    }, 500);
+    if (from || to) {
+      from = from || "1970-01-01";
+      to = to || "2999-12-31";
+    }
 
-    return () => clearTimeout(handler);
-  }, [queryPrams]);
+    return { ...query, supplier_id: query?.customer?.id ?? "", product_id: query?.product?.id ?? "", from_date: from, to_date: to };
+  }
+
+
+  /*
+    Typing in the search box waits a moment; every other change (a page, a
+    filter) loads at once. The whole query used to wait half a second, so
+    paging felt stuck. Only the newest request's answer is shown.
+  */
+  const requestRef = useRef(0);
+  const lastKeyword = useRef(queryPrams.keyword);
 
   useEffect(() => {
 
@@ -274,9 +319,18 @@ const Purchases = (props) => {
       return;
     }
 
-    fetchPosts();
+    var typing = queryPrams.keyword !== lastKeyword.current;
+    lastKeyword.current = queryPrams.keyword;
 
-  }, [debouncedQuery, token]);
+    if (!typing) {
+      fetchPosts();
+      return;
+    }
+
+    const handler = setTimeout(fetchPosts, 400);
+    return () => clearTimeout(handler);
+
+  }, [queryPrams, token]);
 
 
   function onChangeQueryPrams(queryPrams) {
@@ -333,7 +387,7 @@ const Purchases = (props) => {
             <PopoverButton buttonLabel={""} buttonIcon={<IconEdit size={16} />} title={"Edit Purchase"} drawer={"right"} buttonClass={ICON_BUTTON}>
 
               <div className="p-5 bg-gray-50 text-left">
-                <PurchaseEdit id={entry.id} />
+                <PurchaseEdit id={entry.id} variant="drawer" />
               </div>
 
             </PopoverButton>
@@ -426,7 +480,7 @@ const Purchases = (props) => {
                   <IconEyeShare size={16} /> Open
                 </Link>
                 <div className={`${MENU_ITEM} !text-red-600 hover:!bg-red-50 hover:!text-red-700`} onClick={() => {
-                  if (confirm(`Delete purchase #${entry.id}? This cannot be undone.`)) {
+                  if (confirm(`Permanently delete purchase #${entry.id} and its items? There is no trash, so this cannot be undone.`)) {
                     delete_purchases([entry.id]);
                   }
                 }}>
@@ -552,9 +606,14 @@ const Purchases = (props) => {
           </p>
         </div>
 
-        <button type="button" className={PRIMARY_BUTTON} disabled={loading} onClick={() => add_purchase()}>
-          <IconPlus size={16} /> {("Add Purchase")}
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button type="button" className={TOOLBAR_BUTTON} disabled={loading} onClick={fetchPosts}>
+            <IconRefresh size={16} className={loading ? "animate-spin" : ""} /> {("Refresh")}
+          </button>
+          <button type="button" className={PRIMARY_BUTTON} disabled={loading} onClick={() => add_purchase()}>
+            <IconPlus size={16} /> {("Add Purchase")}
+          </button>
+        </div>
       </div>
 
       <div className="flex flex-wrap justify-between gap-3">
@@ -590,9 +649,9 @@ const Purchases = (props) => {
                   </div>
                 </div>
                 <div className="flex items-center justify-between gap-3">
-                  <div className="text-sm font-medium text-gray-700">Customer</div>
+                  <div className="text-sm font-medium text-gray-700">Supplier</div>
                   <div>
-                    <UsersPicker placeholder={"Search Customer"} role={`customer`} onPick={onPickCustomer} />
+                    <UsersPicker placeholder={"Search Supplier"} role={`supplier`} onPick={onPickCustomer} />
                   </div>
                 </div>
                 <div className="flex items-center justify-between gap-3">
@@ -605,14 +664,14 @@ const Purchases = (props) => {
                   <div className="text-sm font-medium text-gray-700">From</div>
                   <div>
                     <DatePicker
-                      showTimeSelect
                       isClearable
                       placeholderText="Any date"
-                      dateFormat="yyyy-MM-dd HH:mm"
+                      dateFormat="yyyy-MM-dd"
                       className={DATE_INPUT}
                       selected={toPickerDate(queryPrams?.from_date)}
+                      maxDate={toPickerDate(queryPrams?.to_date)}
                       onChange={(date) => {
-                        setqueryPrams({ ...queryPrams, from_date: date ? format(date, "yyyy-MM-dd HH:mm:ss") : "", paged: 1 });
+                        setqueryPrams({ ...queryPrams, from_date: date ? format(date, "yyyy-MM-dd") : "", paged: 1 });
                       }}
                     />
                   </div>
@@ -621,15 +680,14 @@ const Purchases = (props) => {
                   <div className="text-sm font-medium text-gray-700">To</div>
                   <div>
                     <DatePicker
-                      showTimeSelect
                       isClearable
                       placeholderText="Any date"
-                      dateFormat="yyyy-MM-dd HH:mm"
+                      dateFormat="yyyy-MM-dd"
                       className={DATE_INPUT}
                       selected={toPickerDate(queryPrams?.to_date)}
                       minDate={toPickerDate(queryPrams?.from_date)}
                       onChange={(date) => {
-                        setqueryPrams({ ...queryPrams, to_date: date ? format(date, "yyyy-MM-dd HH:mm:ss") : "", paged: 1 });
+                        setqueryPrams({ ...queryPrams, to_date: date ? format(date, "yyyy-MM-dd") : "", paged: 1 });
                       }}
                     />
                   </div>
@@ -642,18 +700,19 @@ const Purchases = (props) => {
         </div>
 
         {selectedRows?.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-medium text-gray-500">{selectedRows.length} {("selected")}</span>
-
-            <div
-              className="inline-flex h-9 items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 text-sm font-semibold text-red-700 transition-colors hover:bg-red-100 cursor-pointer"
+          <div className="flex flex-wrap items-center gap-2 rounded-lg border border-[#634FE5]/30 bg-[#634FE5]/5 py-1 pl-3 pr-1">
+            <span className="text-sm font-medium text-gray-700">{selectedRows.length} {("selected")}</span>
+            <button type="button" className="!h-8 rounded-md !border-0 !bg-transparent px-2 text-sm !text-gray-500 !shadow-none hover:!bg-white hover:!text-gray-800" onClick={() => setselectedRows([])}>{("Clear")}</button>
+            <button type="button"
+              className="inline-flex !h-8 items-center gap-2 !rounded-lg !border-0 !bg-red-600 !px-3 !py-0 !text-sm !font-medium !text-white !shadow-sm transition-colors hover:!bg-red-700 cursor-pointer disabled:opacity-50"
+              disabled={loading}
               onClick={() => {
-                if (confirm(`Delete ${selectedRows.length} selected purchase(s)? This cannot be undone.`)) {
+                if (confirm(`Permanently delete ${selectedRows.length} ${selectedRows.length === 1 ? "purchase" : "purchases"} and their items? There is no trash, so this cannot be undone.`)) {
                   delete_purchases()
                 }
               }}>
-              <IconTrash size={16} /> {("Delete")} ({selectedRows.length})
-            </div>
+              <IconTrash size={15} /> {("Delete")}
+            </button>
           </div>
         )}
       </div>
@@ -680,7 +739,7 @@ const Purchases = (props) => {
           )}
           {queryPrams?.customer?.display_name?.length > 0 && (
             <div className={FILTER_CHIP}>
-              <span>{('Customer')}: {queryPrams.customer.display_name}</span>
+              <span>{('Supplier')}: {queryPrams.customer.display_name}</span>
               <span className={FILTER_CHIP_X} onClick={() => setqueryPrams({ ...queryPrams, customer: {}, paged: 1 })}><IconX size={13} /></span>
             </div>
           )}
@@ -692,13 +751,13 @@ const Purchases = (props) => {
           )}
           {queryPrams?.from_date && (
             <div className={FILTER_CHIP}>
-              <span>{('From')}: {String(queryPrams.from_date).slice(0, 16)}</span>
+              <span>{('From')}: {String(queryPrams.from_date).slice(0, 10)}</span>
               <span className={FILTER_CHIP_X} onClick={() => setqueryPrams({ ...queryPrams, from_date: "", paged: 1 })}><IconX size={13} /></span>
             </div>
           )}
           {queryPrams?.to_date && (
             <div className={FILTER_CHIP}>
-              <span>{('To')}: {String(queryPrams.to_date).slice(0, 16)}</span>
+              <span>{('To')}: {String(queryPrams.to_date).slice(0, 10)}</span>
               <span className={FILTER_CHIP_X} onClick={() => setqueryPrams({ ...queryPrams, to_date: "", paged: 1 })}><IconX size={13} /></span>
             </div>
           )}
@@ -709,17 +768,28 @@ const Purchases = (props) => {
       )}
 
 
-      <EntriesTable
-        queryPrams={queryPrams}
-        columns={columns}
-        entries={ordersData}
-        itemPath={""}
-        onChange={onChangeQueryPrams}
-        loading={loading}
-        selectedRows={selectedRows}
-        onSelectRows={onSelectRows}
-        onRefreshRequest={onRefreshRequest}
-      />
+      {ordersData && !loading && activeFilterCount === 0 && !queryPrams?.keyword && (ordersData?.total ?? 0) === 0 && (ordersData?.posts ?? []).length === 0 ? (
+        <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-gray-200 bg-white px-6 py-14 text-center">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 text-gray-400"><IconTruckLoading size={24} /></div>
+          <div className="text-sm font-semibold text-gray-800">{("No purchases yet")}</div>
+          <p className="max-w-sm text-xs text-gray-500">{("Record the stock you buy from suppliers, so what you paid is on record against each supplier and product.")}</p>
+          <button type="button" className={`${PRIMARY_BUTTON} mt-2`} disabled={loading} onClick={() => add_purchase()}>
+            <IconPlus size={16} /> {("Add Purchase")}
+          </button>
+        </div>
+      ) : (
+        <EntriesTable
+          queryPrams={queryPrams}
+          columns={columns}
+          entries={ordersData}
+          itemPath={""}
+          onChange={onChangeQueryPrams}
+          loading={loading}
+          selectedRows={selectedRows}
+          onSelectRows={onSelectRows}
+          onRefreshRequest={onRefreshRequest}
+        />
+      )}
 
 
       {sumData && ordersData?.posts?.length > 0 && (

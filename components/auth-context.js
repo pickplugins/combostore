@@ -7,6 +7,12 @@ import { clearCheckoutDraft } from "@/lib/checkoutDraft";
 import { clearOrdersQuery } from "@/lib/ordersQuery";
 import { clearProductsQuery } from "@/lib/productsQuery";
 import { clearPostsQuery } from "@/lib/postsQuery";
+import { installDemoFetch } from "@/lib/demo/install";
+
+/* NEXT_PUBLIC_DEMO_MODE: answer dashboard requests from the demo store
+   (lib/demo). Here, at module load, so it is in place before AuthProvider's
+   effect - or any other - sends its first request. A no-op otherwise. */
+installDemoFetch();
 
 
 const AuthContext = createContext(null);

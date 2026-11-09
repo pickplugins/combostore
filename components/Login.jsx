@@ -8,6 +8,7 @@ import { useCounterStore } from '../store/useCounterStore'
 import Spinner from './Spinner';
 import { IconAlertCircle, IconEye, IconEyeOff, IconLock, IconUser } from "@tabler/icons-react";
 import { ADORNMENT_CLASSES, FIELD_CLASSES, LABEL_CLASSES, SUBMIT_CLASSES } from "./AuthShell";
+import { DEMO_MODE } from "@/lib/demo/config";
 
 export default function Login() {
 
@@ -27,8 +28,9 @@ export default function Login() {
 	const { user, error, handleLogin, logging } = useAuth();
 	const router = useRouter();
 
-	const [username, setUsername] = useState("");
-	const [password, setPassword] = useState("");
+	/* Demo mode accepts any credentials; prefilled so one click signs in. */
+	const [username, setUsername] = useState(DEMO_MODE ? "demo" : "");
+	const [password, setPassword] = useState(DEMO_MODE ? "demo" : "");
 	const [showPassword, setShowPassword] = useState(false);
 
 	const onSubmit = (e) => {
@@ -71,6 +73,11 @@ export default function Login() {
 				</p>
 			</div>
 
+			{DEMO_MODE && (
+				<p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+					<strong className="font-semibold">Demo mode.</strong> Sign in with any username and password. The dashboard shows sample data and nothing is sent to the server; changes last until you reload.
+				</p>
+			)}
 			{error && (
 				<p
 					role="alert"

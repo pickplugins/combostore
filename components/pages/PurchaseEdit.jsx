@@ -5,7 +5,11 @@ import { useState, useEffect } from "react";
 import { useCounterStore } from '../../store/useCounterStore'
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
-import { IconFileDollar, IconReceipt, IconCreditCard, IconPhone, IconMapPin } from "@tabler/icons-react";
+import Link from "next/link";
+import { IconFileDollar, IconReceipt, IconCreditCard, IconPhone, IconMapPin, IconArrowLeft, IconArrowUpRight, IconRefresh } from "@tabler/icons-react";
+
+const TOOLBAR_BUTTON =
+  "inline-flex !h-9 items-center gap-2 !rounded-lg !border !border-gray-300 !bg-white !px-3 !py-0 !text-sm !font-medium !text-gray-700 !shadow-none transition-colors hover:!border-gray-400 hover:!bg-gray-50 cursor-pointer";
 import { useUtilsStore } from '../../store/useUtilsStore';
 import Tabs from '../../components/Tabs';
 import Tab from '../../components/Tab';
@@ -48,7 +52,8 @@ const Figure = ({ label, value, strong }) => (
   </div>
 );
 
-const PurchaseEdit = ({ id }) => {
+/* variant="drawer" (the Purchases list's Edit drawer): no page padding. */
+const PurchaseEdit = ({ id, variant = "page" }) => {
 
 
   const { wrapCurrency, formatDate } = useUtilsStore()
@@ -135,8 +140,9 @@ const PurchaseEdit = ({ id }) => {
   // }, []);
 
   useEffect(() => {
+    if (!token) return;
     get_purchase();
-  }, [id]);
+  }, [id, token]);
 
 
 
@@ -151,16 +157,13 @@ const PurchaseEdit = ({ id }) => {
     })
 
 
+    /* No `from`: InvoiceWithPDF fills the sender from the shop's Settings.
+       A hard-coded "KidoBazar.com, Rangpur" used to override it; purchases
+       have no `city` either. */
     var data = {
-      from: {
-        name: "KidoBazar.com",
-        address: "New Shalbon, House 145 Road 01",
-        city: "Rangpur",
-      },
       to: {
         name: purchaseData?.billing_name,
         address: purchaseData?.billing_address,
-        city: purchaseData?.city,
         phone: purchaseData?.billing_phone,
       },
       items: items,
@@ -198,7 +201,7 @@ const PurchaseEdit = ({ id }) => {
 
 
   return (
-    <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-4 px-4 py-6 sm:px-6">
+    <div className={variant === "drawer" ? "flex w-full flex-col gap-4" : "mx-auto flex w-full max-w-[1200px] flex-col gap-4 px-4 py-6 sm:px-6"}>
 
       {/*
         Summary card. The screen used to open on a bare "Purchase #id" with
@@ -236,8 +239,16 @@ const PurchaseEdit = ({ id }) => {
             )}
           </div>
 
+          <div className="flex flex-wrap items-center gap-2">
+            {variant === "drawer" ? (
+              <Link href={`/dashboard/purchases/${id}`} className={TOOLBAR_BUTTON}><IconArrowUpRight size={16} /> {("Open page")}</Link>
+            ) : (
+              <Link href="/dashboard/purchases" className={TOOLBAR_BUTTON}><IconArrowLeft size={16} /> {("All purchases")}</Link>
+            )}
+          </div>
+
           {purchaseData && (
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex w-full flex-wrap items-center gap-2">
 
               {statusBadge && (
                 <span className={`${BADGE_BASE} ${statusBadge.classes}`}>{statusBadge.label}</span>
@@ -266,8 +277,9 @@ const PurchaseEdit = ({ id }) => {
         )}
 
         {!loading && !purchaseData && (
-          <div className="mt-4 border-t border-gray-100 pt-4 text-sm text-gray-500">
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 pt-4 text-sm text-gray-500">
             {("This purchase could not be loaded.")}
+            <button type="button" className={TOOLBAR_BUTTON} onClick={get_purchase}><IconRefresh size={16} /> {("Try again")}</button>
           </div>
         )}
 
@@ -298,14 +310,15 @@ const PurchaseEdit = ({ id }) => {
       </div>
 
 
+      {/* Same rail as the order page. */}
       <Tabs activeTab={'purchase'}
         orientation="vertical"
         activeClass="active-tab "
         navsItemClass="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900"
-        navsItemActiveClass="bg-[#634FE5] text-white shadow-sm"
+        navsItemActiveClass="!bg-[#634FE5] !text-white shadow-sm"
 
-        navsWrapperClass="mb-5 flex w-full gap-1 lg:w-[250px]"
-        wrapperClass="flex gap-5"
+        navsWrapperClass="gap-1 rounded-xl border border-gray-200 bg-white p-2 lg:mb-0 lg:w-52 lg:shrink-0 lg:self-start"
+        wrapperClass="gap-5"
 
         tabs={[
           { label: "Purchase", id: 'purchase', icon: <IconFileDollar size={18} /> },
@@ -316,7 +329,8 @@ const PurchaseEdit = ({ id }) => {
 
         <Tab index={0} id="purchase">
 
-          <EditPurchase purchase_id={id} />
+          {/* Re-reads the summary above after a save. */}
+          <EditPurchase purchase_id={id} onSaved={get_purchase} />
 
         </Tab>
         <Tab index={1} id="invoice">

@@ -24,7 +24,23 @@ export function stockStatusFor(product, activeVariation) {
 		if (count !== undefined && count !== null && count !== '' && Number(count) <= 0) return 'outofstock';
 		return 'instock';
 	}
-	return product?.stock_status === 'outofstock' ? 'outofstock' : 'instock';
+	if (product?.stock_status === 'outofstock') return 'outofstock';
+	/* A product that tracks stock (the editor's "Stock" addon) with none left is sold out, whatever its saved status says. */
+	if (Number.isFinite(availableStock(product, null)) && availableStock(product, null) <= 0) return 'outofstock';
+	return 'instock';
+}
+
+/*
+	How many can still be sold: the picked variation's stock count when it has
+	one, else the product's when it tracks stock (addons include
+	'manageStock'). Infinity when stock is not counted, so there is no cap.
+*/
+export function availableStock(product, activeVariation) {
+	var count = activeVariation
+		? (activeVariation?.stock_count ?? activeVariation?.stock_quantity ?? activeVariation?.quantity)
+		: (product?.addons?.includes?.('manageStock') ? product?.stock_count : null);
+	if (count === undefined || count === null || count === '' || !Number.isFinite(Number(count))) return Infinity;
+	return Math.max(0, Math.floor(Number(count)));
 }
 
 /*

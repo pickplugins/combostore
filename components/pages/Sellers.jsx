@@ -155,19 +155,29 @@ const Sellers = () => {
 			body: JSON.stringify({ ids: ids }),
 		})
 			.then((response) => {
+				if (response.status === 403) {
+					throw new Error("You are not allowed to delete these accounts.");
+				}
 				if (!response.ok) {
-					throw new Error("Token validation failed");
+					throw new Error(`Server answered ${response.status}.`);
 				}
 
-				response.json().then(() => {
+				response.json().then((res) => {
 					setselectedRows([]);
-					addNotification({ type: 'success', title: 'Sellers deleted', content: `${ids.length} seller(s) deleted.` })
+					var deleted = parseInt(res?.deleted, 10);
+					var skipped = parseInt(res?.skipped, 10) || 0;
+					if (Number.isNaN(deleted)) deleted = ids.length;
+					addNotification({
+						type: deleted > 0 ? 'success' : 'error',
+						title: deleted > 0 ? `Sellers deleted` : 'Nothing deleted',
+						content: `${deleted} deleted.${skipped ? ` ${skipped} skipped: administrators, your own account, and (for store managers) staff accounts can't be deleted here.` : ""}`,
+					});
 					fetchPosts();
 				});
 			})
-			.catch((_error) => {
+			.catch((error) => {
 				setloading(false);
-				addNotification({ type: 'error', title: 'Delete failed', content: "The sellers could not be deleted. Please try again." })
+				addNotification({ type: 'error', title: 'Delete failed', content: error?.message?.startsWith("You are not allowed") ? error.message : "The sellers could not be deleted. Please try again." })
 			});
 	}
 
@@ -296,7 +306,7 @@ const Sellers = () => {
 							<PopoverButton buttonLabel={"Edit"} buttonIcon={null} title={"Edit Seller"} drawer={"right"} buttonClass={`inline-flex items-center rounded-md px-1.5 py-0.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-900 cursor-pointer`}>
 
 								<div className="p-5 bg-gray-50 text-left">
-									<SellerEdit id={id} />
+									<SellerEdit id={id} variant="drawer" />
 								</div>
 
 							</PopoverButton>

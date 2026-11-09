@@ -3,8 +3,8 @@ import Link from "next/link";
 import React from "react";
 
 import EntriesTable from "../../components/EntriesTable";
-import { useState, useEffect } from "react";
-import { IconFilter, IconEyeShare, IconTrash, IconCopy, IconDotsVertical, IconPackages, IconX, IconEdit } from "@tabler/icons-react";
+import { useState, useEffect, useRef } from "react";
+import { IconFilter, IconEyeShare, IconTrash, IconCopy, IconDotsVertical, IconPackages, IconX, IconEdit, IconRefresh, IconPhoneCall, IconBrandWhatsapp, IconShoppingCartOff, IconRestore } from "@tabler/icons-react";
 
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -129,19 +129,95 @@ const Incomplete = () => {
       body: JSON.stringify({ ids: ids }),
     })
       .then((response) => {
+        if (response.status === 403) {
+          throw new Error("Only administrators and store managers can delete orders.");
+        }
         if (!response.ok) {
-          throw new Error("Token validation failed");
+          throw new Error(`Server answered ${response.status}.`);
+        }
+        return response.json();
+      })
+      .then((res) => {
+        setloading(false);
+
+        if (res?.success === false) {
+          addNotification({ type: 'error', title: 'Delete failed', content: "The server did not delete the order(s)." })
+          return;
         }
 
-        response.json().then(() => {
-          addNotification({ type: 'success', title: 'Deleted', content: `${ids.length} order(s) deleted.` })
-          setselectedRows([]);
-          fetchPosts();
-        });
+        var deleted = parseInt(res?.deleted, 10);
+        if (Number.isNaN(deleted)) deleted = ids.length;
+
+        addNotification({ type: 'success', title: 'Deleted', content: deleted === 1 ? (ids.length === 1 ? `Order #${ids[0]} deleted.` : "1 order deleted.") : `${deleted} orders deleted.` })
+        setselectedRows([]);
+        fetchPosts();
       })
-      .catch((_error) => {
+      .catch((error) => {
         setloading(false);
-        addNotification({ type: 'error', title: 'Delete failed', content: "Could not delete the selected order(s)." })
+        addNotification({ type: 'error', title: 'Delete failed', content: error?.message ?? "Could not delete the selected order(s)." })
+      });
+  }
+
+
+  /*
+    Recover: turn abandoned checkouts into real orders by moving them to
+    Pending, so they leave this list and show up in Orders to be processed.
+    Only the status is sent; bulk_update_orders writes nothing else.
+  */
+  function recover_orders(ids) {
+
+    ids = ids ? ids : selectedRows;
+
+    if (!ids?.length) {
+      return;
+    }
+
+    var label = ids.length === 1 ? `order #${ids[0]}` : `${ids.length} orders`;
+
+    if (!confirm(`Recover ${label}? ${ids.length === 1 ? "It moves" : "They move"} to Pending and ${ids.length === 1 ? "shows" : "show"} up in Orders to be processed. Confirm with the customer first.`)) {
+      return;
+    }
+
+    setloading(true);
+    fetch(serverUrl + "wp-json/combo-store/v2/bulk_update_orders", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ ids: ids, status: "pending" }),
+    })
+      .then((response) => {
+        if (response.status === 403) {
+          throw new Error("You are not allowed to update orders.");
+        }
+        if (!response.ok) {
+          throw new Error(`Server answered ${response.status}.`);
+        }
+        return response.json();
+      })
+      .then((res) => {
+        setloading(false);
+
+        var updated = parseInt(res?.updated, 10);
+        if (Number.isNaN(updated)) updated = res?.status === "success" ? ids.length : 0;
+
+        if (res?.status !== "success" || updated === 0) {
+          addNotification({ type: 'error', title: 'Not recovered', content: "The order(s) could not be moved to Pending." })
+          return;
+        }
+
+        addNotification({
+          type: 'success',
+          title: 'Recovered',
+          content: ids.length === 1 ? `Order #${ids[0]} is now Pending in Orders.` : `${updated} of ${ids.length} orders are now Pending in Orders.`,
+        })
+        setselectedRows([]);
+        fetchPosts();
+      })
+      .catch((error) => {
+        setloading(false);
+        addNotification({ type: 'error', title: 'Not recovered', content: error?.message ?? "The request failed. Please try again." })
       });
   }
 
@@ -152,6 +228,7 @@ const Incomplete = () => {
       return;
     }
 
+    var requestId = ++requestRef.current;
     setloading(true);
 
     fetch(serverUrl + "wp-json/combo-store/v2/get_orders", {
@@ -164,47 +241,43 @@ const Incomplete = () => {
       body: JSON.stringify({ ...queryPrams, status: 'incomplete' }),
     })
       .then((response) => {
-
         if (!response.ok) {
-          throw new Error('Token validation failed');
+          throw new Error(`Server answered ${response.status}.`);
         }
-
-        response.json().then((res) => {
-
-          /* With no matches the API can leave out `posts`, `total` and `max_pages`. */
-          var orders = res?.posts ?? [];
-          var total = parseInt(res?.total) || 0;
-          var max_pages = parseInt(res?.max_pages) || 1;
-
-          setordersData({ posts: orders, total: total, maxPages: max_pages })
-          setsumData({
-            count: orders.length,
-            value: orders.reduce((sum, entry) => sum + orderTotal(entry), 0),
-          });
-          setloading(false);
-        });
+        return response.json();
       })
-      .catch((_error) => {
+      .then((res) => {
+        /* An older, slower request must not replace a newer one's results. */
+        if (requestId !== requestRef.current) return;
+
+        /* With no matches the API can leave out `posts`, `total` and `max_pages`. */
+        var orders = Array.isArray(res?.posts) ? res.posts : [];
+        var total = parseInt(res?.total) || 0;
+        var max_pages = parseInt(res?.max_pages) || 1;
+
+        setordersData({ posts: orders, total: total, maxPages: max_pages })
+        setsumData({
+          count: orders.length,
+          value: orders.reduce((sum, entry) => sum + orderTotal(entry), 0),
+        });
         setloading(false);
-        addNotification({ type: 'error', title: 'Incomplete orders not loaded', content: "The list could not be loaded. Please try again." })
+      })
+      .catch((error) => {
+        if (requestId !== requestRef.current) return;
+
+        setloading(false);
+        addNotification({ type: 'error', title: 'Incomplete orders not loaded', content: error?.message ?? "The list could not be loaded. Please try again." })
       });
   }
 
 
   /*
-    Fetched through a debounced copy, as on Products and Orders. The old page
-    fetched on every query change and again from onChange with the previous
-    query, so each page turn sent two requests and the stale one could land last.
+    Typing in the search box waits a moment; every other change (a page, a
+    filter) loads at once. The whole query used to wait half a second, so
+    paging felt stuck. Only the newest request's answer is shown.
   */
-  const [debouncedQuery, setDebouncedQuery] = useState(queryPrams);
-
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedQuery(queryPrams);
-    }, 500);
-
-    return () => clearTimeout(handler);
-  }, [queryPrams]);
+  const requestRef = useRef(0);
+  const lastKeyword = useRef(queryPrams.keyword);
 
   useEffect(() => {
 
@@ -213,9 +286,18 @@ const Incomplete = () => {
       return;
     }
 
-    fetchPosts();
+    var typing = queryPrams.keyword !== lastKeyword.current;
+    lastKeyword.current = queryPrams.keyword;
 
-  }, [debouncedQuery, token]);
+    if (!typing) {
+      fetchPosts();
+      return;
+    }
+
+    const handler = setTimeout(fetchPosts, 400);
+    return () => clearTimeout(handler);
+
+  }, [queryPrams, token]);
 
 
   function onChangeQueryPrams(queryPrams) {
@@ -241,10 +323,10 @@ const Incomplete = () => {
               {"#" + entry.id}
             </Link>
 
-            <PopoverButton buttonLabel={""} buttonIcon={<IconEdit size={16} />} title={"Edit Order"} drawer={"right"} buttonClass={ICON_BUTTON}>
+            <PopoverButton buttonLabel={""} buttonIcon={<IconEdit size={16} />} title={`Edit order #${entry.id}`} drawer={"right"} buttonClass={ICON_BUTTON}>
 
               <div className="p-5 bg-gray-50 text-left">
-                <OrderEdit id={entry.id} />
+                <OrderEdit id={entry.id} variant="drawer" />
               </div>
 
             </PopoverButton>
@@ -277,6 +359,21 @@ const Incomplete = () => {
           {entry.billing_address && <div className="text-[11px] text-gray-500">{entry.billing_address}</div>}
           {entry?.billing_phone && <div className="text-[11px] tabular-nums text-gray-500">{entry.billing_phone}</div>}
         </div>
+
+        {/* Getting in touch is how an abandoned checkout is recovered. These
+            stop the click, so they do not also copy the cell. */}
+        {entry?.billing_phone && (
+          <div className="mt-1 flex flex-wrap justify-end gap-1.5 lg:justify-start">
+            <a href={`tel:${entry.billing_phone}`} onClick={ev => ev.stopPropagation()}
+              className="inline-flex items-center gap-1 rounded-md border border-gray-200 bg-white px-2 py-0.5 text-[11px] font-medium text-gray-700 transition-colors hover:border-gray-300 hover:bg-gray-50">
+              <IconPhoneCall size={12} /> {("Call")}
+            </a>
+            <a href={`https://wa.me/${String(entry.billing_phone).replace(/[^\d]/g, "")}`} target="_blank" rel="noopener noreferrer" onClick={ev => ev.stopPropagation()}
+              className="inline-flex items-center gap-1 rounded-md border border-gray-200 bg-white px-2 py-0.5 text-[11px] font-medium text-gray-700 transition-colors hover:border-gray-300 hover:bg-gray-50">
+              <IconBrandWhatsapp size={12} /> {("WhatsApp")}
+            </a>
+          </div>
+        )}
       </td>
     );
   }
@@ -333,11 +430,14 @@ const Incomplete = () => {
 
             <div className="p-1.5">
               <div className="flex flex-col gap-0.5">
+                <div className={`${MENU_ITEM} !text-emerald-700 hover:!bg-emerald-50`} onClick={() => recover_orders([entry.id])}>
+                  <IconRestore size={16} /> {("Recover to Pending")}
+                </div>
                 <Link className={MENU_ITEM} href={`/dashboard/orders/${entry.id}`}>
                   <IconEyeShare size={16} /> Open order
                 </Link>
                 <div className={`${MENU_ITEM} !text-red-600 hover:!bg-red-50 hover:!text-red-700`} onClick={() => {
-                  if (confirm(`Delete order #${entry.id}? This cannot be undone.`)) {
+                  if (confirm(`Permanently delete incomplete order #${entry.id}? There is no trash for orders, so this cannot be undone.`)) {
                     delete_orders([entry.id]);
                   }
                 }}>
@@ -437,8 +537,13 @@ const Incomplete = () => {
           <h1 className="text-xl font-semibold text-gray-900">{("Incomplete Orders")}</h1>
           <p className="mt-0.5 text-xs text-gray-500">
             {ordersData?.total ?? 0} {activeFilterCount > 0 ? ("incomplete orders match the filters") : ("incomplete orders")}
+            {" · "}{("Checkouts where the customer gave their name, phone and address, then left without placing the order.")}
           </p>
         </div>
+
+        <button type="button" className={TOOLBAR_BUTTON} disabled={loading} onClick={fetchPosts}>
+          <IconRefresh size={16} className={loading ? "animate-spin" : ""} /> {("Refresh")}
+        </button>
       </div>
 
       <div className="flex flex-wrap justify-between gap-3">
@@ -517,18 +622,25 @@ const Incomplete = () => {
         </div>
 
         {selectedRows?.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-medium text-gray-500">{selectedRows.length} {("selected")}</span>
-
-            <div
-              className="inline-flex h-9 items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 text-sm font-semibold text-red-700 transition-colors hover:bg-red-100 cursor-pointer"
+          <div className="flex flex-wrap items-center gap-2 rounded-lg border border-[#634FE5]/30 bg-[#634FE5]/5 py-1 pl-3 pr-1">
+            <span className="text-sm font-medium text-gray-700">{selectedRows.length} {("selected")}</span>
+            <button type="button" className="!h-8 rounded-md !border-0 !bg-transparent px-2 text-sm !text-gray-500 !shadow-none hover:!bg-white hover:!text-gray-800" onClick={() => setselectedRows([])}>{("Clear")}</button>
+            <button type="button"
+              className="inline-flex !h-8 items-center gap-2 !rounded-lg !border-0 !bg-emerald-600 !px-3 !py-0 !text-sm !font-medium !text-white !shadow-sm transition-colors hover:!bg-emerald-700 cursor-pointer disabled:opacity-50"
+              disabled={loading}
+              onClick={() => recover_orders()}>
+              <IconRestore size={15} /> {("Recover")}
+            </button>
+            <button type="button"
+              className="inline-flex !h-8 items-center gap-2 !rounded-lg !border-0 !bg-red-600 !px-3 !py-0 !text-sm !font-medium !text-white !shadow-sm transition-colors hover:!bg-red-700 cursor-pointer disabled:opacity-50"
+              disabled={loading}
               onClick={() => {
-                if (confirm(`Delete ${selectedRows.length} selected order(s)? This cannot be undone.`)) {
+                if (confirm(`Permanently delete ${selectedRows.length} incomplete ${selectedRows.length === 1 ? "order" : "orders"}? There is no trash for orders, so this cannot be undone.`)) {
                   delete_orders()
                 }
               }}>
-              <IconTrash size={16} /> {("Delete")} ({selectedRows.length})
-            </div>
+              <IconTrash size={15} /> {("Delete")}
+            </button>
           </div>
         )}
       </div>
@@ -578,17 +690,25 @@ const Incomplete = () => {
       )}
 
 
-      <EntriesTable
-        queryPrams={queryPrams}
-        columns={columns}
-        entries={ordersData}
-        itemPath={""}
-        onChange={onChangeQueryPrams}
-        loading={loading}
-        selectedRows={selectedRows}
-        onSelectRows={onSelectRows}
-        onRefreshRequest={onRefreshRequest}
-      />
+      {ordersData && !loading && activeFilterCount === 0 && !queryPrams?.keyword && (ordersData?.total ?? 0) === 0 && (ordersData?.posts ?? []).length === 0 ? (
+        <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-gray-200 bg-white px-6 py-14 text-center">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 text-gray-400"><IconShoppingCartOff size={24} /></div>
+          <div className="text-sm font-semibold text-gray-800">{("No abandoned checkouts")}</div>
+          <p className="max-w-sm text-xs text-gray-500">{("When a customer fills in their name, phone and address at checkout but leaves without ordering, it shows up here so you can follow up.")}</p>
+        </div>
+      ) : (
+        <EntriesTable
+          queryPrams={queryPrams}
+          columns={columns}
+          entries={ordersData}
+          itemPath={""}
+          onChange={onChangeQueryPrams}
+          loading={loading}
+          selectedRows={selectedRows}
+          onSelectRows={onSelectRows}
+          onRefreshRequest={onRefreshRequest}
+        />
+      )}
 
 
       {sumData && ordersData?.posts?.length > 0 && (

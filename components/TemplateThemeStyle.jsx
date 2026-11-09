@@ -18,6 +18,8 @@ async function getTemplateSettings() {
 		const res = await fetch(`${serverUrl}wp-json/combo-store/v2/get_template_settings`, {
 			method: "GET",
 			next: { revalidate: 60, tags: ["template-settings"] },
+			/* Demo mode may run with no server: give up quickly instead of holding every page. */
+			...(process.env.NEXT_PUBLIC_DEMO_MODE === "true" ? { signal: AbortSignal.timeout(4000) } : {}),
 		});
 		if (!res.ok) return null;
 		return await res.json();

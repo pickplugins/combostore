@@ -62,6 +62,36 @@ export const useUtilsStore = create((set, get) => ({
     }
     return string;
   },
+
+  trackPageVisit: async (trackPrams) => {
+
+
+    try {
+      const response = await fetch(serverUrl + "wp-json/combo-store/v2/add_activity", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userid: trackPrams?.userid,
+          event: trackPrams?.event,
+          source: trackPrams?.source,
+          value: { productId: trackPrams?.productId },
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to track visit");
+      }
+
+
+
+      return await response.json();
+    } catch (error) {
+
+      return null;
+    }
+  },
   priceHtml: (entry) => {
 
     var price = entry?.price

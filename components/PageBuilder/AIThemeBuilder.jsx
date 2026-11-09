@@ -25,16 +25,28 @@ import {
 	repairJson,
 	describeReport,
 	countBlocks,
+	PRICES,
+	EMPTY_SPEND,
+	usageCost,
+	addSpend,
+	formatUsd,
+	formatTokens,
 } from './aiLayoutPrompt';
 
 import {
 	THEME_PAGES,
+	PAGE_BY_TYPE,
 	buildBriefPrompt,
 	parseBrief,
 	buildPagePrompt,
 	sanitizeThemeBlocks,
 	describeThemeReport,
 	assembleTemplate,
+	planPages,
+	copyArchivePage,
+	effortFor,
+	DESIGN_EFFORT,
+	PAGE_EFFORT,
 } from './aiThemePrompt';
 
 const fileToBase64 = (file) =>
@@ -87,9 +99,6 @@ const AIThemeBuilder = (props) => {
 	*/
 	const apiKey = settings?.apiKeys?.anthropic?.key;
 
-	console.log(settings);
-
-
 	const client = useMemo(
 		() => (apiKey ? new Anthropic({ apiKey, dangerouslyAllowBrowser: true }) : null),
 		[apiKey]
@@ -137,6 +146,16 @@ const AIThemeBuilder = (props) => {
 	const [pages, setPages] = useState({});        // type -> blocks[]
 	const [status, setStatus] = useState({});      // type -> 'pending' | 'running' | 'done' | 'failed' | 'skipped'
 	const [errors, setErrors] = useState({});      // type -> message
+	const [copiedFrom, setCopiedFrom] = useState({}); // type -> the page it was copied from, no call made
+	const [spend, setSpend] = useState(EMPTY_SPEND);  // this run, from the responses' own usage
+	/* The same total, readable from inside a run's async code without waiting
+	   for a re-render. */
+	const spendRef = useRef(EMPTY_SPEND);
+
+	const resetSpend = () => {
+		spendRef.current = EMPTY_SPEND;
+		setSpend(EMPTY_SPEND);
+	};
 	const [messages, setMessages] = useState([
 		{ role: 'assistant', text: 'Paste a site to take the design from, attach a screenshot, or both - then describe the shop. I read the design into a palette and type scale first, then build all 16 pages against it.' },
 	]);
@@ -147,7 +166,7 @@ const AIThemeBuilder = (props) => {
 	const [selected, setSelected] = useState(() =>
 		Object.fromEntries(THEME_PAGES.map(page => [page.type, true])));
 
-	/* A run is 17 API calls. Nothing here is free, so stopping has to actually
+	/* A run is up to 13 API calls. Nothing here is free, so stopping has to actually
 		 stop - every loop checks this between calls. */
 	const abortRef = useRef(false);
 
@@ -229,7 +248,7 @@ const AIThemeBuilder = (props) => {
 	/* One request. `withImage` decides whether the screenshot rides along - it
 		 is evidence for the header, footer and home page, and a distraction for
 		 the 404. */
-	const ask = async ({ userPrompt, withImage, expectArray }) => {
+	const ask = async ({ userPrompt, withImage, expectArray, effort }) => {
 		let content = userPrompt;
 
 		if (withImage && imageFile) {
@@ -247,12 +266,20 @@ const AIThemeBuilder = (props) => {
 		const stream = client.messages.stream({
 			model: MODEL,
 			max_tokens: MAX_TOKENS,
-			output_config: { effort: 'high' },
+			/* Was `high` on every call. See effortFor in aiThemePrompt. */
+			output_config: { effort },
 			system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral', ttl: '1h' } }],
 			messages: [{ role: 'user', content }],
 		});
 
 		const message = await stream.finalMessage();
+
+		/* Counted before anything can throw: a refused or unparseable reply was
+		   still billed. */
+		const cost = usageCost(message.usage);
+
+		spendRef.current = addSpend(spendRef.current, cost);
+		setSpend(spendRef.current);
 
 		if (message.stop_reason === 'refusal') throw new Error('The model declined this request.');
 
@@ -267,19 +294,22 @@ const AIThemeBuilder = (props) => {
 		return {
 			value: repairJson(extractJson(rawText, { expectArray })),
 			truncated: message.stop_reason === 'max_tokens',
+			cost,
 		};
 	};
 
-	/* One page, start to finish. Returns true on success so the caller can keep
-		 a count without reading state it has not re-rendered with yet. */
+	/* One page, start to finish. Returns the page's blocks on success - the
+		 archive copies are made from them - and null on failure, so the caller
+		 can keep a count without reading state it has not re-rendered with yet. */
 	const buildPage = async (page, briefValue) => {
 		setStatus(prev => ({ ...prev, [page.type]: 'running' }));
 
 		try {
-			const { value, truncated } = await ask({
+			const { value, truncated, cost } = await ask({
 				userPrompt: buildPagePrompt({ brief: briefValue, page, prompt }),
 				withImage: page.image,
 				expectArray: true,
+				effort: effortFor(page),
 			});
 
 			if (!Array.isArray(value)) throw new Error('Expected a JSON array of blocks');
@@ -322,20 +352,51 @@ const AIThemeBuilder = (props) => {
 				describeThemeReport(report),
 			].filter(Boolean).join(' - ');
 
-			say(`${page.title}: ${countBlocks(content)} blocks${notes ? ` - ${notes}` : ''}.`);
+			const meter = PRICES[MODEL]
+				? `${formatTokens(cost.output)} out, ${formatUsd(cost.usd)}`
+				: `${formatTokens(cost.output)} out`;
 
-			return true;
+			say(`${page.title}: ${countBlocks(content)} blocks (${meter})${notes ? ` - ${notes}` : ''}.`);
+
+			return content;
 		} catch (err) {
 			setStatus(prev => ({ ...prev, [page.type]: 'failed' }));
 			setErrors(prev => ({ ...prev, [page.type]: err?.message ?? String(err) }));
 			say(`${page.title} failed: ${err?.message ?? err}`);
 
-			return false;
+			return null;
 		}
 	};
 
+	/*
+		Build one page, then make its archive siblings from it locally. A copy
+		of a page that failed fails with it, and is retried with it.
+	*/
+	const buildWithCopies = async (page, briefValue, copiesOf) => {
+		const content = await buildPage(page, briefValue);
+		const copies = copiesOf[page.type] ?? [];
+
+		for (const copy of copies) {
+			if (content) {
+				setPages(prev => ({ ...prev, [copy.type]: copyArchivePage(content, page.type, copy.type) }));
+				setStatus(prev => ({ ...prev, [copy.type]: 'done' }));
+				setCopiedFrom(prev => ({ ...prev, [copy.type]: page.type }));
+				setErrors(prev => { const next = { ...prev }; delete next[copy.type]; return next; });
+			} else {
+				setStatus(prev => ({ ...prev, [copy.type]: 'failed' }));
+				setErrors(prev => ({ ...prev, [copy.type]: `Copied from ${page.title}, which failed` }));
+			}
+		}
+
+		if (content && copies.length) {
+			say(`${copies.map(copy => copy.title).join(' and ')}: same layout as ${page.title}, copied with no API call.`);
+		}
+
+		return content ? 1 + copies.length : 0;
+	};
+
 	/* Run a list of pages `CONCURRENCY` at a time, stopping on abort. */
-	const runPages = async (list, briefValue) => {
+	const runPages = async (list, briefValue, copiesOf) => {
 		let built = 0;
 		const queue = [...list];
 
@@ -344,11 +405,39 @@ const AIThemeBuilder = (props) => {
 				const page = queue.shift();
 
 				if (!page) return;
-				if (await buildPage(page, briefValue)) built += 1;
+				built += await buildWithCopies(page, briefValue, copiesOf);
 			}
 		};
 
 		await Promise.all(Array.from({ length: Math.min(CONCURRENCY, queue.length) }, worker));
+
+		return built;
+	};
+
+	/*
+		Run a plan, one effort level at a time. Within a level the first page
+		runs alone: it is the call that writes that level's cache entry, and
+		three calls started together would each miss it and each pay the write.
+		The home page leads the design level, as before.
+	*/
+	const runPlan = async (plan, briefValue) => {
+		const copiesOf = {};
+
+		plan.copies.forEach(({ page, from }) => { (copiesOf[from] ??= []).push(page); });
+
+		const design = plan.build.filter(page => effortFor(page) === DESIGN_EFFORT)
+			.sort((a, b) => (a.type === 'home' ? -1 : b.type === 'home' ? 1 : 0));
+		const rest = plan.build.filter(page => effortFor(page) !== DESIGN_EFFORT);
+
+		let built = 0;
+
+		for (const level of [design, rest]) {
+			if (!level.length || abortRef.current) continue;
+
+			built += await buildWithCopies(level[0], briefValue, copiesOf);
+
+			if (!abortRef.current) built += await runPages(level.slice(1), briefValue, copiesOf);
+		}
 
 		return built;
 	};
@@ -375,11 +464,15 @@ const AIThemeBuilder = (props) => {
 			return;
 		}
 
+		const plan = planPages(chosen);
+
 		abortRef.current = false;
 		setRunning(true);
 		setBrief(null);
 		setPages({});
 		setErrors({});
+		setCopiedFrom({});
+		resetSpend();
 		setStatus(Object.fromEntries(THEME_PAGES.map(page => [
 			page.type, selected[page.type] ? 'pending' : 'skipped',
 		])));
@@ -388,6 +481,18 @@ const AIThemeBuilder = (props) => {
 			role: 'user',
 			text: `${imageFile ? '[image] ' : ''}${source ? `[${source.finalUrl}] ` : ''}${prompt || 'Build a theme'} - ${chosen.length} pages`,
 		}]);
+
+		/* Totalled from the calls' own usage. Read from the ref: the `spend`
+		   this closure captured is the value from before the run started. */
+		const reportSpend = () => {
+			const current = spendRef.current;
+
+			if (!current.calls) return;
+
+			say(PRICES[MODEL]
+				? `This run: ${current.calls} calls, ${formatTokens(current.output)} output tokens, about ${formatUsd(current.usd)}.`
+				: `This run: ${current.calls} calls, ${formatTokens(current.output)} output tokens.`);
+		};
 
 		try {
 			/* Pass one: the design system, before any page exists. This is the
@@ -400,6 +505,7 @@ const AIThemeBuilder = (props) => {
 				userPrompt: buildBriefPrompt({ prompt, hasImage: Boolean(imageFile), source }),
 				withImage: true,
 				expectArray: false,
+				effort: DESIGN_EFFORT,
 			});
 
 			const briefValue = parseBrief(value);
@@ -409,17 +515,7 @@ const AIThemeBuilder = (props) => {
 
 			if (abortRef.current) { say('Stopped.'); return; }
 
-			/* Home first and alone: it is the page the screenshot is of, and its
-				 call is what warms the prompt cache for everything after it. */
-			let built = 0;
-			const home = chosen.find(page => page.type === 'home');
-			const rest = chosen.filter(page => page.type !== 'home');
-
-			if (home) {
-				if (await buildPage(home, briefValue)) built += 1;
-			}
-
-			if (!abortRef.current) built += await runPages(rest, briefValue);
+			const built = await runPlan(plan, briefValue);
 
 			if (abortRef.current) {
 				say(`Stopped after ${built} page${built === 1 ? '' : 's'}.`);
@@ -434,6 +530,7 @@ const AIThemeBuilder = (props) => {
 		} catch (err) {
 			say(`Error: ${err?.message ?? err}`);
 		} finally {
+			reportSpend();
 			setRunning(false);
 		}
 	};
@@ -446,14 +543,18 @@ const AIThemeBuilder = (props) => {
 
 		if (!failed.length) return;
 
+		/* A copy fails only when the page it copies failed, so planning over the
+		   failed pages rebuilds that page and copies from it again. */
+		const plan = planPages(failed);
+
 		abortRef.current = false;
 		setRunning(true);
-		say(`Retrying ${failed.length} page${failed.length === 1 ? '' : 's'}...`);
+		say(`Retrying ${failed.length} page${failed.length === 1 ? '' : 's'} with ${plan.build.length} call${plan.build.length === 1 ? '' : 's'}...`);
 
 		try {
-			const built = await runPages(failed, brief);
+			const built = await runPlan(plan, brief);
 
-			say(`Retry built ${built} of ${failed.length}.`);
+			say(`Retry built ${built} of ${failed.length}. Run total so far: ${PRICES[MODEL] ? formatUsd(spendRef.current.usd) : `${formatTokens(spendRef.current.output)} output tokens`}.`);
 		} finally {
 			setRunning(false);
 		}
@@ -463,6 +564,12 @@ const AIThemeBuilder = (props) => {
 		abortRef.current = true;
 		say('Stopping after the calls in flight finish...');
 	};
+
+	/* The plan for what is ticked now, for the call count and the "copy" tags. */
+	const currentPlan = planPages(THEME_PAGES.filter(page => selected[page.type]));
+	const plannedCalls = currentPlan.build.length + 1;
+	const plannedCopyCount = currentPlan.copies.length;
+	const plannedCopies = Object.fromEntries(currentPlan.copies.map(({ page, from }) => [page.type, from]));
 
 	const doneCount = THEME_PAGES.filter(page => status[page.type] === 'done').length;
 	const failedCount = THEME_PAGES.filter(page => status[page.type] === 'failed').length;
@@ -528,7 +635,10 @@ const AIThemeBuilder = (props) => {
 
 		if (!content?.length || !setBlocks) return;
 
-		setBlocks(content, { label: 'Load AI theme page', discrete: true });
+		/* Copies share a source page; loading one must not hand the canvas the
+		   same block objects another page holds. */
+
+		setBlocks(JSON.parse(JSON.stringify(content)), { label: 'Load AI theme page', discrete: true });
 		addNotification({
 			type: 'success',
 			title: 'Loaded onto the canvas',
@@ -706,12 +816,15 @@ const AIThemeBuilder = (props) => {
 					{THEME_PAGES.map((page) => {
 						const state = status[page.type];
 						const tone = STATUS[state]?.tone ?? 'text-gray-600 bg-white border-gray-200';
+						const copySource = copiedFrom[page.type] ?? plannedCopies[page.type];
 
 						return (
 							<div
 								key={page.type}
 								className={`flex items-center justify-between gap-2 rounded-md border px-2 py-1.5 text-[11px] ${tone}`}
-								title={errors[page.type] ?? page.title}
+								title={errors[page.type] ?? (copySource
+									? `Same layout as ${PAGE_BY_TYPE[copySource]?.title} - copied, no API call`
+									: page.title)}
 							>
 								<label className="flex min-w-0 cursor-pointer items-center gap-1.5">
 									<input
@@ -721,6 +834,9 @@ const AIThemeBuilder = (props) => {
 										onChange={(e) => setSelected(prev => ({ ...prev, [page.type]: e.target.checked }))}
 									/>
 									<span className="truncate">{page.title}</span>
+									{copySource && selected[page.type] && (
+										<span className="shrink-0 rounded bg-gray-100 px-1 text-[9px] font-medium uppercase tracking-wide text-gray-500">copy</span>
+									)}
 								</label>
 
 								<div className="flex shrink-0 items-center gap-1">
@@ -744,12 +860,23 @@ const AIThemeBuilder = (props) => {
 				</div>
 			</div>
 
-			{/* A run is one call per page plus the brief, all on Opus at high
-				  effort. That is worth knowing before clicking, not after. */}
+			{/* What a run will cost in calls, worth knowing before clicking. */}
 			<p className="-mt-1 text-[11px] text-gray-500">
-				{THEME_PAGES.filter(p => selected[p.type]).length + 1} API calls on {MODEL} - the design brief, then one per page.
-				The element catalog is cached after the first call, so the rest are charged the cached rate.
+				{plannedCalls} API calls on {MODEL} - the design brief, then one per page
+				{plannedCopyCount > 0 ? `; ${plannedCopyCount} archive page${plannedCopyCount === 1 ? '' : 's'} reuse${plannedCopyCount === 1 ? 's' : ''} another's layout and cost${plannedCopyCount === 1 ? 's' : ''} nothing` : ''}.
+				Header, footer and home run at {DESIGN_EFFORT} effort, the rest at {PAGE_EFFORT}.
 			</p>
+
+			{spend.calls > 0 && (
+				<div className="-mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 rounded-md border border-gray-200 bg-white px-2 py-1.5 text-[11px] text-gray-600">
+					<span className="font-semibold text-gray-900">{PRICES[MODEL] ? formatUsd(spend.usd) : '-'}</span>
+					<span>{spend.calls} call{spend.calls === 1 ? '' : 's'}</span>
+					<span>{formatTokens(spend.output)} output</span>
+					<span>{formatTokens(spend.cacheRead)} cached read</span>
+					{spend.cacheWrite > 0 && <span>{formatTokens(spend.cacheWrite)} cache write</span>}
+					{spend.input > 0 && <span>{formatTokens(spend.input)} uncached in</span>}
+				</div>
+			)}
 
 			{/* Actions */}
 			<div className="flex flex-wrap items-center gap-2">
