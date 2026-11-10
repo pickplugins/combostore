@@ -4,6 +4,7 @@ import { getPageTemplate } from "@/lib/getPageTemplate";
 import PageBuilderContent from "../../../components/PageBuilder/PageBuilderContent";
 import { PostProvider } from "@/components/PageBuilder/context/PostContext";
 import { trackFacebookEvent } from '@/lib/facebook/pixel';
+import { notFound } from 'next/navigation'
 
 import { generateFacebookEventId } from '@/lib/facebook/event-id';
 import { sendFacebookServerEvent } from '@/lib/facebook/capi';
@@ -59,12 +60,18 @@ export default async function page({ params }) {
 
   var productData = productResponse?.product;
 
-  console.log(productData);
+
+  const excludeInSearch = productData?.visibility?.some(item => item.slug === "exclude-from-search");
+  const excludeInShop = productData?.visibility?.some(item => item.slug === "exclude-from-catalog");
 
 
-  var product_template = productData?.product_template ?? JSON.parse(productData?.product_template);
+  if (excludeInShop) {
+    notFound()
+  }
 
-  var productTemplateId = product_template?.id ?? null
+  var productTemplate = productData?.product_template ?? JSON.parse(productData?.product_template);
+
+  var productTemplateId = productTemplate?.id ?? null
 
   var pageTemplate = [];
 
@@ -234,22 +241,29 @@ export default async function page({ params }) {
   return (
     <>
 
-      <PostProvider value={productData}>
-        {pageTemplate?.length > 0 && <PageBuilderContent blocks={pageTemplate} />}
 
-      </PostProvider>
 
-      <FacebookViewContent eventId={eventId} data={eventData} />
+      <>
+        <PostProvider value={productData}>
+          {pageTemplate?.length > 0 && <PageBuilderContent blocks={pageTemplate} />}
 
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
-      />
-      <style>
-        {pageTemplateData?.style}
-        {pageTemplateData?.header?.style}
-        {pageTemplateData?.footer?.style}
-      </style>
+        </PostProvider>
+
+        <FacebookViewContent eventId={eventId} data={eventData} />
+
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
+        />
+        <style>
+          {pageTemplateData?.style}
+          {pageTemplateData?.header?.style}
+          {pageTemplateData?.footer?.style}
+        </style>
+      </>
+
+
+
 
     </>
   );
