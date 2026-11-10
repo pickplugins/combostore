@@ -810,8 +810,6 @@ const ProductEdit = ({ id }) => {
               </div>
 
 
-              {JSON.stringify(storeUrl)}
-
 
               <Link target='_blank' className="inline-flex shrink-0 items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900" href={`${storeUrl}product/${currentObject?.slug}`}>
                 <IconExternalLink size={16} /> View

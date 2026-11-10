@@ -3,7 +3,7 @@
 import PropTypes from "prop-types";
 import React from "react";
 import { useState, useEffect, useMemo } from "react";
-import { IconHome, IconDeviceFloppy, IconPaintFilled, IconCopy, IconClipboard, IconSettings, IconAi, IconListDetails, IconDeviceDesktop, IconDeviceTablet, IconDeviceMobile, IconFileText, IconArrowBackUp, IconArrowForwardUp, IconHistory, IconCheck, IconLayoutBottombarInactive, IconLayoutNavbarInactive, IconLayoutNavbar, IconLayoutBottombar } from "@tabler/icons-react";
+import { IconHome, IconDeviceFloppy, IconPaintFilled, IconCopy, IconClipboard, IconSettings, IconAi, IconExternalLink, IconDeviceDesktop, IconDeviceTablet, IconDeviceMobile, IconFileText, IconArrowBackUp, IconArrowForwardUp, IconHistory, IconCheck, IconLayoutBottombarInactive, IconLayoutNavbarInactive, IconLayoutNavbar, IconLayoutBottombar } from "@tabler/icons-react";
 import { useDraggable } from '@dnd-kit/react';
 import { useCounterStore } from '../../store/useCounterStore';
 import Spinner from '../../components/Spinner';
@@ -23,6 +23,7 @@ import PopoverButton from '../../components/PopoverButton';
 // import CssClassPicker from "../CssClassPicker";
 // import CssSelectors from "../CssSelectors";
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
+const appUrl = process.env.NEXT_PUBLIC_APP_URL;
 
 
 /* Global CSS styles `button` with unlayered rules, so it beats Tailwind
@@ -704,7 +705,7 @@ const EditorActions = (props) => {
 
 
 
-
+	var previewLink = pageData?.isPage ? `${appUrl}${pageData?.slug}` : `${appUrl}?template_part=${pageData?.slug}`
 
 
 	/*
@@ -913,6 +914,13 @@ const EditorActions = (props) => {
 
 
 						</span>
+
+						<Link href={previewLink ?? '/'} target="_blank" rel="noopener noreferrer">
+
+							<IconExternalLink size={16} />
+
+						</Link>
+
 						{!pageData && (
 							<span className="hidden shrink-0 rounded-full bg-amber-400/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-300 sm:inline">
 								{("Not saved")}

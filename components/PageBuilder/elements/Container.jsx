@@ -5,6 +5,7 @@ import React from "react";
 import { IconPlus } from "@tabler/icons-react";
 import BlockPreview from '../BlockPreview';
 import { elementCssClasses } from "../ElementsDefinition";
+import { editorRelative } from '../editorPosition';
 
 const Container = (props) => {
 	const {
@@ -47,7 +48,7 @@ const Container = (props) => {
 		<div
 			draggable
 			id={id}
-			className={`  hover:outline-orange-200 hover:outline-solid hover:outline-1 relative   ${cls('*')} ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200 bg-orange-200' : ''}
+			className={`  hover:outline-orange-200 hover:outline-solid hover:outline-1 ${editorRelative(cls('*'))}   ${cls('*')} ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200 bg-orange-200' : ''}
 				${selectedId === id ? 'outline-1 outline-solid outline-orange-400 relative' : ''}
 			`}
 			onClick={(e) => {

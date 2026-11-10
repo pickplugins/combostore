@@ -154,6 +154,7 @@ const PanelsLeft = (props) => {
 						setSelectedId={setSelectedId}
 						setBlocks={setBlocks}
 						handleMoveBlock={handleMoveBlock}
+						onRevealBlock={props?.revealOnCanvas}
 					/>
 				</Tab>
 				<Tab index={2} id='assests'>

@@ -5,6 +5,7 @@ import React from "react";
 import { IconPackage } from "@tabler/icons-react";
 import { StatusBadge } from './accountUi';
 import { elementCssClasses } from "../ElementsDefinition";
+import { editorRelative } from '../editorPosition';
 
 /* Sample orders for the canvas: the builder never fetches a customer's real ones. */
 const sampleOrders = [
@@ -40,7 +41,7 @@ const CustomerOrders = (props) => {
 		<div
 			draggable
 			id={id}
-			className={` ${cls('*')}  hover:outline-orange-200 hover:outline-solid hover:outline-1 relative   ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200 bg-orange-200' : ''}
+			className={` ${cls('*')}  hover:outline-orange-200 hover:outline-solid hover:outline-1 ${editorRelative(cls('*'))}   ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200 bg-orange-200' : ''}
 				${selectedId === id ? 'outline-1 outline-solid outline-orange-400 relative' : ''}
 			`}
 			onClick={(e) => {

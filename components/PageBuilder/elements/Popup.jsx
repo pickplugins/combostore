@@ -5,6 +5,7 @@ import React from "react";
 import { useState } from "react";
 import { IconColumns, IconPlus } from "@tabler/icons-react";
 import BlockPreview from '../BlockPreview';
+import { editorRelative } from '../editorPosition';
 
 const Popup = (props) => {
 	const {
@@ -60,7 +61,7 @@ const Popup = (props) => {
 		<div
 			draggable
 			id={id}
-			className={`p-4 ${cssSelectors['*']?.classes ?? ''}    hover:outline-orange-200 hover:outline-solid hover:outline-1 relative   ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200 bg-orange-200' : ''}
+			className={`p-4 ${cssSelectors['*']?.classes ?? ''}    hover:outline-orange-200 hover:outline-solid hover:outline-1 ${editorRelative(cssSelectors['*']?.classes)}   ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200 bg-orange-200' : ''}
 				${selectedId === id ? 'outline-1 outline-solid outline-orange-400 relative' : ''}
 			`}
 			onClick={(e) => {

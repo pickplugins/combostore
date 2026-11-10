@@ -1,6 +1,6 @@
 import PropTypes from "prop-types";
 import React, { Children } from "react";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { IconHeading, IconColumns, IconSection, IconSquare, IconFidgetSpinner, IconTrash, IconStarFilled, IconStar, IconX, IconLayoutSidebarLeftCollapse, IconLayoutSidebarLeftExpand, IconLayoutSidebarRightCollapse, IconLayoutSidebarRightExpand } from "@tabler/icons-react";
 import { useCounterStore } from '../../store/useCounterStore';
 import PanelsLeft from './PanelsLeft';
@@ -92,6 +92,51 @@ const PageBuilder = (props) => {
 		it. Null until the frame has built one.
 	*/
 	const [canvasDoc, setCanvasDoc] = useState(null);
+
+	/* The canvas area's scroll container. The frame is as tall as its content
+		 (see CanvasFrame), so this is what scrolls the page, not the frame. */
+	const canvasScrollRef = useRef(null);
+
+	/*
+		Scroll a block into view on the canvas. Called by the layers tree when a
+		row is clicked there, not on every selection change, so clicking a block
+		on the canvas never moves the canvas under the pointer.
+
+		Blocks render with `id={block.id}`. A block that isn't on screen in the
+		canvas (an inactive tab, a closed accordion) has an empty box and is
+		left alone. Does nothing if the block is already fully visible.
+	*/
+	const revealOnCanvas = useCallback((id) => {
+		const scroller = canvasScrollRef.current;
+		const frame = canvasDoc?.defaultView?.frameElement;
+		if (!scroller || !frame || id == null) return;
+
+		/* A frame later, so the selection outline has rendered. */
+		requestAnimationFrame(() => {
+			const el = canvasDoc.getElementById(String(id));
+			if (!el) return;
+
+			const rect = el.getBoundingClientRect();
+			if (!rect.width && !rect.height) return;
+
+			const PAD = 24;
+			const view = scroller.getBoundingClientRect();
+			const frameTop = frame.getBoundingClientRect().top;
+			const top = frameTop + rect.top - view.top;
+			const bottom = top + rect.height;
+			const height = scroller.clientHeight;
+
+			if (top >= 0 && bottom <= height) return;
+
+			/* Line the top up when the block is above the view or too tall to
+				 fit; otherwise bring its bottom edge just into view. */
+			const delta = (top < 0 || rect.height > height - PAD * 2)
+				? top - PAD
+				: bottom - height + PAD;
+
+			scroller.scrollBy({ top: delta, behavior: 'smooth' });
+		});
+	}, [canvasDoc]);
 
 	const [loading, setloading] = useState(false);
 	/*
@@ -683,11 +728,11 @@ const PageBuilder = (props) => {
 				<aside
 					className={`scroll-thin shrink-0 overflow-y-auto overflow-x-hidden border-r border-gray-200 bg-white transition-[width] duration-200 ease-out ${leftOpen ? "w-[320px]" : "w-0 border-r-0"}`}>
 					<div className="w-[320px]">
-						<PanelsLeft handleMoveBlock={handleMoveBlock} selectedBlock={selectedBlock} selectedId={selectedId} setSelectedId={setSelectedId} elements={elements} blocks={blocks} setBlocks={setBlocks} pageData={pageData} setpageData={setpageData} handlePasteBlock={handlePasteBlock} onLoadPage={onLoadPage} />
+						<PanelsLeft handleMoveBlock={handleMoveBlock} selectedBlock={selectedBlock} selectedId={selectedId} setSelectedId={setSelectedId} elements={elements} blocks={blocks} setBlocks={setBlocks} pageData={pageData} setpageData={setpageData} handlePasteBlock={handlePasteBlock} onLoadPage={onLoadPage} revealOnCanvas={revealOnCanvas} />
 					</div>
 				</aside>
 
-				<div className="scroll-thin min-w-0 flex-1 overflow-auto bg-gray-100">
+				<div ref={canvasScrollRef} className="scroll-thin min-w-0 flex-1 overflow-auto bg-gray-100">
 
 					<ThemeProvider value={{ themeConfig: themeConfig }}>
 						<PageBuilderCanvas handleMoveBlock={handleMoveBlock} blocks={blocks} setBlocks={setBlocks} elements={elements} selectedId={selectedId} setSelectedId={setSelectedId} selectedBlock={selectedBlock} pageData={pageData} device={device} onDocument={setCanvasDoc} />

@@ -1,7 +1,7 @@
 import PropTypes from "prop-types";
 import React from "react";
 import { useState, useEffect } from "react";
-import { IconCircleCheck, IconFileDollar, IconSettings, IconCopy, IconTrash, IconBrowserPlus, IconStack, IconSparkles, IconPlus } from "@tabler/icons-react";
+import { IconCircleCheck, IconFileDollar, IconSettings, IconCopy, IconTrash, IconBrowserPlus, IconStack, IconSparkles, IconPlus, IconRefresh } from "@tabler/icons-react";
 import { useCounterStore } from '../../store/useCounterStore';
 import { useDraggable } from '@dnd-kit/react';
 import PopoverButton from '../../components/PopoverButton';
@@ -338,7 +338,7 @@ const Templates = (props) => {
 						console.log(res);
 						// return;
 
-						if (content == undefined ) {
+						if (content == undefined) {
 
 
 							addNotification({ type: 'error', title: 'Content not valid JSON', content: `Dummy content added, Existing content will replace.` })
@@ -645,7 +645,7 @@ const Templates = (props) => {
 
 	useEffect(() => {
 
-
+		console.log('useEffect called');
 
 		get_templates();
 		get_active_template()
@@ -730,6 +730,13 @@ const Templates = (props) => {
 
 
 
+							{!loading && (
+								<div className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-gray-200 bg-white p-1.5 text-xs font-medium text-gray-500 cursor-pointer transition-colors hover:border-gray-300 hover:bg-gray-100 hover:text-gray-900" onClick={() => {
+									get_templates();
+								}}>
+									<IconRefresh size={16} />
+								</div>
+							)}
 							{loading && (
 								<Spinner />
 							)}
