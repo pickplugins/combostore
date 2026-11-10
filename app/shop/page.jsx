@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import React from "react";
 import PageBuilderContent from "@/components/PageBuilder/PageBuilderContent";
-import { getPageTemplate } from "@/lib/getPageTemplate";
+import { getStyledPageTemplate as getPageTemplate } from "@/lib/pageStyles";
 
 import { generateFacebookEventId } from '@/lib/facebook/event-id';
 import { sendFacebookServerEvent } from '@/lib/facebook/capi';
@@ -74,9 +74,7 @@ export default async function page({ params, searchParams }) {
       {pageTemplate?.length > 0 && <PageBuilderContent blocks={pageTemplate} />}
       <FacebookViewContent eventId={eventId} data={eventData} />
       <style>
-        {pageTemplateData?.style}
-        {pageTemplateData?.header?.style}
-        {pageTemplateData?.footer?.style}
+        {[pageTemplateData?.style, pageTemplateData?.header?.style, pageTemplateData?.footer?.style].filter(Boolean).join("\n")}
       </style>
     </>
 

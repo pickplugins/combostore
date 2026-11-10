@@ -1,6 +1,6 @@
 import { templateMetadata, slugToName } from "@/lib/templateSeo";
 import { sendMetaEvent } from "@/lib/sendMetaEvent";
-import { getPageTemplate } from "@/lib/getPageTemplate";
+import { getStyledPageTemplate as getPageTemplate } from "@/lib/pageStyles";
 import PageBuilderContent from "../../../components/PageBuilder/PageBuilderContent";
 import { PostProvider } from "@/components/PageBuilder/context/PostContext";
 import { trackFacebookEvent } from '@/lib/facebook/pixel';
@@ -256,9 +256,7 @@ export default async function page({ params }) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
         />
         <style>
-          {pageTemplateData?.style}
-          {pageTemplateData?.header?.style}
-          {pageTemplateData?.footer?.style}
+          {[pageTemplateData?.style, pageTemplateData?.header?.style, pageTemplateData?.footer?.style].filter(Boolean).join("\n")}
         </style>
       </>
 

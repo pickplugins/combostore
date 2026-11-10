@@ -3,7 +3,7 @@ import { templateMetadata, slugToName } from "@/lib/templateSeo";
 import Link from "next/link";
 import Image from "next/image";
 import React from "react";
-import { getPageTemplate } from "@/lib/getPageTemplate";
+import { getStyledPageTemplate as getPageTemplate } from "@/lib/pageStyles";
 import PageBuilderContent from "@/components/PageBuilder/PageBuilderContent";
 import { PageProvider } from "@/components/PageBuilder/context/PageContext";
 
@@ -92,9 +92,7 @@ export default async function page({ params }) {
       </PageProvider>
       <FacebookViewContent eventId={eventId} data={eventData} />
       <style>
-        {pageTemplateData?.style}
-        {pageTemplateData?.header?.style}
-        {pageTemplateData?.footer?.style}
+        {[pageTemplateData?.style, pageTemplateData?.header?.style, pageTemplateData?.footer?.style].filter(Boolean).join("\n")}
       </style>
     </>
 

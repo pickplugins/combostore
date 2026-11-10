@@ -3,7 +3,7 @@
 import React from "react";
 import PageBuilderContent from "../components/PageBuilder/PageBuilderContent";
 
-import { getPageTemplate } from "../lib/getPageTemplate";
+import { getStyledPageTemplate as getPageTemplate } from "../lib/pageStyles";
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 const appUrl = process.env.NEXT_PUBLIC_STORE_URL;
 
@@ -36,9 +36,7 @@ export default async function NotFound() {
 
 
       <style>
-        {pageTemplateData?.style}
-        {pageTemplateData?.header?.style}
-        {pageTemplateData?.footer?.style}
+        {[pageTemplateData?.style, pageTemplateData?.header?.style, pageTemplateData?.footer?.style].filter(Boolean).join("\n")}
       </style>
 
     </>

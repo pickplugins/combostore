@@ -1,5 +1,6 @@
 "use client"
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { IconPlus, IconX } from "@tabler/icons-react";
 import BlockRender from "../BlockRender";
 import "animate.css";
@@ -88,9 +89,27 @@ const PopoverButton = (props) => {
 		}
 	};
 
+	/*
+		The fixed positions (side drawers, centred modal) render into <body>.
+		`position: fixed` is relative to the viewport only while no ancestor has
+		a transform, filter or backdrop-filter; a sticky header with
+		`backdrop-blur` - WonderJoy's, and most glassy headers - becomes the
+		frame instead, so `top-0 h-full` meant the header's height and the
+		mobile menu opened as a 138px strip with its search cut off. The
+		dropdown positions stay where they are, since they are meant to hang
+		off the button. Same fix as the cart drawer (CartView.jsx).
+	*/
+	const isFixed = position === "fixedLeft" || position === "fixedRight" || position === "fixedMiddle";
+	const rootRef = useRef(null);
+	const [portalTarget, setPortalTarget] = useState(null);
+	useEffect(() => {
+		setPortalTarget(rootRef.current?.ownerDocument?.body ?? null);
+	}, []);
+	const place = (node) => (isFixed && portalTarget ? createPortal(node, portalTarget) : node);
+
 	return (
 		<div
-
+			ref={rootRef}
 			id={id}
 			type={type}
 			className={`${cls('*') || ""} relative`}
@@ -115,7 +134,7 @@ const PopoverButton = (props) => {
 			</div>
 
 			{/* Popover */}
-			{isOpen && (
+			{isOpen && place(
 				<div
 					className={`
                         ${cls('popover') || ""}

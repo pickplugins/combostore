@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import React from "react";
 import PageBuilderContent from "../../components/PageBuilder/PageBuilderContent";
-import { getPageTemplate } from "../../lib/getPageTemplate";
+import { getStyledPageTemplate as getPageTemplate } from "../../lib/pageStyles";
 
 
 import { IconArrowNarrowRightDashed, IconArrowNarrowLeftDashed, IconCopy, IconBrandOpenai, IconX, IconBookmark, IconHeart, IconHeartFilled, IconChevronDown, IconChevronUp, IconDownload, IconThumbUp, IconThumbDown, IconTags, IconLink, IconEyeSearch, IconHeartPlus, IconTrash, IconStackPop } from "@tabler/icons-react";
@@ -51,9 +51,7 @@ export default async function page({ params, searchParams }) {
 			<PageBuilderContent blocks={pageTemplate} />
 
 			<style>
-				{pageTemplateData?.style}
-				{pageTemplateData?.header?.style}
-				{pageTemplateData?.footer?.style}
+				{[pageTemplateData?.style, pageTemplateData?.header?.style, pageTemplateData?.footer?.style].filter(Boolean).join("\n")}
 			</style>
 		</>
 

@@ -3,7 +3,7 @@
 import { notFound } from 'next/navigation'
 import BlockRender from '../../components/PageBuilder/BlockRender';
 import PageBuilderContent from "../../components/PageBuilder/PageBuilderContent";
-import { getPageTemplate } from "@/lib/getPageTemplate";
+import { getStyledPageTemplate as getPageTemplate, styleFor } from "@/lib/pageStyles";
 
 export const dynamic = 'force-dynamic'
 
@@ -185,8 +185,12 @@ export default async function DynamicPage({ params }) {
 
 			<PageBuilderContent blocks={blocks} />
 
+			{/* The sheet for whichever blocks were rendered above: the template's
+				  (one sheet for content, header and footer, see lib/pageStyles.js)
+				  or the page's own. It used to write the page's sheet even when
+				  the template's blocks were the ones on screen. */}
 			<style>
-				{page?.style}
+				{pageTemplatecontent ? pageTemplateData?.style : await styleFor(page)}
 			</style>
 		</>
 	)

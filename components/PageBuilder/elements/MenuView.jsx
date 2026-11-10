@@ -5,8 +5,17 @@ import BlockRender from '../BlockRender';
 import { MenuProvider } from "../context/MenuContext";
 import { elementCssClasses, withElementCssDefaults } from "../ElementsDefinition";
 
-/* The screen widths a menu can be shown from, as the classes that do it (written out, so Tailwind generates them). */
-const showFromClasses = { all: '', md: 'hidden md:block', lg: 'hidden lg:block', xl: 'hidden xl:block' };
+/* The screen widths a menu can be shown from, as the classes that do it (written out, so Tailwind generates them).
+
+   `max-lg:hidden`, not `hidden lg:block`: the pair only works while
+   `lg:block` comes after `.hidden` in the CSS. A page's compiled sheet (the
+   builder injects it into the canvas after Tailwind's own; the storefront
+   adds one for classes the build lacks) can carry a later `.hidden` from the
+   page's classes but never this component's `lg:block`, and then the
+   desktop nav was hidden at every width. A max- variant hides below the
+   width and leaves the display alone above it, so there is no pair to
+   reorder. */
+const showFromClasses = { all: '', md: 'max-md:hidden', lg: 'max-lg:hidden', xl: 'max-xl:hidden' };
 
 /*
 	When the menu shows: options.showFrom 'all', 'md', 'lg' or 'xl' (screens

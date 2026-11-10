@@ -373,7 +373,15 @@ const QuickSearchView = (props) => {
 		>
 
 
-			<div className={`flex gap-2  items-center`} onClick={ev => {
+			{/* The wrapper and input take the block's own `input-wrapper` and
+			   `input-search` classes, as the builder's QuickSearch does. They used
+			   to be hard-coded here (`w-full lg:w-max px-3` on the input), so a
+			   template that styled them - WonderJoy's pill search - looked right
+			   in the builder and on the storefront got an input shrunk to its
+			   placeholder with the icon stranded mid-pill. The defaults in
+			   ElementsDefinition carry the old classes, so blocks that set
+			   neither look as before. */}
+			<div className={cls('input-wrapper')} onClick={ev => {
 				if (onTriggerOpen) {
 					onTriggerOpen(isOpen, prams)
 				}
@@ -391,7 +399,7 @@ const QuickSearchView = (props) => {
 					setpromptsData({ ...promptsData, posts: [], total: 0, })
 
 
-				}} type="text" className={`${cls('input-search')}  w-full lg:w-max  px-3`} placeholder={placeholder} />
+				}} type="text" className={cls('input-search')} placeholder={placeholder} />
 
 
 				{!loading && (

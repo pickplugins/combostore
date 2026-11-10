@@ -7,7 +7,7 @@ import React from "react";
 import { useCounterStore } from '@/store/useCounterStore'
 // import { useUtilsStore } from "@/store/useUtilsStore";
 // import { useAuthStore } from "@/store/authStore";
-import { getPageTemplate } from "@/lib/getPageTemplate";
+import { getStyledPageTemplate as getPageTemplate } from "@/lib/pageStyles";
 import PageBuilderContent from "../../components/PageBuilder/PageBuilderContent";
 import { PageProvider } from "../../components/PageBuilder/context/PageContext";
 
@@ -70,9 +70,7 @@ export default async function page({ params }) {
       </PageProvider>
 
       <style>
-        {pageTemplateData?.style}
-        {pageTemplateData?.header?.style}
-        {pageTemplateData?.footer?.style}
+        {[pageTemplateData?.style, pageTemplateData?.header?.style, pageTemplateData?.footer?.style].filter(Boolean).join("\n")}
       </style>
 
     </>

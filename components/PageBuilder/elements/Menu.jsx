@@ -2,14 +2,24 @@
 import React from "react";
 import { IconPlus } from "@tabler/icons-react";
 import BlockPreview from '../BlockPreview';
-import { MenuMarkup } from "./MenuView";
+import { MenuMarkup, menuVisibilityClasses } from "./MenuView";
 import { elementCssClasses } from "../ElementsDefinition";
+
+/* True when `targetId` is one of these blocks or anywhere below them. */
+const containsId = (blocks, targetId) =>
+	(blocks || []).some((b) => b?.id === targetId || containsId(b?.children, targetId));
 
 /*
 	Builder (canvas) preview of the menu: MenuView's own markup, classes and
-	context. It is always shown here, whatever its "Show from" width, so it
-	can be edited on any canvas size; an empty menu is a drop zone for menu
-	items (outside the list, which may only hold <li>s).
+	context; an empty menu is a drop zone for menu items (outside the list,
+	which may only hold <li>s).
+
+	It hides below its "Show from" width as on the storefront. It used to be
+	always shown so it could be edited on any canvas size, but then the mobile
+	canvas showed a header that never exists: the desktop nav overflowing the
+	row and pushing the mobile menu button off the edge. While the menu or
+	one of its items is selected (canvas or Layers) it shows regardless, so
+	it can still be edited on a narrow canvas.
 */
 const Menu = (props) => {
 
@@ -54,7 +64,8 @@ const Menu = (props) => {
 	}
 
 	return (
-		<MenuMarkup cls={cls} id={id} index={index} type={props?.type} options={props?.options} cssSelectors={props?.cssSelectors} rootClassName={rootClassName} rootProps={rootProps}>
+		<MenuMarkup cls={cls} id={id} index={index} type={props?.type} options={props?.options} cssSelectors={props?.cssSelectors} rootClassName={rootClassName} rootProps={rootProps}
+			visibility={selectedId != null && (selectedId === id || containsId(children, selectedId)) ? '' : menuVisibilityClasses(props?.options, props?.cssSelectors?.['*']?.classes)}>
 			{children.map((child, idx) => (
 				<BlockPreview key={child.id ?? idx} index={`${index}-${idx}`} block={child} draggingBlock={draggingBlock} dragOverIndex={dragOverIndex} setDragOverIndex={setDragOverIndex} setDraggingBlock={setDraggingBlock} setSelectedId={setSelectedId} selectedId={selectedId} handleMoveBlock={handleMoveBlock} />
 			))}

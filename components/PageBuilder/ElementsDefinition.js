@@ -2000,7 +2000,7 @@ const elements = [
 		cssSelectors: {
 			/* The results panel: these were hardcoded in QuickSearchView with these same classes. */
 			'filters': { classes: 'flex flex-wrap items-center gap-2 border-b border-gray-100 p-3' },
-			'filter-select': { classes: 'min-w-0 flex-1 rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-sm text-gray-700 focus:border-[#1b0e9f] focus:outline-none focus:ring-2 focus:ring-[#1b0e9f]/15' },
+			'filter-select': { classes: 'min-w-[8rem] flex-1 rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-sm text-gray-700 focus:border-[#1b0e9f] focus:outline-none focus:ring-2 focus:ring-[#1b0e9f]/15' },
 			'clear-filters': { classes: 'inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-sm font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900' },
 			'results': { classes: 'min-h-0 flex-1 overflow-y-auto p-2' },
 			'loading': { classes: 'flex items-center justify-center gap-2 py-8 text-sm text-gray-500' },

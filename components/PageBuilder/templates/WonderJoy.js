@@ -470,13 +470,13 @@ var template = [
                             "classes": "flex items-center gap-2"
                           },
                           "input-search": {
-                            "classes": "w-full bg-transparent py-1 text-sm text-[#1D1E2C] placeholder:text-gray-400 focus:outline-none"
+                            "classes": "w-full min-w-0 flex-1 bg-transparent px-3 py-1 text-sm text-[#1D1E2C] placeholder:text-gray-400 focus:outline-none focus-visible:!outline-none"
                           },
                           "icon": {
                             "classes": "flex items-center text-[#5C5E78]"
                           },
                           "filter-select": {
-                            "classes": "min-w-0 flex-1 rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-sm text-gray-700 focus:border-[#FF6B6B] focus:outline-none focus:ring-2 focus:ring-[#FF6B6B]/15"
+                            "classes": "min-w-[8rem] flex-1 rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-sm text-gray-700 focus:border-[#FF6B6B] focus:outline-none focus:ring-2 focus:ring-[#FF6B6B]/15"
                           },
                           "result-title": {
                             "classes": "line-clamp-2 text-sm font-medium text-gray-900 hover:text-[#FF6B6B]"
@@ -701,13 +701,13 @@ var template = [
                                     "classes": "flex items-center gap-2"
                                   },
                                   "input-search": {
-                                    "classes": "w-full bg-transparent py-1 text-sm text-[#1D1E2C] placeholder:text-gray-400 focus:outline-none"
+                                    "classes": "w-full min-w-0 flex-1 bg-transparent px-3 py-1 text-sm text-[#1D1E2C] placeholder:text-gray-400 focus:outline-none focus-visible:!outline-none"
                                   },
                                   "icon": {
                                     "classes": "flex items-center text-[#5C5E78]"
                                   },
                                   "filter-select": {
-                                    "classes": "min-w-0 flex-1 rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-sm text-gray-700 focus:border-[#FF6B6B] focus:outline-none focus:ring-2 focus:ring-[#FF6B6B]/15"
+                                    "classes": "min-w-[8rem] flex-1 rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-sm text-gray-700 focus:border-[#FF6B6B] focus:outline-none focus:ring-2 focus:ring-[#FF6B6B]/15"
                                   },
                                   "result-title": {
                                     "classes": "line-clamp-2 text-sm font-medium text-gray-900 hover:text-[#FF6B6B]"

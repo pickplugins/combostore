@@ -1,6 +1,7 @@
 import PropTypes from "prop-types";
 import React from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { IconPlus, IconX } from "@tabler/icons-react";
 import BlockPreview from '../BlockPreview';
 import 'animate.css';
@@ -84,12 +85,28 @@ const PopoverButton = (props) => {
 	if (position == 'fixedMiddle') {
 		var positionClass = "mx-auto sm:w-3/4 md:w-2/4 fixed inset-x-0 top-10";
 	}
+	/* No width here: the storefront (PopoverButtonView) adds none, so a
+	   drawer is as wide as its `popover` classes say in both places. The
+	   `w-64` that was here made the canvas drawer narrower than the shop's
+	   (WonderJoy sets w-80) whenever it won the class order. */
 	if (position == 'fixedLeft') {
-		var positionClass = " fixed w-64 top-0 left-0";
+		var positionClass = "fixed top-0 left-0";
 	}
 	if (position == 'fixedRight') {
-		var positionClass = " fixed w-64 top-0 right-0";
+		var positionClass = "fixed top-0 right-0";
 	}
+
+	/* Fixed panels render into the canvas <body>, as on the storefront:
+	   inside a header with backdrop-blur (or any transform / filter) a fixed
+	   panel is positioned against the header, so `h-full` meant the header's
+	   height. See PopoverButtonView.jsx. */
+	var isFixed = position == 'fixedLeft' || position == 'fixedRight' || position == 'fixedMiddle';
+	const rootRef = useRef(null);
+	const [portalTarget, setPortalTarget] = useState(null);
+	useEffect(() => {
+		setPortalTarget(rootRef.current?.ownerDocument?.body ?? null);
+	}, []);
+	const place = (node) => (isFixed && portalTarget ? createPortal(node, portalTarget) : node);
 
 
 
@@ -113,7 +130,7 @@ const PopoverButton = (props) => {
 	};
 
 
-	return <div draggable id={id} type={type} className={`${cls('*')}  relative hover:outline-orange-200 hover:outline-solid hover:outline-1 ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200' : ''} ${selectedId == id ? 'outline-1 outline-solid outline-orange-400' : ''} `}
+	return <div ref={rootRef} draggable id={id} type={type} className={`${cls('*')}  relative hover:outline-orange-200 hover:outline-solid hover:outline-1 ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200' : ''} ${selectedId == id ? 'outline-1 outline-solid outline-orange-400' : ''} `}
 		onClick={e => {
 			e.stopPropagation();
 
@@ -149,7 +166,7 @@ const PopoverButton = (props) => {
 
 		</div>
 
-		{isOpen && (
+		{isOpen && place(
 			<div className={`${cls('popover')}  ${positionClass} animate__animated ${animate ? " animate__fadeOutLeft" : "animate__fadeInLeft"}`}>
 
 				<div className={`${cls('popover-close')} `} onClick={ev => {

@@ -120,6 +120,7 @@ function injectGeneratedCss(css, doc) {
 }
 
 
+
 /* How long class edits are left to settle before compiling. Picking a class
 	 from the dropdown is one edit, but typing in the class textarea is one per
 	 keystroke, and every compile is a round trip to the Node-only compiler. */
@@ -375,8 +376,26 @@ const EditorActions = (props) => {
 	/* True only for the length of a compile the user did not ask for - the one
 		 that follows a class change. Save has its own spinner. */
 	const [cssCompiling, setcssCompiling] = useState(false);
+	const [previewLink, setpreviewLink] = useState(appUrl);
 
 
+
+
+	useEffect(() => {
+
+		var previewLinkX = appUrl
+
+		if (pageData?.type == 'home') {
+			previewLinkX = appUrl
+		}
+
+		if (pageData?.type == 'product') {
+			previewLinkX = appUrl + `/product/${pageData?.slug}`
+		}
+
+		setpreviewLink(previewLinkX);
+
+	}, [pageData?.style, canvasDoc]);
 
 	/* What the stylesheet depends on: the set of classes anywhere in the tree.
 		 Editing text, dragging a block and renaming a selector each mint a new
@@ -403,6 +422,7 @@ const EditorActions = (props) => {
 
 
 	}, [pageData?.style, canvasDoc]);
+
 
 
 	/**
@@ -705,7 +725,6 @@ const EditorActions = (props) => {
 
 
 
-	var previewLink = pageData?.isPage ? `${appUrl}${pageData?.slug}` : `${appUrl}?template_part=${pageData?.slug}`
 
 
 	/*

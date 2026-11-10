@@ -6,7 +6,7 @@ import Image from "next/image";
 
 import { PostProvider } from "@/components/PageBuilder/context/PostContext";
 
-import { getPageTemplate } from "@/lib/getPageTemplate";
+import { getStyledPageTemplate as getPageTemplate } from "@/lib/pageStyles";
 import PageBuilderContent from "@/components/PageBuilder/PageBuilderContent";
 
 
@@ -97,9 +97,7 @@ export default async function page({ params }) {
       <FacebookViewContent eventId={eventId} data={eventData} />
 
       <style>
-        {pageTemplateData?.style}
-        {pageTemplateData?.header?.style}
-        {pageTemplateData?.footer?.style}
+        {[pageTemplateData?.style, pageTemplateData?.header?.style, pageTemplateData?.footer?.style].filter(Boolean).join("\n")}
       </style>
 
     </>
