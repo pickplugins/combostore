@@ -1,5 +1,5 @@
 "use client"
-import { useMemo } from "react";
+import { useMemo, useRef, useEffect } from "react";
 import { Splide } from '@splidejs/react-splide';
 import '@splidejs/react-splide/css';
 import BlockRender from '../BlockRender';
@@ -63,9 +63,45 @@ export function usePostSliderContextValue(cssSelectors, query) {
 	one slide per post - are rendered by the caller.
 */
 export function PostSliderMarkup({ cls, id, index, type, splideOptions, children, rootClassName = '', rootProps = {} }) {
+	const splideRef = useRef(null);
+	const rootRef = useRef(null);
+
+	/*
+		Refresh Splide whenever its slides change. The slides come from the
+		child loop, which fetches its posts / terms after Splide has mounted
+		and re-renders only itself. react-splide re-reads its slides only when
+		<Splide> itself re-renders, so on the storefront it never did: it
+		stayed mounted on an empty list, the slides got no width, and each
+		showed at its image's natural size - a product card the width of the
+		row. The builder canvas re-renders on every selection, which is why
+		the same slider looked right there.
+	*/
+	useEffect(() => {
+		const list = rootRef.current?.querySelector('.splide__list');
+		if (!list || typeof MutationObserver === 'undefined') return;
+		let frame = 0;
+		/* Only a change in the number of real slides counts. A refresh
+		   re-adds Splide's own clones (loop type) and may move slides, and
+		   reacting to that would refresh forever. */
+		const realSlides = () => [...list.children].filter((n) => !n.classList.contains('splide__slide--clone')).length;
+		let count = realSlides();
+		const observer = new MutationObserver(() => {
+			const next = realSlides();
+			if (next === count) return;
+			count = next;
+			cancelAnimationFrame(frame);
+			frame = requestAnimationFrame(() => splideRef.current?.splide?.refresh());
+		});
+		observer.observe(list, { childList: true });
+		return () => {
+			cancelAnimationFrame(frame);
+			observer.disconnect();
+		};
+	}, []);
+
 	return (
-		<div id={id} index={index} type={type} className={`${cls('*')} ${rootClassName}`} {...rootProps}>
-			<Splide aria-label="" options={splideOptions}>
+		<div ref={rootRef} id={id} index={index} type={type} className={`${cls('*')} ${rootClassName}`} {...rootProps}>
+			<Splide ref={splideRef} aria-label="" options={splideOptions}>
 				{children}
 			</Splide>
 		</div>
