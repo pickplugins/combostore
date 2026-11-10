@@ -1,5 +1,6 @@
 "use client"
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext, useRef } from "react";
+import { createPortal } from "react-dom";
 import { IconTrash, IconBasketCheck, IconX, IconShoppingCart, IconMinus, IconPlus, IconArrowLeft, IconArrowRight, IconTicket, IconShoppingBag, IconTruckDelivery } from "@tabler/icons-react";
 import Image from "next/image";
 import crypto from "crypto";
@@ -392,8 +393,30 @@ export function CartMarkup(props) {
 
 	var items = cartItems ?? [];
 
+	/*
+		The backdrop and drawer render into <body> rather than in place.
+
+		They are `fixed`, and a fixed box is placed against the viewport only
+		while no ancestor has a transform, filter or backdrop-filter. Carts sit
+		in headers, and sticky headers commonly carry `backdrop-blur`: that
+		made the header the drawer's containing block, so `top-0 h-full` meant
+		the header's 80px, not the screen. The body is taken from the cart's
+		own document, so in the builder the drawer lands in the canvas frame
+		and not in the editor around it.
+	*/
+	const rootRef = useRef(null);
+	const [portalTarget, setPortalTarget] = useState(null);
+
+	useEffect(() => {
+		setPortalTarget(rootRef.current?.ownerDocument?.body ?? null);
+	}, []);
+
+	/* Until mounted (and on the server) there is no body to portal into; the
+		 drawer is closed then anyway. */
+	const toBody = (node) => (portalTarget ? createPortal(node, portalTarget) : node);
+
 	return (
-		<div id={id} type={type} className={cls('*')}>
+		<div ref={rootRef} id={id} type={type} className={cls('*')}>
 
 			{iconTrigger && (
 				<button type="button" aria-label="Cart" className={cls('trigger-icon')} onClick={onToggle}>
@@ -411,7 +434,7 @@ export function CartMarkup(props) {
 				</button>
 			)}
 
-			{cartOpen && (
+			{cartOpen && toBody(
 				<>
 					{/* Backdrop: dims the page and closes the drawer on click. */}
 					<div className={`${cls('backdrop')} animate__animated animate__fadeIn animate__faster`} onClick={onClose} aria-hidden="true" />

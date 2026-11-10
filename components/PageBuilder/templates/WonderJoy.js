@@ -40,16 +40,20 @@
  *     quickSearch. The wishlist button is dropped: there is no wishlist block.
  *   - Categories come from the shop (termsGrid, product_cat by count) rather
  *     than six hard-coded tiles.
- *   - The 3-step quiz is a "Toy Finder" of links: an age row and an interest
- *     row, each going to a category. The budget step and the computed match
- *     are dropped; no block can do them.
  *   - The newsletter form is a "Claim 15% Discount" button to /register; no
  *     block submits a form.
- *   - The hero and STEM illustrations (inline SVG in the HTML) are
- *     public/templates/wonderjoy-hero.svg and wonderjoy-gears.svg.
+ *   - The hero illustration (inline SVG in the HTML) is
+ *     public/templates/wonderjoy-hero.svg.
  *   - The coral word in the hero headline and its squiggle are gone: a heading
  *     renders plain text. The floating cards no longer bob (no keyframes).
- *   - The duplicated <li> in the monthly plan's list is fixed.
+ *   - The HTML's toy finder quiz, STEM spotlight, monthly play-kit plans and
+ *     Instagram gallery are not on the home page. In their place, after the
+ *     bestsellers, are marketplace-style product rows, one per category
+ *     (stem-science, eco-wooden, arts-crafts, outdoor-sports, plush-pretend):
+ *     a header with a "View all" link and a product slider (postSlider, up to
+ *     ten products from that category; 4 per view on desktop, 3 tablet, 2 phone).
+ *     The STEM row keeps the #stem-learning anchor the "Eco & STEM" menu link
+ *     uses; "Play Kits" links go to /categories/play-kits.
  *
  * FILL IN BEFORE GOING LIVE
  *
@@ -58,14 +62,16 @@
  *     plush-pretend, play-kits; and the tag trending.
  *   - Contact details (phone, hello@example.com), social URLs, and the
  *     "Shipping & Delivery" / "Returns & Refunds" links (#).
- *   - Promises and plan prices are the HTML's copy: check they match how the
- *     shop actually ships, returns and bills.
+ *   - The six parent reviews in the home page slider are sample copy: replace
+ *     them with real ones.
+ *   - Promises are the HTML's copy: check they match how the shop actually
+ *     ships and returns.
  */
 
 var template = [
   {
     "name": "WonderJoy Toys",
-    "description": "Playful kids-toy store in coral, teal and butter: a gradient promo bar, a hero with floating badges, shop-by-age cards, live categories and bestsellers, a toy finder, a STEM spotlight, play-kit plans, parent reviews and a newsletter footer. All 16 pages.",
+    "description": "Playful kids-toy store in coral, teal and butter: a gradient promo bar, a hero with floating badges, shop-by-age cards, live categories and bestsellers, marketplace-style product rows by category, parent reviews and a newsletter footer. All 16 pages.",
     "thumbnail": "/templates/wonderjoy.svg",
     "meta": {
       "fonts": [
@@ -423,7 +429,7 @@ var template = [
                             "type": "menuItem",
                             "options": {
                               "label": "Play Kits",
-                              "url": "/#subscription",
+                              "url": "/categories/play-kits",
                               "icon": "IconGift",
                               "iconSize": 16
                             },
@@ -854,7 +860,7 @@ var template = [
                                     "type": "menuItem",
                                     "options": {
                                       "label": "Play Kits",
-                                      "url": "/#subscription",
+                                      "url": "/categories/play-kits",
                                       "icon": "IconGift",
                                       "iconSize": 16
                                     },
@@ -1263,9 +1269,9 @@ var template = [
                                   "slug": "/brands"
                                 },
                                 {
-                                  "text": "WonderBox Play Kits",
+                                  "text": "Play Kits",
                                   "icon": "",
-                                  "slug": "/#subscription"
+                                  "slug": "/categories/play-kits"
                                 }
                               ]
                             },
@@ -1741,12 +1747,12 @@ var template = [
                                 "id": "wj-hero-btn-2",
                                 "type": "button",
                                 "options": {
-                                  "text": "Take the Toy Finder",
+                                  "text": "Shop by Category",
                                   "linkTo": "custom",
                                   "scheme": "",
-                                  "url": "/#toy-wizard",
+                                  "url": "/#categories",
                                   "target": "",
-                                  "icon": "IconWand",
+                                  "icon": "IconLayoutGrid",
                                   "iconSize": 18
                                 },
                                 "cssSelectors": {
@@ -2667,33 +2673,71 @@ var template = [
                     ]
                   },
                   {
-                    "id": "wj-cats-grid",
-                    "type": "termsGrid",
+                    "id": "wj-cats-slider",
+                    "type": "termsSlider",
                     "options": {
                       "queryPrams": {
                         "taxonomy": "product_cat",
-                        "number": "6",
-                        "per_page": "6",
+                        "number": "12",
+                        "per_page": "12",
                         "hide_empty": true,
                         "order": "DESC",
                         "orderby": "count",
                         "paged": 1
+                      },
+                      "sliderOptions": {
+                        "type": "slide",
+                        "perPage": 6,
+                        "perMove": 1,
+                        "gap": "1rem",
+                        "arrows": true,
+                        "pagination": false,
+                        "rewind": false,
+                        "mediaQuery": "max",
+                        "breakpoints": {
+                          "479": {
+                            "perPage": 2,
+                            "arrows": false
+                          },
+                          "767": {
+                            "perPage": 3,
+                            "arrows": false
+                          },
+                          "1023": {
+                            "perPage": 4
+                          }
+                        }
                       }
                     },
                     "cssSelectors": {
                       "*": {
+                        "classes": "relative [&_.splide__track]:!-mx-1 [&_.splide__track]:!px-1 [&_.splide__track]:!pt-2 [&_.splide__track]:!pb-4"
+                      },
+                      "arrows-wrap": {
                         "classes": ""
                       },
-                      "loop-items": {
-                        "classes": "grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6"
+                      "arrow-item": {
+                        "classes": "!h-11 !w-11 !rounded-full !border !border-gray-100 !bg-white !opacity-100 !shadow-[0_10px_25px_-5px_rgba(29,30,44,0.15)] transition-colors hover:!bg-[#FF6B6B] [&>svg]:!h-4 [&>svg]:!w-4 [&>svg]:!fill-[#FF6B6B] hover:[&>svg]:!fill-white disabled:!opacity-0"
+                      },
+                      "arrow-prev": {
+                        "classes": "!-left-2 lg:!-left-5"
+                      },
+                      "arrow-next": {
+                        "classes": "!-right-2 lg:!-right-5"
+                      },
+                      "pagination": {
+                        "classes": ""
+                      },
+                      "page-item": {
+                        "classes": ""
                       },
                       "loop-item": {
-                        "classes": "group flex flex-col items-center gap-1 rounded-3xl border border-gray-100 bg-white p-5 text-center shadow-sm transition-all hover:-translate-y-1 hover:shadow-[0_12px_30px_rgba(29,30,44,0.06)]"
+                        "classes": "group flex h-full flex-col items-center gap-1 rounded-3xl border border-gray-100 bg-white p-5 text-center shadow-sm transition-all hover:-translate-y-1 hover:shadow-[0_12px_30px_rgba(29,30,44,0.06)]"
                       }
                     },
                     "children": [
                       {
-                        "id": "wj-cats-grid-loop",
+                        "id": "wj-cats-slider-loop",
                         "type": "termsLoop",
                         "options": {},
                         "cssSelectors": {
@@ -2701,15 +2745,15 @@ var template = [
                             "classes": ""
                           },
                           "loop-items": {
-                            "classes": "grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6"
+                            "classes": ""
                           },
                           "loop-item": {
-                            "classes": "group flex flex-col items-center gap-1 rounded-3xl border border-gray-100 bg-white p-5 text-center shadow-sm transition-all hover:-translate-y-1 hover:shadow-[0_12px_30px_rgba(29,30,44,0.06)]"
+                            "classes": "group flex h-full flex-col items-center gap-1 rounded-3xl border border-gray-100 bg-white p-5 text-center shadow-sm transition-all hover:-translate-y-1 hover:shadow-[0_12px_30px_rgba(29,30,44,0.06)]"
                           }
                         },
                         "children": [
                           {
-                            "id": "wj-cats-grid-thumb",
+                            "id": "wj-cats-slider-thumb",
                             "type": "termThumbnail",
                             "options": {
                               "linkTo": "termUrl"
@@ -2727,7 +2771,7 @@ var template = [
                             }
                           },
                           {
-                            "id": "wj-cats-grid-title",
+                            "id": "wj-cats-slider-title",
                             "type": "termTitle",
                             "options": {
                               "tag": "h4",
@@ -2740,7 +2784,7 @@ var template = [
                             }
                           },
                           {
-                            "id": "wj-cats-grid-count",
+                            "id": "wj-cats-slider-count",
                             "type": "termCount",
                             "options": {
                               "label": "",
@@ -2931,8 +2975,8 @@ var template = [
                     ]
                   },
                   {
-                    "id": "wj-featured-grid",
-                    "type": "postGrid",
+                    "id": "wj-featured-slider",
+                    "type": "postSlider",
                     "options": {
                       "queryPrams": {
                         "post_type": [
@@ -2940,16 +2984,51 @@ var template = [
                         ],
                         "order": "DESC",
                         "orderby": "date",
-                        "posts_per_page": "8",
+                        "posts_per_page": "10",
                         "taxQuery": []
+                      },
+                      "sliderOptions": {
+                        "type": "slide",
+                        "perPage": 4,
+                        "perMove": 1,
+                        "gap": "1.5rem",
+                        "arrows": true,
+                        "pagination": false,
+                        "rewind": false,
+                        "mediaQuery": "max",
+                        "breakpoints": {
+                          "767": {
+                            "perPage": 2,
+                            "gap": "1rem",
+                            "arrows": false
+                          },
+                          "1023": {
+                            "perPage": 3
+                          }
+                        }
                       }
                     },
                     "cssSelectors": {
                       "*": {
+                        "classes": "relative [&_.splide__track]:!-mx-1 [&_.splide__track]:!px-1 [&_.splide__track]:!pt-2 [&_.splide__track]:!pb-4"
+                      },
+                      "arrows-wrap": {
                         "classes": ""
                       },
-                      "loop-items": {
-                        "classes": "grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4"
+                      "arrow-item": {
+                        "classes": "!h-11 !w-11 !rounded-full !border !border-gray-100 !bg-white !opacity-100 !shadow-[0_10px_25px_-5px_rgba(29,30,44,0.15)] transition-colors hover:!bg-[#FF6B6B] [&>svg]:!h-4 [&>svg]:!w-4 [&>svg]:!fill-[#FF6B6B] hover:[&>svg]:!fill-white disabled:!opacity-0"
+                      },
+                      "arrow-prev": {
+                        "classes": "!-left-2 lg:!-left-5"
+                      },
+                      "arrow-next": {
+                        "classes": "!-right-2 lg:!-right-5"
+                      },
+                      "pagination": {
+                        "classes": ""
+                      },
+                      "page-item": {
+                        "classes": ""
                       },
                       "loop-item": {
                         "classes": "group relative flex h-full flex-col justify-between rounded-3xl border border-gray-100 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_30px_rgba(29,30,44,0.06)]"
@@ -2957,7 +3036,7 @@ var template = [
                     },
                     "children": [
                       {
-                        "id": "wj-featured-grid-loop",
+                        "id": "wj-featured-slider-loop",
                         "type": "postLoop",
                         "options": {},
                         "cssSelectors": {
@@ -2965,7 +3044,7 @@ var template = [
                             "classes": ""
                           },
                           "loop-items": {
-                            "classes": "grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4"
+                            "classes": ""
                           },
                           "loop-item": {
                             "classes": "group relative flex h-full flex-col justify-between rounded-3xl border border-gray-100 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_30px_rgba(29,30,44,0.06)]"
@@ -2973,7 +3052,7 @@ var template = [
                         },
                         "children": [
                           {
-                            "id": "wj-featured-grid-c-top",
+                            "id": "wj-featured-slider-c-top",
                             "type": "container",
                             "options": {},
                             "cssSelectors": {
@@ -2983,7 +3062,7 @@ var template = [
                             },
                             "children": [
                               {
-                                "id": "wj-featured-grid-c-media",
+                                "id": "wj-featured-slider-c-media",
                                 "type": "container",
                                 "options": {},
                                 "cssSelectors": {
@@ -2993,7 +3072,7 @@ var template = [
                                 },
                                 "children": [
                                   {
-                                    "id": "wj-featured-grid-c-thumb",
+                                    "id": "wj-featured-slider-c-thumb",
                                     "type": "postThumbnail",
                                     "options": {
                                       "linkTo": "postUrl"
@@ -3011,7 +3090,7 @@ var template = [
                                     }
                                   },
                                   {
-                                    "id": "wj-featured-grid-c-off",
+                                    "id": "wj-featured-slider-c-off",
                                     "type": "productDiscount",
                                     "options": {
                                       "label": "OFF"
@@ -3031,7 +3110,7 @@ var template = [
                                 ]
                               },
                               {
-                                "id": "wj-featured-grid-c-info",
+                                "id": "wj-featured-slider-c-info",
                                 "type": "container",
                                 "options": {},
                                 "cssSelectors": {
@@ -3041,7 +3120,7 @@ var template = [
                                 },
                                 "children": [
                                   {
-                                    "id": "wj-featured-grid-c-rate",
+                                    "id": "wj-featured-slider-c-rate",
                                     "type": "productRatings",
                                     "options": {
                                       "hideIfEmpty": true
@@ -3068,7 +3147,7 @@ var template = [
                                     }
                                   },
                                   {
-                                    "id": "wj-featured-grid-c-title",
+                                    "id": "wj-featured-slider-c-title",
                                     "type": "postTitle",
                                     "options": {
                                       "linkTo": "postUrl",
@@ -3081,7 +3160,7 @@ var template = [
                                     }
                                   },
                                   {
-                                    "id": "wj-featured-grid-c-ex",
+                                    "id": "wj-featured-slider-c-ex",
                                     "type": "postExcerpt",
                                     "options": {
                                       "maxWord": 14,
@@ -3112,7 +3191,7 @@ var template = [
                             ]
                           },
                           {
-                            "id": "wj-featured-grid-c-foot",
+                            "id": "wj-featured-slider-c-foot",
                             "type": "container",
                             "options": {},
                             "cssSelectors": {
@@ -3122,7 +3201,7 @@ var template = [
                             },
                             "children": [
                               {
-                                "id": "wj-featured-grid-c-price",
+                                "id": "wj-featured-slider-c-price",
                                 "type": "productPrice",
                                 "options": {},
                                 "cssSelectors": {
@@ -3159,7 +3238,7 @@ var template = [
                                 }
                               },
                               {
-                                "id": "wj-featured-grid-c-add",
+                                "id": "wj-featured-slider-c-add",
                                 "type": "addToCart",
                                 "options": {
                                   "buttonText": "Add",
@@ -3242,410 +3321,19 @@ var template = [
             ]
           },
           {
-            "id": "wj-finder",
-            "type": "section",
-            "options": {
-              "anchor": "toy-wizard"
-            },
-            "cssSelectors": {
-              "*": {
-                "classes": "w-full bg-gradient-to-r from-[#E6FAF6] via-[#FFF9EB] to-[#FFF0F0] py-16"
-              }
-            },
-            "children": [
-              {
-                "id": "wj-finder-in",
-                "type": "container",
-                "options": {},
-                "cssSelectors": {
-                  "*": {
-                    "classes": "mx-auto w-full max-w-4xl px-4 sm:px-6 lg:px-8"
-                  }
-                },
-                "children": [
-                  {
-                    "id": "wj-finder-card",
-                    "type": "container",
-                    "options": {},
-                    "cssSelectors": {
-                      "*": {
-                        "classes": "relative flex flex-col gap-8 overflow-hidden rounded-[2.5rem] border border-gray-100 bg-white p-6 shadow-[0_12px_30px_rgba(29,30,44,0.06)] sm:p-10"
-                      }
-                    },
-                    "children": [
-                      {
-                        "id": "wj-finder-head",
-                        "type": "container",
-                        "options": {},
-                        "cssSelectors": {
-                          "*": {
-                            "classes": "mx-auto flex max-w-lg flex-col items-center gap-2 text-center"
-                          }
-                        },
-                        "children": [
-                          {
-                            "id": "wj-finder-k",
-                            "type": "text",
-                            "options": {
-                              "text": "Smart Gift Assistant",
-                              "tag": "span"
-                            },
-                            "cssSelectors": {
-                              "*": {
-                                "classes": "inline-block rounded-full bg-[#FF6B6B] px-3 py-1 font-heading text-xs font-bold uppercase tracking-wider text-[#FFFFFF]"
-                              }
-                            }
-                          },
-                          {
-                            "id": "wj-finder-h",
-                            "type": "heading",
-                            "options": {
-                              "text": "Toy Finder 🧙‍♂️",
-                              "tag": "h2"
-                            },
-                            "cssSelectors": {
-                              "*": {
-                                "classes": "font-heading text-3xl font-bold text-[#1D1E2C]"
-                              }
-                            }
-                          },
-                          {
-                            "id": "wj-finder-p",
-                            "type": "text",
-                            "options": {
-                              "text": "Two quick picks to land on the ultimate toy gift.",
-                              "tag": "p"
-                            },
-                            "cssSelectors": {
-                              "*": {
-                                "classes": "text-sm text-gray-500"
-                              }
-                            }
-                          }
-                        ]
-                      },
-                      {
-                        "id": "wj-finder-step-1",
-                        "type": "container",
-                        "options": {},
-                        "cssSelectors": {
-                          "*": {
-                            "classes": "flex flex-col gap-3"
-                          }
-                        },
-                        "children": [
-                          {
-                            "id": "wj-finder-step-1-l",
-                            "type": "text",
-                            "options": {
-                              "text": "Step 1: Pick the kid's age",
-                              "tag": "span"
-                            },
-                            "cssSelectors": {
-                              "*": {
-                                "classes": "block text-center font-heading font-bold text-[#1D1E2C]"
-                              }
-                            }
-                          },
-                          {
-                            "id": "wj-finder-step-1-g",
-                            "type": "container",
-                            "options": {},
-                            "cssSelectors": {
-                              "*": {
-                                "classes": "grid grid-cols-2 gap-3 sm:grid-cols-4"
-                              }
-                            },
-                            "children": [
-                              {
-                                "id": "wj-finder-age-0-2",
-                                "type": "button",
-                                "options": {
-                                  "text": "0 - 2 Yrs",
-                                  "linkTo": "custom",
-                                  "scheme": "",
-                                  "url": "/categories/ages-0-2",
-                                  "target": "",
-                                  "icon": "",
-                                  "iconSize": 16
-                                },
-                                "cssSelectors": {
-                                  "*": {
-                                    "classes": "flex items-center justify-center rounded-2xl border-2 border-gray-200 p-3 text-center cursor-pointer transition-colors hover:border-[#00C9A7] hover:bg-[#E6FAF6]"
-                                  },
-                                  "icon": {
-                                    "classes": "flex items-center shrink-0"
-                                  },
-                                  "label": {
-                                    "classes": "font-heading text-sm text-[#1D1E2C]"
-                                  }
-                                }
-                              },
-                              {
-                                "id": "wj-finder-age-3-5",
-                                "type": "button",
-                                "options": {
-                                  "text": "3 - 5 Yrs",
-                                  "linkTo": "custom",
-                                  "scheme": "",
-                                  "url": "/categories/ages-3-5",
-                                  "target": "",
-                                  "icon": "",
-                                  "iconSize": 16
-                                },
-                                "cssSelectors": {
-                                  "*": {
-                                    "classes": "flex items-center justify-center rounded-2xl border-2 border-gray-200 p-3 text-center cursor-pointer transition-colors hover:border-[#00C9A7] hover:bg-[#E6FAF6]"
-                                  },
-                                  "icon": {
-                                    "classes": "flex items-center shrink-0"
-                                  },
-                                  "label": {
-                                    "classes": "font-heading text-sm text-[#1D1E2C]"
-                                  }
-                                }
-                              },
-                              {
-                                "id": "wj-finder-age-6-8",
-                                "type": "button",
-                                "options": {
-                                  "text": "6 - 8 Yrs",
-                                  "linkTo": "custom",
-                                  "scheme": "",
-                                  "url": "/categories/ages-6-8",
-                                  "target": "",
-                                  "icon": "",
-                                  "iconSize": 16
-                                },
-                                "cssSelectors": {
-                                  "*": {
-                                    "classes": "flex items-center justify-center rounded-2xl border-2 border-gray-200 p-3 text-center cursor-pointer transition-colors hover:border-[#00C9A7] hover:bg-[#E6FAF6]"
-                                  },
-                                  "icon": {
-                                    "classes": "flex items-center shrink-0"
-                                  },
-                                  "label": {
-                                    "classes": "font-heading text-sm text-[#1D1E2C]"
-                                  }
-                                }
-                              },
-                              {
-                                "id": "wj-finder-age-9",
-                                "type": "button",
-                                "options": {
-                                  "text": "9+ Yrs",
-                                  "linkTo": "custom",
-                                  "scheme": "",
-                                  "url": "/categories/ages-9-plus",
-                                  "target": "",
-                                  "icon": "",
-                                  "iconSize": 16
-                                },
-                                "cssSelectors": {
-                                  "*": {
-                                    "classes": "flex items-center justify-center rounded-2xl border-2 border-gray-200 p-3 text-center cursor-pointer transition-colors hover:border-[#00C9A7] hover:bg-[#E6FAF6]"
-                                  },
-                                  "icon": {
-                                    "classes": "flex items-center shrink-0"
-                                  },
-                                  "label": {
-                                    "classes": "font-heading text-sm text-[#1D1E2C]"
-                                  }
-                                }
-                              }
-                            ]
-                          }
-                        ]
-                      },
-                      {
-                        "id": "wj-finder-step-2",
-                        "type": "container",
-                        "options": {},
-                        "cssSelectors": {
-                          "*": {
-                            "classes": "flex flex-col gap-3"
-                          }
-                        },
-                        "children": [
-                          {
-                            "id": "wj-finder-step-2-l",
-                            "type": "text",
-                            "options": {
-                              "text": "Step 2: Or pick their main interest",
-                              "tag": "span"
-                            },
-                            "cssSelectors": {
-                              "*": {
-                                "classes": "block text-center font-heading font-bold text-[#1D1E2C]"
-                              }
-                            }
-                          },
-                          {
-                            "id": "wj-finder-step-2-g",
-                            "type": "container",
-                            "options": {},
-                            "cssSelectors": {
-                              "*": {
-                                "classes": "grid grid-cols-2 gap-3 sm:grid-cols-4"
-                              }
-                            },
-                            "children": [
-                              {
-                                "id": "wj-finder-int-building",
-                                "type": "button",
-                                "options": {
-                                  "text": "🧱 Building & STEM",
-                                  "linkTo": "custom",
-                                  "scheme": "",
-                                  "url": "/categories/stem-science",
-                                  "target": "",
-                                  "icon": "",
-                                  "iconSize": 16
-                                },
-                                "cssSelectors": {
-                                  "*": {
-                                    "classes": "flex items-center justify-center rounded-2xl border-2 border-gray-200 p-3 text-center cursor-pointer transition-colors hover:border-[#FF6B6B] hover:bg-[#FFF0F0]"
-                                  },
-                                  "icon": {
-                                    "classes": "flex items-center shrink-0"
-                                  },
-                                  "label": {
-                                    "classes": "font-heading text-sm text-[#1D1E2C]"
-                                  }
-                                }
-                              },
-                              {
-                                "id": "wj-finder-int-creative",
-                                "type": "button",
-                                "options": {
-                                  "text": "🎨 Arts & Crafts",
-                                  "linkTo": "custom",
-                                  "scheme": "",
-                                  "url": "/categories/arts-crafts",
-                                  "target": "",
-                                  "icon": "",
-                                  "iconSize": 16
-                                },
-                                "cssSelectors": {
-                                  "*": {
-                                    "classes": "flex items-center justify-center rounded-2xl border-2 border-gray-200 p-3 text-center cursor-pointer transition-colors hover:border-[#FF6B6B] hover:bg-[#FFF0F0]"
-                                  },
-                                  "icon": {
-                                    "classes": "flex items-center shrink-0"
-                                  },
-                                  "label": {
-                                    "classes": "font-heading text-sm text-[#1D1E2C]"
-                                  }
-                                }
-                              },
-                              {
-                                "id": "wj-finder-int-active",
-                                "type": "button",
-                                "options": {
-                                  "text": "⚽ Outdoor & Action",
-                                  "linkTo": "custom",
-                                  "scheme": "",
-                                  "url": "/categories/outdoor-sports",
-                                  "target": "",
-                                  "icon": "",
-                                  "iconSize": 16
-                                },
-                                "cssSelectors": {
-                                  "*": {
-                                    "classes": "flex items-center justify-center rounded-2xl border-2 border-gray-200 p-3 text-center cursor-pointer transition-colors hover:border-[#FF6B6B] hover:bg-[#FFF0F0]"
-                                  },
-                                  "icon": {
-                                    "classes": "flex items-center shrink-0"
-                                  },
-                                  "label": {
-                                    "classes": "font-heading text-sm text-[#1D1E2C]"
-                                  }
-                                }
-                              },
-                              {
-                                "id": "wj-finder-int-pretend",
-                                "type": "button",
-                                "options": {
-                                  "text": "🧸 Plush & Pretend",
-                                  "linkTo": "custom",
-                                  "scheme": "",
-                                  "url": "/categories/plush-pretend",
-                                  "target": "",
-                                  "icon": "",
-                                  "iconSize": 16
-                                },
-                                "cssSelectors": {
-                                  "*": {
-                                    "classes": "flex items-center justify-center rounded-2xl border-2 border-gray-200 p-3 text-center cursor-pointer transition-colors hover:border-[#FF6B6B] hover:bg-[#FFF0F0]"
-                                  },
-                                  "icon": {
-                                    "classes": "flex items-center shrink-0"
-                                  },
-                                  "label": {
-                                    "classes": "font-heading text-sm text-[#1D1E2C]"
-                                  }
-                                }
-                              }
-                            ]
-                          }
-                        ]
-                      },
-                      {
-                        "id": "wj-finder-cta",
-                        "type": "container",
-                        "options": {},
-                        "cssSelectors": {
-                          "*": {
-                            "classes": "flex justify-center pt-2"
-                          }
-                        },
-                        "children": [
-                          {
-                            "id": "wj-finder-btn",
-                            "type": "button",
-                            "options": {
-                              "text": "Browse Every Toy ✨",
-                              "linkTo": "custom",
-                              "scheme": "",
-                              "url": "/shop",
-                              "target": "",
-                              "icon": "",
-                              "iconSize": 18
-                            },
-                            "cssSelectors": {
-                              "*": {
-                                "classes": "inline-flex items-center justify-center gap-2 rounded-2xl bg-[#FF6B6B] px-8 py-4 cursor-pointer shadow-[0_10px_25px_-5px_rgba(255,107,107,0.2),0_8px_10px_-6px_rgba(0,0,0,0.05)] transition-all hover:-translate-y-1 hover:bg-[#E05252] "
-                              },
-                              "icon": {
-                                "classes": "flex items-center shrink-0 text-white"
-                              },
-                              "label": {
-                                "classes": "font-heading text-lg font-bold text-white whitespace-nowrap"
-                              }
-                            }
-                          }
-                        ]
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "id": "wj-stem",
+            "id": "wj-cat-stem",
             "type": "section",
             "options": {
               "anchor": "stem-learning"
             },
             "cssSelectors": {
               "*": {
-                "classes": "w-full overflow-hidden bg-white py-16"
+                "classes": "w-full bg-[#F7F9FC] py-12 lg:py-16"
               }
             },
             "children": [
               {
-                "id": "wj-stem-in",
+                "id": "wj-cat-stem-in",
                 "type": "container",
                 "options": {},
                 "cssSelectors": {
@@ -3655,285 +3343,71 @@ var template = [
                 },
                 "children": [
                   {
-                    "id": "wj-stem-card",
+                    "id": "wj-cat-stem-head",
                     "type": "container",
                     "options": {},
                     "cssSelectors": {
                       "*": {
-                        "classes": "relative grid grid-cols-1 items-center gap-8 overflow-hidden rounded-[2.5rem] bg-[#1D1E2C] p-8 text-white sm:p-12 lg:grid-cols-12 lg:p-16"
+                        "classes": "mb-8 flex items-end justify-between gap-4 border-b border-gray-200/70 pb-4"
                       }
                     },
                     "children": [
                       {
-                        "id": "wj-stem-glow-1",
+                        "id": "wj-cat-stem-head-t",
                         "type": "container",
                         "options": {},
                         "cssSelectors": {
                           "*": {
-                            "classes": "pointer-events-none absolute -right-24 -top-24 h-96 w-96 rounded-full bg-[#00C9A7]/20 blur-3xl"
-                          }
-                        },
-                        "children": []
-                      },
-                      {
-                        "id": "wj-stem-glow-2",
-                        "type": "container",
-                        "options": {},
-                        "cssSelectors": {
-                          "*": {
-                            "classes": "pointer-events-none absolute -bottom-24 -left-24 h-96 w-96 rounded-full bg-[#FF6B6B]/20 blur-3xl"
-                          }
-                        },
-                        "children": []
-                      },
-                      {
-                        "id": "wj-stem-copy",
-                        "type": "container",
-                        "options": {},
-                        "cssSelectors": {
-                          "*": {
-                            "classes": "relative z-10 flex flex-col items-start gap-6 lg:col-span-7"
+                            "classes": "flex min-w-0 items-center gap-3 sm:gap-4"
                           }
                         },
                         "children": [
                           {
-                            "id": "wj-stem-k",
+                            "id": "wj-cat-stem-ic",
                             "type": "text",
                             "options": {
-                              "text": "Brain Building & Play",
+                              "text": "🔬",
                               "tag": "span"
                             },
                             "cssSelectors": {
                               "*": {
-                                "classes": "inline-block rounded-full bg-[#FFD166] px-3 py-1 font-heading text-xs font-bold uppercase tracking-wider text-[#1D1E2C]"
+                                "classes": "flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#E6FAF6] text-2xl sm:h-14 sm:w-14 sm:text-3xl"
                               }
                             }
                           },
                           {
-                            "id": "wj-stem-h",
-                            "type": "heading",
-                            "options": {
-                              "text": "Screen-Free Play That Helps Young Brains Grow 🧠✨",
-                              "tag": "h2"
-                            },
-                            "cssSelectors": {
-                              "*": {
-                                "classes": "font-heading text-3xl font-bold leading-tight sm:text-5xl"
-                              }
-                            }
-                          },
-                          {
-                            "id": "wj-stem-p",
-                            "type": "text",
-                            "options": {
-                              "text": "Every WonderJoy toy is crafted alongside child psychologists and educators, with a focus on active problem solving, fine motor coordination and screen-free delight.",
-                              "tag": "p"
-                            },
-                            "cssSelectors": {
-                              "*": {
-                                "classes": "text-base leading-relaxed text-gray-300 sm:text-lg"
-                              }
-                            }
-                          },
-                          {
-                            "id": "wj-stem-badges",
+                            "id": "wj-cat-stem-head-tt",
                             "type": "container",
                             "options": {},
                             "cssSelectors": {
                               "*": {
-                                "classes": "grid w-full grid-cols-2 gap-4 pt-2 sm:grid-cols-3"
+                                "classes": "flex min-w-0 flex-col gap-0.5"
                               }
                             },
                             "children": [
                               {
-                                "id": "wj-stem-b1",
-                                "type": "container",
-                                "options": {},
-                                "cssSelectors": {
-                                  "*": {
-                                    "classes": "flex flex-col gap-1 rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur-sm"
-                                  }
-                                },
-                                "children": [
-                                  {
-                                    "id": "wj-stem-b1-ic",
-                                    "type": "icon",
-                                    "options": {
-                                      "iconName": "IconLeaf",
-                                      "size": 26,
-                                      "label": ""
-                                    },
-                                    "cssSelectors": {
-                                      "*": {
-                                        "classes": "mb-1 flex text-[#00C9A7]"
-                                      }
-                                    }
-                                  },
-                                  {
-                                    "id": "wj-stem-b1-h",
-                                    "type": "heading",
-                                    "options": {
-                                      "text": "FSC Certified Wood",
-                                      "tag": "h4"
-                                    },
-                                    "cssSelectors": {
-                                      "*": {
-                                        "classes": "font-heading text-sm font-bold text-white"
-                                      }
-                                    }
-                                  },
-                                  {
-                                    "id": "wj-stem-b1-p",
-                                    "type": "text",
-                                    "options": {
-                                      "text": "Sourced sustainably",
-                                      "tag": "p"
-                                    },
-                                    "cssSelectors": {
-                                      "*": {
-                                        "classes": "text-[11px] text-gray-300"
-                                      }
-                                    }
-                                  }
-                                ]
-                              },
-                              {
-                                "id": "wj-stem-b2",
-                                "type": "container",
-                                "options": {},
-                                "cssSelectors": {
-                                  "*": {
-                                    "classes": "flex flex-col gap-1 rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur-sm"
-                                  }
-                                },
-                                "children": [
-                                  {
-                                    "id": "wj-stem-b2-ic",
-                                    "type": "icon",
-                                    "options": {
-                                      "iconName": "IconShieldCheck",
-                                      "size": 26,
-                                      "label": ""
-                                    },
-                                    "cssSelectors": {
-                                      "*": {
-                                        "classes": "mb-1 flex text-[#FFD166]"
-                                      }
-                                    }
-                                  },
-                                  {
-                                    "id": "wj-stem-b2-h",
-                                    "type": "heading",
-                                    "options": {
-                                      "text": "BPA & Lead Free",
-                                      "tag": "h4"
-                                    },
-                                    "cssSelectors": {
-                                      "*": {
-                                        "classes": "font-heading text-sm font-bold text-white"
-                                      }
-                                    }
-                                  },
-                                  {
-                                    "id": "wj-stem-b2-p",
-                                    "type": "text",
-                                    "options": {
-                                      "text": "100% non-toxic paint",
-                                      "tag": "p"
-                                    },
-                                    "cssSelectors": {
-                                      "*": {
-                                        "classes": "text-[11px] text-gray-300"
-                                      }
-                                    }
-                                  }
-                                ]
-                              },
-                              {
-                                "id": "wj-stem-b3",
-                                "type": "container",
-                                "options": {},
-                                "cssSelectors": {
-                                  "*": {
-                                    "classes": "flex flex-col gap-1 rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur-sm"
-                                  }
-                                },
-                                "children": [
-                                  {
-                                    "id": "wj-stem-b3-ic",
-                                    "type": "icon",
-                                    "options": {
-                                      "iconName": "IconSchool",
-                                      "size": 26,
-                                      "label": ""
-                                    },
-                                    "cssSelectors": {
-                                      "*": {
-                                        "classes": "mb-1 flex text-[#FF6B6B]"
-                                      }
-                                    }
-                                  },
-                                  {
-                                    "id": "wj-stem-b3-h",
-                                    "type": "heading",
-                                    "options": {
-                                      "text": "STEM Certified",
-                                      "tag": "h4"
-                                    },
-                                    "cssSelectors": {
-                                      "*": {
-                                        "classes": "font-heading text-sm font-bold text-white"
-                                      }
-                                    }
-                                  },
-                                  {
-                                    "id": "wj-stem-b3-p",
-                                    "type": "text",
-                                    "options": {
-                                      "text": "Educator tested",
-                                      "tag": "p"
-                                    },
-                                    "cssSelectors": {
-                                      "*": {
-                                        "classes": "text-[11px] text-gray-300"
-                                      }
-                                    }
-                                  }
-                                ]
-                              }
-                            ]
-                          },
-                          {
-                            "id": "wj-stem-cta",
-                            "type": "container",
-                            "options": {},
-                            "cssSelectors": {
-                              "*": {
-                                "classes": "pt-4"
-                              }
-                            },
-                            "children": [
-                              {
-                                "id": "wj-stem-btn",
-                                "type": "button",
+                                "id": "wj-cat-stem-h",
+                                "type": "heading",
                                 "options": {
-                                  "text": "Shop STEM & Learning",
-                                  "linkTo": "custom",
-                                  "scheme": "",
-                                  "url": "/categories/stem-science",
-                                  "target": "",
-                                  "icon": "IconArrowRight",
-                                  "iconSize": 18
+                                  "text": "STEM & Science Kits",
+                                  "tag": "h2"
                                 },
                                 "cssSelectors": {
                                   "*": {
-                                    "classes": "inline-flex items-center gap-2 rounded-2xl bg-[#FFD166] px-8 py-4 cursor-pointer transition-all hover:-translate-y-0.5 hover:bg-[#FFE099]"
-                                  },
-                                  "icon": {
-                                    "classes": "flex items-center text-[#1D1E2C]"
-                                  },
-                                  "label": {
-                                    "classes": "font-heading text-base font-bold text-[#1D1E2C]"
+                                    "classes": "font-heading text-2xl font-bold text-[#1D1E2C] sm:text-3xl"
+                                  }
+                                }
+                              },
+                              {
+                                "id": "wj-cat-stem-p",
+                                "type": "text",
+                                "options": {
+                                  "text": "Robots, circuits and experiments that make learning a game.",
+                                  "tag": "p"
+                                },
+                                "cssSelectors": {
+                                  "*": {
+                                    "classes": "hidden text-sm text-gray-500 sm:block"
                                   }
                                 }
                               }
@@ -3942,69 +3416,343 @@ var template = [
                         ]
                       },
                       {
-                        "id": "wj-stem-visual",
-                        "type": "container",
+                        "id": "wj-cat-stem-all",
+                        "type": "button",
+                        "options": {
+                          "text": "View all",
+                          "linkTo": "custom",
+                          "scheme": "",
+                          "url": "/categories/stem-science",
+                          "target": "",
+                          "icon": "IconArrowRight",
+                          "iconSize": 16
+                        },
+                        "cssSelectors": {
+                          "*": {
+                            "classes": "group inline-flex shrink-0 items-center gap-2 cursor-pointer"
+                          },
+                          "icon": {
+                            "classes": "flex items-center shrink-0 text-[#00C9A7] transition-transform group-hover:translate-x-1"
+                          },
+                          "label": {
+                            "classes": "font-heading text-sm font-bold whitespace-nowrap text-[#00C9A7] group-hover:text-[#00A387]"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "id": "wj-cat-stem-slider",
+                    "type": "postSlider",
+                    "options": {
+                      "queryPrams": {
+                        "post_type": [
+                          "cmb_product"
+                        ],
+                        "order": "DESC",
+                        "orderby": "date",
+                        "posts_per_page": "10",
+                        "taxQuery": [
+                          {
+                            "title": "",
+                            "collections": [
+                              {
+                                "taxonomy": "product_cat",
+                                "field": "slug",
+                                "terms": [
+                                  "stem-science"
+                                ],
+                                "operator": "IN"
+                              }
+                            ],
+                            "relation": "OR"
+                          }
+                        ]
+                      },
+                      "sliderOptions": {
+                        "type": "slide",
+                        "perPage": 4,
+                        "perMove": 1,
+                        "gap": "1.5rem",
+                        "arrows": true,
+                        "pagination": false,
+                        "rewind": false,
+                        "mediaQuery": "max",
+                        "breakpoints": {
+                          "767": {
+                            "perPage": 2,
+                            "gap": "1rem",
+                            "arrows": false
+                          },
+                          "1023": {
+                            "perPage": 3
+                          }
+                        }
+                      }
+                    },
+                    "cssSelectors": {
+                      "*": {
+                        "classes": "relative [&_.splide__track]:!-mx-1 [&_.splide__track]:!px-1 [&_.splide__track]:!pt-2 [&_.splide__track]:!pb-4"
+                      },
+                      "arrows-wrap": {
+                        "classes": ""
+                      },
+                      "arrow-item": {
+                        "classes": "!h-11 !w-11 !rounded-full !border !border-gray-100 !bg-white !opacity-100 !shadow-[0_10px_25px_-5px_rgba(29,30,44,0.15)] transition-colors hover:!bg-[#FF6B6B] [&>svg]:!h-4 [&>svg]:!w-4 [&>svg]:!fill-[#FF6B6B] hover:[&>svg]:!fill-white disabled:!opacity-0"
+                      },
+                      "arrow-prev": {
+                        "classes": "!-left-2 lg:!-left-5"
+                      },
+                      "arrow-next": {
+                        "classes": "!-right-2 lg:!-right-5"
+                      },
+                      "pagination": {
+                        "classes": ""
+                      },
+                      "page-item": {
+                        "classes": ""
+                      },
+                      "loop-item": {
+                        "classes": "group relative flex h-full flex-col justify-between rounded-3xl border border-gray-100 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_30px_rgba(29,30,44,0.06)]"
+                      }
+                    },
+                    "children": [
+                      {
+                        "id": "wj-cat-stem-slider-loop",
+                        "type": "postLoop",
                         "options": {},
                         "cssSelectors": {
                           "*": {
-                            "classes": "relative z-10 flex justify-center lg:col-span-5"
+                            "classes": ""
+                          },
+                          "loop-items": {
+                            "classes": ""
+                          },
+                          "loop-item": {
+                            "classes": "group relative flex h-full flex-col justify-between rounded-3xl border border-gray-100 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_30px_rgba(29,30,44,0.06)]"
                           }
                         },
                         "children": [
                           {
-                            "id": "wj-stem-visual-card",
+                            "id": "wj-cat-stem-slider-c-top",
                             "type": "container",
                             "options": {},
                             "cssSelectors": {
                               "*": {
-                                "classes": "flex w-full flex-col items-center gap-1 rounded-[2rem] border border-white/10 bg-white/5 p-6 text-center backdrop-blur-md"
+                                "classes": "flex flex-col"
                               }
                             },
                             "children": [
                               {
-                                "id": "wj-stem-img",
-                                "type": "image",
-                                "options": {
-                                  "src": "/templates/wonderjoy-gears.svg",
-                                  "altText": "Gear builders set",
-                                  "link": "/categories/stem-science",
-                                  "newTab": false
-                                },
+                                "id": "wj-cat-stem-slider-c-media",
+                                "type": "container",
+                                "options": {},
                                 "cssSelectors": {
                                   "*": {
-                                    "classes": "w-full"
+                                    "classes": "relative"
+                                  }
+                                },
+                                "children": [
+                                  {
+                                    "id": "wj-cat-stem-slider-c-thumb",
+                                    "type": "postThumbnail",
+                                    "options": {
+                                      "linkTo": "postUrl"
+                                    },
+                                    "cssSelectors": {
+                                      "*": {
+                                        "classes": "block overflow-hidden rounded-2xl bg-[#E6FAF6]"
+                                      },
+                                      "link": {
+                                        "classes": "block"
+                                      },
+                                      "image": {
+                                        "classes": "aspect-square w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                      }
+                                    }
                                   },
-                                  "link": {
-                                    "classes": "block"
+                                  {
+                                    "id": "wj-cat-stem-slider-c-off",
+                                    "type": "productDiscount",
+                                    "options": {
+                                      "label": "OFF"
+                                    },
+                                    "cssSelectors": {
+                                      "*": {
+                                        "classes": "pointer-events-none absolute left-3 top-3 z-[2] flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider text-[#FF6B6B] shadow-sm backdrop-blur-sm"
+                                      },
+                                      "discount": {
+                                        "classes": ""
+                                      },
+                                      "label": {
+                                        "classes": ""
+                                      }
+                                    }
+                                  }
+                                ]
+                              },
+                              {
+                                "id": "wj-cat-stem-slider-c-info",
+                                "type": "container",
+                                "options": {},
+                                "cssSelectors": {
+                                  "*": {
+                                    "classes": "mt-4 flex flex-col gap-1"
+                                  }
+                                },
+                                "children": [
+                                  {
+                                    "id": "wj-cat-stem-slider-c-rate",
+                                    "type": "productRatings",
+                                    "options": {
+                                      "hideIfEmpty": true
+                                    },
+                                    "cssSelectors": {
+                                      "*": {
+                                        "classes": "flex items-center gap-1 text-xs"
+                                      },
+                                      "star-rate": {
+                                        "classes": "flex items-center gap-0.5 text-amber-400"
+                                      },
+                                      "rate-count": {
+                                        "classes": "text-[10px] font-semibold text-gray-400"
+                                      },
+                                      "icon": {
+                                        "classes": ""
+                                      },
+                                      "avg-rating": {
+                                        "classes": "text-[10px] font-semibold text-gray-400"
+                                      },
+                                      "total-reviews": {
+                                        "classes": "text-[10px] text-gray-400"
+                                      }
+                                    }
                                   },
-                                  "img": {
-                                    "classes": "mx-auto h-auto w-full"
+                                  {
+                                    "id": "wj-cat-stem-slider-c-title",
+                                    "type": "postTitle",
+                                    "options": {
+                                      "linkTo": "postUrl",
+                                      "tag": "h3"
+                                    },
+                                    "cssSelectors": {
+                                      "*": {
+                                        "classes": "line-clamp-1 font-heading text-lg font-bold text-[#1D1E2C] transition-colors group-hover:text-[#FF6B6B]"
+                                      }
+                                    }
+                                  },
+                                  {
+                                    "id": "wj-cat-stem-slider-c-ex",
+                                    "type": "postExcerpt",
+                                    "options": {
+                                      "maxWord": 14,
+                                      "readMoreText": "",
+                                      "readMoreIcon": "",
+                                      "readMoreIconSize": 16
+                                    },
+                                    "cssSelectors": {
+                                      "*": {
+                                        "classes": "text-xs text-gray-400"
+                                      },
+                                      "excerpt": {
+                                        "classes": "line-clamp-2"
+                                      },
+                                      "read-more": {
+                                        "classes": "hidden"
+                                      },
+                                      "read-more-icon": {
+                                        "classes": ""
+                                      },
+                                      "read-more-label": {
+                                        "classes": ""
+                                      }
+                                    }
+                                  }
+                                ]
+                              }
+                            ]
+                          },
+                          {
+                            "id": "wj-cat-stem-slider-c-foot",
+                            "type": "container",
+                            "options": {},
+                            "cssSelectors": {
+                              "*": {
+                                "classes": "mt-4 flex items-center justify-between gap-2 border-t border-gray-100 pt-3"
+                              }
+                            },
+                            "children": [
+                              {
+                                "id": "wj-cat-stem-slider-c-price",
+                                "type": "productPrice",
+                                "options": {},
+                                "cssSelectors": {
+                                  "*": {
+                                    "classes": "flex items-center"
+                                  },
+                                  "simple-price-wrap": {
+                                    "classes": "flex flex-col leading-tight"
+                                  },
+                                  "simple-price-sale": {
+                                    "classes": "font-heading text-xl font-black text-[#1D1E2C]"
+                                  },
+                                  "simple-price-regular": {
+                                    "classes": "text-xs text-gray-400 line-through"
+                                  },
+                                  "variable-price-wrap": {
+                                    "classes": "flex items-baseline gap-1"
+                                  },
+                                  "variable-price-min": {
+                                    "classes": "font-heading text-xl font-black text-[#1D1E2C]"
+                                  },
+                                  "variable-price-max": {
+                                    "classes": "font-heading text-xl font-black text-[#1D1E2C]"
+                                  },
+                                  "price-separator": {
+                                    "classes": "text-gray-400"
+                                  },
+                                  "pwyw-price": {
+                                    "classes": "text-2xl text-[#FF6B6B]"
+                                  },
+                                  "pwyw-edit": {
+                                    "classes": "text-xl text-[#FF6B6B] cursor-pointer"
                                   }
                                 }
                               },
                               {
-                                "id": "wj-stem-cap",
-                                "type": "text",
+                                "id": "wj-cat-stem-slider-c-add",
+                                "type": "addToCart",
                                 "options": {
-                                  "text": "Award-Winning Gear Builders Set",
-                                  "tag": "span"
+                                  "buttonText": "Add",
+                                  "hideQuantity": true,
+                                  "hideButton": false,
+                                  "icon": "IconShoppingCartPlus",
+                                  "iconSize": 18
                                 },
                                 "cssSelectors": {
                                   "*": {
-                                    "classes": "mt-2 block font-heading text-lg font-bold text-white"
-                                  }
-                                }
-                              },
-                              {
-                                "id": "wj-stem-cap-sub",
-                                "type": "text",
-                                "options": {
-                                  "text": "Voted Best Brain Toy 2026",
-                                  "tag": "span"
-                                },
-                                "cssSelectors": {
-                                  "*": {
-                                    "classes": "text-xs text-[#FFD166]"
+                                    "classes": "flex items-center"
+                                  },
+                                  "button-wrapper": {
+                                    "classes": "inline-flex h-10 cursor-pointer items-center justify-center gap-1.5 rounded-2xl bg-[#E6FAF6] px-3.5 text-[#00C9A7] shadow-sm transition-colors hover:bg-[#00C9A7] hover:text-white"
+                                  },
+                                  "button-label": {
+                                    "classes": "font-heading text-sm font-bold whitespace-nowrap"
+                                  },
+                                  "button-icon": {
+                                    "classes": "flex items-center"
+                                  },
+                                  "quantity-wrapper": {
+                                    "classes": "hidden"
+                                  },
+                                  "quantity-decrease": {
+                                    "classes": ""
+                                  },
+                                  "quantity-input": {
+                                    "classes": ""
+                                  },
+                                  "quantity-increase": {
+                                    "classes": ""
                                   }
                                 }
                               }
@@ -4019,19 +3767,19 @@ var template = [
             ]
           },
           {
-            "id": "wj-plans",
+            "id": "wj-cat-eco",
             "type": "section",
             "options": {
-              "anchor": "subscription"
+              "anchor": "eco-wooden"
             },
             "cssSelectors": {
               "*": {
-                "classes": "w-full bg-[#F7F9FC] py-16"
+                "classes": "w-full bg-white py-12 lg:py-16"
               }
             },
             "children": [
               {
-                "id": "wj-plans-in",
+                "id": "wj-cat-eco-in",
                 "type": "container",
                 "options": {},
                 "cssSelectors": {
@@ -4041,371 +3789,1758 @@ var template = [
                 },
                 "children": [
                   {
-                    "id": "wj-plans-head",
+                    "id": "wj-cat-eco-head",
                     "type": "container",
                     "options": {},
                     "cssSelectors": {
                       "*": {
-                        "classes": "mx-auto mb-12 flex max-w-2xl flex-col items-center gap-2 text-center"
+                        "classes": "mb-8 flex items-end justify-between gap-4 border-b border-gray-200/70 pb-4"
                       }
                     },
                     "children": [
                       {
-                        "id": "wj-plans-head-k",
-                        "type": "text",
-                        "options": {
-                          "text": "Unbox Joy Every Month",
-                          "tag": "span"
-                        },
+                        "id": "wj-cat-eco-head-t",
+                        "type": "container",
+                        "options": {},
                         "cssSelectors": {
                           "*": {
-                            "classes": "inline-block rounded-full bg-[#FFF0F0] px-3 py-1 font-heading text-xs font-bold uppercase tracking-wider text-[#FF6B6B]"
+                            "classes": "flex min-w-0 items-center gap-3 sm:gap-4"
                           }
-                        }
+                        },
+                        "children": [
+                          {
+                            "id": "wj-cat-eco-ic",
+                            "type": "text",
+                            "options": {
+                              "text": "🌳",
+                              "tag": "span"
+                            },
+                            "cssSelectors": {
+                              "*": {
+                                "classes": "flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#FFF9EB] text-2xl sm:h-14 sm:w-14 sm:text-3xl"
+                              }
+                            }
+                          },
+                          {
+                            "id": "wj-cat-eco-head-tt",
+                            "type": "container",
+                            "options": {},
+                            "cssSelectors": {
+                              "*": {
+                                "classes": "flex min-w-0 flex-col gap-0.5"
+                              }
+                            },
+                            "children": [
+                              {
+                                "id": "wj-cat-eco-h",
+                                "type": "heading",
+                                "options": {
+                                  "text": "Eco & Wooden Toys",
+                                  "tag": "h2"
+                                },
+                                "cssSelectors": {
+                                  "*": {
+                                    "classes": "font-heading text-2xl font-bold text-[#1D1E2C] sm:text-3xl"
+                                  }
+                                }
+                              },
+                              {
+                                "id": "wj-cat-eco-p",
+                                "type": "text",
+                                "options": {
+                                  "text": "Sustainably made, beautifully simple, built to be handed down.",
+                                  "tag": "p"
+                                },
+                                "cssSelectors": {
+                                  "*": {
+                                    "classes": "hidden text-sm text-gray-500 sm:block"
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        ]
                       },
                       {
-                        "id": "wj-plans-head-h",
-                        "type": "heading",
+                        "id": "wj-cat-eco-all",
+                        "type": "button",
                         "options": {
-                          "text": "WonderBox™ Play Kits Delivered",
-                          "tag": "h2"
+                          "text": "View all",
+                          "linkTo": "custom",
+                          "scheme": "",
+                          "url": "/categories/eco-wooden",
+                          "target": "",
+                          "icon": "IconArrowRight",
+                          "iconSize": 16
                         },
                         "cssSelectors": {
                           "*": {
-                            "classes": "font-heading text-3xl font-bold text-[#1D1E2C] sm:text-4xl"
-                          }
-                        }
-                      },
-                      {
-                        "id": "wj-plans-head-p",
-                        "type": "text",
-                        "options": {
-                          "text": "Age-matched developmental play boxes delivered to your doorstep. Cancel anytime!",
-                          "tag": "p"
-                        },
-                        "cssSelectors": {
-                          "*": {
-                            "classes": "text-sm text-gray-500 sm:text-base"
+                            "classes": "group inline-flex shrink-0 items-center gap-2 cursor-pointer"
+                          },
+                          "icon": {
+                            "classes": "flex items-center shrink-0 text-[#B45309] transition-transform group-hover:translate-x-1"
+                          },
+                          "label": {
+                            "classes": "font-heading text-sm font-bold whitespace-nowrap text-[#B45309] group-hover:text-[#92400E]"
                           }
                         }
                       }
                     ]
                   },
                   {
-                    "id": "wj-plans-grid",
-                    "type": "container",
-                    "options": {},
+                    "id": "wj-cat-eco-slider",
+                    "type": "postSlider",
+                    "options": {
+                      "queryPrams": {
+                        "post_type": [
+                          "cmb_product"
+                        ],
+                        "order": "DESC",
+                        "orderby": "date",
+                        "posts_per_page": "10",
+                        "taxQuery": [
+                          {
+                            "title": "",
+                            "collections": [
+                              {
+                                "taxonomy": "product_cat",
+                                "field": "slug",
+                                "terms": [
+                                  "eco-wooden"
+                                ],
+                                "operator": "IN"
+                              }
+                            ],
+                            "relation": "OR"
+                          }
+                        ]
+                      },
+                      "sliderOptions": {
+                        "type": "slide",
+                        "perPage": 4,
+                        "perMove": 1,
+                        "gap": "1.5rem",
+                        "arrows": true,
+                        "pagination": false,
+                        "rewind": false,
+                        "mediaQuery": "max",
+                        "breakpoints": {
+                          "767": {
+                            "perPage": 2,
+                            "gap": "1rem",
+                            "arrows": false
+                          },
+                          "1023": {
+                            "perPage": 3
+                          }
+                        }
+                      }
+                    },
                     "cssSelectors": {
                       "*": {
-                        "classes": "mx-auto grid max-w-4xl grid-cols-1 gap-8 md:grid-cols-2"
+                        "classes": "relative [&_.splide__track]:!-mx-1 [&_.splide__track]:!px-1 [&_.splide__track]:!pt-2 [&_.splide__track]:!pb-4"
+                      },
+                      "arrows-wrap": {
+                        "classes": ""
+                      },
+                      "arrow-item": {
+                        "classes": "!h-11 !w-11 !rounded-full !border !border-gray-100 !bg-white !opacity-100 !shadow-[0_10px_25px_-5px_rgba(29,30,44,0.15)] transition-colors hover:!bg-[#FF6B6B] [&>svg]:!h-4 [&>svg]:!w-4 [&>svg]:!fill-[#FF6B6B] hover:[&>svg]:!fill-white disabled:!opacity-0"
+                      },
+                      "arrow-prev": {
+                        "classes": "!-left-2 lg:!-left-5"
+                      },
+                      "arrow-next": {
+                        "classes": "!-right-2 lg:!-right-5"
+                      },
+                      "pagination": {
+                        "classes": ""
+                      },
+                      "page-item": {
+                        "classes": ""
+                      },
+                      "loop-item": {
+                        "classes": "group relative flex h-full flex-col justify-between rounded-3xl border border-gray-100 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_30px_rgba(29,30,44,0.06)]"
                       }
                     },
                     "children": [
                       {
-                        "id": "wj-plan-month",
-                        "type": "container",
+                        "id": "wj-cat-eco-slider-loop",
+                        "type": "postLoop",
                         "options": {},
                         "cssSelectors": {
                           "*": {
-                            "classes": "relative flex flex-col rounded-[2rem] bg-white p-8 transition-all border border-gray-100 shadow-sm hover:shadow-[0_12px_30px_rgba(29,30,44,0.06)]"
+                            "classes": ""
+                          },
+                          "loop-items": {
+                            "classes": ""
+                          },
+                          "loop-item": {
+                            "classes": "group relative flex h-full flex-col justify-between rounded-3xl border border-gray-100 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_30px_rgba(29,30,44,0.06)]"
                           }
                         },
                         "children": [
                           {
-                            "id": "wj-plan-month-tag",
-                            "type": "text",
-                            "options": {
-                              "text": "Flexible",
-                              "tag": "span"
-                            },
-                            "cssSelectors": {
-                              "*": {
-                                "classes": "self-start rounded-full bg-gray-100 text-[#1D1E2C] px-3 py-1 font-heading text-xs font-bold uppercase tracking-wider"
-                              }
-                            }
-                          },
-                          {
-                            "id": "wj-plan-month-h",
-                            "type": "heading",
-                            "options": {
-                              "text": "Monthly Explorer Kit",
-                              "tag": "h3"
-                            },
-                            "cssSelectors": {
-                              "*": {
-                                "classes": "mt-3 font-heading text-2xl font-bold text-[#1D1E2C]"
-                              }
-                            }
-                          },
-                          {
-                            "id": "wj-plan-month-p",
-                            "type": "text",
-                            "options": {
-                              "text": "One box a month filled with 4-5 curated surprise toys.",
-                              "tag": "p"
-                            },
-                            "cssSelectors": {
-                              "*": {
-                                "classes": "mt-1 text-sm text-gray-500"
-                              }
-                            }
-                          },
-                          {
-                            "id": "wj-plan-month-price",
+                            "id": "wj-cat-eco-slider-c-top",
                             "type": "container",
                             "options": {},
                             "cssSelectors": {
                               "*": {
-                                "classes": "my-6 flex flex-wrap items-baseline gap-1"
+                                "classes": "flex flex-col"
                               }
                             },
                             "children": [
                               {
-                                "id": "wj-plan-month-pv",
-                                "type": "text",
-                                "options": {
-                                  "text": "$34.99",
-                                  "tag": "span"
-                                },
+                                "id": "wj-cat-eco-slider-c-media",
+                                "type": "container",
+                                "options": {},
                                 "cssSelectors": {
                                   "*": {
-                                    "classes": "font-heading text-4xl font-black text-[#1D1E2C]"
+                                    "classes": "relative"
                                   }
-                                }
+                                },
+                                "children": [
+                                  {
+                                    "id": "wj-cat-eco-slider-c-thumb",
+                                    "type": "postThumbnail",
+                                    "options": {
+                                      "linkTo": "postUrl"
+                                    },
+                                    "cssSelectors": {
+                                      "*": {
+                                        "classes": "block overflow-hidden rounded-2xl bg-[#E6FAF6]"
+                                      },
+                                      "link": {
+                                        "classes": "block"
+                                      },
+                                      "image": {
+                                        "classes": "aspect-square w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                      }
+                                    }
+                                  },
+                                  {
+                                    "id": "wj-cat-eco-slider-c-off",
+                                    "type": "productDiscount",
+                                    "options": {
+                                      "label": "OFF"
+                                    },
+                                    "cssSelectors": {
+                                      "*": {
+                                        "classes": "pointer-events-none absolute left-3 top-3 z-[2] flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider text-[#FF6B6B] shadow-sm backdrop-blur-sm"
+                                      },
+                                      "discount": {
+                                        "classes": ""
+                                      },
+                                      "label": {
+                                        "classes": ""
+                                      }
+                                    }
+                                  }
+                                ]
                               },
                               {
-                                "id": "wj-plan-month-pp",
-                                "type": "text",
-                                "options": {
-                                  "text": "/ month",
-                                  "tag": "span"
-                                },
+                                "id": "wj-cat-eco-slider-c-info",
+                                "type": "container",
+                                "options": {},
                                 "cssSelectors": {
                                   "*": {
-                                    "classes": "text-sm font-semibold text-gray-400"
+                                    "classes": "mt-4 flex flex-col gap-1"
                                   }
-                                }
+                                },
+                                "children": [
+                                  {
+                                    "id": "wj-cat-eco-slider-c-rate",
+                                    "type": "productRatings",
+                                    "options": {
+                                      "hideIfEmpty": true
+                                    },
+                                    "cssSelectors": {
+                                      "*": {
+                                        "classes": "flex items-center gap-1 text-xs"
+                                      },
+                                      "star-rate": {
+                                        "classes": "flex items-center gap-0.5 text-amber-400"
+                                      },
+                                      "rate-count": {
+                                        "classes": "text-[10px] font-semibold text-gray-400"
+                                      },
+                                      "icon": {
+                                        "classes": ""
+                                      },
+                                      "avg-rating": {
+                                        "classes": "text-[10px] font-semibold text-gray-400"
+                                      },
+                                      "total-reviews": {
+                                        "classes": "text-[10px] text-gray-400"
+                                      }
+                                    }
+                                  },
+                                  {
+                                    "id": "wj-cat-eco-slider-c-title",
+                                    "type": "postTitle",
+                                    "options": {
+                                      "linkTo": "postUrl",
+                                      "tag": "h3"
+                                    },
+                                    "cssSelectors": {
+                                      "*": {
+                                        "classes": "line-clamp-1 font-heading text-lg font-bold text-[#1D1E2C] transition-colors group-hover:text-[#FF6B6B]"
+                                      }
+                                    }
+                                  },
+                                  {
+                                    "id": "wj-cat-eco-slider-c-ex",
+                                    "type": "postExcerpt",
+                                    "options": {
+                                      "maxWord": 14,
+                                      "readMoreText": "",
+                                      "readMoreIcon": "",
+                                      "readMoreIconSize": 16
+                                    },
+                                    "cssSelectors": {
+                                      "*": {
+                                        "classes": "text-xs text-gray-400"
+                                      },
+                                      "excerpt": {
+                                        "classes": "line-clamp-2"
+                                      },
+                                      "read-more": {
+                                        "classes": "hidden"
+                                      },
+                                      "read-more-icon": {
+                                        "classes": ""
+                                      },
+                                      "read-more-label": {
+                                        "classes": ""
+                                      }
+                                    }
+                                  }
+                                ]
                               }
                             ]
                           },
                           {
-                            "id": "wj-plan-month-perks",
-                            "type": "list",
-                            "options": {
-                              "icon": "IconCircleCheckFilled",
-                              "iconSize": 18,
-                              "tag": "ul",
-                              "items": [
-                                {
-                                  "text": "Tailored to your kid's exact age & stage",
-                                  "icon": ""
-                                },
-                                {
-                                  "text": "Includes a parent play guidebook",
-                                  "icon": ""
-                                },
-                                {
-                                  "text": "Free shipping included",
-                                  "icon": ""
-                                },
-                                {
-                                  "text": "Pause or cancel in one click",
-                                  "icon": ""
+                            "id": "wj-cat-eco-slider-c-foot",
+                            "type": "container",
+                            "options": {},
+                            "cssSelectors": {
+                              "*": {
+                                "classes": "mt-4 flex items-center justify-between gap-2 border-t border-gray-100 pt-3"
+                              }
+                            },
+                            "children": [
+                              {
+                                "id": "wj-cat-eco-slider-c-price",
+                                "type": "productPrice",
+                                "options": {},
+                                "cssSelectors": {
+                                  "*": {
+                                    "classes": "flex items-center"
+                                  },
+                                  "simple-price-wrap": {
+                                    "classes": "flex flex-col leading-tight"
+                                  },
+                                  "simple-price-sale": {
+                                    "classes": "font-heading text-xl font-black text-[#1D1E2C]"
+                                  },
+                                  "simple-price-regular": {
+                                    "classes": "text-xs text-gray-400 line-through"
+                                  },
+                                  "variable-price-wrap": {
+                                    "classes": "flex items-baseline gap-1"
+                                  },
+                                  "variable-price-min": {
+                                    "classes": "font-heading text-xl font-black text-[#1D1E2C]"
+                                  },
+                                  "variable-price-max": {
+                                    "classes": "font-heading text-xl font-black text-[#1D1E2C]"
+                                  },
+                                  "price-separator": {
+                                    "classes": "text-gray-400"
+                                  },
+                                  "pwyw-price": {
+                                    "classes": "text-2xl text-[#FF6B6B]"
+                                  },
+                                  "pwyw-edit": {
+                                    "classes": "text-xl text-[#FF6B6B] cursor-pointer"
+                                  }
                                 }
-                              ]
+                              },
+                              {
+                                "id": "wj-cat-eco-slider-c-add",
+                                "type": "addToCart",
+                                "options": {
+                                  "buttonText": "Add",
+                                  "hideQuantity": true,
+                                  "hideButton": false,
+                                  "icon": "IconShoppingCartPlus",
+                                  "iconSize": 18
+                                },
+                                "cssSelectors": {
+                                  "*": {
+                                    "classes": "flex items-center"
+                                  },
+                                  "button-wrapper": {
+                                    "classes": "inline-flex h-10 cursor-pointer items-center justify-center gap-1.5 rounded-2xl bg-[#E6FAF6] px-3.5 text-[#00C9A7] shadow-sm transition-colors hover:bg-[#00C9A7] hover:text-white"
+                                  },
+                                  "button-label": {
+                                    "classes": "font-heading text-sm font-bold whitespace-nowrap"
+                                  },
+                                  "button-icon": {
+                                    "classes": "flex items-center"
+                                  },
+                                  "quantity-wrapper": {
+                                    "classes": "hidden"
+                                  },
+                                  "quantity-decrease": {
+                                    "classes": ""
+                                  },
+                                  "quantity-input": {
+                                    "classes": ""
+                                  },
+                                  "quantity-increase": {
+                                    "classes": ""
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "wj-cat-arts",
+            "type": "section",
+            "options": {
+              "anchor": "arts-crafts"
+            },
+            "cssSelectors": {
+              "*": {
+                "classes": "w-full bg-[#F7F9FC] py-12 lg:py-16"
+              }
+            },
+            "children": [
+              {
+                "id": "wj-cat-arts-in",
+                "type": "container",
+                "options": {},
+                "cssSelectors": {
+                  "*": {
+                    "classes": "mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8"
+                  }
+                },
+                "children": [
+                  {
+                    "id": "wj-cat-arts-head",
+                    "type": "container",
+                    "options": {},
+                    "cssSelectors": {
+                      "*": {
+                        "classes": "mb-8 flex items-end justify-between gap-4 border-b border-gray-200/70 pb-4"
+                      }
+                    },
+                    "children": [
+                      {
+                        "id": "wj-cat-arts-head-t",
+                        "type": "container",
+                        "options": {},
+                        "cssSelectors": {
+                          "*": {
+                            "classes": "flex min-w-0 items-center gap-3 sm:gap-4"
+                          }
+                        },
+                        "children": [
+                          {
+                            "id": "wj-cat-arts-ic",
+                            "type": "text",
+                            "options": {
+                              "text": "🎨",
+                              "tag": "span"
                             },
                             "cssSelectors": {
                               "*": {
-                                "classes": "mb-8 flex flex-col gap-3 text-sm text-gray-600"
-                              },
-                              "li": {
-                                "classes": "flex list-none items-center gap-2"
-                              },
-                              "icon": {
-                                "classes": "flex shrink-0 text-[#00C9A7]"
-                              },
-                              "text": {
-                                "classes": ""
+                                "classes": "flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#FFF0F0] text-2xl sm:h-14 sm:w-14 sm:text-3xl"
                               }
                             }
                           },
                           {
-                            "id": "wj-plan-month-btn",
-                            "type": "button",
-                            "options": {
-                              "text": "Join Monthly Club",
-                              "linkTo": "custom",
-                              "scheme": "",
-                              "url": "/categories/play-kits",
-                              "target": "",
-                              "icon": "",
-                              "iconSize": 16
-                            },
+                            "id": "wj-cat-arts-head-tt",
+                            "type": "container",
+                            "options": {},
                             "cssSelectors": {
                               "*": {
-                                "classes": "group mt-auto flex w-full items-center justify-center rounded-2xl bg-[#F7F9FC] py-3.5 cursor-pointer transition-all hover:bg-[#1D1E2C]"
-                              },
-                              "icon": {
-                                "classes": "flex items-center shrink-0"
-                              },
-                              "label": {
-                                "classes": "font-heading font-bold text-[#1D1E2C] group-hover:text-white"
+                                "classes": "flex min-w-0 flex-col gap-0.5"
                               }
-                            }
+                            },
+                            "children": [
+                              {
+                                "id": "wj-cat-arts-h",
+                                "type": "heading",
+                                "options": {
+                                  "text": "Arts & Crafts",
+                                  "tag": "h2"
+                                },
+                                "cssSelectors": {
+                                  "*": {
+                                    "classes": "font-heading text-2xl font-bold text-[#1D1E2C] sm:text-3xl"
+                                  }
+                                }
+                              },
+                              {
+                                "id": "wj-cat-arts-p",
+                                "type": "text",
+                                "options": {
+                                  "text": "Paints, clay and craft kits for little makers.",
+                                  "tag": "p"
+                                },
+                                "cssSelectors": {
+                                  "*": {
+                                    "classes": "hidden text-sm text-gray-500 sm:block"
+                                  }
+                                }
+                              }
+                            ]
                           }
                         ]
                       },
                       {
-                        "id": "wj-plan-year",
-                        "type": "container",
+                        "id": "wj-cat-arts-all",
+                        "type": "button",
+                        "options": {
+                          "text": "View all",
+                          "linkTo": "custom",
+                          "scheme": "",
+                          "url": "/categories/arts-crafts",
+                          "target": "",
+                          "icon": "IconArrowRight",
+                          "iconSize": 16
+                        },
+                        "cssSelectors": {
+                          "*": {
+                            "classes": "group inline-flex shrink-0 items-center gap-2 cursor-pointer"
+                          },
+                          "icon": {
+                            "classes": "flex items-center shrink-0 text-[#FF6B6B] transition-transform group-hover:translate-x-1"
+                          },
+                          "label": {
+                            "classes": "font-heading text-sm font-bold whitespace-nowrap text-[#FF6B6B] group-hover:text-[#E05252]"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "id": "wj-cat-arts-slider",
+                    "type": "postSlider",
+                    "options": {
+                      "queryPrams": {
+                        "post_type": [
+                          "cmb_product"
+                        ],
+                        "order": "DESC",
+                        "orderby": "date",
+                        "posts_per_page": "10",
+                        "taxQuery": [
+                          {
+                            "title": "",
+                            "collections": [
+                              {
+                                "taxonomy": "product_cat",
+                                "field": "slug",
+                                "terms": [
+                                  "arts-crafts"
+                                ],
+                                "operator": "IN"
+                              }
+                            ],
+                            "relation": "OR"
+                          }
+                        ]
+                      },
+                      "sliderOptions": {
+                        "type": "slide",
+                        "perPage": 4,
+                        "perMove": 1,
+                        "gap": "1.5rem",
+                        "arrows": true,
+                        "pagination": false,
+                        "rewind": false,
+                        "mediaQuery": "max",
+                        "breakpoints": {
+                          "767": {
+                            "perPage": 2,
+                            "gap": "1rem",
+                            "arrows": false
+                          },
+                          "1023": {
+                            "perPage": 3
+                          }
+                        }
+                      }
+                    },
+                    "cssSelectors": {
+                      "*": {
+                        "classes": "relative [&_.splide__track]:!-mx-1 [&_.splide__track]:!px-1 [&_.splide__track]:!pt-2 [&_.splide__track]:!pb-4"
+                      },
+                      "arrows-wrap": {
+                        "classes": ""
+                      },
+                      "arrow-item": {
+                        "classes": "!h-11 !w-11 !rounded-full !border !border-gray-100 !bg-white !opacity-100 !shadow-[0_10px_25px_-5px_rgba(29,30,44,0.15)] transition-colors hover:!bg-[#FF6B6B] [&>svg]:!h-4 [&>svg]:!w-4 [&>svg]:!fill-[#FF6B6B] hover:[&>svg]:!fill-white disabled:!opacity-0"
+                      },
+                      "arrow-prev": {
+                        "classes": "!-left-2 lg:!-left-5"
+                      },
+                      "arrow-next": {
+                        "classes": "!-right-2 lg:!-right-5"
+                      },
+                      "pagination": {
+                        "classes": ""
+                      },
+                      "page-item": {
+                        "classes": ""
+                      },
+                      "loop-item": {
+                        "classes": "group relative flex h-full flex-col justify-between rounded-3xl border border-gray-100 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_30px_rgba(29,30,44,0.06)]"
+                      }
+                    },
+                    "children": [
+                      {
+                        "id": "wj-cat-arts-slider-loop",
+                        "type": "postLoop",
                         "options": {},
                         "cssSelectors": {
                           "*": {
-                            "classes": "relative flex flex-col rounded-[2rem] bg-white p-8 transition-all border-2 border-[#00C9A7] shadow-[0_10px_25px_-5px_rgba(0,201,167,0.25)] md:-translate-y-2"
+                            "classes": ""
+                          },
+                          "loop-items": {
+                            "classes": ""
+                          },
+                          "loop-item": {
+                            "classes": "group relative flex h-full flex-col justify-between rounded-3xl border border-gray-100 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_30px_rgba(29,30,44,0.06)]"
                           }
                         },
                         "children": [
                           {
-                            "id": "wj-plan-year-tag",
-                            "type": "text",
-                            "options": {
-                              "text": "Best Value • Save 20%",
-                              "tag": "span"
-                            },
-                            "cssSelectors": {
-                              "*": {
-                                "classes": "self-start rounded-full bg-[#00C9A7] text-white px-3 py-1 font-heading text-xs font-bold uppercase tracking-wider"
-                              }
-                            }
-                          },
-                          {
-                            "id": "wj-plan-year-h",
-                            "type": "heading",
-                            "options": {
-                              "text": "Annual Play Pass",
-                              "tag": "h3"
-                            },
-                            "cssSelectors": {
-                              "*": {
-                                "classes": "mt-3 font-heading text-2xl font-bold text-[#1D1E2C]"
-                              }
-                            }
-                          },
-                          {
-                            "id": "wj-plan-year-p",
-                            "type": "text",
-                            "options": {
-                              "text": "12 months of continuous play plus a free birthday bonus box!",
-                              "tag": "p"
-                            },
-                            "cssSelectors": {
-                              "*": {
-                                "classes": "mt-1 text-sm text-gray-500"
-                              }
-                            }
-                          },
-                          {
-                            "id": "wj-plan-year-price",
+                            "id": "wj-cat-arts-slider-c-top",
                             "type": "container",
                             "options": {},
                             "cssSelectors": {
                               "*": {
-                                "classes": "my-6 flex flex-wrap items-baseline gap-1"
+                                "classes": "flex flex-col"
                               }
                             },
                             "children": [
                               {
-                                "id": "wj-plan-year-pv",
-                                "type": "text",
-                                "options": {
-                                  "text": "$27.99",
-                                  "tag": "span"
-                                },
+                                "id": "wj-cat-arts-slider-c-media",
+                                "type": "container",
+                                "options": {},
                                 "cssSelectors": {
                                   "*": {
-                                    "classes": "font-heading text-4xl font-black text-[#00C9A7]"
+                                    "classes": "relative"
                                   }
-                                }
+                                },
+                                "children": [
+                                  {
+                                    "id": "wj-cat-arts-slider-c-thumb",
+                                    "type": "postThumbnail",
+                                    "options": {
+                                      "linkTo": "postUrl"
+                                    },
+                                    "cssSelectors": {
+                                      "*": {
+                                        "classes": "block overflow-hidden rounded-2xl bg-[#E6FAF6]"
+                                      },
+                                      "link": {
+                                        "classes": "block"
+                                      },
+                                      "image": {
+                                        "classes": "aspect-square w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                      }
+                                    }
+                                  },
+                                  {
+                                    "id": "wj-cat-arts-slider-c-off",
+                                    "type": "productDiscount",
+                                    "options": {
+                                      "label": "OFF"
+                                    },
+                                    "cssSelectors": {
+                                      "*": {
+                                        "classes": "pointer-events-none absolute left-3 top-3 z-[2] flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider text-[#FF6B6B] shadow-sm backdrop-blur-sm"
+                                      },
+                                      "discount": {
+                                        "classes": ""
+                                      },
+                                      "label": {
+                                        "classes": ""
+                                      }
+                                    }
+                                  }
+                                ]
                               },
                               {
-                                "id": "wj-plan-year-pp",
-                                "type": "text",
-                                "options": {
-                                  "text": "/ month, billed annually",
-                                  "tag": "span"
-                                },
+                                "id": "wj-cat-arts-slider-c-info",
+                                "type": "container",
+                                "options": {},
                                 "cssSelectors": {
                                   "*": {
-                                    "classes": "text-sm font-semibold text-gray-400"
+                                    "classes": "mt-4 flex flex-col gap-1"
                                   }
-                                }
+                                },
+                                "children": [
+                                  {
+                                    "id": "wj-cat-arts-slider-c-rate",
+                                    "type": "productRatings",
+                                    "options": {
+                                      "hideIfEmpty": true
+                                    },
+                                    "cssSelectors": {
+                                      "*": {
+                                        "classes": "flex items-center gap-1 text-xs"
+                                      },
+                                      "star-rate": {
+                                        "classes": "flex items-center gap-0.5 text-amber-400"
+                                      },
+                                      "rate-count": {
+                                        "classes": "text-[10px] font-semibold text-gray-400"
+                                      },
+                                      "icon": {
+                                        "classes": ""
+                                      },
+                                      "avg-rating": {
+                                        "classes": "text-[10px] font-semibold text-gray-400"
+                                      },
+                                      "total-reviews": {
+                                        "classes": "text-[10px] text-gray-400"
+                                      }
+                                    }
+                                  },
+                                  {
+                                    "id": "wj-cat-arts-slider-c-title",
+                                    "type": "postTitle",
+                                    "options": {
+                                      "linkTo": "postUrl",
+                                      "tag": "h3"
+                                    },
+                                    "cssSelectors": {
+                                      "*": {
+                                        "classes": "line-clamp-1 font-heading text-lg font-bold text-[#1D1E2C] transition-colors group-hover:text-[#FF6B6B]"
+                                      }
+                                    }
+                                  },
+                                  {
+                                    "id": "wj-cat-arts-slider-c-ex",
+                                    "type": "postExcerpt",
+                                    "options": {
+                                      "maxWord": 14,
+                                      "readMoreText": "",
+                                      "readMoreIcon": "",
+                                      "readMoreIconSize": 16
+                                    },
+                                    "cssSelectors": {
+                                      "*": {
+                                        "classes": "text-xs text-gray-400"
+                                      },
+                                      "excerpt": {
+                                        "classes": "line-clamp-2"
+                                      },
+                                      "read-more": {
+                                        "classes": "hidden"
+                                      },
+                                      "read-more-icon": {
+                                        "classes": ""
+                                      },
+                                      "read-more-label": {
+                                        "classes": ""
+                                      }
+                                    }
+                                  }
+                                ]
                               }
                             ]
                           },
                           {
-                            "id": "wj-plan-year-perks",
-                            "type": "list",
-                            "options": {
-                              "icon": "IconCircleCheckFilled",
-                              "iconSize": 18,
-                              "tag": "ul",
-                              "items": [
-                                {
-                                  "text": "All Monthly Plan features",
-                                  "icon": ""
-                                },
-                                {
-                                  "text": "FREE $50 birthday gift box",
-                                  "icon": "IconStarFilled"
-                                },
-                                {
-                                  "text": "Early access to limited-edition toys",
-                                  "icon": ""
-                                },
-                                {
-                                  "text": "VIP customer support",
-                                  "icon": ""
+                            "id": "wj-cat-arts-slider-c-foot",
+                            "type": "container",
+                            "options": {},
+                            "cssSelectors": {
+                              "*": {
+                                "classes": "mt-4 flex items-center justify-between gap-2 border-t border-gray-100 pt-3"
+                              }
+                            },
+                            "children": [
+                              {
+                                "id": "wj-cat-arts-slider-c-price",
+                                "type": "productPrice",
+                                "options": {},
+                                "cssSelectors": {
+                                  "*": {
+                                    "classes": "flex items-center"
+                                  },
+                                  "simple-price-wrap": {
+                                    "classes": "flex flex-col leading-tight"
+                                  },
+                                  "simple-price-sale": {
+                                    "classes": "font-heading text-xl font-black text-[#1D1E2C]"
+                                  },
+                                  "simple-price-regular": {
+                                    "classes": "text-xs text-gray-400 line-through"
+                                  },
+                                  "variable-price-wrap": {
+                                    "classes": "flex items-baseline gap-1"
+                                  },
+                                  "variable-price-min": {
+                                    "classes": "font-heading text-xl font-black text-[#1D1E2C]"
+                                  },
+                                  "variable-price-max": {
+                                    "classes": "font-heading text-xl font-black text-[#1D1E2C]"
+                                  },
+                                  "price-separator": {
+                                    "classes": "text-gray-400"
+                                  },
+                                  "pwyw-price": {
+                                    "classes": "text-2xl text-[#FF6B6B]"
+                                  },
+                                  "pwyw-edit": {
+                                    "classes": "text-xl text-[#FF6B6B] cursor-pointer"
+                                  }
                                 }
-                              ]
+                              },
+                              {
+                                "id": "wj-cat-arts-slider-c-add",
+                                "type": "addToCart",
+                                "options": {
+                                  "buttonText": "Add",
+                                  "hideQuantity": true,
+                                  "hideButton": false,
+                                  "icon": "IconShoppingCartPlus",
+                                  "iconSize": 18
+                                },
+                                "cssSelectors": {
+                                  "*": {
+                                    "classes": "flex items-center"
+                                  },
+                                  "button-wrapper": {
+                                    "classes": "inline-flex h-10 cursor-pointer items-center justify-center gap-1.5 rounded-2xl bg-[#E6FAF6] px-3.5 text-[#00C9A7] shadow-sm transition-colors hover:bg-[#00C9A7] hover:text-white"
+                                  },
+                                  "button-label": {
+                                    "classes": "font-heading text-sm font-bold whitespace-nowrap"
+                                  },
+                                  "button-icon": {
+                                    "classes": "flex items-center"
+                                  },
+                                  "quantity-wrapper": {
+                                    "classes": "hidden"
+                                  },
+                                  "quantity-decrease": {
+                                    "classes": ""
+                                  },
+                                  "quantity-input": {
+                                    "classes": ""
+                                  },
+                                  "quantity-increase": {
+                                    "classes": ""
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "wj-cat-outdoor",
+            "type": "section",
+            "options": {
+              "anchor": "outdoor-play"
+            },
+            "cssSelectors": {
+              "*": {
+                "classes": "w-full bg-white py-12 lg:py-16"
+              }
+            },
+            "children": [
+              {
+                "id": "wj-cat-outdoor-in",
+                "type": "container",
+                "options": {},
+                "cssSelectors": {
+                  "*": {
+                    "classes": "mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8"
+                  }
+                },
+                "children": [
+                  {
+                    "id": "wj-cat-outdoor-head",
+                    "type": "container",
+                    "options": {},
+                    "cssSelectors": {
+                      "*": {
+                        "classes": "mb-8 flex items-end justify-between gap-4 border-b border-gray-200/70 pb-4"
+                      }
+                    },
+                    "children": [
+                      {
+                        "id": "wj-cat-outdoor-head-t",
+                        "type": "container",
+                        "options": {},
+                        "cssSelectors": {
+                          "*": {
+                            "classes": "flex min-w-0 items-center gap-3 sm:gap-4"
+                          }
+                        },
+                        "children": [
+                          {
+                            "id": "wj-cat-outdoor-ic",
+                            "type": "text",
+                            "options": {
+                              "text": "⚽",
+                              "tag": "span"
                             },
                             "cssSelectors": {
                               "*": {
-                                "classes": "mb-8 flex flex-col gap-3 text-sm text-gray-600"
-                              },
-                              "li": {
-                                "classes": "flex list-none items-center gap-2"
-                              },
-                              "icon": {
-                                "classes": "flex shrink-0 text-[#00C9A7]"
-                              },
-                              "text": {
-                                "classes": ""
+                                "classes": "flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#E6FAF6] text-2xl sm:h-14 sm:w-14 sm:text-3xl"
                               }
                             }
                           },
                           {
-                            "id": "wj-plan-year-btn",
-                            "type": "button",
+                            "id": "wj-cat-outdoor-head-tt",
+                            "type": "container",
+                            "options": {},
+                            "cssSelectors": {
+                              "*": {
+                                "classes": "flex min-w-0 flex-col gap-0.5"
+                              }
+                            },
+                            "children": [
+                              {
+                                "id": "wj-cat-outdoor-h",
+                                "type": "heading",
+                                "options": {
+                                  "text": "Outdoor & Active Play",
+                                  "tag": "h2"
+                                },
+                                "cssSelectors": {
+                                  "*": {
+                                    "classes": "font-heading text-2xl font-bold text-[#1D1E2C] sm:text-3xl"
+                                  }
+                                }
+                              },
+                              {
+                                "id": "wj-cat-outdoor-p",
+                                "type": "text",
+                                "options": {
+                                  "text": "Get them moving: ride-ons, sports sets and backyard fun.",
+                                  "tag": "p"
+                                },
+                                "cssSelectors": {
+                                  "*": {
+                                    "classes": "hidden text-sm text-gray-500 sm:block"
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "id": "wj-cat-outdoor-all",
+                        "type": "button",
+                        "options": {
+                          "text": "View all",
+                          "linkTo": "custom",
+                          "scheme": "",
+                          "url": "/categories/outdoor-sports",
+                          "target": "",
+                          "icon": "IconArrowRight",
+                          "iconSize": 16
+                        },
+                        "cssSelectors": {
+                          "*": {
+                            "classes": "group inline-flex shrink-0 items-center gap-2 cursor-pointer"
+                          },
+                          "icon": {
+                            "classes": "flex items-center shrink-0 text-[#00C9A7] transition-transform group-hover:translate-x-1"
+                          },
+                          "label": {
+                            "classes": "font-heading text-sm font-bold whitespace-nowrap text-[#00C9A7] group-hover:text-[#00A387]"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "id": "wj-cat-outdoor-slider",
+                    "type": "postSlider",
+                    "options": {
+                      "queryPrams": {
+                        "post_type": [
+                          "cmb_product"
+                        ],
+                        "order": "DESC",
+                        "orderby": "date",
+                        "posts_per_page": "10",
+                        "taxQuery": [
+                          {
+                            "title": "",
+                            "collections": [
+                              {
+                                "taxonomy": "product_cat",
+                                "field": "slug",
+                                "terms": [
+                                  "outdoor-sports"
+                                ],
+                                "operator": "IN"
+                              }
+                            ],
+                            "relation": "OR"
+                          }
+                        ]
+                      },
+                      "sliderOptions": {
+                        "type": "slide",
+                        "perPage": 4,
+                        "perMove": 1,
+                        "gap": "1.5rem",
+                        "arrows": true,
+                        "pagination": false,
+                        "rewind": false,
+                        "mediaQuery": "max",
+                        "breakpoints": {
+                          "767": {
+                            "perPage": 2,
+                            "gap": "1rem",
+                            "arrows": false
+                          },
+                          "1023": {
+                            "perPage": 3
+                          }
+                        }
+                      }
+                    },
+                    "cssSelectors": {
+                      "*": {
+                        "classes": "relative [&_.splide__track]:!-mx-1 [&_.splide__track]:!px-1 [&_.splide__track]:!pt-2 [&_.splide__track]:!pb-4"
+                      },
+                      "arrows-wrap": {
+                        "classes": ""
+                      },
+                      "arrow-item": {
+                        "classes": "!h-11 !w-11 !rounded-full !border !border-gray-100 !bg-white !opacity-100 !shadow-[0_10px_25px_-5px_rgba(29,30,44,0.15)] transition-colors hover:!bg-[#FF6B6B] [&>svg]:!h-4 [&>svg]:!w-4 [&>svg]:!fill-[#FF6B6B] hover:[&>svg]:!fill-white disabled:!opacity-0"
+                      },
+                      "arrow-prev": {
+                        "classes": "!-left-2 lg:!-left-5"
+                      },
+                      "arrow-next": {
+                        "classes": "!-right-2 lg:!-right-5"
+                      },
+                      "pagination": {
+                        "classes": ""
+                      },
+                      "page-item": {
+                        "classes": ""
+                      },
+                      "loop-item": {
+                        "classes": "group relative flex h-full flex-col justify-between rounded-3xl border border-gray-100 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_30px_rgba(29,30,44,0.06)]"
+                      }
+                    },
+                    "children": [
+                      {
+                        "id": "wj-cat-outdoor-slider-loop",
+                        "type": "postLoop",
+                        "options": {},
+                        "cssSelectors": {
+                          "*": {
+                            "classes": ""
+                          },
+                          "loop-items": {
+                            "classes": ""
+                          },
+                          "loop-item": {
+                            "classes": "group relative flex h-full flex-col justify-between rounded-3xl border border-gray-100 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_30px_rgba(29,30,44,0.06)]"
+                          }
+                        },
+                        "children": [
+                          {
+                            "id": "wj-cat-outdoor-slider-c-top",
+                            "type": "container",
+                            "options": {},
+                            "cssSelectors": {
+                              "*": {
+                                "classes": "flex flex-col"
+                              }
+                            },
+                            "children": [
+                              {
+                                "id": "wj-cat-outdoor-slider-c-media",
+                                "type": "container",
+                                "options": {},
+                                "cssSelectors": {
+                                  "*": {
+                                    "classes": "relative"
+                                  }
+                                },
+                                "children": [
+                                  {
+                                    "id": "wj-cat-outdoor-slider-c-thumb",
+                                    "type": "postThumbnail",
+                                    "options": {
+                                      "linkTo": "postUrl"
+                                    },
+                                    "cssSelectors": {
+                                      "*": {
+                                        "classes": "block overflow-hidden rounded-2xl bg-[#E6FAF6]"
+                                      },
+                                      "link": {
+                                        "classes": "block"
+                                      },
+                                      "image": {
+                                        "classes": "aspect-square w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                      }
+                                    }
+                                  },
+                                  {
+                                    "id": "wj-cat-outdoor-slider-c-off",
+                                    "type": "productDiscount",
+                                    "options": {
+                                      "label": "OFF"
+                                    },
+                                    "cssSelectors": {
+                                      "*": {
+                                        "classes": "pointer-events-none absolute left-3 top-3 z-[2] flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider text-[#FF6B6B] shadow-sm backdrop-blur-sm"
+                                      },
+                                      "discount": {
+                                        "classes": ""
+                                      },
+                                      "label": {
+                                        "classes": ""
+                                      }
+                                    }
+                                  }
+                                ]
+                              },
+                              {
+                                "id": "wj-cat-outdoor-slider-c-info",
+                                "type": "container",
+                                "options": {},
+                                "cssSelectors": {
+                                  "*": {
+                                    "classes": "mt-4 flex flex-col gap-1"
+                                  }
+                                },
+                                "children": [
+                                  {
+                                    "id": "wj-cat-outdoor-slider-c-rate",
+                                    "type": "productRatings",
+                                    "options": {
+                                      "hideIfEmpty": true
+                                    },
+                                    "cssSelectors": {
+                                      "*": {
+                                        "classes": "flex items-center gap-1 text-xs"
+                                      },
+                                      "star-rate": {
+                                        "classes": "flex items-center gap-0.5 text-amber-400"
+                                      },
+                                      "rate-count": {
+                                        "classes": "text-[10px] font-semibold text-gray-400"
+                                      },
+                                      "icon": {
+                                        "classes": ""
+                                      },
+                                      "avg-rating": {
+                                        "classes": "text-[10px] font-semibold text-gray-400"
+                                      },
+                                      "total-reviews": {
+                                        "classes": "text-[10px] text-gray-400"
+                                      }
+                                    }
+                                  },
+                                  {
+                                    "id": "wj-cat-outdoor-slider-c-title",
+                                    "type": "postTitle",
+                                    "options": {
+                                      "linkTo": "postUrl",
+                                      "tag": "h3"
+                                    },
+                                    "cssSelectors": {
+                                      "*": {
+                                        "classes": "line-clamp-1 font-heading text-lg font-bold text-[#1D1E2C] transition-colors group-hover:text-[#FF6B6B]"
+                                      }
+                                    }
+                                  },
+                                  {
+                                    "id": "wj-cat-outdoor-slider-c-ex",
+                                    "type": "postExcerpt",
+                                    "options": {
+                                      "maxWord": 14,
+                                      "readMoreText": "",
+                                      "readMoreIcon": "",
+                                      "readMoreIconSize": 16
+                                    },
+                                    "cssSelectors": {
+                                      "*": {
+                                        "classes": "text-xs text-gray-400"
+                                      },
+                                      "excerpt": {
+                                        "classes": "line-clamp-2"
+                                      },
+                                      "read-more": {
+                                        "classes": "hidden"
+                                      },
+                                      "read-more-icon": {
+                                        "classes": ""
+                                      },
+                                      "read-more-label": {
+                                        "classes": ""
+                                      }
+                                    }
+                                  }
+                                ]
+                              }
+                            ]
+                          },
+                          {
+                            "id": "wj-cat-outdoor-slider-c-foot",
+                            "type": "container",
+                            "options": {},
+                            "cssSelectors": {
+                              "*": {
+                                "classes": "mt-4 flex items-center justify-between gap-2 border-t border-gray-100 pt-3"
+                              }
+                            },
+                            "children": [
+                              {
+                                "id": "wj-cat-outdoor-slider-c-price",
+                                "type": "productPrice",
+                                "options": {},
+                                "cssSelectors": {
+                                  "*": {
+                                    "classes": "flex items-center"
+                                  },
+                                  "simple-price-wrap": {
+                                    "classes": "flex flex-col leading-tight"
+                                  },
+                                  "simple-price-sale": {
+                                    "classes": "font-heading text-xl font-black text-[#1D1E2C]"
+                                  },
+                                  "simple-price-regular": {
+                                    "classes": "text-xs text-gray-400 line-through"
+                                  },
+                                  "variable-price-wrap": {
+                                    "classes": "flex items-baseline gap-1"
+                                  },
+                                  "variable-price-min": {
+                                    "classes": "font-heading text-xl font-black text-[#1D1E2C]"
+                                  },
+                                  "variable-price-max": {
+                                    "classes": "font-heading text-xl font-black text-[#1D1E2C]"
+                                  },
+                                  "price-separator": {
+                                    "classes": "text-gray-400"
+                                  },
+                                  "pwyw-price": {
+                                    "classes": "text-2xl text-[#FF6B6B]"
+                                  },
+                                  "pwyw-edit": {
+                                    "classes": "text-xl text-[#FF6B6B] cursor-pointer"
+                                  }
+                                }
+                              },
+                              {
+                                "id": "wj-cat-outdoor-slider-c-add",
+                                "type": "addToCart",
+                                "options": {
+                                  "buttonText": "Add",
+                                  "hideQuantity": true,
+                                  "hideButton": false,
+                                  "icon": "IconShoppingCartPlus",
+                                  "iconSize": 18
+                                },
+                                "cssSelectors": {
+                                  "*": {
+                                    "classes": "flex items-center"
+                                  },
+                                  "button-wrapper": {
+                                    "classes": "inline-flex h-10 cursor-pointer items-center justify-center gap-1.5 rounded-2xl bg-[#E6FAF6] px-3.5 text-[#00C9A7] shadow-sm transition-colors hover:bg-[#00C9A7] hover:text-white"
+                                  },
+                                  "button-label": {
+                                    "classes": "font-heading text-sm font-bold whitespace-nowrap"
+                                  },
+                                  "button-icon": {
+                                    "classes": "flex items-center"
+                                  },
+                                  "quantity-wrapper": {
+                                    "classes": "hidden"
+                                  },
+                                  "quantity-decrease": {
+                                    "classes": ""
+                                  },
+                                  "quantity-input": {
+                                    "classes": ""
+                                  },
+                                  "quantity-increase": {
+                                    "classes": ""
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "wj-cat-plush",
+            "type": "section",
+            "options": {
+              "anchor": "plush-pretend"
+            },
+            "cssSelectors": {
+              "*": {
+                "classes": "w-full bg-[#F7F9FC] py-12 lg:py-16"
+              }
+            },
+            "children": [
+              {
+                "id": "wj-cat-plush-in",
+                "type": "container",
+                "options": {},
+                "cssSelectors": {
+                  "*": {
+                    "classes": "mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8"
+                  }
+                },
+                "children": [
+                  {
+                    "id": "wj-cat-plush-head",
+                    "type": "container",
+                    "options": {},
+                    "cssSelectors": {
+                      "*": {
+                        "classes": "mb-8 flex items-end justify-between gap-4 border-b border-gray-200/70 pb-4"
+                      }
+                    },
+                    "children": [
+                      {
+                        "id": "wj-cat-plush-head-t",
+                        "type": "container",
+                        "options": {},
+                        "cssSelectors": {
+                          "*": {
+                            "classes": "flex min-w-0 items-center gap-3 sm:gap-4"
+                          }
+                        },
+                        "children": [
+                          {
+                            "id": "wj-cat-plush-ic",
+                            "type": "text",
                             "options": {
-                              "text": "Get Annual Pass & Save",
-                              "linkTo": "custom",
-                              "scheme": "",
-                              "url": "/categories/play-kits",
-                              "target": "",
-                              "icon": "",
-                              "iconSize": 16
+                              "text": "🧸",
+                              "tag": "span"
                             },
                             "cssSelectors": {
                               "*": {
-                                "classes": "mt-auto flex w-full items-center justify-center rounded-2xl bg-[#00C9A7] py-3.5 cursor-pointer shadow-md transition-all hover:bg-[#00A387]"
-                              },
-                              "icon": {
-                                "classes": "flex items-center shrink-0"
-                              },
-                              "label": {
-                                "classes": "font-heading font-bold text-white"
+                                "classes": "flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#FFF0F0] text-2xl sm:h-14 sm:w-14 sm:text-3xl"
                               }
                             }
+                          },
+                          {
+                            "id": "wj-cat-plush-head-tt",
+                            "type": "container",
+                            "options": {},
+                            "cssSelectors": {
+                              "*": {
+                                "classes": "flex min-w-0 flex-col gap-0.5"
+                              }
+                            },
+                            "children": [
+                              {
+                                "id": "wj-cat-plush-h",
+                                "type": "heading",
+                                "options": {
+                                  "text": "Plush & Pretend Play",
+                                  "tag": "h2"
+                                },
+                                "cssSelectors": {
+                                  "*": {
+                                    "classes": "font-heading text-2xl font-bold text-[#1D1E2C] sm:text-3xl"
+                                  }
+                                }
+                              },
+                              {
+                                "id": "wj-cat-plush-p",
+                                "type": "text",
+                                "options": {
+                                  "text": "Cuddly friends, play kitchens and dress-up for big imaginations.",
+                                  "tag": "p"
+                                },
+                                "cssSelectors": {
+                                  "*": {
+                                    "classes": "hidden text-sm text-gray-500 sm:block"
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "id": "wj-cat-plush-all",
+                        "type": "button",
+                        "options": {
+                          "text": "View all",
+                          "linkTo": "custom",
+                          "scheme": "",
+                          "url": "/categories/plush-pretend",
+                          "target": "",
+                          "icon": "IconArrowRight",
+                          "iconSize": 16
+                        },
+                        "cssSelectors": {
+                          "*": {
+                            "classes": "group inline-flex shrink-0 items-center gap-2 cursor-pointer"
+                          },
+                          "icon": {
+                            "classes": "flex items-center shrink-0 text-[#FF6B6B] transition-transform group-hover:translate-x-1"
+                          },
+                          "label": {
+                            "classes": "font-heading text-sm font-bold whitespace-nowrap text-[#FF6B6B] group-hover:text-[#E05252]"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "id": "wj-cat-plush-slider",
+                    "type": "postSlider",
+                    "options": {
+                      "queryPrams": {
+                        "post_type": [
+                          "cmb_product"
+                        ],
+                        "order": "DESC",
+                        "orderby": "date",
+                        "posts_per_page": "10",
+                        "taxQuery": [
+                          {
+                            "title": "",
+                            "collections": [
+                              {
+                                "taxonomy": "product_cat",
+                                "field": "slug",
+                                "terms": [
+                                  "plush-pretend"
+                                ],
+                                "operator": "IN"
+                              }
+                            ],
+                            "relation": "OR"
+                          }
+                        ]
+                      },
+                      "sliderOptions": {
+                        "type": "slide",
+                        "perPage": 4,
+                        "perMove": 1,
+                        "gap": "1.5rem",
+                        "arrows": true,
+                        "pagination": false,
+                        "rewind": false,
+                        "mediaQuery": "max",
+                        "breakpoints": {
+                          "767": {
+                            "perPage": 2,
+                            "gap": "1rem",
+                            "arrows": false
+                          },
+                          "1023": {
+                            "perPage": 3
+                          }
+                        }
+                      }
+                    },
+                    "cssSelectors": {
+                      "*": {
+                        "classes": "relative [&_.splide__track]:!-mx-1 [&_.splide__track]:!px-1 [&_.splide__track]:!pt-2 [&_.splide__track]:!pb-4"
+                      },
+                      "arrows-wrap": {
+                        "classes": ""
+                      },
+                      "arrow-item": {
+                        "classes": "!h-11 !w-11 !rounded-full !border !border-gray-100 !bg-white !opacity-100 !shadow-[0_10px_25px_-5px_rgba(29,30,44,0.15)] transition-colors hover:!bg-[#FF6B6B] [&>svg]:!h-4 [&>svg]:!w-4 [&>svg]:!fill-[#FF6B6B] hover:[&>svg]:!fill-white disabled:!opacity-0"
+                      },
+                      "arrow-prev": {
+                        "classes": "!-left-2 lg:!-left-5"
+                      },
+                      "arrow-next": {
+                        "classes": "!-right-2 lg:!-right-5"
+                      },
+                      "pagination": {
+                        "classes": ""
+                      },
+                      "page-item": {
+                        "classes": ""
+                      },
+                      "loop-item": {
+                        "classes": "group relative flex h-full flex-col justify-between rounded-3xl border border-gray-100 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_30px_rgba(29,30,44,0.06)]"
+                      }
+                    },
+                    "children": [
+                      {
+                        "id": "wj-cat-plush-slider-loop",
+                        "type": "postLoop",
+                        "options": {},
+                        "cssSelectors": {
+                          "*": {
+                            "classes": ""
+                          },
+                          "loop-items": {
+                            "classes": ""
+                          },
+                          "loop-item": {
+                            "classes": "group relative flex h-full flex-col justify-between rounded-3xl border border-gray-100 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_30px_rgba(29,30,44,0.06)]"
+                          }
+                        },
+                        "children": [
+                          {
+                            "id": "wj-cat-plush-slider-c-top",
+                            "type": "container",
+                            "options": {},
+                            "cssSelectors": {
+                              "*": {
+                                "classes": "flex flex-col"
+                              }
+                            },
+                            "children": [
+                              {
+                                "id": "wj-cat-plush-slider-c-media",
+                                "type": "container",
+                                "options": {},
+                                "cssSelectors": {
+                                  "*": {
+                                    "classes": "relative"
+                                  }
+                                },
+                                "children": [
+                                  {
+                                    "id": "wj-cat-plush-slider-c-thumb",
+                                    "type": "postThumbnail",
+                                    "options": {
+                                      "linkTo": "postUrl"
+                                    },
+                                    "cssSelectors": {
+                                      "*": {
+                                        "classes": "block overflow-hidden rounded-2xl bg-[#E6FAF6]"
+                                      },
+                                      "link": {
+                                        "classes": "block"
+                                      },
+                                      "image": {
+                                        "classes": "aspect-square w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                      }
+                                    }
+                                  },
+                                  {
+                                    "id": "wj-cat-plush-slider-c-off",
+                                    "type": "productDiscount",
+                                    "options": {
+                                      "label": "OFF"
+                                    },
+                                    "cssSelectors": {
+                                      "*": {
+                                        "classes": "pointer-events-none absolute left-3 top-3 z-[2] flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider text-[#FF6B6B] shadow-sm backdrop-blur-sm"
+                                      },
+                                      "discount": {
+                                        "classes": ""
+                                      },
+                                      "label": {
+                                        "classes": ""
+                                      }
+                                    }
+                                  }
+                                ]
+                              },
+                              {
+                                "id": "wj-cat-plush-slider-c-info",
+                                "type": "container",
+                                "options": {},
+                                "cssSelectors": {
+                                  "*": {
+                                    "classes": "mt-4 flex flex-col gap-1"
+                                  }
+                                },
+                                "children": [
+                                  {
+                                    "id": "wj-cat-plush-slider-c-rate",
+                                    "type": "productRatings",
+                                    "options": {
+                                      "hideIfEmpty": true
+                                    },
+                                    "cssSelectors": {
+                                      "*": {
+                                        "classes": "flex items-center gap-1 text-xs"
+                                      },
+                                      "star-rate": {
+                                        "classes": "flex items-center gap-0.5 text-amber-400"
+                                      },
+                                      "rate-count": {
+                                        "classes": "text-[10px] font-semibold text-gray-400"
+                                      },
+                                      "icon": {
+                                        "classes": ""
+                                      },
+                                      "avg-rating": {
+                                        "classes": "text-[10px] font-semibold text-gray-400"
+                                      },
+                                      "total-reviews": {
+                                        "classes": "text-[10px] text-gray-400"
+                                      }
+                                    }
+                                  },
+                                  {
+                                    "id": "wj-cat-plush-slider-c-title",
+                                    "type": "postTitle",
+                                    "options": {
+                                      "linkTo": "postUrl",
+                                      "tag": "h3"
+                                    },
+                                    "cssSelectors": {
+                                      "*": {
+                                        "classes": "line-clamp-1 font-heading text-lg font-bold text-[#1D1E2C] transition-colors group-hover:text-[#FF6B6B]"
+                                      }
+                                    }
+                                  },
+                                  {
+                                    "id": "wj-cat-plush-slider-c-ex",
+                                    "type": "postExcerpt",
+                                    "options": {
+                                      "maxWord": 14,
+                                      "readMoreText": "",
+                                      "readMoreIcon": "",
+                                      "readMoreIconSize": 16
+                                    },
+                                    "cssSelectors": {
+                                      "*": {
+                                        "classes": "text-xs text-gray-400"
+                                      },
+                                      "excerpt": {
+                                        "classes": "line-clamp-2"
+                                      },
+                                      "read-more": {
+                                        "classes": "hidden"
+                                      },
+                                      "read-more-icon": {
+                                        "classes": ""
+                                      },
+                                      "read-more-label": {
+                                        "classes": ""
+                                      }
+                                    }
+                                  }
+                                ]
+                              }
+                            ]
+                          },
+                          {
+                            "id": "wj-cat-plush-slider-c-foot",
+                            "type": "container",
+                            "options": {},
+                            "cssSelectors": {
+                              "*": {
+                                "classes": "mt-4 flex items-center justify-between gap-2 border-t border-gray-100 pt-3"
+                              }
+                            },
+                            "children": [
+                              {
+                                "id": "wj-cat-plush-slider-c-price",
+                                "type": "productPrice",
+                                "options": {},
+                                "cssSelectors": {
+                                  "*": {
+                                    "classes": "flex items-center"
+                                  },
+                                  "simple-price-wrap": {
+                                    "classes": "flex flex-col leading-tight"
+                                  },
+                                  "simple-price-sale": {
+                                    "classes": "font-heading text-xl font-black text-[#1D1E2C]"
+                                  },
+                                  "simple-price-regular": {
+                                    "classes": "text-xs text-gray-400 line-through"
+                                  },
+                                  "variable-price-wrap": {
+                                    "classes": "flex items-baseline gap-1"
+                                  },
+                                  "variable-price-min": {
+                                    "classes": "font-heading text-xl font-black text-[#1D1E2C]"
+                                  },
+                                  "variable-price-max": {
+                                    "classes": "font-heading text-xl font-black text-[#1D1E2C]"
+                                  },
+                                  "price-separator": {
+                                    "classes": "text-gray-400"
+                                  },
+                                  "pwyw-price": {
+                                    "classes": "text-2xl text-[#FF6B6B]"
+                                  },
+                                  "pwyw-edit": {
+                                    "classes": "text-xl text-[#FF6B6B] cursor-pointer"
+                                  }
+                                }
+                              },
+                              {
+                                "id": "wj-cat-plush-slider-c-add",
+                                "type": "addToCart",
+                                "options": {
+                                  "buttonText": "Add",
+                                  "hideQuantity": true,
+                                  "hideButton": false,
+                                  "icon": "IconShoppingCartPlus",
+                                  "iconSize": 18
+                                },
+                                "cssSelectors": {
+                                  "*": {
+                                    "classes": "flex items-center"
+                                  },
+                                  "button-wrapper": {
+                                    "classes": "inline-flex h-10 cursor-pointer items-center justify-center gap-1.5 rounded-2xl bg-[#E6FAF6] px-3.5 text-[#00C9A7] shadow-sm transition-colors hover:bg-[#00C9A7] hover:text-white"
+                                  },
+                                  "button-label": {
+                                    "classes": "font-heading text-sm font-bold whitespace-nowrap"
+                                  },
+                                  "button-icon": {
+                                    "classes": "flex items-center"
+                                  },
+                                  "quantity-wrapper": {
+                                    "classes": "hidden"
+                                  },
+                                  "quantity-decrease": {
+                                    "classes": ""
+                                  },
+                                  "quantity-input": {
+                                    "classes": ""
+                                  },
+                                  "quantity-increase": {
+                                    "classes": ""
+                                  }
+                                }
+                              }
+                            ]
                           }
                         ]
                       }
@@ -4476,25 +5611,67 @@ var template = [
                     ]
                   },
                   {
-                    "id": "wj-reviews-grid",
-                    "type": "grid",
-                    "options": {},
+                    "id": "wj-reviews-slider",
+                    "type": "contentSlider",
+                    "options": {
+                      "sliderOptions": {
+                        "type": "loop",
+                        "perPage": 3,
+                        "perMove": 1,
+                        "gap": "1.5rem",
+                        "arrows": true,
+                        "pagination": true,
+                        "autoplay": true,
+                        "interval": 6000,
+                        "pauseOnHover": true,
+                        "pauseOnFocus": true,
+                        "mediaQuery": "max",
+                        "breakpoints": {
+                          "767": {
+                            "perPage": 1,
+                            "gap": "1rem",
+                            "arrows": false
+                          },
+                          "1023": {
+                            "perPage": 2
+                          }
+                        }
+                      }
+                    },
                     "cssSelectors": {
                       "*": {
-                        "classes": "grid grid-cols-1 gap-6 md:grid-cols-3"
+                        "classes": "relative [&_.splide__track]:!pt-1 [&_.splide__track]:!pb-2"
                       },
-                      "grid-item": {
+                      "slide": {
                         "classes": ""
+                      },
+                      "arrows-wrap": {
+                        "classes": ""
+                      },
+                      "arrow-item": {
+                        "classes": "!h-11 !w-11 !rounded-full !border !border-gray-100 !bg-white !opacity-100 !shadow-[0_10px_25px_-5px_rgba(29,30,44,0.15)] transition-colors hover:!bg-[#FF6B6B] [&>svg]:!h-4 [&>svg]:!w-4 [&>svg]:!fill-[#FF6B6B] hover:[&>svg]:!fill-white disabled:!opacity-0"
+                      },
+                      "arrow-prev": {
+                        "classes": "!-left-2 lg:!-left-5"
+                      },
+                      "arrow-next": {
+                        "classes": "!-right-2 lg:!-right-5"
+                      },
+                      "pagination": {
+                        "classes": "!static !mt-8 !gap-2 !p-0"
+                      },
+                      "page-item": {
+                        "classes": "!m-0 !h-2 !w-2 !rounded-full !bg-gray-300 !opacity-100 !transform-none transition-all [&.is-active]:!w-6 [&.is-active]:!bg-[#FF6B6B]"
                       }
                     },
                     "children": [
                       {
                         "id": "wj-review-r1",
-                        "type": "gridItem",
+                        "type": "container",
                         "options": {},
                         "cssSelectors": {
                           "*": {
-                            "classes": "flex flex-col justify-between rounded-3xl border border-gray-100 bg-[#F7F9FC] p-6"
+                            "classes": "flex h-full flex-col justify-between rounded-3xl border border-gray-100 bg-[#F7F9FC] p-6"
                           }
                         },
                         "children": [
@@ -4603,11 +5780,11 @@ var template = [
                       },
                       {
                         "id": "wj-review-r2",
-                        "type": "gridItem",
+                        "type": "container",
                         "options": {},
                         "cssSelectors": {
                           "*": {
-                            "classes": "flex flex-col justify-between rounded-3xl border border-gray-100 bg-[#F7F9FC] p-6"
+                            "classes": "flex h-full flex-col justify-between rounded-3xl border border-gray-100 bg-[#F7F9FC] p-6"
                           }
                         },
                         "children": [
@@ -4638,7 +5815,7 @@ var template = [
                                 "id": "wj-review-r2-q",
                                 "type": "text",
                                 "options": {
-                                  "text": "\"The Toy Finder pointed us to the Solar Robot for my nephew's 7th birthday. He hasn't stopped playing with it for 3 days!\"",
+                                  "text": "\"The STEM picks pointed us to the Solar Robot for my nephew's 7th birthday. He hasn't stopped playing with it for 3 days!\"",
                                   "tag": "p"
                                 },
                                 "cssSelectors": {
@@ -4716,11 +5893,11 @@ var template = [
                       },
                       {
                         "id": "wj-review-r3",
-                        "type": "gridItem",
+                        "type": "container",
                         "options": {},
                         "cssSelectors": {
                           "*": {
-                            "classes": "flex flex-col justify-between rounded-3xl border border-gray-100 bg-[#F7F9FC] p-6"
+                            "classes": "flex h-full flex-col justify-between rounded-3xl border border-gray-100 bg-[#F7F9FC] p-6"
                           }
                         },
                         "children": [
@@ -4826,466 +6003,341 @@ var template = [
                             ]
                           }
                         ]
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "id": "wj-ugc",
-            "type": "section",
-            "options": {
-              "anchor": "gallery"
-            },
-            "cssSelectors": {
-              "*": {
-                "classes": "w-full bg-[#F7F9FC] py-16"
-              }
-            },
-            "children": [
-              {
-                "id": "wj-ugc-in",
-                "type": "container",
-                "options": {},
-                "cssSelectors": {
-                  "*": {
-                    "classes": "mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8"
-                  }
-                },
-                "children": [
-                  {
-                    "id": "wj-ugc-head",
-                    "type": "container",
-                    "options": {},
-                    "cssSelectors": {
-                      "*": {
-                        "classes": "mb-8 flex flex-col justify-between gap-2 md:flex-row md:items-end"
-                      }
-                    },
-                    "children": [
-                      {
-                        "id": "wj-ugc-head-t",
-                        "type": "container",
-                        "options": {},
-                        "cssSelectors": {
-                          "*": {
-                            "classes": "flex flex-col gap-1"
-                          }
-                        },
-                        "children": [
-                          {
-                            "id": "wj-ugc-k",
-                            "type": "text",
-                            "options": {
-                              "text": "Share The Smiles",
-                              "tag": "span"
-                            },
-                            "cssSelectors": {
-                              "*": {
-                                "classes": "font-heading text-xs font-bold uppercase tracking-widest text-[#FF6B6B]"
-                              }
-                            }
-                          },
-                          {
-                            "id": "wj-ugc-h",
-                            "type": "heading",
-                            "options": {
-                              "text": "#WonderJoyKids On Instagram",
-                              "tag": "h2"
-                            },
-                            "cssSelectors": {
-                              "*": {
-                                "classes": "font-heading text-3xl font-bold text-[#1D1E2C]"
-                              }
-                            }
-                          }
-                        ]
                       },
                       {
-                        "id": "wj-ugc-follow",
-                        "type": "button",
-                        "options": {
-                          "text": "Follow @WonderJoyToys",
-                          "linkTo": "custom",
-                          "scheme": "",
-                          "url": "https://instagram.com/",
-                          "target": "_blank",
-                          "icon": "IconBrandInstagram",
-                          "iconSize": 20
-                        },
-                        "cssSelectors": {
-                          "*": {
-                            "classes": "group inline-flex flex-row-reverse items-center gap-1.5 cursor-pointer"
-                          },
-                          "icon": {
-                            "classes": "flex items-center text-[#FF6B6B]"
-                          },
-                          "label": {
-                            "classes": "font-heading text-sm font-bold text-[#1D1E2C] group-hover:text-[#FF6B6B]"
-                          }
-                        }
-                      }
-                    ]
-                  },
-                  {
-                    "id": "wj-ugc-grid",
-                    "type": "container",
-                    "options": {},
-                    "cssSelectors": {
-                      "*": {
-                        "classes": "grid grid-cols-2 gap-4 sm:grid-cols-4"
-                      }
-                    },
-                    "children": [
-                      {
-                        "id": "wj-ugc-u1",
+                        "id": "wj-review-r4",
                         "type": "container",
                         "options": {},
                         "cssSelectors": {
                           "*": {
-                            "classes": "group relative aspect-square overflow-hidden rounded-3xl bg-white shadow-sm"
+                            "classes": "flex h-full flex-col justify-between rounded-3xl border border-gray-100 bg-[#F7F9FC] p-6"
                           }
                         },
                         "children": [
                           {
-                            "id": "wj-ugc-u1-art",
-                            "type": "text",
-                            "options": {
-                              "text": "🧸",
-                              "tag": "span"
-                            },
-                            "cssSelectors": {
-                              "*": {
-                                "classes": "flex h-full w-full items-center justify-center bg-gradient-to-tr from-[#FF6B6B]/30 to-[#FFD166]/40 text-4xl"
-                              }
-                            }
-                          },
-                          {
-                            "id": "wj-ugc-u1-over",
+                            "id": "wj-review-r4-top",
                             "type": "container",
                             "options": {},
                             "cssSelectors": {
                               "*": {
-                                "classes": "absolute inset-0 flex flex-col items-center justify-center gap-1 bg-[#1D1E2C]/60 p-4 text-center text-white opacity-0 transition-opacity group-hover:opacity-100"
+                                "classes": "flex flex-col gap-3"
                               }
                             },
                             "children": [
                               {
-                                "id": "wj-ugc-u1-ic",
-                                "type": "icon",
-                                "options": {
-                                  "iconName": "IconBrandInstagram",
-                                  "size": 24,
-                                  "label": ""
-                                },
-                                "cssSelectors": {
-                                  "*": {
-                                    "classes": "flex"
-                                  }
-                                }
-                              },
-                              {
-                                "id": "wj-ugc-u1-cap",
+                                "id": "wj-review-r4-stars",
                                 "type": "text",
                                 "options": {
-                                  "text": "\"Morning plushie tea party! ☕\"",
+                                  "text": "★★★★★",
                                   "tag": "span"
                                 },
                                 "cssSelectors": {
                                   "*": {
-                                    "classes": "text-xs font-semibold"
+                                    "classes": "text-sm tracking-widest text-amber-400"
                                   }
                                 }
                               },
                               {
-                                "id": "wj-ugc-u1-btn",
-                                "type": "button",
+                                "id": "wj-review-r4-q",
+                                "type": "text",
                                 "options": {
-                                  "text": "Tap to Shop",
-                                  "linkTo": "custom",
-                                  "scheme": "",
-                                  "url": "/shop",
-                                  "target": "",
-                                  "icon": "",
-                                  "iconSize": 16
+                                  "text": "\"Ordered the STEM robot kit for a rainy weekend and it kept both kids busy for hours. Clear instructions and sturdy parts.\"",
+                                  "tag": "p"
                                 },
                                 "cssSelectors": {
                                   "*": {
-                                    "classes": "mt-2 inline-flex items-center rounded-full bg-white px-3 py-1 cursor-pointer"
-                                  },
-                                  "icon": {
-                                    "classes": "flex items-center shrink-0"
-                                  },
-                                  "label": {
-                                    "classes": "text-[10px] font-bold uppercase text-[#1D1E2C]"
+                                    "classes": "text-sm italic leading-relaxed text-gray-600"
                                   }
                                 }
+                              }
+                            ]
+                          },
+                          {
+                            "id": "wj-review-r4-who",
+                            "type": "container",
+                            "options": {},
+                            "cssSelectors": {
+                              "*": {
+                                "classes": "mt-6 flex items-center gap-3 border-t border-gray-200/60 pt-4"
+                              }
+                            },
+                            "children": [
+                              {
+                                "id": "wj-review-r4-ini",
+                                "type": "text",
+                                "options": {
+                                  "text": "DO",
+                                  "tag": "span"
+                                },
+                                "cssSelectors": {
+                                  "*": {
+                                    "classes": "flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#00C9A733] font-heading font-bold text-[#00C9A7]"
+                                  }
+                                }
+                              },
+                              {
+                                "id": "wj-review-r4-name",
+                                "type": "container",
+                                "options": {},
+                                "cssSelectors": {
+                                  "*": {
+                                    "classes": "flex flex-col"
+                                  }
+                                },
+                                "children": [
+                                  {
+                                    "id": "wj-review-r4-n",
+                                    "type": "heading",
+                                    "options": {
+                                      "text": "Daniel Okafor",
+                                      "tag": "h4"
+                                    },
+                                    "cssSelectors": {
+                                      "*": {
+                                        "classes": "font-heading text-sm font-bold text-[#1D1E2C]"
+                                      }
+                                    }
+                                  },
+                                  {
+                                    "id": "wj-review-r4-r",
+                                    "type": "text",
+                                    "options": {
+                                      "text": "Verified Buyer • Dad of 3",
+                                      "tag": "span"
+                                    },
+                                    "cssSelectors": {
+                                      "*": {
+                                        "classes": "text-[11px] font-semibold text-[#00C9A7]"
+                                      }
+                                    }
+                                  }
+                                ]
                               }
                             ]
                           }
                         ]
                       },
                       {
-                        "id": "wj-ugc-u2",
+                        "id": "wj-review-r5",
                         "type": "container",
                         "options": {},
                         "cssSelectors": {
                           "*": {
-                            "classes": "group relative aspect-square overflow-hidden rounded-3xl bg-white shadow-sm"
+                            "classes": "flex h-full flex-col justify-between rounded-3xl border border-gray-100 bg-[#F7F9FC] p-6"
                           }
                         },
                         "children": [
                           {
-                            "id": "wj-ugc-u2-art",
-                            "type": "text",
-                            "options": {
-                              "text": "🚀",
-                              "tag": "span"
-                            },
-                            "cssSelectors": {
-                              "*": {
-                                "classes": "flex h-full w-full items-center justify-center bg-gradient-to-tr from-[#00C9A7]/30 to-[#FF6B6B]/30 text-4xl"
-                              }
-                            }
-                          },
-                          {
-                            "id": "wj-ugc-u2-over",
+                            "id": "wj-review-r5-top",
                             "type": "container",
                             "options": {},
                             "cssSelectors": {
                               "*": {
-                                "classes": "absolute inset-0 flex flex-col items-center justify-center gap-1 bg-[#1D1E2C]/60 p-4 text-center text-white opacity-0 transition-opacity group-hover:opacity-100"
+                                "classes": "flex flex-col gap-3"
                               }
                             },
                             "children": [
                               {
-                                "id": "wj-ugc-u2-ic",
-                                "type": "icon",
-                                "options": {
-                                  "iconName": "IconBrandInstagram",
-                                  "size": 24,
-                                  "label": ""
-                                },
-                                "cssSelectors": {
-                                  "*": {
-                                    "classes": "flex"
-                                  }
-                                }
-                              },
-                              {
-                                "id": "wj-ugc-u2-cap",
+                                "id": "wj-review-r5-stars",
                                 "type": "text",
                                 "options": {
-                                  "text": "\"Building rocket bases all day! 🌌\"",
+                                  "text": "★★★★★",
                                   "tag": "span"
                                 },
                                 "cssSelectors": {
                                   "*": {
-                                    "classes": "text-xs font-semibold"
+                                    "classes": "text-sm tracking-widest text-amber-400"
                                   }
                                 }
                               },
                               {
-                                "id": "wj-ugc-u2-btn",
-                                "type": "button",
+                                "id": "wj-review-r5-q",
+                                "type": "text",
                                 "options": {
-                                  "text": "Tap to Shop",
-                                  "linkTo": "custom",
-                                  "scheme": "",
-                                  "url": "/shop",
-                                  "target": "",
-                                  "icon": "",
-                                  "iconSize": 16
+                                  "text": "\"Gift wrapping was gorgeous and it arrived two days early. My niece hugged the plush bunny the moment she opened the box.\"",
+                                  "tag": "p"
                                 },
                                 "cssSelectors": {
                                   "*": {
-                                    "classes": "mt-2 inline-flex items-center rounded-full bg-white px-3 py-1 cursor-pointer"
-                                  },
-                                  "icon": {
-                                    "classes": "flex items-center shrink-0"
-                                  },
-                                  "label": {
-                                    "classes": "text-[10px] font-bold uppercase text-[#1D1E2C]"
+                                    "classes": "text-sm italic leading-relaxed text-gray-600"
                                   }
                                 }
+                              }
+                            ]
+                          },
+                          {
+                            "id": "wj-review-r5-who",
+                            "type": "container",
+                            "options": {},
+                            "cssSelectors": {
+                              "*": {
+                                "classes": "mt-6 flex items-center gap-3 border-t border-gray-200/60 pt-4"
+                              }
+                            },
+                            "children": [
+                              {
+                                "id": "wj-review-r5-ini",
+                                "type": "text",
+                                "options": {
+                                  "text": "PS",
+                                  "tag": "span"
+                                },
+                                "cssSelectors": {
+                                  "*": {
+                                    "classes": "flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#FF6B6B33] font-heading font-bold text-[#FF6B6B]"
+                                  }
+                                }
+                              },
+                              {
+                                "id": "wj-review-r5-name",
+                                "type": "container",
+                                "options": {},
+                                "cssSelectors": {
+                                  "*": {
+                                    "classes": "flex flex-col"
+                                  }
+                                },
+                                "children": [
+                                  {
+                                    "id": "wj-review-r5-n",
+                                    "type": "heading",
+                                    "options": {
+                                      "text": "Priya Sharma",
+                                      "tag": "h4"
+                                    },
+                                    "cssSelectors": {
+                                      "*": {
+                                        "classes": "font-heading text-sm font-bold text-[#1D1E2C]"
+                                      }
+                                    }
+                                  },
+                                  {
+                                    "id": "wj-review-r5-r",
+                                    "type": "text",
+                                    "options": {
+                                      "text": "Verified Buyer • Proud Aunt",
+                                      "tag": "span"
+                                    },
+                                    "cssSelectors": {
+                                      "*": {
+                                        "classes": "text-[11px] font-semibold text-[#00C9A7]"
+                                      }
+                                    }
+                                  }
+                                ]
                               }
                             ]
                           }
                         ]
                       },
                       {
-                        "id": "wj-ugc-u3",
+                        "id": "wj-review-r6",
                         "type": "container",
                         "options": {},
                         "cssSelectors": {
                           "*": {
-                            "classes": "group relative aspect-square overflow-hidden rounded-3xl bg-white shadow-sm"
+                            "classes": "flex h-full flex-col justify-between rounded-3xl border border-gray-100 bg-[#F7F9FC] p-6"
                           }
                         },
                         "children": [
                           {
-                            "id": "wj-ugc-u3-art",
-                            "type": "text",
-                            "options": {
-                              "text": "🎨",
-                              "tag": "span"
-                            },
-                            "cssSelectors": {
-                              "*": {
-                                "classes": "flex h-full w-full items-center justify-center bg-gradient-to-tr from-[#FFD166]/40 to-[#00C9A7]/30 text-4xl"
-                              }
-                            }
-                          },
-                          {
-                            "id": "wj-ugc-u3-over",
+                            "id": "wj-review-r6-top",
                             "type": "container",
                             "options": {},
                             "cssSelectors": {
                               "*": {
-                                "classes": "absolute inset-0 flex flex-col items-center justify-center gap-1 bg-[#1D1E2C]/60 p-4 text-center text-white opacity-0 transition-opacity group-hover:opacity-100"
+                                "classes": "flex flex-col gap-3"
                               }
                             },
                             "children": [
                               {
-                                "id": "wj-ugc-u3-ic",
-                                "type": "icon",
-                                "options": {
-                                  "iconName": "IconBrandInstagram",
-                                  "size": 24,
-                                  "label": ""
-                                },
-                                "cssSelectors": {
-                                  "*": {
-                                    "classes": "flex"
-                                  }
-                                }
-                              },
-                              {
-                                "id": "wj-ugc-u3-cap",
+                                "id": "wj-review-r6-stars",
                                 "type": "text",
                                 "options": {
-                                  "text": "\"Mess-free finger painting magic!\"",
+                                  "text": "★★★★★",
                                   "tag": "span"
                                 },
                                 "cssSelectors": {
                                   "*": {
-                                    "classes": "text-xs font-semibold"
+                                    "classes": "text-sm tracking-widest text-amber-400"
                                   }
                                 }
                               },
                               {
-                                "id": "wj-ugc-u3-btn",
-                                "type": "button",
+                                "id": "wj-review-r6-q",
+                                "type": "text",
                                 "options": {
-                                  "text": "Tap to Shop",
-                                  "linkTo": "custom",
-                                  "scheme": "",
-                                  "url": "/shop",
-                                  "target": "",
-                                  "icon": "",
-                                  "iconSize": 16
+                                  "text": "\"Love that the wooden toys are plastic-free and still bright and fun. Customer service helped me pick the right age range.\"",
+                                  "tag": "p"
                                 },
                                 "cssSelectors": {
                                   "*": {
-                                    "classes": "mt-2 inline-flex items-center rounded-full bg-white px-3 py-1 cursor-pointer"
-                                  },
-                                  "icon": {
-                                    "classes": "flex items-center shrink-0"
-                                  },
-                                  "label": {
-                                    "classes": "text-[10px] font-bold uppercase text-[#1D1E2C]"
+                                    "classes": "text-sm italic leading-relaxed text-gray-600"
                                   }
                                 }
                               }
                             ]
-                          }
-                        ]
-                      },
-                      {
-                        "id": "wj-ugc-u4",
-                        "type": "container",
-                        "options": {},
-                        "cssSelectors": {
-                          "*": {
-                            "classes": "group relative aspect-square overflow-hidden rounded-3xl bg-white shadow-sm"
-                          }
-                        },
-                        "children": [
-                          {
-                            "id": "wj-ugc-u4-art",
-                            "type": "text",
-                            "options": {
-                              "text": "🧩",
-                              "tag": "span"
-                            },
-                            "cssSelectors": {
-                              "*": {
-                                "classes": "flex h-full w-full items-center justify-center bg-gradient-to-tr from-[#FF6B6B]/20 to-purple-300/30 text-4xl"
-                              }
-                            }
                           },
                           {
-                            "id": "wj-ugc-u4-over",
+                            "id": "wj-review-r6-who",
                             "type": "container",
                             "options": {},
                             "cssSelectors": {
                               "*": {
-                                "classes": "absolute inset-0 flex flex-col items-center justify-center gap-1 bg-[#1D1E2C]/60 p-4 text-center text-white opacity-0 transition-opacity group-hover:opacity-100"
+                                "classes": "mt-6 flex items-center gap-3 border-t border-gray-200/60 pt-4"
                               }
                             },
                             "children": [
                               {
-                                "id": "wj-ugc-u4-ic",
-                                "type": "icon",
-                                "options": {
-                                  "iconName": "IconBrandInstagram",
-                                  "size": 24,
-                                  "label": ""
-                                },
-                                "cssSelectors": {
-                                  "*": {
-                                    "classes": "flex"
-                                  }
-                                }
-                              },
-                              {
-                                "id": "wj-ugc-u4-cap",
+                                "id": "wj-review-r6-ini",
                                 "type": "text",
                                 "options": {
-                                  "text": "\"Puzzle completed in record time!\"",
+                                  "text": "EC",
                                   "tag": "span"
                                 },
                                 "cssSelectors": {
                                   "*": {
-                                    "classes": "text-xs font-semibold"
+                                    "classes": "flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#FFD16666] font-heading font-bold text-[#B45309]"
                                   }
                                 }
                               },
                               {
-                                "id": "wj-ugc-u4-btn",
-                                "type": "button",
-                                "options": {
-                                  "text": "Tap to Shop",
-                                  "linkTo": "custom",
-                                  "scheme": "",
-                                  "url": "/shop",
-                                  "target": "",
-                                  "icon": "",
-                                  "iconSize": 16
-                                },
+                                "id": "wj-review-r6-name",
+                                "type": "container",
+                                "options": {},
                                 "cssSelectors": {
                                   "*": {
-                                    "classes": "mt-2 inline-flex items-center rounded-full bg-white px-3 py-1 cursor-pointer"
-                                  },
-                                  "icon": {
-                                    "classes": "flex items-center shrink-0"
-                                  },
-                                  "label": {
-                                    "classes": "text-[10px] font-bold uppercase text-[#1D1E2C]"
+                                    "classes": "flex flex-col"
                                   }
-                                }
+                                },
+                                "children": [
+                                  {
+                                    "id": "wj-review-r6-n",
+                                    "type": "heading",
+                                    "options": {
+                                      "text": "Emily Carter",
+                                      "tag": "h4"
+                                    },
+                                    "cssSelectors": {
+                                      "*": {
+                                        "classes": "font-heading text-sm font-bold text-[#1D1E2C]"
+                                      }
+                                    }
+                                  },
+                                  {
+                                    "id": "wj-review-r6-r",
+                                    "type": "text",
+                                    "options": {
+                                      "text": "Verified Buyer • Mom of 1",
+                                      "tag": "span"
+                                    },
+                                    "cssSelectors": {
+                                      "*": {
+                                        "classes": "text-[11px] font-semibold text-[#00C9A7]"
+                                      }
+                                    }
+                                  }
+                                ]
                               }
                             ]
                           }
