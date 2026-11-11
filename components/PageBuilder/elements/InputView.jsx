@@ -1,6 +1,6 @@
 "use client"
 import React from "react";
-import * as TablerIcons from '@tabler/icons-react';
+import { tablerIcon } from "@/components/icons/TablerIcon";
 import { elementCssClasses } from "../ElementsDefinition";
 
 /*
@@ -14,7 +14,7 @@ const InputView = (props) => {
 	var cls = elementCssClasses('input', props?.cssSelectors);
 
 	var options = props?.options;
-	var IconX = TablerIcons[options?.icon];
+	var IconX = tablerIcon(options?.icon);
 	var iconSize = Number(options?.iconSize) || 20;
 
 	return (

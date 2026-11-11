@@ -8,6 +8,7 @@ import '@splidejs/react-splide/css';
 import Image from "next/image";
 import { useProductStore } from "../../../store/productStore";
 import { elementCssClasses } from "../ElementsDefinition";
+import { canOptimizeImage, sizesAuto } from "@/lib/imageOptimization.mjs";
 
 /*
 	The images a product's gallery shows: its variations' images when any
@@ -53,8 +54,10 @@ const thumbnailOptions = {
 	it. The slider's arrows and dots get the block's classes through Splide's
 	`classes` option, next to Splide's own class names (which it uses to find
 	them). `activeImageId` slides to that image when it is in the gallery.
-	Images are `unoptimized`, as the shop always had them: product images come
-	from the store's own server, which next/image is not configured for.
+	Images from the store's server are resized by next/image (they were
+	`unoptimized`, full-size uploads; see lib/imageOptimization.mjs). The
+	first image - the product page's largest paint - loads eagerly at high
+	priority; the rest stay lazy.
 */
 export function ProductGalleryMarkup({ cls, id, index, type, options, images, title, activeImageId, rootClassName = '', rootProps = {} }) {
 
@@ -94,7 +97,7 @@ export function ProductGalleryMarkup({ cls, id, index, type, options, images, ti
 			>
 				{images.map((item, itemIndex) => (
 					<SplideSlide key={item?.id ?? itemIndex} className={cls('item')}>
-						<Image unoptimized className={`${cls('image')} w-full h-auto`} src={item?.src || `/thumb.png`} alt={item?.alt || title || ""} width={500} height={500} />
+						<Image unoptimized={!canOptimizeImage(item?.src || `/thumb.png`)} sizes={itemIndex === 0 ? '(max-width: 768px) 100vw, 60vw' : sizesAuto('(max-width: 768px) 100vw, 60vw')} {...(itemIndex === 0 ? { loading: 'eager', fetchPriority: 'high' } : {})} className={`${cls('image')} w-full h-auto`} src={item?.src || `/thumb.png`} alt={item?.alt || title || ""} width={500} height={500} />
 					</SplideSlide>
 				))}
 			</Splide>
@@ -108,7 +111,7 @@ export function ProductGalleryMarkup({ cls, id, index, type, options, images, ti
 				>
 					{images.map((item, itemIndex) => (
 						<SplideSlide key={item?.id ?? itemIndex} className={cls('thumbnail')}>
-							<Image unoptimized className={cls('thumbnail-image')} src={item?.src || `/thumb.png`} alt={item?.alt || title || ""} width={500} height={500} />
+							<Image unoptimized={!canOptimizeImage(item?.src || `/thumb.png`)} sizes={sizesAuto('160px')} className={cls('thumbnail-image')} src={item?.src || `/thumb.png`} alt={item?.alt || title || ""} width={500} height={500} />
 						</SplideSlide>
 					))}
 				</Splide>

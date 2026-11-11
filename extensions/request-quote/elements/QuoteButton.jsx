@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
-import * as TablerIcons from "@tabler/icons-react";
+import { tablerIcon } from "@/components/icons/TablerIcon";
 
 import { usePost } from "../../../components/PageBuilder/context/PostContext";
 import { useCounterStore } from "../../../store/useCounterStore";
@@ -77,7 +77,7 @@ const QuoteButton = (props) => {
 		|| (decision.mode === "also" ? settings?.addLabel : settings?.buttonLabel)
 		|| "Request a Quote";
 
-	const IconX = icon ? TablerIcons[icon] : null;
+	const IconX = icon ? tablerIcon(icon) : null;
 
 	function onAdd() {
 		if (isEditor) return;

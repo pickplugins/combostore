@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600" role="img" aria-label="Muthofon Mobile template preview">
+  <title>Muthofon Mobile template preview</title>
+  <!-- Picker thumbnail for templates/Muthofon: a wireframe of its home page - three-tier marketplace header and the bento hero with a lock-screen phone - in the template's palette. -->
+  <defs>
+    <clipPath id="mf-t-clip"><rect width="800" height="600"/></clipPath>
+    <linearGradient id="mf-t-wall" x1="0" y1="0" x2="0.6" y2="1"><stop offset="0" stop-color="#7B3FF2"/><stop offset="0.5" stop-color="#B04BEB"/><stop offset="1" stop-color="#FF7A59"/></linearGradient>
+    <radialGradient id="mf-t-glow" cx="80%" cy="30%" r="60%"><stop offset="0" stop-color="#7B3FF2" stop-opacity="0.55"/><stop offset="1" stop-color="#7B3FF2" stop-opacity="0"/></radialGradient>
+    <linearGradient id="mf-t-logo" x1="0" y1="0" x2="0.6" y2="1"><stop offset="0" stop-color="#7B3FF2"/><stop offset="1" stop-color="#FF7A59"/></linearGradient>
+  </defs>
+  <g clip-path="url(#mf-t-clip)">
+  <rect width="800" height="600" fill="#F2F2F7"/>
+  <!-- utility bar -->
+  <rect width="800" height="18" fill="#111116"/>
+  <circle cx="22" cy="9" r="2.5" fill="#2BD9A0"/><rect x="30" y="7" width="150" height="4" rx="2" fill="#FFFFFF" opacity="0.5"/>
+  <g fill="#FFFFFF" opacity="0.5"><rect x="560" y="7" width="40" height="4" rx="2"/><rect x="612" y="7" width="34" height="4" rx="2"/><rect x="658" y="7" width="40" height="4" rx="2"/><rect x="710" y="7" width="34" height="4" rx="2"/></g>
+  <!-- main row -->
+  <rect y="18" width="800" height="50" fill="#FFFFFF"/>
+  <rect x="22" y="29" width="16" height="26" rx="5" fill="url(#mf-t-logo)" stroke="#111116" stroke-width="2"/>
+  <text x="44" y="49" font-family="Sora, Arial, sans-serif" font-size="18" font-weight="700" fill="#111116">muthofon</text>
+  <rect x="160" y="28" width="470" height="30" rx="15" fill="#111116"/>
+  <circle cx="176" cy="43" r="11" fill="#7B3FF2"/><rect x="196" y="40" width="160" height="6" rx="3" fill="#FFFFFF" opacity="0.4"/>
+  <rect x="660" y="30" width="28" height="26" rx="8" fill="#F2F2F7"/><rect x="696" y="30" width="28" height="26" rx="8" fill="#F2F2F7"/><rect x="732" y="30" width="28" height="26" rx="8" fill="#7B3FF2"/>
+  <!-- category bar -->
+  <rect y="68" width="800" height="34" fill="#FFFFFF"/><rect y="68" width="800" height="1" fill="#E3E3EA"/>
+  <rect x="22" y="75" width="88" height="20" rx="7" fill="#EFE8FF"/><rect x="32" y="83" width="66" height="4" rx="2" fill="#7B3FF2"/>
+  <g fill="#111116" opacity="0.6"><rect x="124" y="83" width="44" height="4" rx="2"/><rect x="180" y="83" width="32" height="4" rx="2"/><rect x="224" y="83" width="36" height="4" rx="2"/><rect x="272" y="83" width="38" height="4" rx="2"/><rect x="322" y="83" width="30" height="4" rx="2"/><rect x="364" y="83" width="28" height="4" rx="2"/><rect x="404" y="83" width="44" height="4" rx="2"/><rect x="460" y="83" width="44" height="4" rx="2"/><rect x="516" y="83" width="62" height="4" rx="2"/></g>
+  <rect x="690" y="83" width="70" height="4" rx="2" fill="#FF7A59"/>
+  <!-- bento: main tile -->
+  <rect x="22" y="116" width="390" height="400" rx="26" fill="#111116"/>
+  <rect x="22" y="116" width="390" height="400" rx="26" fill="url(#mf-t-glow)"/>
+  <rect x="44" y="142" width="96" height="16" rx="8" fill="#FFFFFF" fill-opacity="0.1"/>
+  <g font-family="Sora, Arial, sans-serif" font-size="27" font-weight="700" fill="#FFFFFF"><text x="44" y="194">Your next</text><text x="44" y="226">phone, best</text><text x="44" y="258">price in town.</text></g>
+  <g fill="#FFFFFF" opacity="0.35"><rect x="44" y="280" width="170" height="5" rx="2.5"/><rect x="44" y="292" width="150" height="5" rx="2.5"/><rect x="44" y="304" width="160" height="5" rx="2.5"/></g>
+  <rect x="44" y="328" width="100" height="32" rx="16" fill="#7B3FF2"/><rect x="44" y="370" width="116" height="32" rx="16" fill="none" stroke="#FFFFFF" stroke-opacity="0.25"/>
+  <!-- the phone -->
+  <rect x="260" y="140" width="132" height="280" rx="28" fill="#0A0A0D" stroke="#3A3A44" stroke-width="2"/>
+  <rect x="267" y="147" width="118" height="266" rx="22" fill="url(#mf-t-wall)"/>
+  <rect x="306" y="153" width="40" height="11" rx="5.5" fill="#0A0A0D"/>
+  <text x="326" y="210" font-family="Sora, Arial, sans-serif" font-size="34" font-weight="600" fill="#FFFFFF" text-anchor="middle">9:41</text>
+  <g fill="#FFFFFF" fill-opacity="0.22"><rect x="274" y="300" width="104" height="28" rx="9"/><rect x="274" y="333" width="104" height="28" rx="9"/><rect x="274" y="366" width="104" height="28" rx="9"/></g>
+  <rect x="280" y="306" width="16" height="16" rx="5" fill="#FF7A59"/><rect x="280" y="339" width="16" height="16" rx="5" fill="#2BD9A0"/><rect x="280" y="372" width="16" height="16" rx="5" fill="#7B3FF2"/>
+  <g fill="#FFFFFF" opacity="0.8"><rect x="302" y="311" width="64" height="4" rx="2"/><rect x="302" y="344" width="58" height="4" rx="2"/><rect x="302" y="377" width="62" height="4" rx="2"/></g>
+  <rect x="306" y="404" width="40" height="3" rx="1.5" fill="#FFFFFF" opacity="0.8"/>
+  <!-- small tiles -->
+  <rect x="424" y="116" width="164" height="194" rx="22" fill="#FF7A59"/>
+  <rect x="600" y="116" width="178" height="194" rx="22" fill="#EFE8FF"/>
+  <rect x="424" y="322" width="164" height="194" rx="22" fill="#DDF8EE"/>
+  <rect x="600" y="322" width="178" height="194" rx="22" fill="#FFFFFF" stroke="#E3E3EA"/>
+  <g><rect x="440" y="136" width="44" height="4" rx="2" fill="#FFFFFF" opacity="0.7"/><rect x="440" y="150" width="120" height="10" rx="5" fill="#FFFFFF"/><rect x="440" y="166" width="96" height="10" rx="5" fill="#FFFFFF"/><rect x="440" y="270" width="72" height="22" rx="11" fill="#FFFFFF"/></g>
+  <g fill="#111116"><rect x="616" y="136" width="44" height="4" rx="2" opacity="0.5"/><rect x="616" y="150" width="130" height="10" rx="5"/><rect x="616" y="166" width="96" height="10" rx="5"/><rect x="616" y="270" width="80" height="22" rx="11"/></g>
+  <g fill="#111116"><rect x="440" y="342" width="44" height="4" rx="2" opacity="0.5"/><rect x="440" y="356" width="124" height="10" rx="5"/><rect x="440" y="372" width="70" height="10" rx="5"/><rect x="440" y="476" width="78" height="22" rx="11"/></g>
+  <g fill="#111116"><rect x="616" y="342" width="44" height="4" rx="2" opacity="0.5"/><rect x="616" y="356" width="136" height="10" rx="5"/><rect x="616" y="372" width="110" height="10" rx="5"/><rect x="616" y="476" width="78" height="22" rx="11"/></g>
+  <!-- trust strip -->
+  <rect x="22" y="530" width="756" height="40" rx="16" fill="#FFFFFF" stroke="#E3E3EA"/>
+  <g fill="#7B3FF2"><rect x="40" y="546" width="8" height="8" rx="2"/><rect x="166" y="546" width="8" height="8" rx="2"/><rect x="292" y="546" width="8" height="8" rx="2"/><rect x="418" y="546" width="8" height="8" rx="2"/><rect x="544" y="546" width="8" height="8" rx="2"/><rect x="670" y="546" width="8" height="8" rx="2"/></g>
+  <g fill="#111116" opacity="0.65"><rect x="56" y="548" width="70" height="4" rx="2"/><rect x="182" y="548" width="76" height="4" rx="2"/><rect x="308" y="548" width="44" height="4" rx="2"/><rect x="434" y="548" width="80" height="4" rx="2"/><rect x="560" y="548" width="84" height="4" rx="2"/><rect x="686" y="548" width="50" height="4" rx="2"/></g>
+  </g>
+</svg>

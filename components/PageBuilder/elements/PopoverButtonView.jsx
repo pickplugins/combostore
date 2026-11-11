@@ -5,7 +5,7 @@ import { IconPlus, IconX } from "@tabler/icons-react";
 import BlockRender from "../BlockRender";
 import "animate.css";
 
-import * as TablerIcons from "@tabler/icons-react";
+import { tablerIcon } from "@/components/icons/TablerIcon";
 
 import { elementCssClasses } from "../ElementsDefinition";
 const PopoverButton = (props) => {
@@ -33,7 +33,7 @@ const PopoverButton = (props) => {
 	const [isOpen, setIsOpen] = useState(false);
 	const [isClosing, setIsClosing] = useState(false);
 
-	const IconCustom = TablerIcons[buttonIcon];
+	const IconCustom = tablerIcon(buttonIcon);
 
 	let positionClass = "";
 

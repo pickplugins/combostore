@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 560" width="400" height="560" role="img" aria-label="A faceted glass perfume bottle with amber liquid, a gold cap and a cream label reading Oud Noir">
+  <!-- Hero art for templates/Sugondhi: a perfume bottle on a transparent background. Replace with a cut-out photo of your signature scent. -->
+  <defs>
+    <linearGradient id="sg-glass" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0.55"/><stop offset="0.5" stop-color="#FFFFFF" stop-opacity="0.15"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0.5"/></linearGradient>
+    <linearGradient id="sg-juice" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E7A64A"/><stop offset="0.6" stop-color="#C8742E"/><stop offset="1" stop-color="#8E4A1C"/></linearGradient>
+    <linearGradient id="sg-gold" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9C7330"/><stop offset="0.35" stop-color="#F3D58C"/><stop offset="0.6" stop-color="#C9A050"/><stop offset="1" stop-color="#7E5A22"/></linearGradient>
+    <radialGradient id="sg-shadow" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#2A1B17" stop-opacity="0.35"/><stop offset="1" stop-color="#2A1B17" stop-opacity="0"/></radialGradient>
+  </defs>
+  <ellipse cx="200" cy="532" rx="150" ry="18" fill="url(#sg-shadow)"/>
+  <!-- cap -->
+  <rect x="150" y="30" width="100" height="96" rx="8" fill="url(#sg-gold)"/>
+  <g stroke="#7E5A22" stroke-opacity="0.35" stroke-width="2"><path d="M168 36v84M186 36v84M204 36v84M222 36v84M240 36v84"/></g>
+  <rect x="164" y="124" width="72" height="26" fill="url(#sg-gold)"/>
+  <!-- bottle body: faceted -->
+  <path d="M86 170L314 170L348 210L348 486Q348 520 314 520L86 520Q52 520 52 486L52 210Z" fill="url(#sg-juice)"/>
+  <path d="M86 170L314 170L348 210L348 250L52 250L52 210Z" fill="#FFFFFF" opacity="0.18"/>
+  <path d="M86 170L314 170L348 210L348 486Q348 520 314 520L86 520Q52 520 52 486L52 210Z" fill="url(#sg-glass)" opacity="0.6"/>
+  <path d="M86 170L314 170L348 210L348 486Q348 520 314 520L86 520Q52 520 52 486L52 210Z" fill="none" stroke="#FFFFFF" stroke-opacity="0.7" stroke-width="3"/>
+  <!-- facets -->
+  <path d="M52 210L92 236V478L52 486" fill="#FFFFFF" opacity="0.18"/>
+  <path d="M348 210L308 236V478L348 486" fill="#2A1B17" opacity="0.15"/>
+  <path d="M92 236H308M92 478H308" stroke="#FFFFFF" stroke-opacity="0.35" stroke-width="2"/>
+  <rect x="70" y="250" width="10" height="200" rx="5" fill="#FFFFFF" opacity="0.45"/>
+  <!-- label -->
+  <rect x="120" y="300" width="160" height="128" rx="4" fill="#F7F2EC"/>
+  <rect x="128" y="308" width="144" height="112" rx="2" fill="none" stroke="#C9A050" stroke-width="1.5"/>
+  <text x="200" y="344" font-family="Italiana, Georgia, serif" font-size="15" letter-spacing="5" fill="#2A1B17" text-anchor="middle">SUGONDHI</text>
+  <path d="M176 356h48" stroke="#C9A050" stroke-width="1"/>
+  <text x="200" y="384" font-family="Italiana, Georgia, serif" font-size="24" fill="#2A1B17" text-anchor="middle">Oud Noir</text>
+  <text x="200" y="406" font-family="Arial, sans-serif" font-size="6.5" letter-spacing="1.6" fill="#7A6A62" text-anchor="middle">EAU DE PARFUM · 100 ML</text>
+</svg>

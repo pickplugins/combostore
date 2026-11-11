@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import * as TablerIcons from "@tabler/icons-react";
+import { tablerIcon } from "@/components/icons/TablerIcon";
 
 import { useUtilsStore } from "../../../store/useUtilsStore";
 import { useDiscountRulesStore } from "../lib/store";
@@ -73,7 +73,7 @@ const CartDiscounts = (props) => {
 	const result = isEditor ? SAMPLE : live;
 
 	const lines = result?.lines ?? [];
-	const IconX = icon ? TablerIcons[icon] : null;
+	const IconX = icon ? tablerIcon(icon) : null;
 
 	/* Nothing qualified. Rendering an empty heading would leave a stray label
 	   in the cart on most visits, so the block collapses unless the merchant

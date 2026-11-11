@@ -1,6 +1,6 @@
 "use client"
 import React from "react";
-import * as TablerIcons from '@tabler/icons-react';
+import { tablerIcon } from "@/components/icons/TablerIcon";
 import Link from "next/link";
 
 
@@ -12,7 +12,9 @@ import { getSettings } from "@/lib/getSettings";
 
 import ToggleContent from "../../../components/ToggleContent";
 import DropDown from "../../../components/DropDown";
-import LocationPicker from "../../../components/LocationPicker";
+import dynamic from "next/dynamic";
+/* The map (Google Maps) loads only when the "Delivery location" panel shows it: it was in every shop page's JavaScript. */
+const LocationPicker = dynamic(() => import("../../../components/LocationPicker"), { ssr: false });
 import { useAuthStore } from '../../../store/authStore';
 import { useCounterStore } from '../../../store/useCounterStore'
 import { useUtilsStore } from '../../../store/useUtilsStore'
@@ -182,7 +184,7 @@ const CheckoutView = (props) => {
 
 	const Tag = tag;
 
-	const IconX = TablerIcons[icon];
+	const IconX = tablerIcon(icon);
 
 
 	const router = useRouter();

@@ -1,15 +1,22 @@
 import React from "react";
+/*
+	Dashboard pages and builder options panels load on demand (next/dynamic):
+	the storefront loads this config for its blocks and runtime, and static
+	imports put the admin screens - rich-text editor, maps, the icon picker -
+	into every shop page. The blocks and the runtime stay static imports.
+*/
+import dynamic from "next/dynamic";
 import { IconClock, IconClockBolt } from "@tabler/icons-react";
 
-import Countdowns from "./pages/Countdowns";
+const Countdowns = dynamic(() => import("./pages/Countdowns"));
 import CountdownRuntime from "./lib/CountdownRuntime";
 
 import Countdown from "./elements/Countdown";
-import CountdownOptions from "./elements/CountdownOptions";
+const CountdownOptions = dynamic(() => import("./elements/CountdownOptions"));
 import countdownLayouts from "./elements/countdownLayouts";
 
 import CountdownBar from "./elements/CountdownBar";
-import CountdownBarOptions from "./elements/CountdownBarOptions";
+const CountdownBarOptions = dynamic(() => import("./elements/CountdownBarOptions"));
 import countdownBarLayouts from "./elements/countdownBarLayouts";
 
 /**

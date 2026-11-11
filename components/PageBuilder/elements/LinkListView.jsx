@@ -1,7 +1,7 @@
 import PropTypes from "prop-types";
 import React from "react";
 import Link from "next/link";
-import * as TablerIcons from '@tabler/icons-react';
+import { tablerIcon } from "@/components/icons/TablerIcon";
 import { isExternal } from "./ImageView";
 import { elementCssClasses } from "../ElementsDefinition";
 
@@ -25,14 +25,14 @@ export function LinkListMarkup({ cls, id, index, type, options, onLinkClick, roo
 	var Tag = options?.tag === 'ol' ? 'ol' : 'ul';
 	var headerText = String(options?.headerText ?? '').trim();
 	var iconSize = Number(options?.iconSize) || 24;
-	var DefaultIcon = TablerIcons[options?.icon];
+	var DefaultIcon = tablerIcon(options?.icon);
 
 	return (
 		<div id={id} index={index} type={type} className={`${cls('*')} ${rootClassName}`} {...rootProps}>
 			{headerText && <div className={cls('header-text')}>{headerText}</div>}
 			<Tag className={cls('ul')}>
 				{items.map((item, i) => {
-					var ItemIcon = TablerIcons[item?.icon] ?? DefaultIcon;
+					var ItemIcon = tablerIcon(item?.icon) ?? DefaultIcon;
 					var href = String(item?.slug ?? '').trim();
 					var inner = (
 						<>

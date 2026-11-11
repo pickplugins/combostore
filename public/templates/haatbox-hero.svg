@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 360" width="440" height="360" role="img" aria-label="A basket of fresh vegetables, fruit, bread, milk and eggs">
+  <!-- Hero art for templates/Haatbox.js (sits on the green banner, transparent background): a woven basket overflowing with greens, carrots, tomatoes, an eggplant, a banana bunch, a baguette, a milk bottle and eggs. -->
+  <defs>
+    <linearGradient id="hb-basket" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E7B46A"/><stop offset="1" stop-color="#B9803A"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="220" cy="346" rx="180" ry="14" fill="#0B3B24" opacity="0.25"/>
+  <!-- milk bottle (behind) -->
+  <rect x="300" y="70" width="56" height="140" rx="16" fill="#FFFFFF"/>
+  <rect x="312" y="48" width="32" height="30" rx="6" fill="#FFFFFF"/>
+  <rect x="310" y="40" width="36" height="12" rx="4" fill="#12A150"/>
+  <rect x="300" y="120" width="56" height="44" fill="#E7F7EE"/>
+  <text x="328" y="148" font-family="Arial, sans-serif" font-size="13" font-weight="800" fill="#0B3B24" text-anchor="middle">MILK</text>
+  <!-- baguette -->
+  <rect x="70" y="40" width="40" height="190" rx="20" fill="#D99A4E" transform="rotate(-22 90 135)"/>
+  <g stroke="#B47634" stroke-width="3" stroke-linecap="round" transform="rotate(-22 90 135)"><path d="M80 80l20-8M80 120l20-8M80 160l20-8M80 200l20-8"/></g>
+  <!-- greens -->
+  <g fill="#1E9E4A">
+    <path d="M150 170c-30-60-10-120 20-130 10 40 10 90-20 130z"/>
+    <path d="M175 170c-10-70 20-120 50-120-5 50-20 90-50 120z"/>
+    <path d="M200 175c10-60 50-90 80-80-15 40-40 70-80 80z"/>
+  </g>
+  <g fill="#3CC46B"><path d="M162 168c-12-40-4-80 10-100 4 30 2 60-10 100z"/><path d="M190 170c0-40 16-70 34-90-2 34-12 62-34 90z"/></g>
+  <!-- carrots -->
+  <g transform="rotate(18 260 160)">
+    <path d="M250 110l14 100 14-100z" fill="#F07A1A"/><path d="M252 106c-6-18 2-30 12-34 2 12 0 24-12 34zM268 106c4-18 16-24 26-22-4 12-12 20-26 22z" fill="#1E9E4A"/>
+    <g stroke="#C85F0F" stroke-width="2" stroke-linecap="round"><path d="M256 140h8M258 160h8M260 180h6"/></g>
+  </g>
+  <!-- banana bunch -->
+  <g fill="#FFD43B" stroke="#E0AE10" stroke-width="2">
+    <path d="M110 200c20 40 70 50 100 30-30 0-70-10-100-30z"/>
+    <path d="M112 190c26 34 76 36 102 12-30 6-74-2-102-12z"/>
+  </g>
+  <!-- basket -->
+  <path d="M60 200h320l-30 140H90z" fill="url(#hb-basket)"/>
+  <g stroke="#A06B2C" stroke-width="3" opacity="0.7">
+    <path d="M66 226h308M72 254h296M78 282h284M84 310h272"/>
+    <path d="M110 200l10 140M160 200l6 140M210 200v140M260 200l-6 140M310 200l-10 140"/>
+  </g>
+  <rect x="48" y="188" width="344" height="22" rx="11" fill="#C98E46"/>
+  <!-- tomatoes -->
+  <g><circle cx="150" cy="190" r="22" fill="#E8412C"/><circle cx="196" cy="186" r="24" fill="#F0503A"/><circle cx="242" cy="190" r="20" fill="#E8412C"/></g>
+  <g fill="#1E9E4A"><path d="M150 168l-6 4 6 2 6-2zM196 162l-7 5 7 2 7-2zM242 170l-6 4 6 2 6-2z"/></g>
+  <g fill="#FFFFFF" opacity="0.35"><circle cx="142" cy="182" r="5"/><circle cx="188" cy="178" r="6"/><circle cx="235" cy="183" r="4"/></g>
+  <!-- eggplant -->
+  <path d="M276 196c10-30 50-40 76-24 10 12-6 34-36 40-24 4-46 0-40-16z" fill="#6B2E91"/>
+  <path d="M344 166c8-6 16-6 20-2-4 6-10 10-18 10z" fill="#1E9E4A"/>
+  <!-- eggs -->
+  <g fill="#FFF3E0" stroke="#E7CFAE" stroke-width="2">
+    <ellipse cx="118" cy="330" rx="20" ry="24" transform="rotate(-10 118 330)"/>
+    <ellipse cx="350" cy="330" rx="18" ry="22" transform="rotate(12 350 330)"/>
+  </g>
+</svg>

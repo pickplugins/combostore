@@ -4,7 +4,7 @@ import PropTypes from "prop-types";
 import React from "react";
 import { useState } from "react";
 import BlockRender from '../BlockRender';
-import * as TablerIcons from '@tabler/icons-react';
+import { tablerIcon } from "@/components/icons/TablerIcon";
 import { elementCssClasses } from "../ElementsDefinition";
 
 /*
@@ -45,7 +45,7 @@ export function TabsMarkup({ cls, id, tabsItems, children, vertical, activeTab, 
 				{tabsItems.map((tab, tabIndex) => {
 
 					var isActive = activeTab === tabIndex;
-					const IconX = TablerIcons[tab?.icon];
+					const IconX = tablerIcon(tab?.icon);
 
 					return (
 						<button

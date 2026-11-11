@@ -2,7 +2,7 @@
 "use client"
 import { useState, useEffect } from "react";
 import { IconSquareRoundedPlusFilled, IconSquareRoundedMinusFilled, IconStarFilled, IconStar, IconIdBadge2 } from "@tabler/icons-react";
-import * as TablerIcons from '@tabler/icons-react';
+import { tablerIcon } from "@/components/icons/TablerIcon";
 
 
 import { useCounterStore } from '../../../store/useCounterStore';
@@ -96,7 +96,7 @@ const AddToCart = (props) => {
 
 
 
-	const IconX = TablerIcons[icon];
+	const IconX = tablerIcon(icon);
 
 	const trackPageVisit = useUtilsStore((state) => state.trackPageVisit);
 
@@ -426,19 +426,18 @@ const AddToCart = (props) => {
 			{/* Sold out: the button stays (so the layout holds) but cannot add, and the stepper goes. */}
 			{canAddToCart && !purchaseBlocked && outOfStock && !hideButton && (
 				<div id={id} type={type} className={cls('*')}>
-					<div className={`${cls('button-wrapper')} !cursor-not-allowed opacity-50`}
-						role="button"
+					{/* A real <button> (it was a div with role="button" and tabindex="0"):
+					   inside a slider, Splide takes native buttons in off-screen slides
+					   out of the tab order, but not divs - Lighthouse flagged them as
+					   focusable content inside aria-hidden slides. Spans inside, as a
+					   button may only hold phrasing content; every template gives the
+					   wrapper a flex/grid display, so its children lay out as before. */}
+					<button type="button" className={`${cls('button-wrapper')} !cursor-not-allowed opacity-50`}
 						aria-disabled="true"
-						tabIndex={0}
 						onClick={() => notifyStock(0)}
-						onKeyDown={ev => {
-							if (ev.key !== 'Enter' && ev.key !== ' ') return;
-							ev.preventDefault();
-							notifyStock(0);
-						}}
 					>
-						<div className={cls('button-label')}>{outOfStockText}</div>
-					</div>
+						<span className={cls('button-label')}>{outOfStockText}</span>
+					</button>
 				</div>
 			)}
 
@@ -639,27 +638,20 @@ const AddToCart = (props) => {
 
 
 					{!hideButton && (
-						<div className={cls('button-wrapper')}
-							role="button"
-							tabIndex={0}
+						<button type="button" className={cls('button-wrapper')}
 							onClick={() => addToCart()}
-							onKeyDown={ev => {
-								if (ev.key !== 'Enter' && ev.key !== ' ') return;
-								ev.preventDefault();
-								addToCart();
-							}}
 						>
 
 							{IconX && (
-								<div className={cls('button-icon')}>
+								<span className={cls('button-icon')} aria-hidden="true">
 									{IconX ? <IconX size={iconSize} /> : null}
-								</div>
+								</span>
 							)}
 
-							<div className={cls('button-label')}>{buttonText}</div>
+							<span className={cls('button-label')}>{buttonText}</span>
 
 
-						</div>
+						</button>
 
 					)}
 

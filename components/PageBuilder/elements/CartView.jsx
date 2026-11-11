@@ -4,7 +4,15 @@ import { createPortal } from "react-dom";
 import { IconTrash, IconBasketCheck, IconX, IconShoppingCart, IconMinus, IconPlus, IconArrowLeft, IconArrowRight, IconTicket, IconShoppingBag, IconTruckDelivery } from "@tabler/icons-react";
 import Image from "next/image";
 import crypto from "crypto";
-import CheckoutView from "./CheckoutView";
+import dynamic from "next/dynamic";
+/*
+	The checkout step loads on demand: the cart drawer is in every page's
+	header, and the checkout form brings the country and state lists (~250 KB)
+	and the map picker, which every page used to download and parse. The
+	drawer starts fetching it when it opens (see the effect below).
+*/
+const loadCheckoutView = () => import("./CheckoutView");
+const CheckoutView = dynamic(loadCheckoutView);
 import CartCrossSells, { defaultCartCrossSellsTitle, defaultCartCrossSellsLimit } from "./CartCrossSellsView";
 import { useCounterStore } from '../../../store/useCounterStore'
 import { useUtilsStore } from '../../../store/useUtilsStore'
@@ -276,6 +284,11 @@ const CartView = (props) => {
 
 		document.addEventListener('keydown', onKeyDown);
 		return () => document.removeEventListener('keydown', onKeyDown);
+	}, [cartToggle]);
+
+	/* Fetch the checkout step's code as soon as the drawer opens, so "Checkout" does not wait for it. */
+	useEffect(() => {
+		if (cartToggle) loadCheckoutView();
 	}, [cartToggle]);
 
 

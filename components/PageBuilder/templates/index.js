@@ -1,5 +1,7 @@
 /**
- * Every template in this folder, as one list.
+ * Every template in this folder, as one list. Each template lives in its own
+ * folder (Name/index.js, plus any extra files it needs later), so the
+ * imports below resolve to Name/index.js.
  *
  * Each file default-exports an array holding a single template object, so this
  * barrel concatenates them: a picker can map over `templates` and read `name`,
@@ -23,9 +25,33 @@ import BikeParts from './BikeParts';
 // import ComboStore from './ComboStore';
 // import AuraGem from './AuraGem';
 import WonderJoy from './WonderJoy';
+import Nexora from './Nexora';
+import Noorani from './Noorani';
+import Aanchal from './Aanchal';
+import Aurelle from './Aurelle';
+import Glowbie from './Glowbie';
+import Fashora from './Fashora';
+import Voltix from './Voltix';
+import Haatbox from './Haatbox';
+import Kaath from './Kaath';
+import Oushodh from './Oushodh';
+import Pathok from './Pathok';
+import Tuntuni from './Tuntuni';
+import Kodom from './Kodom';
+import Ghori from './Ghori';
+import Sugondhi from './Sugondhi';
+import Jhola from './Jhola';
+import Muthofon from './Muthofon';
+import Upohar from './Upohar';
+import Nolen from './Nolen';
+import Dutipata from './Dutipata';
+import Adda from './Adda';
+import Pauruti from './Pauruti';
+import Ashbab from './Ashbab';
+import Posha from './Posha';
 // import EhansMart from './EhansMart';
 // import EhansMartV2 from './EhansMartV2';
 
-var templates = [...BikeParts, ...WonderJoy];
+var templates = [...BikeParts, ...WonderJoy, ...Nexora, ...Noorani, ...Aanchal, ...Aurelle, ...Glowbie, ...Fashora, ...Voltix, ...Haatbox, ...Kaath, ...Oushodh, ...Pathok, ...Tuntuni, ...Kodom, ...Ghori, ...Sugondhi, ...Jhola, ...Muthofon, ...Upohar, ...Nolen, ...Dutipata, ...Adda, ...Pauruti, ...Ashbab, ...Posha];
 
 export default templates;

@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="600" height="600" role="img" aria-label="A flat-lay of kids clothes: a yellow tee with a bird print, blue dungarees, a pink dress, mint sneakers, an orange cap and lilac socks">
+  <!-- Hero art for templates/Tuntuni: a flat-lay of little clothes with stitched seams. Swap for a real photo of your range if you like. -->
+  <g stroke="#23214A" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+    <!-- thread trail -->
+    <path d="M60 70c40-40 90 10 130-20s70-30 110 0" fill="none" stroke="#FF7A3D" stroke-width="3" stroke-dasharray="2 9"/>
+
+    <!-- yellow tee with a tailorbird -->
+    <g transform="rotate(-8 190 180)">
+      <path d="M130 110l40-20h40l40 20 35 40-30 25-15-15v110H140V160l-15 15-30-25z" fill="#FFC93C"/>
+      <path d="M170 90q20 24 40 0" fill="none"/>
+      <path d="M148 255h84" fill="none" stroke-width="2" stroke-dasharray="5 6" opacity="0.5"/>
+      <ellipse cx="186" cy="200" rx="24" ry="15" fill="#3E9B6E" stroke-width="3"/>
+      <circle cx="208" cy="187" r="10" fill="#3E9B6E" stroke-width="3"/>
+      <path d="M217 185l12 4-12 4z" fill="#FF7A3D" stroke-width="2"/>
+      <path d="M164 196l-12-6M164 202l-13 1" fill="none" stroke-width="3"/>
+      <circle cx="210" cy="185" r="1.8" fill="#23214A" stroke="none"/>
+    </g>
+
+    <!-- cobalt dungarees -->
+    <g transform="rotate(6 410 200)">
+      <path d="M372 110l-14-44M438 110l14-44" fill="none" stroke="#3550DC" stroke-width="10"/>
+      <path d="M372 110l-14-44M438 110l14-44" fill="none" stroke-width="2" stroke-dasharray="3 5" opacity="0.6"/>
+      <path d="M345 160H465l5 140h-52l-13-80-13 80h-52z" fill="#3550DC"/>
+      <rect x="368" y="104" width="74" height="62" rx="8" fill="#3550DC"/>
+      <rect x="384" y="122" width="42" height="30" rx="6" fill="#2A41B8" stroke-width="3"/>
+      <path d="M388 128h34" fill="none" stroke="#FFF8EE" stroke-width="2" stroke-dasharray="3 4"/>
+      <circle cx="378" cy="116" r="6" fill="#FFC93C" stroke-width="3"/>
+      <circle cx="432" cy="116" r="6" fill="#FFC93C" stroke-width="3"/>
+      <path d="M352 292h46M412 292h48" fill="none" stroke="#FFF8EE" stroke-width="2" stroke-dasharray="4 5"/>
+    </g>
+
+    <!-- pink dress with dots -->
+    <g transform="rotate(-4 150 420)">
+      <path d="M120 310v22M180 310v22" fill="none" stroke="#FFB3C7" stroke-width="10"/>
+      <path d="M115 330h70l10 30 45 140H60l45-140z" fill="#FFB3C7"/>
+      <path d="M105 360h90" fill="none" stroke-width="3"/>
+      <path d="M72 480h156" fill="none" stroke-width="2" stroke-dasharray="5 6" opacity="0.5"/>
+      <g fill="#FFFFFF" stroke="none"><circle cx="130" cy="395" r="6"/><circle cx="165" cy="420" r="6"/><circle cx="110" cy="440" r="6"/><circle cx="190" cy="455" r="6"/><circle cx="145" cy="465" r="6"/><circle cx="95" cy="475" r="5"/></g>
+      <circle cx="150" cy="346" r="5" fill="#FF7A3D" stroke-width="2"/>
+    </g>
+
+    <!-- mint sneakers -->
+    <g>
+      <path d="M290 430q0-36 30-36h28q18 0 28 20l34 12q12 4 12 16v12H290z" fill="#8FD9C0"/>
+      <rect x="286" y="452" width="130" height="14" rx="7" fill="#FFFFFF"/>
+      <path d="M326 410l10 14M342 406l10 14" fill="none" stroke-width="3"/>
+    </g>
+    <g transform="translate(26 74)">
+      <path d="M290 430q0-36 30-36h28q18 0 28 20l34 12q12 4 12 16v12H290z" fill="#8FD9C0"/>
+      <rect x="286" y="452" width="130" height="14" rx="7" fill="#FFFFFF"/>
+      <path d="M326 410l10 14M342 406l10 14" fill="none" stroke-width="3"/>
+    </g>
+
+    <!-- tangerine cap -->
+    <g transform="rotate(-10 520 360)">
+      <path d="M475 382a45 42 0 0 1 90 0z" fill="#FF7A3D"/>
+      <path d="M560 382h30q8 0 4 8h-34z" fill="#FF7A3D"/>
+      <path d="M520 340v42" fill="none" stroke-width="2" stroke-dasharray="4 5" opacity="0.6"/>
+      <circle cx="520" cy="338" r="5" fill="#FFC93C" stroke-width="3"/>
+    </g>
+
+    <!-- lilac socks -->
+    <g>
+      <path d="M478 430v62q0 22 22 22h24q13 0 13-13t-13-13h-14v-58z" fill="#C9B6FF"/>
+      <path d="M478 446h32" fill="none" stroke-width="3"/>
+    </g>
+    <g transform="translate(52 12)">
+      <path d="M478 430v62q0 22 22 22h24q13 0 13-13t-13-13h-14v-58z" fill="#C9B6FF"/>
+      <path d="M478 446h32" fill="none" stroke-width="3"/>
+    </g>
+  </g>
+  <!-- sparkles -->
+  <g fill="#FFC93C" stroke="#23214A" stroke-width="2.5" stroke-linejoin="round">
+    <path d="M300 300l7 15 15 7-15 7-7 15-7-15-15-7 15-7z"/>
+    <path d="M540 220l5 10 10 5-10 5-5 10-5-10-10-5 10-5z"/>
+    <path d="M60 230l5 10 10 5-10 5-5 10-5-10-10-5 10-5z"/>
+  </g>
+</svg>

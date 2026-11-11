@@ -1,6 +1,6 @@
 import PropTypes from "prop-types";
 import React from "react";
-import * as TablerIcons from '@tabler/icons-react';
+import { tablerIcon } from "@/components/icons/TablerIcon";
 import { useLoop } from "../context/LoopContext";
 import { useFeatuerbox } from "../context/FeatuerboxContext";
 import { elementCssClasses } from "../ElementsDefinition";
@@ -15,7 +15,7 @@ import { elementCssClasses } from "../ElementsDefinition";
 export function iconSettings(options, loop) {
 	var name = String(loop?.icon ?? '').trim() || options?.iconName || null;
 	var size = Number(loop?.iconSize) || Number(options?.size) || 20;
-	return { name, size, Icon: name ? TablerIcons[name] : null };
+	return { name, size, Icon: name ? tablerIcon(name) : null };
 }
 
 /*

@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 560" width="560" height="560" role="img" aria-label="A stack of three wrapped gift boxes in green, blush and gold with satin ribbons and bows, and a gift tag">
+  <!-- Hero art for templates/Upohar: wrapped gifts on a transparent background. Replace with a photo of your gift boxes or hampers. -->
+  <defs>
+    <pattern id="uh-dots" width="18" height="18" patternUnits="userSpaceOnUse"><circle cx="9" cy="9" r="3" fill="#FFFFFF" opacity="0.55"/></pattern>
+    <pattern id="uh-stripes" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="8" height="16" fill="#FFFFFF" opacity="0.12"/></pattern>
+    <linearGradient id="uh-gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F3D27E"/><stop offset="0.5" stop-color="#E0B354"/><stop offset="1" stop-color="#B98A2E"/></linearGradient>
+    <radialGradient id="uh-shadow" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#2B1B2E" stop-opacity="0.3"/><stop offset="1" stop-color="#2B1B2E" stop-opacity="0"/></radialGradient>
+  </defs>
+  <ellipse cx="280" cy="520" rx="230" ry="20" fill="url(#uh-shadow)"/>
+
+  <!-- big green box -->
+  <rect x="70" y="300" width="300" height="210" rx="10" fill="#0F5C4A"/>
+  <rect x="70" y="300" width="300" height="210" rx="10" fill="url(#uh-stripes)"/>
+  <rect x="58" y="280" width="324" height="50" rx="10" fill="#0D5040"/>
+  <rect x="58" y="280" width="324" height="50" rx="10" fill="url(#uh-stripes)"/>
+  <rect x="198" y="280" width="44" height="230" fill="url(#uh-gold)"/>
+  <rect x="70" y="384" width="300" height="34" fill="url(#uh-gold)" opacity="0.95"/>
+
+  <!-- blush box (right) -->
+  <rect x="360" y="380" width="160" height="130" rx="10" fill="#F4B9B2"/>
+  <rect x="360" y="380" width="160" height="130" rx="10" fill="url(#uh-dots)"/>
+  <rect x="352" y="364" width="176" height="34" rx="8" fill="#EFA9A1"/>
+  <rect x="352" y="364" width="176" height="34" rx="8" fill="url(#uh-dots)"/>
+  <rect x="428" y="364" width="24" height="146" fill="#0F5C4A"/>
+
+  <!-- gold box (top) -->
+  <rect x="120" y="170" width="200" height="112" rx="8" fill="url(#uh-gold)"/>
+  <rect x="110" y="156" width="220" height="34" rx="8" fill="#E9C46A"/>
+  <rect x="206" y="156" width="28" height="126" fill="#F4B9B2"/>
+  <rect x="120" y="212" width="200" height="22" fill="#F4B9B2"/>
+
+  <!-- bow on gold box -->
+  <g fill="#F4B9B2" stroke="#D98C84" stroke-width="2">
+    <path d="M220 156C180 110 140 120 150 146C158 166 200 162 220 156Z"/>
+    <path d="M220 156C260 110 300 120 290 146C282 166 240 162 220 156Z"/>
+    <path d="M214 158L196 196L208 194L218 160Z"/>
+    <path d="M226 158L244 196L232 194L222 160Z"/>
+  </g>
+  <rect x="210" y="146" width="20" height="20" rx="6" fill="#EFA9A1" stroke="#D98C84" stroke-width="2"/>
+
+  <!-- bow on blush box -->
+  <g fill="#0F5C4A" stroke="#0A4638" stroke-width="2">
+    <path d="M440 364C414 334 388 342 394 360C399 373 428 370 440 364Z"/>
+    <path d="M440 364C466 334 492 342 486 360C481 373 452 370 440 364Z"/>
+  </g>
+  <rect x="432" y="356" width="16" height="15" rx="5" fill="#0A4638"/>
+
+  <!-- gift tag on a string -->
+  <path d="M242 300C270 300 292 312 300 330" fill="none" stroke="#2B1B2E" stroke-width="2"/>
+  <g transform="rotate(-12 330 360)">
+    <path d="M300 336H392V392H300L286 364Z" fill="#FFF8F0" stroke="#2B1B2E" stroke-width="2.5" stroke-linejoin="round"/>
+    <circle cx="302" cy="364" r="5" fill="#F7ECDF" stroke="#2B1B2E" stroke-width="2"/>
+    <text x="350" y="360" font-family="Caveat, 'Comic Sans MS', cursive" font-size="17" fill="#2B1B2E" text-anchor="middle">For you</text>
+    <text x="350" y="380" font-family="Caveat, 'Comic Sans MS', cursive" font-size="14" fill="#B5174F" text-anchor="middle">♥</text>
+  </g>
+
+  <!-- confetti -->
+  <g>
+    <circle cx="90" cy="150" r="6" fill="#E0B354"/><circle cx="470" cy="200" r="7" fill="#F4B9B2"/><circle cx="420" cy="120" r="5" fill="#0F5C4A"/>
+    <rect x="460" y="290" width="12" height="5" rx="2.5" fill="#E0B354" transform="rotate(30 466 292)"/>
+    <rect x="60" y="250" width="14" height="5" rx="2.5" fill="#F4B9B2" transform="rotate(-25 67 252)"/>
+    <rect x="350" y="80" width="12" height="5" rx="2.5" fill="#E0B354" transform="rotate(60 356 82)"/>
+    <path d="M500 250l4 9 9 4-9 4-4 9-4-9-9-4 9-4z" fill="#E0B354"/>
+    <path d="M110 90l3 7 7 3-7 3-3 7-3-7-7-3 7-3z" fill="#F4B9B2"/>
+  </g>
+</svg>

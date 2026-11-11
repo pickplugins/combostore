@@ -1,3 +1,8 @@
+import { storeImageHost } from './lib/imageOptimization.mjs';
+
+/* The store's WordPress server, whose images next/image now resizes (lib/imageOptimization.mjs). */
+const storeHost = storeImageHost();
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // basePath: '/dashboard',
@@ -48,7 +53,14 @@ const nextConfig = {
     ],
   },
   images: {
+    /*
+      Resized images are cached for 31 days (Next's default is 4 hours).
+      Uploads keep their URL for life - a new image is a new file - and on
+      Vercel every cache miss counts as a billed transformation.
+    */
+    minimumCacheTTL: 2678400,
     remotePatterns: [
+      ...(storeHost ? [{ ...storeHost, pathname: '/**' }] : []),
 
       {
         protocol: 'http',

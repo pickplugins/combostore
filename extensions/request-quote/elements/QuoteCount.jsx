@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import * as TablerIcons from "@tabler/icons-react";
+import { tablerIcon } from "@/components/icons/TablerIcon";
 
 import { useQuoteStore } from "../lib/store";
 
@@ -59,7 +59,7 @@ const QuoteCount = (props) => {
 	if (!isEditor && !itemsHydrated) return null;
 	if (!isEditor && hideWhenEmpty && count === 0) return null;
 
-	const IconX = icon ? TablerIcons[icon] : null;
+	const IconX = icon ? tablerIcon(icon) : null;
 
 	const editorProps = isEditor
 		? {

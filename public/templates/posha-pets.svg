@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 540 480" width="540" height="480" role="img" aria-label="A happy golden dog and a grey tabby cat sitting side by side">
+  <!-- Hero art for templates/Posha: a flat, friendly dog and cat sitting together, with a bone and a yarn ball, on a transparent background (it sits over the cobalt blob). -->
+  <!-- ground shadow -->
+  <ellipse cx="270" cy="458" rx="210" ry="14" fill="#1D2140" opacity="0.18"/>
+  <!-- cat tail -->
+  <path d="M440 440C520 440 520 330 470 318" fill="none" stroke="#8C93A8" stroke-width="20" stroke-linecap="round"/>
+  <path d="M500 380C506 360 500 340 488 328" fill="none" stroke="#6B7186" stroke-width="6" stroke-linecap="round" opacity="0.6"/>
+  <!-- dog body -->
+  <path d="M100 450C88 360 110 290 200 280C290 290 312 360 300 450Z" fill="#E8A55A"/>
+  <ellipse cx="200" cy="370" rx="52" ry="72" fill="#FBE3C2"/>
+  <rect x="148" y="372" width="36" height="84" rx="18" fill="#E8A55A"/><rect x="216" y="372" width="36" height="84" rx="18" fill="#E8A55A"/>
+  <ellipse cx="166" cy="452" rx="24" ry="12" fill="#FBE3C2"/><ellipse cx="234" cy="452" rx="24" ry="12" fill="#FBE3C2"/>
+  <path d="M158 448V458M166 446V458M174 448V458M226 448V458M234 446V458M242 448V458" stroke="#D9A574" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- dog head -->
+  <circle cx="200" cy="200" r="84" fill="#E8A55A"/>
+  <path d="M132 150C88 146 72 240 104 278C126 296 146 240 148 188Z" fill="#9A5B2E"/>
+  <path d="M268 150C312 146 328 240 296 278C274 296 254 240 252 188Z" fill="#9A5B2E"/>
+  <ellipse cx="200" cy="240" rx="48" ry="36" fill="#FBE3C2"/>
+  <ellipse cx="200" cy="218" rx="15" ry="10" fill="#1D2140"/>
+  <ellipse cx="195" cy="214" rx="4" ry="2.5" fill="#FFFFFF" opacity="0.6"/>
+  <path d="M200 228V242M200 242Q188 254 176 244M200 242Q212 254 224 244" fill="none" stroke="#1D2140" stroke-width="3.5" stroke-linecap="round"/>
+  <path d="M190 248Q200 278 210 248Z" fill="#FF8A8A"/><path d="M200 252V266" stroke="#E86A6A" stroke-width="2"/>
+  <circle cx="168" cy="188" r="9" fill="#1D2140"/><circle cx="232" cy="188" r="9" fill="#1D2140"/>
+  <circle cx="171" cy="185" r="3" fill="#FFFFFF"/><circle cx="235" cy="185" r="3" fill="#FFFFFF"/>
+  <ellipse cx="150" cy="218" rx="10" ry="6" fill="#FF8A8A" opacity="0.35"/><ellipse cx="250" cy="218" rx="10" ry="6" fill="#FF8A8A" opacity="0.35"/>
+  <!-- dog collar -->
+  <path d="M130 268Q200 300 270 268L268 284Q200 318 132 284Z" fill="#FF7A3D"/>
+  <circle cx="200" cy="306" r="13" fill="#FFD23F"/><circle cx="200" cy="306" r="5" fill="#E6A800"/>
+  <!-- cat body -->
+  <path d="M310 450C300 380 316 318 378 310C440 318 456 380 446 450Z" fill="#8C93A8"/>
+  <ellipse cx="378" cy="384" rx="36" ry="56" fill="#E7E9F0"/>
+  <ellipse cx="350" cy="450" rx="22" ry="11" fill="#E7E9F0"/><ellipse cx="406" cy="450" rx="22" ry="11" fill="#E7E9F0"/>
+  <path d="M320 360Q332 356 338 364M314 392Q328 388 334 396M436 360Q424 356 418 364M442 392Q428 388 422 396" fill="none" stroke="#6B7186" stroke-width="5" stroke-linecap="round"/>
+  <!-- cat head -->
+  <path d="M316 232L320 168L362 206Z" fill="#8C93A8"/><path d="M440 232L436 168L394 206Z" fill="#8C93A8"/>
+  <path d="M326 218L329 184L352 206Z" fill="#FFB3C1"/><path d="M430 218L427 184L404 206Z" fill="#FFB3C1"/>
+  <ellipse cx="378" cy="252" rx="66" ry="58" fill="#8C93A8"/>
+  <path d="M366 200L368 216M378 196V216M390 200L388 216" stroke="#6B7186" stroke-width="5" stroke-linecap="round"/>
+  <ellipse cx="378" cy="276" rx="30" ry="22" fill="#E7E9F0"/>
+  <ellipse cx="354" cy="250" rx="10" ry="12" fill="#C8E06B"/><ellipse cx="402" cy="250" rx="10" ry="12" fill="#C8E06B"/>
+  <ellipse cx="354" cy="251" rx="3.5" ry="9" fill="#1D2140"/><ellipse cx="402" cy="251" rx="3.5" ry="9" fill="#1D2140"/>
+  <circle cx="357" cy="245" r="2" fill="#FFFFFF"/><circle cx="405" cy="245" r="2" fill="#FFFFFF"/>
+  <path d="M371 268H385L378 276Z" fill="#FF8FA3"/>
+  <path d="M378 276Q370 286 362 280M378 276Q386 286 394 280" fill="none" stroke="#1D2140" stroke-width="3" stroke-linecap="round"/>
+  <g stroke="#1D2140" stroke-width="2" stroke-linecap="round" opacity="0.55"><path d="M356 274L316 266M356 282L318 290M400 274L440 266M400 282L438 290"/></g>
+  <!-- cat collar -->
+  <path d="M330 298Q378 320 426 298L424 310Q378 334 332 310Z" fill="#3DBB94"/>
+  <circle cx="378" cy="326" r="9" fill="#FFD23F"/><path d="M372 326H384" stroke="#E6A800" stroke-width="2"/>
+  <!-- bone -->
+  <g transform="translate(78 92) rotate(-25)">
+    <rect x="-34" y="-8" width="68" height="16" rx="8" fill="#FFFFFF"/>
+    <circle cx="-34" cy="-8" r="10" fill="#FFFFFF"/><circle cx="-34" cy="8" r="10" fill="#FFFFFF"/><circle cx="34" cy="-8" r="10" fill="#FFFFFF"/><circle cx="34" cy="8" r="10" fill="#FFFFFF"/>
+  </g>
+  <!-- yarn ball -->
+  <g transform="translate(470 120)">
+    <circle r="30" fill="#FF7A3D"/>
+    <path d="M-26 -12Q0 -2 24 -18M-30 4Q0 16 28 -2M-20 20Q4 28 22 14M-8 -28Q-20 0 -6 28" fill="none" stroke="#E8601F" stroke-width="3" stroke-linecap="round"/>
+    <path d="M24 18Q40 40 20 56Q4 66 16 80" fill="none" stroke="#FF7A3D" stroke-width="3" stroke-linecap="round"/>
+  </g>
+  <!-- hearts -->
+  <g fill="#FFD23F"><path d="M290 120c-6-10-22-6-18 6 3 8 18 18 18 18s15-10 18-18c4-12-12-16-18-6z"/></g>
+  <g fill="#FFFFFF" opacity="0.8"><path d="M118 300c-4-6-13-4-11 3 2 5 11 11 11 11s9-6 11-11c2-7-7-9-11-3z"/></g>
+</svg>

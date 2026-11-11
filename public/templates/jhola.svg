@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600" role="img" aria-label="Jhola Bags and Leather template preview">
+  <title>Jhola Bags &amp; Leather template preview</title>
+  <!-- Picker thumbnail for templates/Jhola: a wireframe of its home page - the leather-strap header with a buckle logo, and the tote hero - in the template's palette. -->
+  <defs>
+    <clipPath id="jh-t-clip"><rect width="800" height="600"/></clipPath>
+    <clipPath id="jh-t-arch"><path d="M470 300a140 140 0 0 1 280 0V470a24 24 0 0 1-24 24H494a24 24 0 0 1-24-24z"/></clipPath>
+  </defs>
+  <g clip-path="url(#jh-t-clip)">
+  <rect width="800" height="600" fill="#EFE8DA"/>
+  <!-- promo -->
+  <rect x="250" y="9" width="220" height="5" rx="2.5" fill="#2B211C" opacity="0.4"/><rect x="478" y="6" width="44" height="11" rx="5.5" fill="#A6552B"/>
+  <!-- the strap -->
+  <rect x="20" y="26" width="760" height="48" rx="24" fill="#2B211C"/>
+  <rect x="25" y="31" width="750" height="38" rx="19" fill="none" stroke="#A6552B" stroke-width="1.5" stroke-dasharray="5 4"/>
+  <rect x="34" y="34" width="120" height="32" rx="7" fill="none" stroke="#C9A36A" stroke-width="3"/>
+  <rect x="42" y="40" width="4" height="20" rx="2" fill="#F0D28E"/>
+  <text x="54" y="57" font-family="Syne, Arial, sans-serif" font-size="20" font-weight="700" fill="#EFE8DA">jhola</text>
+  <g fill="#EFE8DA" opacity="0.8"><rect x="190" y="47" width="36" height="6" rx="3"/><rect x="240" y="47" width="50" height="6" rx="3"/><rect x="304" y="47" width="50" height="6" rx="3"/><rect x="368" y="47" width="36" height="6" rx="3"/><rect x="418" y="47" width="36" height="6" rx="3"/><rect x="468" y="47" width="40" height="6" rx="3"/></g>
+  <rect x="530" y="38" width="110" height="24" rx="12" fill="#FFFFFF" fill-opacity="0.1"/>
+  <circle cx="660" cy="50" r="12" fill="#FFFFFF" fill-opacity="0.12"/><circle cx="690" cy="50" r="12" fill="#A6552B"/>
+  <g fill="#000000" opacity="0.6"><circle cx="720" cy="50" r="3.5"/><circle cx="735" cy="50" r="3.5"/><circle cx="750" cy="50" r="3.5"/></g>
+  <!-- hero copy -->
+  <rect x="40" y="118" width="150" height="18" rx="9" fill="#F4E3D6" stroke="#A6552B" stroke-opacity="0.4" stroke-dasharray="3 3"/>
+  <g font-family="Syne, Arial, sans-serif" font-size="46" font-weight="700" fill="#2B211C"><text x="38" y="196">Carry it all,</text><text x="38" y="248">beautifully.</text></g>
+  <g fill="#776C61" opacity="0.5"><rect x="40" y="272" width="300" height="6" rx="3"/><rect x="40" y="286" width="270" height="6" rx="3"/></g>
+  <rect x="40" y="312" width="124" height="38" rx="19" fill="#A6552B"/><rect x="44" y="316" width="116" height="30" rx="15" fill="none" stroke="#F0D28E" stroke-opacity="0.6" stroke-dasharray="3 3"/>
+  <rect x="174" y="312" width="140" height="38" rx="19" fill="none" stroke="#2B211C" stroke-width="2"/>
+  <rect x="40" y="374" width="300" height="1" fill="#DCD2C0"/>
+  <g fill="#FFFFFF"><rect x="40" y="392" width="76" height="26" rx="13"/><rect x="122" y="392" width="72" height="26" rx="13"/><rect x="200" y="392" width="64" height="26" rx="13"/><rect x="270" y="392" width="76" height="26" rx="13"/></g>
+  <g fill="#A6552B"><rect x="50" y="401" width="8" height="8" rx="2"/><rect x="132" y="401" width="8" height="8" rx="2"/><rect x="210" y="401" width="8" height="8" rx="2"/><rect x="280" y="401" width="8" height="8" rx="2"/></g>
+  <!-- arch + tote -->
+  <g clip-path="url(#jh-t-arch)">
+    <rect x="470" y="160" width="280" height="340" fill="#A9CBE6"/>
+    <circle cx="610" cy="250" r="56" fill="#E5F0F8"/>
+    <rect x="470" y="420" width="280" height="80" fill="#E5DCCB"/>
+    <path d="M575 330c0-60 70-60 70 0" fill="none" stroke="#8A4320" stroke-width="10" stroke-linecap="round"/>
+    <path d="M540 330H680L694 462H526Z" fill="#A6552B"/>
+    <path d="M541 330H679L680 342H540Z" fill="#8A4320"/>
+    <path d="M560 372H660L664 446H556Z" fill="#9A4C25" stroke="#5E2D16"/>
+    <rect x="600" y="368" width="20" height="18" rx="3" fill="#7C3D1E"/><rect x="604" y="378" width="12" height="7" rx="2" fill="#F0D28E"/>
+    <path d="M550 350L536 452M670 350L684 452" stroke="#F0D28E" stroke-width="1" stroke-dasharray="4 3" opacity="0.7"/>
+  </g>
+  <path d="M480 300a130 130 0 0 1 260 0V462a20 20 0 0 1-20 20H500a20 20 0 0 1-20-20z" fill="none" stroke="#FFFFFF" stroke-opacity="0.6" stroke-dasharray="4 4"/>
+  <circle cx="478" cy="240" r="38" fill="#A6552B"/><circle cx="478" cy="240" r="32" fill="none" stroke="#F0D28E" stroke-opacity="0.7" stroke-dasharray="3 3"/>
+  <rect x="456" y="236" width="44" height="7" rx="3.5" fill="#FFFFFF"/>
+  <rect x="640" y="440" width="140" height="40" rx="12" fill="#FFFFFF"/><rect x="652" y="450" width="20" height="20" rx="6" fill="#E7E8DA"/><rect x="680" y="455" width="86" height="6" rx="3" fill="#2B211C" opacity="0.6"/>
+  <!-- strip -->
+  <rect y="520" width="800" height="40" fill="#2B211C"/>
+  <rect x="2" y="524" width="796" height="32" fill="none" stroke="#A6552B" stroke-dasharray="5 4"/>
+  <g fill="#EFE8DA"><rect x="24" y="537" width="130" height="6" rx="3"/><rect x="194" y="537" width="110" height="6" rx="3" fill="#F0D28E"/><rect x="344" y="537" width="100" height="6" rx="3"/><rect x="484" y="537" width="140" height="6" rx="3"/><rect x="664" y="537" width="110" height="6" rx="3" fill="#F0D28E"/></g>
+  <!-- type tiles -->
+  <g fill="#FFFFFF"><rect x="20" y="572" width="180" height="60" rx="18"/><rect x="214" y="572" width="180" height="60" rx="18"/><rect x="408" y="572" width="180" height="60" rx="18"/><rect x="602" y="572" width="178" height="60" rx="18"/></g>
+  </g>
+</svg>

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" role="img" aria-label="Freshly roasted every Tuesday badge">
+  <!-- Spinning hero badge for templates/Adda: circular "freshly roasted" text around an espresso bean. -->
+  <defs><path id="ad-ring" d="M100 100m-77 0a77 77 0 1 1 154 0a77 77 0 1 1 -154 0"/></defs>
+  <circle cx="100" cy="100" r="96" fill="#D9472B" stroke="#2A1810" stroke-width="4"/>
+  <circle cx="100" cy="100" r="58" fill="#F4ECE0" stroke="#2A1810" stroke-width="3"/>
+  <text font-family="'JetBrains Mono','Courier New',monospace" font-size="15" font-weight="700" fill="#FFFFFF" letter-spacing="1"><textPath href="#ad-ring" textLength="476" lengthAdjust="spacing">FRESHLY ROASTED · EVERY TUESDAY · ADDA COFFEE ·</textPath></text>
+  <g transform="rotate(25 100 100)">
+    <ellipse cx="100" cy="100" rx="24" ry="32" fill="#2A1810"/>
+    <path d="M100 72C92 86 108 112 100 128" fill="none" stroke="#E3A857" stroke-width="4" stroke-linecap="round"/>
+  </g>
+</svg>

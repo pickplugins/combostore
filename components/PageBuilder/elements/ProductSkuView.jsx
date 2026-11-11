@@ -1,7 +1,7 @@
 import PropTypes from "prop-types";
 import React from "react";
 import { usePost } from "../context/PostContext";
-import * as TablerIcons from '@tabler/icons-react';
+import { tablerIcon } from "@/components/icons/TablerIcon";
 import { useProductStore } from "../../../store/productStore";
 import { elementCssClasses } from "../ElementsDefinition";
 
@@ -23,7 +23,7 @@ export function skuFor(product, activeVariation) {
 */
 export function ProductSkuMarkup({ cls, id, index, type, options, sku, rootClassName = '', rootProps = {} }) {
 
-	var IconX = TablerIcons[options?.icon];
+	var IconX = tablerIcon(options?.icon);
 	/* Unset, tabler draws 24px; kept as the fallback so existing blocks do not change size. */
 	var iconSize = Number(options?.iconSize) || 24;
 

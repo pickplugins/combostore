@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 560" width="560" height="560" role="img" aria-label="A cup of amber tea on a saucer seen from above, with a sprig of two leaves and a bud and loose tea leaves">
+  <!-- Hero art for templates/Dutipata: a top-down cup of tea on a saucer, a "two leaves and a bud" sprig and loose leaves, on a transparent background. -->
+  <defs>
+    <radialGradient id="dp-liquor" cx="0.42" cy="0.38" r="0.65"><stop offset="0" stop-color="#E7A35A"/><stop offset="0.45" stop-color="#C0702A"/><stop offset="1" stop-color="#7E3A12"/></radialGradient>
+    <radialGradient id="dp-saucer" cx="0.5" cy="0.45" r="0.55"><stop offset="0" stop-color="#FFFFFF"/><stop offset="0.8" stop-color="#F1ECE2"/><stop offset="1" stop-color="#DCD4C4"/></radialGradient>
+    <radialGradient id="dp-shadow" cx="0.5" cy="0.5" r="0.5"><stop offset="0.6" stop-color="#1C1A15" stop-opacity="0.22"/><stop offset="1" stop-color="#1C1A15" stop-opacity="0"/></radialGradient>
+    <linearGradient id="dp-leaf" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8DB36E"/><stop offset="1" stop-color="#3F6B35"/></linearGradient>
+    <linearGradient id="dp-leaf2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6F9A55"/><stop offset="1" stop-color="#2E5129"/></linearGradient>
+  </defs>
+  <!-- saucer -->
+  <circle cx="290" cy="300" r="214" fill="url(#dp-shadow)"/>
+  <circle cx="280" cy="290" r="200" fill="url(#dp-saucer)"/>
+  <circle cx="280" cy="290" r="150" fill="none" stroke="#E2DACB" stroke-width="3"/>
+  <circle cx="280" cy="290" r="190" fill="none" stroke="#1F3D2B" stroke-width="2" stroke-dasharray="2 8" opacity="0.35"/>
+  <!-- cup handle -->
+  <path d="M398 222Q456 196 470 236Q478 268 430 284" fill="none" stroke="#1F3D2B" stroke-width="30" stroke-linecap="round"/>
+  <path d="M398 222Q456 196 470 236Q478 268 430 284" fill="none" stroke="#FFFFFF" stroke-width="22" stroke-linecap="round"/>
+  <path d="M398 222Q456 196 470 236Q478 268 430 284" fill="none" stroke="#E2DACB" stroke-width="22" stroke-linecap="round" opacity="0.35"/>
+  <!-- cup -->
+  <circle cx="290" cy="300" r="138" fill="#1C1A15" opacity="0.12"/>
+  <circle cx="280" cy="290" r="136" fill="#FFFFFF"/>
+  <circle cx="280" cy="290" r="136" fill="none" stroke="#1F3D2B" stroke-width="5"/>
+  <circle cx="280" cy="290" r="124" fill="none" stroke="#1F3D2B" stroke-width="1.5" opacity="0.4"/>
+  <!-- tea -->
+  <circle cx="280" cy="290" r="112" fill="url(#dp-liquor)"/>
+  <ellipse cx="236" cy="246" rx="44" ry="22" fill="#FFFFFF" opacity="0.28" transform="rotate(-30 236 246)"/>
+  <circle cx="300" cy="320" r="70" fill="none" stroke="#FFFFFF" stroke-width="1.5" opacity="0.18"/>
+  <circle cx="300" cy="320" r="48" fill="none" stroke="#FFFFFF" stroke-width="1.5" opacity="0.14"/>
+  <!-- the sprig: two leaves and a bud -->
+  <g transform="translate(70 360) rotate(-24)">
+    <path d="M0 0C40 -10 90 -20 150 -70" fill="none" stroke="#3F6B35" stroke-width="5" stroke-linecap="round"/>
+    <path d="M60 -16C40 -70 70 -110 110 -116C118 -76 100 -34 60 -16Z" fill="url(#dp-leaf)"/>
+    <path d="M60 -16C80 -60 100 -90 110 -116" fill="none" stroke="#2E5129" stroke-width="2"/>
+    <path d="M104 -40C110 -2 150 18 190 8C180 -30 146 -50 104 -40Z" fill="url(#dp-leaf2)"/>
+    <path d="M104 -40C130 -26 160 -6 190 8" fill="none" stroke="#244020" stroke-width="2"/>
+    <path d="M150 -70C150 -96 166 -114 182 -118C186 -98 176 -80 150 -70Z" fill="#A9C98A"/>
+  </g>
+  <!-- loose leaves -->
+  <g fill="#3F2A16">
+    <path d="M470 430c10-6 22-4 26 4-10 6-22 4-26-4z"/><path d="M486 452c8-8 20-8 24-2-8 8-20 8-24 2z"/><path d="M450 456c12-2 20 4 22 10-12 2-20-4-22-10z"/>
+    <path d="M96 160c8-8 20-8 24-2-8 8-20 8-24 2z"/><path d="M80 186c12-4 22 0 24 8-12 4-22 0-24-8z"/>
+  </g>
+  <g fill="#5E8B4E"><path d="M500 140c6-14 22-20 34-16-6 14-22 20-34 16z"/><path d="M44 300c10-12 26-14 36-8-10 12-26 14-36 8z"/></g>
+</svg>

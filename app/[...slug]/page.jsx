@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import BlockRender from '../../components/PageBuilder/BlockRender';
 import PageBuilderContent from "../../components/PageBuilder/PageBuilderContent";
 import { getStyledPageTemplate as getPageTemplate, styleFor } from "@/lib/pageStyles";
+import { PostProvider } from "@/components/PageBuilder/context/PostContext";
 
 export const dynamic = 'force-dynamic'
 
@@ -111,9 +112,23 @@ export default async function DynamicPage({ params }) {
 	const page = await getPageData(path)
 
 
+	console.log(page);
+
+	var pageTemplateData = null;
+	var postData = null;
 
 
-	const pageTemplateData = await getPageTemplate({ slug: slug.join('') })
+	if (page?.post_type == 'post') {
+		pageTemplateData = await getPageTemplate({ type: 'blog_single' })
+		var postData = pageTemplateData;
+
+
+	} else {
+		pageTemplateData = await getPageTemplate({ slug: slug.join('') })
+
+	}
+
+
 	var pageTemplatecontent = pageTemplateData?.content ? JSON.parse(pageTemplateData?.content) : [];
 
 
@@ -181,9 +196,11 @@ export default async function DynamicPage({ params }) {
 
 	return (
 		<>
+			<PostProvider value={postData}>
+				<PageBuilderContent blocks={blocks} />
 
+			</PostProvider>
 
-			<PageBuilderContent blocks={blocks} />
 
 			{/* The sheet for whichever blocks were rendered above: the template's
 				  (one sheet for content, header and footer, see lib/pageStyles.js)

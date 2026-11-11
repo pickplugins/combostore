@@ -1,3 +1,4 @@
+import { storeUrl } from "@/lib/storeUrl";
 
 import { templateMetadata, slugToName } from "@/lib/templateSeo";
 import React from "react";
@@ -75,7 +76,7 @@ export default async function page({ params }) {
       eventName: 'ViewContent',
       eventId,
       data: eventData,
-      sourceUrl: `${appUrl}`,
+      sourceUrl: storeUrl(),
       ip, userAgent, fbp, fbc,
     })
   );

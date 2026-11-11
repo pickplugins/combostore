@@ -11,7 +11,8 @@ import Image from "next/image";
 import Spinner from "../../../components/Spinner";
 import { useUtilsStore } from '../../../store/useUtilsStore'
 import { useCounterStore } from '../../../store/useCounterStore';
-import * as TablerIcons from '@tabler/icons-react';
+import { tablerIcon } from "@/components/icons/TablerIcon";
+import { canOptimizeImage } from "@/lib/imageOptimization.mjs";
 
 import { elementCssClasses } from "../ElementsDefinition";
 const QuickSearchView = (props) => {
@@ -35,7 +36,7 @@ const QuickSearchView = (props) => {
 	var icon = options?.icon;
 	var iconSize = options?.iconSize;
 
-	const IconX = TablerIcons[icon];
+	const IconX = tablerIcon(icon);
 
 
 
@@ -529,7 +530,7 @@ const QuickSearchView = (props) => {
 
 											<Link href={`/product/${product.slug}/`} className={cls('result-thumb')}>
 												<Image
-													unoptimized
+													unoptimized={!canOptimizeImage(product?.post_thumbnail_url && product?.post_thumbnail?.src ? product.post_thumbnail.src : `/thumb.png`)}
 													className={cls('result-image')}
 													src={product?.post_thumbnail_url && product?.post_thumbnail?.src ? product.post_thumbnail.src : `/thumb.png`}
 													width={112}

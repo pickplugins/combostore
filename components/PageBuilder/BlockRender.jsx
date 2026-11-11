@@ -102,7 +102,9 @@ import TabsView from './elements/TabsView';
 import TabsItemView from './elements/TabsItemView';
 import AccordionView from './elements/AccordionView';
 import AccordionItemView from './elements/AccordionItemView';
-import CheckoutView from './elements/CheckoutView';
+import dynamic from "next/dynamic";
+/* On demand: only checkout pages have this block, and it brings the country and state lists (~250 KB) and the map picker, which every page used to load. Still rendered on the server. */
+const CheckoutView = dynamic(() => import('./elements/CheckoutView'));
 import CartView from './elements/CartView';
 import NotifyView from './elements/NotifyView';
 import CustomerAccountLoggedView from './elements/CustomerAccountLoggedView';

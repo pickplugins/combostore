@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600" role="img" aria-label="Ghori Fine Watches template preview">
+  <title>Ghori Fine Watches template preview</title>
+  <!-- Picker thumbnail for templates/Ghori: a wireframe of its home page - split-menu header, minute track and watch hero - in the template's palette. -->
+  <defs>
+    <clipPath id="gh-t-clip"><rect width="800" height="600"/></clipPath>
+    <radialGradient id="gh-t-glow" cx="72%" cy="45%" r="45%"><stop offset="0" stop-color="#C9A96E" stop-opacity="0.18"/><stop offset="1" stop-color="#C9A96E" stop-opacity="0"/></radialGradient>
+    <pattern id="gh-t-track" width="10" height="10" patternUnits="userSpaceOnUse"><rect width="1" height="5" fill="#C9A96E" opacity="0.6"/></pattern>
+    <pattern id="gh-t-track5" width="50" height="10" patternUnits="userSpaceOnUse"><rect width="2" height="10" fill="#C9A96E"/></pattern>
+  </defs>
+  <g clip-path="url(#gh-t-clip)">
+  <rect width="800" height="600" fill="#0B1220"/>
+  <rect width="800" height="600" fill="url(#gh-t-glow)"/>
+  <!-- top bar -->
+  <rect width="800" height="22" fill="#070C16"/>
+  <rect x="20" y="9" width="180" height="4" rx="2" fill="#FFFFFF" opacity="0.4"/><rect x="206" y="6" width="44" height="10" rx="5" fill="none" stroke="#C9A96E" stroke-opacity="0.6"/>
+  <rect x="640" y="5" width="140" height="12" rx="6" fill="#FFFFFF" fill-opacity="0.06" stroke="#FFFFFF" stroke-opacity="0.15"/>
+  <!-- split menu + logo -->
+  <g fill="#FFFFFF" opacity="0.7"><rect x="150" y="47" width="30" height="4" rx="2"/><rect x="196" y="47" width="40" height="4" rx="2"/><rect x="252" y="47" width="70" height="4" rx="2"/><rect x="478" y="47" width="80" height="4" rx="2"/><rect x="574" y="47" width="44" height="4" rx="2"/><rect x="634" y="47" width="36" height="4" rx="2"/></g>
+  <circle cx="400" cy="34" r="3" fill="#9BF2C4"/>
+  <text x="400" y="58" font-family="Prata, Georgia, serif" font-size="22" letter-spacing="7" fill="#E2CC9B" text-anchor="middle">GHORI</text>
+  <circle cx="712" cy="49" r="11" fill="none" stroke="#FFFFFF" stroke-opacity="0.2"/><circle cx="742" cy="49" r="11" fill="#C9A96E"/>
+  <rect y="74" width="800" height="10" fill="url(#gh-t-track)"/><rect y="74" width="800" height="10" fill="url(#gh-t-track5)"/>
+  <!-- hero copy -->
+  <rect x="40" y="128" width="24" height="1" fill="#C9A96E"/><rect x="72" y="125" width="90" height="6" rx="3" fill="#C9A96E" opacity="0.8"/>
+  <text x="38" y="196" font-family="Prata, Georgia, serif" font-size="52" fill="#FFFFFF">Time, well</text>
+  <text x="38" y="252" font-family="Prata, Georgia, serif" font-size="52" fill="#FFFFFF">kept.</text>
+  <g fill="#FFFFFF" opacity="0.35"><rect x="40" y="280" width="290" height="6" rx="3"/><rect x="40" y="294" width="260" height="6" rx="3"/><rect x="40" y="308" width="200" height="6" rx="3"/></g>
+  <rect x="40" y="336" width="130" height="34" rx="17" fill="#C9A96E"/><rect x="180" y="336" width="110" height="34" rx="17" fill="none" stroke="#FFFFFF" stroke-opacity="0.3"/>
+  <rect x="40" y="392" width="290" height="1" fill="#FFFFFF" opacity="0.12"/>
+  <g fill="#9BF2C4"><rect x="40" y="408" width="8" height="8" rx="2"/><rect x="140" y="408" width="8" height="8" rx="2"/><rect x="240" y="408" width="8" height="8" rx="2"/></g>
+  <g fill="#FFFFFF" opacity="0.5"><rect x="40" y="426" width="70" height="4" rx="2"/><rect x="140" y="426" width="70" height="4" rx="2"/><rect x="240" y="426" width="70" height="4" rx="2"/></g>
+  <!-- watch: a simplified ghori-dial.svg (an <img> cannot load nested images) -->
+  <rect x="556" y="80" width="68" height="60" fill="#221F1C"/><rect x="556" y="440" width="68" height="60" fill="#221F1C"/><rect x="778" y="280" width="12" height="20" rx="3" fill="#B9BFC9"/><circle cx="590" cy="290" r="190" fill="#B9BFC9" stroke="#6E7685" stroke-width="2"/><circle cx="590" cy="290" r="177" fill="#0B1220"/><circle cx="590" cy="290" r="168" fill="none" stroke="#C9A96E" stroke-width="8" stroke-dasharray="1.4 16.2" opacity="0.8"/><circle cx="590" cy="290" r="156" fill="#13213A"/><g fill="#E2CC9B"><rect x="586" y="150" width="8" height="30" rx="2" transform="rotate(0 590 290)"/><rect x="586" y="150" width="8" height="30" rx="2" transform="rotate(30 590 290)"/><rect x="586" y="150" width="8" height="30" rx="2" transform="rotate(60 590 290)"/><rect x="586" y="150" width="8" height="30" rx="2" transform="rotate(90 590 290)"/><rect x="586" y="150" width="8" height="30" rx="2" transform="rotate(120 590 290)"/><rect x="586" y="150" width="8" height="30" rx="2" transform="rotate(150 590 290)"/><rect x="586" y="150" width="8" height="30" rx="2" transform="rotate(180 590 290)"/><rect x="586" y="150" width="8" height="30" rx="2" transform="rotate(210 590 290)"/><rect x="586" y="150" width="8" height="30" rx="2" transform="rotate(240 590 290)"/><rect x="586" y="150" width="8" height="30" rx="2" transform="rotate(270 590 290)"/><rect x="586" y="150" width="8" height="30" rx="2" transform="rotate(300 590 290)"/><rect x="586" y="150" width="8" height="30" rx="2" transform="rotate(330 590 290)"/></g><text x="590" y="232" font-family="Prata, Georgia, serif" font-size="18" letter-spacing="5" fill="#E2CC9B" text-anchor="middle">GHORI</text><rect x="670" y="280" width="28" height="20" rx="2" fill="#F5F4F0"/>
+  <g transform="translate(590 290)">
+    <rect x="-4" y="-68" width="8" height="70" rx="4" fill="#E2CC9B" transform="rotate(305)"/>
+    <rect x="-3" y="-100" width="6" height="102" rx="3" fill="#E2CC9B" transform="rotate(60)"/>
+    <rect x="-1" y="-112" width="2" height="114" rx="1" fill="#9BF2C4" transform="rotate(20)"/>
+    <circle r="7" fill="#0B1220" stroke="#E2CC9B" stroke-width="2.5"/>
+  </g>
+  <!-- movement strip -->
+  <rect y="500" width="800" height="100" fill="#F5F4F0"/>
+  <rect x="40" y="532" width="120" height="6" rx="3" fill="#0B1220"/>
+  <g fill="#FFFFFF" stroke="#E3E0D8"><rect x="300" y="520" width="76" height="30" rx="15"/><rect x="384" y="520" width="64" height="30" rx="15"/><rect x="456" y="520" width="92" height="30" rx="15"/><rect x="556" y="520" width="58" height="30" rx="15"/><rect x="622" y="520" width="58" height="30" rx="15"/><rect x="688" y="520" width="72" height="30" rx="15"/></g>
+  <g fill="#A88A52"><circle cx="314" cy="535" r="4"/><circle cx="398" cy="535" r="4"/><circle cx="470" cy="535" r="4"/><circle cx="570" cy="535" r="4"/><circle cx="636" cy="535" r="4"/><circle cx="702" cy="535" r="4"/></g>
+  </g>
+</svg>

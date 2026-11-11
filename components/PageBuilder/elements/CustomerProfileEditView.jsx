@@ -5,7 +5,9 @@ import React from "react";
 import { useState, useEffect } from "react";
 import { IconUser, IconMapPin, IconHome, IconDeviceFloppy } from "@tabler/icons-react";
 import Spinner from "../../../components/Spinner";
-import LocationPicker from "../../../components/LocationPicker";
+import dynamic from "next/dynamic";
+/* The map (Google Maps) loads only when this form shows it, not on every page. */
+const LocationPicker = dynamic(() => import("../../../components/LocationPicker"), { ssr: false });
 import { useCounterStore } from '../../../store/useCounterStore';
 import { useSavedToken } from './useSavedToken';
 import { AccountNotice } from './accountUi';

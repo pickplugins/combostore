@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 520" width="400" height="520" role="img" aria-label="An ivory panjabi framed in a mihrab arch under a crescent moon">
+  <!-- Hero illustration for templates/Noorani.js: an embroidered ivory panjabi on a hanger inside a mihrab arch, crescent and lanterns above. -->
+  <defs>
+    <linearGradient id="nr-bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0F5B44"/><stop offset="1" stop-color="#0C2E24"/>
+    </linearGradient>
+    <linearGradient id="nr-cloth" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#E9E1CF"/><stop offset="0.45" stop-color="#FBF6EA"/><stop offset="1" stop-color="#DDD3BD"/>
+    </linearGradient>
+    <linearGradient id="nr-gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E6CF93"/><stop offset="1" stop-color="#B8913F"/>
+    </linearGradient>
+    <radialGradient id="nr-glow" cx="0.5" cy="0.45" r="0.5">
+      <stop offset="0" stop-color="#D6B565" stop-opacity="0.28"/><stop offset="1" stop-color="#D6B565" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="nr-lat" width="56" height="56" patternUnits="userSpaceOnUse">
+      <g fill="none" stroke="#D6B565" stroke-opacity="0.12">
+        <rect x="18" y="18" width="20" height="20"/><rect x="18" y="18" width="20" height="20" transform="rotate(45 28 28)"/>
+      </g>
+    </pattern>
+  </defs>
+  <rect width="400" height="520" fill="url(#nr-bg)"/>
+  <rect width="400" height="520" fill="url(#nr-lat)"/>
+  <!-- inner arch -->
+  <path d="M60 520V230C60 140 120 80 200 50C280 80 340 140 340 230V520" fill="none" stroke="url(#nr-gold)" stroke-width="2" opacity="0.7"/>
+  <path d="M76 520V236C76 156 130 104 200 76C270 104 324 156 324 236V520" fill="none" stroke="#D6B565" stroke-width="1" stroke-dasharray="2 6" opacity="0.6"/>
+  <ellipse cx="200" cy="300" rx="170" ry="210" fill="url(#nr-glow)"/>
+  <!-- crescent and star -->
+  <path d="M214 92a26 26 0 1 1-20-44a20 20 0 1 0 20 44z" fill="url(#nr-gold)"/>
+  <path d="M226 62l3 7 7 .5-5.5 4.5 2 7-6.5-4-6.5 4 2-7-5.5-4.5 7-.5z" fill="#E6CF93"/>
+  <!-- lanterns -->
+  <path d="M110 0V128M290 0V112" stroke="#D6B565" stroke-opacity="0.6" fill="none"/>
+  <g fill="url(#nr-gold)">
+    <path d="M101 128h18l4 10-4 22h-18l-4-22z"/><rect x="104" y="160" width="12" height="5" rx="1"/>
+    <path d="M281 112h18l4 10-4 22h-18l-4-22z"/><rect x="284" y="144" width="12" height="5" rx="1"/>
+  </g>
+  <g fill="#FFF3C4" opacity="0.85"><rect x="106" y="138" width="8" height="16" rx="3"/><rect x="286" y="122" width="8" height="16" rx="3"/></g>
+  <!-- hanger -->
+  <path d="M200 150v-14c0-10 12-10 12-20s-8-14-14-12" fill="none" stroke="#D6B565" stroke-width="3" stroke-linecap="round"/>
+  <path d="M200 150L134 172M200 150L266 172" stroke="#B8913F" stroke-width="3" stroke-linecap="round"/>
+  <!-- panjabi -->
+  <path d="M184 156L140 168L104 196L76 352L110 360L128 252L130 486L270 486L272 252L290 360L324 352L296 196L260 168L216 156Z" fill="url(#nr-cloth)"/>
+  <path d="M128 252L130 486M272 252L270 486" stroke="#CFC4AA" stroke-width="1"/>
+  <path d="M130 438v48M270 438v48" stroke="#0C2E24" stroke-opacity="0.35" stroke-width="2"/>
+  <!-- collar band and placket embroidery -->
+  <path d="M182 146h36v14c-6 4-30 4-36 0z" fill="#F4EDDD" stroke="url(#nr-gold)" stroke-width="2"/>
+  <rect x="192" y="160" width="16" height="150" rx="2" fill="#F4EDDD" stroke="url(#nr-gold)" stroke-width="2"/>
+  <g fill="none" stroke="#B8913F" stroke-width="1.2">
+    <path d="M186 153h28" stroke-dasharray="3 3"/>
+    <path d="M200 166l5 6-5 6-5-6zM200 196l5 6-5 6-5-6zM200 226l5 6-5 6-5-6zM200 256l5 6-5 6-5-6zM200 286l5 6-5 6-5-6z"/>
+    <path d="M104 344l32 7M296 344l-32 7" stroke-dasharray="3 3"/>
+  </g>
+  <g fill="#B8913F"><circle cx="200" cy="181" r="2.6"/><circle cx="200" cy="211" r="2.6"/><circle cx="200" cy="241" r="2.6"/><circle cx="200" cy="271" r="2.6"/></g>
+  <!-- tone-on-tone motif near hem -->
+  <g fill="none" stroke="#C9B98F" stroke-width="1.2" opacity="0.9">
+    <path d="M150 462h100"/><path d="M160 452l6-6 6 6-6 6zM194 452l6-6 6 6-6 6zM228 452l6-6 6 6-6 6z"/>
+  </g>
+  <!-- floor -->
+  <ellipse cx="200" cy="500" rx="120" ry="10" fill="#000" opacity="0.25"/>
+</svg>

@@ -1,7 +1,14 @@
 import React from "react";
+/*
+	Dashboard pages and builder options panels load on demand (next/dynamic):
+	the storefront loads this config for its blocks and runtime, and static
+	imports put the admin screens - rich-text editor, maps, the icon picker -
+	into every shop page. The blocks and the runtime stay static imports.
+*/
+import dynamic from "next/dynamic";
 import { IconShieldHalf } from "@tabler/icons-react";
 
-import FraudChecker from "./pages/FraudChecker";
+const FraudChecker = dynamic(() => import("./pages/FraudChecker"));
 
 /**
  * Fraud Checker.

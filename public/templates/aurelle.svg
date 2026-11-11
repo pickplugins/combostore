@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600" role="img" aria-label="Aurelle Fine Jewellery template preview">
+  <title>Aurelle Fine Jewellery template preview</title>
+  <!-- Picker thumbnail for templates/Aurelle.js: a wireframe of its home page in the template's palette. -->
+  <defs>
+    <pattern id="au-t-lat" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M0 20L20 0L40 20L20 40Z" fill="none" stroke="#D9B77E" stroke-opacity="0.16"/>
+    </pattern>
+    <linearGradient id="au-t-blush" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F8EEEB"/><stop offset="1" stop-color="#EBCFCB"/></linearGradient>
+    <linearGradient id="au-t-gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F3DDAE"/><stop offset="1" stop-color="#9C7638"/></linearGradient>
+  </defs>
+  <rect width="800" height="600" fill="#FCF8F6"/>
+  <rect width="800" height="22" fill="#1A1214"/>
+  <rect x="300" y="8" width="160" height="6" rx="3" fill="#FFFFFF" opacity="0.5"/><rect x="468" y="6" width="40" height="10" rx="5" fill="#D9B77E"/>
+  <rect y="22" width="800" height="56" fill="#FFFFFF"/>
+  <circle cx="54" cy="50" r="14" fill="#1E1416" stroke="#D9B77E"/>
+  <text x="54" y="56" font-family="Bodoni Moda, Didot, serif" font-size="16" font-style="italic" fill="#D9B77E" text-anchor="middle">A</text>
+  <text x="76" y="56" font-family="Bodoni Moda, Didot, serif" font-size="18" letter-spacing="3" fill="#241A1C">AURELLE</text>
+  <g fill="#75686A" opacity="0.6"><rect x="300" y="47" width="50" height="4" rx="2"/><rect x="364" y="47" width="44" height="4" rx="2"/><rect x="422" y="47" width="56" height="4" rx="2"/><rect x="492" y="47" width="60" height="4" rx="2"/></g>
+  <circle cx="720" cy="50" r="12" fill="#FBEDEE"/><circle cx="752" cy="50" r="12" fill="#1E1416"/>
+  <rect y="78" width="800" height="300" fill="#1A1214"/>
+  <rect y="78" width="800" height="300" fill="url(#au-t-lat)"/>
+  <clipPath id="au-t-hero"><rect y="78" width="800" height="300"/></clipPath>
+  <circle cx="680" cy="110" r="150" fill="#A0525E" opacity="0.25" clip-path="url(#au-t-hero)"/>
+  <text x="60" y="134" font-family="Pinyon Script, cursive" font-size="34" fill="#D9B77E">made to shine</text>
+  <text x="60" y="184" font-family="Bodoni Moda, Didot, serif" font-size="38" fill="#FFFFFF">Little Luxuries for</text>
+  <text x="60" y="226" font-family="Bodoni Moda, Didot, serif" font-size="38" fill="#FFFFFF">Every Day You Glow</text>
+  <g fill="#FFFFFF" opacity="0.35"><rect x="60" y="248" width="300" height="6" rx="3"/><rect x="60" y="262" width="250" height="6" rx="3"/></g>
+  <rect x="60" y="290" width="150" height="38" rx="19" fill="#D9B77E"/>
+  <rect x="222" y="290" width="150" height="38" rx="19" fill="none" stroke="#FFFFFF" stroke-opacity="0.4"/>
+  <path d="M540 378V210a100 100 0 0 1 200 0v168z" fill="url(#au-t-blush)" stroke="#D9B77E" stroke-opacity="0.6" stroke-width="2"/>
+  <path d="M560 112C580 210 610 230 640 232C670 230 700 210 720 112" fill="none" stroke="url(#au-t-gold)" stroke-width="1.5"/>
+  <ellipse cx="640" cy="248" rx="10" ry="13" fill="#FFFFFF" stroke="#CDBAB4"/>
+  <ellipse cx="640" cy="342" rx="22" ry="19" fill="none" stroke="url(#au-t-gold)" stroke-width="5"/>
+  <path d="M630 322l-6-8 7-8h18l7 8-6 8z" fill="#EEF2F7" stroke="#A9B6C4"/>
+  <text x="400" y="406" font-family="Pinyon Script, cursive" font-size="20" fill="#A0525E" text-anchor="middle">adorn</text>
+  <text x="400" y="434" font-family="Bodoni Moda, Didot, serif" font-size="22" fill="#241A1C" text-anchor="middle">Find Your Signature Piece</text>
+  <g fill="#F8EEEB" stroke="#8C6B3A" stroke-opacity="0.35">
+    <circle cx="130" cy="510" r="52"/><circle cx="265" cy="510" r="52"/><circle cx="400" cy="510" r="52"/><circle cx="535" cy="510" r="52"/><circle cx="670" cy="510" r="52"/>
+  </g>
+  <g fill="none" stroke="url(#au-t-gold)" stroke-width="4">
+    <circle cx="130" cy="514" r="18"/><path d="M265 486v16"/><circle cx="265" cy="512" r="10"/><path d="M370 494C380 530 420 530 430 494"/><circle cx="535" cy="510" r="24"/><circle cx="670" cy="510" r="14"/><circle cx="676" cy="516" r="14"/>
+  </g>
+  <path d="M124 494l-4-6 5-6h10l5 6-4 6z" fill="#EEF2F7" stroke="#A9B6C4"/>
+  <ellipse cx="400" cy="534" rx="7" ry="9" fill="#FFFFFF" stroke="#CDBAB4"/>
+</svg>

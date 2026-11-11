@@ -1,5 +1,4 @@
 User-agent: *
-Disallow: server.kidobazar.com
 Disallow: /wp-admin/
 Disallow: /product-tag/
 Disallow: /tag/
@@ -41,3 +40,4 @@ Disallow: /products/[0-9]+
 Allow: /wp-admin/admin-ajax.php
 
 Sitemap: https://kidobazar.com/sitemap.xml
+Sitemap: https://kidobazar.com/sitemap-blogs.xml

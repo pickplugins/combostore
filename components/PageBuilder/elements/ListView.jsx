@@ -1,6 +1,6 @@
 import PropTypes from "prop-types";
 import React from "react";
-import * as TablerIcons from '@tabler/icons-react';
+import { tablerIcon } from "@/components/icons/TablerIcon";
 import { elementCssClasses } from "../ElementsDefinition";
 
 /*
@@ -16,13 +16,13 @@ import { elementCssClasses } from "../ElementsDefinition";
 export function ListMarkup({ cls, id, index, type, options, items, rootClassName = '', rootProps = {} }) {
 
 	var Tag = options?.tag === 'ol' ? 'ol' : 'ul';
-	var DefaultIcon = TablerIcons[options?.icon];
+	var DefaultIcon = tablerIcon(options?.icon);
 	var defaultSize = Number(options?.iconSize) || 24;
 
 	return (
 		<Tag id={id} index={index} type={type} className={`${cls('*')} ${rootClassName}`} {...rootProps}>
 			{items.map((item, i) => {
-				var ItemIcon = TablerIcons[item?.icon] ?? DefaultIcon;
+				var ItemIcon = tablerIcon(item?.icon) ?? DefaultIcon;
 				return (
 					<li key={i} className={cls('li')}>
 						{ItemIcon && <span className={cls('icon')} aria-hidden="true"><ItemIcon size={Number(item?.iconSize) || defaultSize} /></span>}

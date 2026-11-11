@@ -1,5 +1,5 @@
 import React from "react";
-import * as TablerIcons from '@tabler/icons-react';
+import { tablerIcon } from "@/components/icons/TablerIcon";
 import IconPicker from "../../../components/IconPicker";
 
 /*
@@ -66,7 +66,7 @@ export function formatProductMessage(template, product) {
 export function ChatButtonMarkup({ cls, id, index, type, options, href, defaultLabel = '', rootClassName = '', rootProps = {} }) {
 
 	var label = options?.label ?? defaultLabel;
-	var IconX = TablerIcons[options?.icon];
+	var IconX = tablerIcon(options?.icon);
 	/* The definitions' 20, also for blocks saved without the key (tabler's own default is 24). */
 	var iconSize = Number(options?.iconSize) || 20;
 

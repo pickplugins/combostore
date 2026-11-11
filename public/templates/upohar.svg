@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600" role="img" aria-label="Upohar Gift Shop template preview">
+  <title>Upohar Gift Shop template preview</title>
+  <!-- Picker thumbnail for templates/Upohar: a wireframe of its home page - gift-tag logo, ribbon with bow, gift finder hero and gift stack - in the template's palette. -->
+  <defs>
+    <clipPath id="uh-t-clip"><rect width="800" height="600"/></clipPath>
+    <linearGradient id="uh-t-gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F3D27E"/><stop offset="0.5" stop-color="#E0B354"/><stop offset="1" stop-color="#B98A2E"/></linearGradient>
+    <pattern id="uh-t-stripes" width="14" height="14" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="7" height="14" fill="#FFFFFF" opacity="0.12"/></pattern>
+    <pattern id="uh-t-dots" width="14" height="14" patternUnits="userSpaceOnUse"><circle cx="7" cy="7" r="2.4" fill="#FFFFFF" opacity="0.6"/></pattern>
+  </defs>
+  <g clip-path="url(#uh-t-clip)">
+  <rect width="800" height="600" fill="#FFF8F0"/>
+  <circle cx="610" cy="300" r="190" fill="#FCE8E5"/>
+  <circle cx="610" cy="300" r="205" fill="none" stroke="#E0B354" stroke-opacity="0.5" stroke-width="2" stroke-dasharray="6 6"/>
+  <!-- promo -->
+  <rect width="800" height="20" fill="#F4B9B2"/>
+  <rect x="250" y="8" width="210" height="4" rx="2" fill="#2B1B2E" opacity="0.6"/><rect x="468" y="5" width="56" height="10" rx="5" fill="#2B1B2E"/>
+  <!-- tag logo -->
+  <g transform="rotate(-3 90 46)">
+    <path d="M38 28H158V64H38L24 46Z" fill="#FFFFFF" stroke="#2B1B2E" stroke-opacity="0.1"/>
+    <circle cx="36" cy="46" r="3.5" fill="#F7ECDF" stroke="#2B1B2E" stroke-opacity="0.25"/>
+    <circle cx="56" cy="46" r="10" fill="#B5174F"/>
+    <text x="56" y="50" font-family="Arial, sans-serif" font-size="11" fill="#FFFFFF" text-anchor="middle">♥</text>
+    <text x="72" y="52" font-family="Gloock, Georgia, serif" font-size="19" fill="#2B1B2E">Upohar</text>
+  </g>
+  <g fill="#2B1B2E" opacity="0.75"><rect x="200" y="44" width="44" height="5" rx="2.5"/><rect x="256" y="44" width="60" height="5" rx="2.5"/><rect x="328" y="44" width="40" height="5" rx="2.5"/><rect x="380" y="44" width="40" height="5" rx="2.5"/><rect x="432" y="44" width="26" height="5" rx="2.5"/><rect x="470" y="44" width="48" height="5" rx="2.5"/></g>
+  <rect x="560" y="34" width="130" height="24" rx="12" fill="#FFFFFF" stroke="#2B1B2E" stroke-opacity="0.1" stroke-width="2"/>
+  <circle cx="716" cy="46" r="13" fill="#FFFFFF"/><circle cx="752" cy="46" r="13" fill="#0F5C4A"/>
+  <!-- ribbon + bow -->
+  <rect y="74" width="800" height="8" fill="#E0B354"/><rect y="74" width="800" height="1.5" fill="#B98A2E"/><rect y="80.5" width="800" height="1.5" fill="#B98A2E"/>
+  <g fill="#E0B354" stroke="#B98A2E" stroke-width="2"><path d="M398 78c-14-12-28-9-26 1 2 9 16 7 26-1z"/><path d="M402 78c14-12 28-9 26 1-2 9-16 7-26-1z"/><rect x="394" y="72" width="12" height="12" rx="3"/></g>
+  <!-- hero copy -->
+  <text x="34" y="130" font-family="Caveat, cursive" font-size="18" fill="#B5174F">wrapped with love</text>
+  <g font-family="Gloock, Georgia, serif" font-size="40" fill="#2B1B2E"><text x="32" y="176">Find the perfect</text><text x="32" y="220">gift in three taps.</text></g>
+  <g fill="#7A6870" opacity="0.45"><rect x="34" y="240" width="300" height="5" rx="2.5"/><rect x="34" y="252" width="250" height="5" rx="2.5"/></g>
+  <!-- finder card -->
+  <rect x="34" y="276" width="350" height="250" rx="22" fill="#FFFFFF"/>
+  <g>
+    <circle cx="56" cy="300" r="8" fill="#E0B354"/><rect x="70" y="297" width="80" height="6" rx="3" fill="#2B1B2E" opacity="0.7"/>
+    <g fill="none" stroke="#2B1B2E" stroke-opacity="0.12" stroke-width="2"><rect x="50" y="314" width="42" height="24" rx="12"/><rect x="98" y="314" width="42" height="24" rx="12"/><rect x="146" y="314" width="46" height="24" rx="12"/><rect x="198" y="314" width="62" height="24" rx="12"/><rect x="266" y="314" width="58" height="24" rx="12"/></g>
+    <rect x="50" y="354" width="318" height="1" fill="#EADDD2"/>
+    <circle cx="56" cy="376" r="8" fill="#E0B354"/><rect x="70" y="373" width="110" height="6" rx="3" fill="#2B1B2E" opacity="0.7"/>
+    <rect x="50" y="390" width="64" height="24" rx="12" fill="#0F5C4A"/>
+    <g fill="none" stroke="#2B1B2E" stroke-opacity="0.12" stroke-width="2"><rect x="120" y="390" width="88" height="24" rx="12"/><rect x="214" y="390" width="38" height="24" rx="12"/><rect x="258" y="390" width="62" height="24" rx="12"/></g>
+    <rect x="50" y="430" width="318" height="1" fill="#EADDD2"/>
+    <circle cx="56" cy="452" r="8" fill="#E0B354"/><rect x="70" y="449" width="70" height="6" rx="3" fill="#2B1B2E" opacity="0.7"/>
+    <g fill="none" stroke="#2B1B2E" stroke-opacity="0.12" stroke-width="2"><rect x="50" y="466" width="84" height="24" rx="12"/><rect x="140" y="466" width="84" height="24" rx="12"/><rect x="230" y="466" width="84" height="24" rx="12"/></g>
+  </g>
+  <!-- gift stack -->
+  <g transform="translate(445 150) scale(0.62)">
+    <rect x="70" y="300" width="300" height="210" rx="10" fill="#0F5C4A"/><rect x="70" y="300" width="300" height="210" rx="10" fill="url(#uh-t-stripes)"/>
+    <rect x="58" y="280" width="324" height="50" rx="10" fill="#0D5040"/>
+    <rect x="198" y="280" width="44" height="230" fill="url(#uh-t-gold)"/><rect x="70" y="384" width="300" height="34" fill="url(#uh-t-gold)"/>
+    <rect x="360" y="380" width="160" height="130" rx="10" fill="#F4B9B2"/><rect x="360" y="380" width="160" height="130" rx="10" fill="url(#uh-t-dots)"/>
+    <rect x="352" y="364" width="176" height="34" rx="8" fill="#EFA9A1"/><rect x="428" y="364" width="24" height="146" fill="#0F5C4A"/>
+    <rect x="120" y="170" width="200" height="112" rx="8" fill="url(#uh-t-gold)"/><rect x="110" y="156" width="220" height="34" rx="8" fill="#E9C46A"/>
+    <rect x="206" y="156" width="28" height="126" fill="#F4B9B2"/><rect x="120" y="212" width="200" height="22" fill="#F4B9B2"/>
+    <g fill="#F4B9B2" stroke="#D98C84" stroke-width="2"><path d="M220 156C180 110 140 120 150 146C158 166 200 162 220 156Z"/><path d="M220 156C260 110 300 120 290 146C282 166 240 162 220 156Z"/></g>
+    <rect x="210" y="146" width="20" height="20" rx="6" fill="#EFA9A1" stroke="#D98C84" stroke-width="2"/>
+    <g fill="#0F5C4A"><path d="M440 364C414 334 388 342 394 360C399 373 428 370 440 364Z"/><path d="M440 364C466 334 492 342 486 360C481 373 452 370 440 364Z"/></g>
+  </g>
+  <!-- strip -->
+  <rect y="550" width="800" height="50" fill="#0F5C4A"/>
+  <rect y="554" width="800" height="2" fill="#E0B354"/><rect y="594" width="800" height="2" fill="#E0B354"/>
+  <g fill="#FFF8F0"><rect x="24" y="572" width="110" height="6" rx="3"/><rect x="174" y="572" width="120" height="6" rx="3" fill="#E0B354"/><rect x="334" y="572" width="170" height="6" rx="3"/><rect x="544" y="572" width="140" height="6" rx="3"/></g>
+  </g>
+</svg>

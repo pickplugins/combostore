@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 520" width="520" height="520" role="img" aria-label="A cognac leather tote bag with rolled handles, brass rivets, contrast stitching and a front pocket">
+  <!-- Hero art for templates/Jhola: a structured leather tote on a transparent background. Replace with a cut-out photo of your hero bag. -->
+  <defs>
+    <linearGradient id="jh-leather" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#C46B37"/><stop offset="0.55" stop-color="#A6552B"/><stop offset="1" stop-color="#7C3D1E"/></linearGradient>
+    <linearGradient id="jh-side" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#7C3D1E"/><stop offset="1" stop-color="#5E2D16"/></linearGradient>
+    <linearGradient id="jh-brass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F0D28E"/><stop offset="0.5" stop-color="#C9A36A"/><stop offset="1" stop-color="#8E6B33"/></linearGradient>
+    <radialGradient id="jh-shadow" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#2B211C" stop-opacity="0.35"/><stop offset="1" stop-color="#2B211C" stop-opacity="0"/></radialGradient>
+  </defs>
+  <ellipse cx="260" cy="488" rx="200" ry="18" fill="url(#jh-shadow)"/>
+  <!-- back handle -->
+  <path d="M170 196C170 90 350 90 350 196" fill="none" stroke="#7C3D1E" stroke-width="16" stroke-linecap="round"/>
+  <!-- body -->
+  <path d="M96 196H424L452 470Q454 486 438 486H82Q66 486 68 470Z" fill="url(#jh-leather)"/>
+  <path d="M424 196L452 470Q454 486 438 486H420L404 206Z" fill="url(#jh-side)" opacity="0.8"/>
+  <path d="M96 196H424" stroke="#5E2D16" stroke-width="4"/>
+  <!-- top band -->
+  <path d="M98 196H422L425 226H95Z" fill="#8A4320"/>
+  <path d="M104 216H416" stroke="#F0D28E" stroke-width="1.5" stroke-dasharray="6 5" opacity="0.8"/>
+  <!-- body stitching -->
+  <path d="M104 236L80 468M416 236L440 468M86 474H434" fill="none" stroke="#F0D28E" stroke-width="1.5" stroke-dasharray="6 5" opacity="0.7"/>
+  <!-- front pocket -->
+  <path d="M150 300H370L378 440H142Z" fill="#9A4C25"/>
+  <path d="M150 300H370L378 440H142Z" fill="none" stroke="#5E2D16" stroke-width="2"/>
+  <path d="M158 312H362M152 428H368" stroke="#F0D28E" stroke-width="1.5" stroke-dasharray="6 5" opacity="0.7"/>
+  <!-- flap tab + brass turn-lock -->
+  <path d="M232 296H288V338Q288 352 274 352H246Q232 352 232 338Z" fill="#7C3D1E"/>
+  <rect x="246" y="326" width="28" height="18" rx="4" fill="url(#jh-brass)" stroke="#8E6B33"/>
+  <!-- front handle -->
+  <path d="M184 206C184 112 336 112 336 206" fill="none" stroke="#A6552B" stroke-width="18" stroke-linecap="round"/>
+  <path d="M184 206C184 112 336 112 336 206" fill="none" stroke="#F0D28E" stroke-width="1.5" stroke-dasharray="6 5" opacity="0.6"/>
+  <!-- handle tabs + rivets -->
+  <g fill="#7C3D1E"><rect x="170" y="196" width="30" height="46" rx="6"/><rect x="320" y="196" width="30" height="46" rx="6"/></g>
+  <g fill="url(#jh-brass)" stroke="#8E6B33"><circle cx="185" cy="230" r="6"/><circle cx="335" cy="230" r="6"/></g>
+  <!-- luggage tag -->
+  <path d="M350 238C380 250 390 270 392 292" fill="none" stroke="#2B211C" stroke-width="2.5"/>
+  <g transform="rotate(10 410 340)">
+    <path d="M378 292H442V380Q442 388 434 388H386Q378 388 378 380Z" fill="#A9CBE6" stroke="#2B211C" stroke-width="2.5"/>
+    <circle cx="410" cy="306" r="5" fill="#EFE8DA" stroke="#2B211C" stroke-width="2"/>
+    <path d="M390 326H430M390 340H424M390 354H428" stroke="#2B211C" stroke-width="2.5" stroke-linecap="round" opacity="0.55"/>
+    <text x="410" y="376" font-family="Arial, sans-serif" font-size="10" font-weight="700" letter-spacing="1" fill="#2B211C" text-anchor="middle">JHOLA</text>
+  </g>
+  <!-- leather sheen -->
+  <path d="M110 250Q130 240 132 260L118 440Q100 444 102 430Z" fill="#FFFFFF" opacity="0.08"/>
+</svg>

@@ -1,10 +1,13 @@
+import { storeUrl } from "@/lib/storeUrl";
 
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
-const appUrl = process.env.NEXT_PUBLIC_STORE_URL;
+
+/* <loc> is XML: & and the like must be escaped. */
+const xmlEscape = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
 
 
+/* URLs come from storeUrl(): one slash between the store URL and the path (it was https://kidobazar.com//blog/...). */
 export async function GET() {
-  const baseUrl = appUrl;
 
   // Example: dynamic routes (you can fetch from DB, CMS, API, etc.)
   // const staticRoutes = ["",
@@ -77,7 +80,7 @@ export async function GET() {
       .map((route) => {
         return `
         <url>
-          <loc>${baseUrl}/${route}</loc>
+          <loc>${xmlEscape(storeUrl(route))}</loc>
           <lastmod>${new Date().toISOString()}</lastmod>
           <changefreq>weekly</changefreq>
           <priority>0.8</priority>

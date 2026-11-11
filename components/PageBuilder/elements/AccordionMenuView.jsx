@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useState, useEffect } from "react";
-import * as TablerIcons from '@tabler/icons-react';
+import { tablerIcon } from "@/components/icons/TablerIcon";
 import Link from "next/link";
 import { IconChevronDown, IconChevronUp } from "@tabler/icons-react";
 import { elementCssClasses } from "../ElementsDefinition";
@@ -82,7 +82,7 @@ function MenuItem({ cls, item, root, ancestors, hierarchical, icon, iconSize, on
 	const [open, setOpen] = useState(false);
 	const hasChildren = Array.isArray(item?.children) && item.children.length > 0;
 
-	var IconX = TablerIcons[item?.icon || icon];
+	var IconX = tablerIcon(item?.icon || icon);
 	var size = Number(item?.iconSize) || Number(iconSize) || 20;
 
 	return (

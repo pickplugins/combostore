@@ -1,7 +1,7 @@
 "use client"
 import PropTypes from "prop-types";
 import React, { useState, useEffect } from "react";
-import * as TablerIcons from '@tabler/icons-react';
+import { tablerIcon } from "@/components/icons/TablerIcon";
 import { IconArrowNarrowLeftDashed, IconArrowNarrowRightDashed } from "@tabler/icons-react";
 import { usePostGrid } from "../context/PostGridContext";
 import { elementCssClasses } from "../ElementsDefinition";
@@ -65,8 +65,8 @@ export function PaginationMarkup({ cls, id, index, type, settings, paged, maxPag
 		else setDraft(String(paged));
 	};
 
-	var PrevIcon = TablerIcons[settings?.prevIcon] ?? IconArrowNarrowLeftDashed;
-	var NextIcon = TablerIcons[settings?.nextIcon] ?? IconArrowNarrowRightDashed;
+	var PrevIcon = tablerIcon(settings?.prevIcon) ?? IconArrowNarrowLeftDashed;
+	var NextIcon = tablerIcon(settings?.nextIcon) ?? IconArrowNarrowRightDashed;
 
 	return (
 		<nav id={id} index={index} type={type} aria-label="Pagination" className={`${cls('*')} ${rootClassName}`} {...rootProps}>

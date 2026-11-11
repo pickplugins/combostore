@@ -1,15 +1,22 @@
 import React from "react";
+/*
+	Dashboard pages and builder options panels load on demand (next/dynamic):
+	the storefront loads this config for its blocks and runtime, and static
+	imports put the admin screens - rich-text editor, maps, the icon picker -
+	into every shop page. The blocks and the runtime stay static imports.
+*/
+import dynamic from "next/dynamic";
 import { IconCoin, IconInfoCircle } from "@tabler/icons-react";
 
-import Currencies from "./pages/Currencies";
+const Currencies = dynamic(() => import("./pages/Currencies"));
 import CurrencyRuntime from "./lib/CurrencyRuntime";
 
 import CurrencySwitcher from "./elements/CurrencySwitcher";
-import CurrencySwitcherOptions from "./elements/CurrencySwitcherOptions";
+const CurrencySwitcherOptions = dynamic(() => import("./elements/CurrencySwitcherOptions"));
 import currencySwitcherLayouts from "./elements/currencySwitcherLayouts";
 
 import CurrencyNote from "./elements/CurrencyNote";
-import CurrencyNoteOptions from "./elements/CurrencyNoteOptions";
+const CurrencyNoteOptions = dynamic(() => import("./elements/CurrencyNoteOptions"));
 
 /**
  * Currency Switcher.

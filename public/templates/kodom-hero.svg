@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" width="640" height="360" role="img" aria-label="A chalk-white sneaker with an ember-red heel, black side panel and gum-black sole, seen from the side">
+  <!-- Hero art for templates/Kodom: a side-view sneaker. It is also the base of the "anatomy" callouts on Home, so if you swap it keep the shoe in the same place (or move the pins). -->
+  <g stroke="#121212" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+    <!-- upper -->
+    <path d="M70 255C58 205 64 152 96 120L152 104Q204 136 252 118L276 76Q300 62 318 80L334 132C404 150 472 176 540 206C586 224 604 246 594 262L76 262Z" fill="#F3EEE6"/>
+    <!-- mesh dots on the vamp -->
+    <g fill="#121212" stroke="none" opacity="0.18">
+      <circle cx="420" cy="205" r="2.5"/><circle cx="436" cy="214" r="2.5"/><circle cx="452" cy="222" r="2.5"/><circle cx="468" cy="230" r="2.5"/><circle cx="484" cy="238" r="2.5"/>
+      <circle cx="412" cy="222" r="2.5"/><circle cx="428" cy="231" r="2.5"/><circle cx="444" cy="239" r="2.5"/><circle cx="460" cy="246" r="2.5"/><circle cx="476" cy="252" r="2.5"/>
+      <circle cx="404" cy="190" r="2.5"/><circle cx="388" cy="200" r="2.5"/><circle cx="396" cy="214" r="2.5"/>
+    </g>
+    <!-- toe cap -->
+    <path d="M492 262C506 228 548 214 582 232C598 242 600 254 594 262Z" fill="#C8A27C"/>
+    <path d="M504 254C518 234 548 226 574 236" fill="none" stroke-width="2" stroke-dasharray="4 5"/>
+    <!-- side wave panel -->
+    <path d="M128 262C170 206 262 186 360 214C400 226 430 242 452 262Z" fill="#121212"/>
+    <path d="M150 250C190 210 262 198 350 220" fill="none" stroke="#F3EEE6" stroke-width="2" stroke-dasharray="5 6" opacity="0.7"/>
+    <!-- heel counter -->
+    <path d="M72 252C60 204 66 160 94 126L144 140C126 176 124 218 134 262L76 262Z" fill="#E4002B"/>
+    <path d="M86 240C78 204 82 172 100 146" fill="none" stroke="#F3EEE6" stroke-width="2" stroke-dasharray="4 5" opacity="0.8"/>
+    <!-- pull tab -->
+    <path d="M96 120L88 92L112 86L118 112Z" fill="#E4002B"/>
+    <!-- padded collar -->
+    <path d="M152 104Q204 136 252 118" fill="none" stroke-width="10" stroke="#C8A27C"/>
+    <path d="M152 104Q204 136 252 118" fill="none"/>
+    <!-- tongue -->
+    <path d="M276 76Q300 62 318 80L326 108Q300 98 282 104Z" fill="#E4002B"/>
+    <!-- laces -->
+    <g fill="#F3EEE6">
+      <circle cx="340" cy="142" r="5"/><circle cx="372" cy="152" r="5"/><circle cx="404" cy="164" r="5"/><circle cx="436" cy="176" r="5"/><circle cx="468" cy="189" r="5"/>
+    </g>
+    <path d="M336 128L362 158M368 138L394 170M400 150L426 182M432 162L458 194M464 175L486 202" fill="none" stroke-width="5"/>
+    <path d="M336 128L362 158M368 138L394 170M400 150L426 182M432 162L458 194M464 175L486 202" fill="none" stroke="#F3EEE6" stroke-width="2"/>
+    <!-- monogram -->
+    <circle cx="250" cy="232" r="15" fill="#F3EEE6" stroke-width="3"/>
+    <text x="250" y="239" font-family="Arial Black, Arial, sans-serif" font-size="18" font-weight="900" fill="#121212" stroke="none" text-anchor="middle">K</text>
+    <!-- midsole -->
+    <path d="M62 258L600 258Q610 274 598 290L60 290Q52 274 62 258Z" fill="#FFFFFF"/>
+    <path d="M90 274H580" fill="none" stroke="#E4002B" stroke-width="4"/>
+    <!-- outsole -->
+    <path d="M60 290L598 290Q596 308 566 310L96 310Q62 310 60 290Z" fill="#121212"/>
+    <g stroke="#F3EEE6" stroke-width="2" opacity="0.5"><path d="M120 298v8M150 298v8M180 298v8M210 298v8M240 298v8M270 298v8M300 298v8M330 298v8M360 298v8M390 298v8M420 298v8M450 298v8M480 298v8M510 298v8M540 298v8"/></g>
+  </g>
+  <!-- ground shadow -->
+  <ellipse cx="330" cy="336" rx="250" ry="10" fill="#121212" opacity="0.12"/>
+</svg>

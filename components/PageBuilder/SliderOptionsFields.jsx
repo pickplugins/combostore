@@ -82,7 +82,7 @@ export default function SliderOptionsFields({ sliderOptions, onChange }) {
 	return (
 		<div className="flex flex-col gap-3">
 			<div className="flex items-center justify-between gap-2">
-				<label className="text-xs font-medium text-gray-600">Slider settings</label>
+				<label className="text-md font-medium text-gray-600">Slider settings</label>
 				<DropDown allowReset={true} multiple={false} value={''} position="right" options={addable} label={`Add`} labelClass={'inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-2 py-1 text-xs font-medium text-gray-600 cursor-pointer transition-colors hover:border-brand/40 hover:bg-brand/5 hover:text-brand-700 w-fit'} onOptionsChoose={(args) => args?.id && set(args.id, splideSettings[args.id]?.value ?? '')} />
 			</div>
 

@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import * as TablerIcons from "@tabler/icons-react";
+import { tablerIcon } from "@/components/icons/TablerIcon";
 
 import { usePost } from "../../../components/PageBuilder/context/PostContext";
 import { useQuickViewStore } from "../lib/store";
@@ -62,7 +62,7 @@ const QuickViewButton = (props) => {
 	if (!isEditor && !slug) return null;
 
 	const label = labelOverride || settings?.buttonLabel || "Quick view";
-	const IconX = icon ? TablerIcons[icon] : null;
+	const IconX = icon ? tablerIcon(icon) : null;
 	const isOpen = openSlug && openSlug === slug;
 
 	function onOpen(event) {

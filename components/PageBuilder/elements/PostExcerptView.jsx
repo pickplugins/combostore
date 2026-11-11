@@ -1,7 +1,7 @@
 import PropTypes from "prop-types";
 import React from "react";
 import Link from "next/link";
-import * as TablerIcons from '@tabler/icons-react';
+import { tablerIcon } from "@/components/icons/TablerIcon";
 import { usePost } from "../context/PostContext";
 import { useProductStore } from "../../../store/productStore";
 import { postUrlFor } from "./PostTitleView";
@@ -32,7 +32,7 @@ export function PostExcerptMarkup({ cls, id, index, type, options, source, href,
 
 	var content = excerptContent(source, options?.maxWord ?? 20);
 	var readMoreText = options?.readMoreText ?? 'Read more';
-	var IconX = TablerIcons[options?.readMoreIcon];
+	var IconX = tablerIcon(options?.readMoreIcon);
 	var iconSize = Number(options?.readMoreIconSize) || 25;
 
 	return (

@@ -1,6 +1,6 @@
 import PropTypes from "prop-types";
 import React from "react";
-import * as TablerIcons from '@tabler/icons-react';
+import { tablerIcon } from "@/components/icons/TablerIcon";
 import Link from "next/link";
 import { elementCssClasses } from "../ElementsDefinition";
 
@@ -31,19 +31,46 @@ export function buttonHref(options) {
 	its click and drag handlers. options.target '_blank' opens the link in a
 	new tab; it was saved by templates but never applied.
 */
+/*
+	A name for a button with no visible text (an icon-only account link, a
+	social icon), which screen readers - and Lighthouse's "Links do not have a
+	discernible name" - otherwise get nothing for. options.ariaLabel wins;
+	else a known site in the URL ("Facebook"), else the path ("/account" ->
+	"Account"), else the icon's name ("IconShoppingCart" -> "Shopping cart").
+*/
+const SOCIAL_SITES = { 'facebook.com': 'Facebook', 'fb.com': 'Facebook', 'instagram.com': 'Instagram', 'youtube.com': 'YouTube', 'youtu.be': 'YouTube', 'tiktok.com': 'TikTok', 'twitter.com': 'X (Twitter)', 'x.com': 'X (Twitter)', 'linkedin.com': 'LinkedIn', 'pinterest.com': 'Pinterest', 'wa.me': 'WhatsApp', 'whatsapp.com': 'WhatsApp', 'm.me': 'Messenger', 't.me': 'Telegram' };
+
+export function buttonAriaLabel(options, href) {
+	var own = String(options?.ariaLabel ?? '').trim();
+	if (own) return own;
+	var url = String(href ?? '').trim();
+	var scheme = url.match(/^(tel|mailto|sms):/i);
+	if (scheme) return { tel: 'Call us', mailto: 'Email us', sms: 'Text us' }[scheme[1].toLowerCase()];
+	var host = url.match(/^(?:https?:)?\/\/(?:www\.)?([^/?#]+)/i)?.[1]?.toLowerCase();
+	if (host) {
+		var site = Object.keys(SOCIAL_SITES).find(d => host === d || host.endsWith(`.${d}`));
+		if (site) return SOCIAL_SITES[site];
+	}
+	var segment = !host && url.split(/[?#]/)[0].split('/').filter(Boolean).pop();
+	if (segment) return decodeURIComponent(segment).replace(/[-_]+/g, ' ').replace(/^./, c => c.toUpperCase());
+	var icon = String(options?.icon ?? '').replace(/^Icon/, '').replace(/([a-z])([A-Z])/g, '$1 $2').replace(/^Brand /, '').trim();
+	return icon ? icon.charAt(0).toUpperCase() + icon.slice(1).toLowerCase() : undefined;
+}
+
 export function ButtonMarkup({ cls, id, type, options, rootClassName = '', rootProps = {} }) {
 
 	var text = options?.text ?? 'Dummy Link';
-	var IconX = TablerIcons[options?.icon];
+	var IconX = tablerIcon(options?.icon);
 	/* Unset, tabler draws 24px; kept as the fallback so existing buttons do not change size. */
 	var iconSize = Number(options?.iconSize) || 24;
 	var href = buttonHref(options);
 	var newTab = options?.target === '_blank';
+	var ariaLabel = String(text).trim() ? (String(options?.ariaLabel ?? '').trim() || undefined) : buttonAriaLabel(options, href);
 
 	var content = (
 		<>
 			{IconX && (
-				<div className={cls('icon')}>
+				<div className={cls('icon')} aria-hidden="true">
 					<IconX size={iconSize} />
 				</div>
 			)}
@@ -55,7 +82,7 @@ export function ButtonMarkup({ cls, id, type, options, rootClassName = '', rootP
 
 	if (href) {
 		return (
-			<Link id={id} type={type} className={className} href={href} target={newTab ? '_blank' : undefined} rel={newTab ? 'noopener noreferrer' : undefined} {...rootProps}>
+			<Link id={id} type={type} className={className} href={href} target={newTab ? '_blank' : undefined} rel={newTab ? 'noopener noreferrer' : undefined} aria-label={ariaLabel} {...rootProps}>
 				{content}
 			</Link>
 		);

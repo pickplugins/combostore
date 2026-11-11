@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600" role="img" aria-label="Nolen Gur Co. template preview">
+  <title>Nolen Gur Co. template preview</title>
+  <!-- Picker thumbnail for templates/Nolen: a wireframe of its home page - season-ticker header with molasses drips and the foggy dawn hero with a tapped date palm - in the template's palette. -->
+  <defs>
+    <clipPath id="nl-t-clip"><rect width="800" height="600"/></clipPath>
+    <linearGradient id="nl-t-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#AFC0C8"/><stop offset="0.6" stop-color="#E6D7C2"/><stop offset="1" stop-color="#F0C68E"/></linearGradient>
+    <radialGradient id="nl-t-sun" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#FFE2A6"/><stop offset="0.45" stop-color="#F7C873"/><stop offset="1" stop-color="#F7C873" stop-opacity="0"/></radialGradient>
+    <linearGradient id="nl-t-wash" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#EEF0EB" stop-opacity="0.97"/><stop offset="0.45" stop-color="#EEF0EB" stop-opacity="0.85"/><stop offset="0.75" stop-color="#EEF0EB" stop-opacity="0"/></linearGradient>
+    <linearGradient id="nl-t-clay" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#D07A4A"/><stop offset="1" stop-color="#8E3E1E"/></linearGradient>
+    <pattern id="nl-t-drips" width="28" height="9" patternUnits="userSpaceOnUse"><ellipse cx="14" cy="0" rx="4" ry="8" fill="#4A2C1A"/><ellipse cx="4" cy="0" rx="2.4" ry="5" fill="#4A2C1A"/></pattern>
+    <filter id="nl-t-blur" x="-20%" y="-50%" width="140%" height="200%"><feGaussianBlur stdDeviation="12"/></filter>
+  </defs>
+  <g clip-path="url(#nl-t-clip)">
+  <!-- top bar + season ticker -->
+  <rect width="800" height="22" fill="#4A2C1A"/>
+  <circle cx="20" cy="11" r="3" fill="#E0A040"/><rect x="28" y="9" width="170" height="4" rx="2" fill="#F8F5EE" opacity="0.7"/>
+  <rect x="580" y="9" width="30" height="4" rx="2" fill="#FFFFFF" opacity="0.3"/>
+  <rect x="618" y="9" width="18" height="4" rx="2" fill="#FFFFFF" opacity="0.3"/>
+  <rect x="644" y="5" width="30" height="12" rx="6" fill="#E0A040"/><rect x="680" y="5" width="30" height="12" rx="6" fill="#E0A040"/><rect x="716" y="5" width="30" height="12" rx="6" fill="#E0A040"/>
+  <rect x="752" y="9" width="18" height="4" rx="2" fill="#FFFFFF" opacity="0.3"/>
+  <!-- main row -->
+  <rect y="22" width="800" height="48" fill="#F8F5EE"/>
+  <path d="M24 34Q24 28 32 28H44Q52 28 52 34Q58 46 52 58Q44 66 38 66Q32 66 24 58Q18 46 24 34Z" fill="#4A2C1A"/>
+  <text x="38" y="52" font-family="Galada, sans-serif" font-size="12" fill="#E0A040" text-anchor="middle">গুড়</text>
+  <text x="62" y="54" font-family="Young Serif, Georgia, serif" font-size="22" fill="#3B2416">Nolen</text>
+  <g fill="#3B2416" opacity="0.75"><rect x="230" y="44" width="50" height="5" rx="2.5" fill="#B65C34"/><rect x="294" y="44" width="46" height="5" rx="2.5"/><rect x="354" y="44" width="46" height="5" rx="2.5"/><rect x="414" y="44" width="40" height="5" rx="2.5"/><rect x="468" y="44" width="62" height="5" rx="2.5"/></g>
+  <rect x="572" y="34" width="130" height="24" rx="12" fill="#FFFFFF" stroke="#E3DDD0"/>
+  <circle cx="726" cy="46" r="13" fill="#FFFFFF" stroke="#E3DDD0"/><circle cx="760" cy="46" r="13" fill="#4A2C1A"/>
+  <rect y="70" width="800" height="3" fill="#4A2C1A"/>
+  <!-- hero scene -->
+  <rect y="73" width="800" height="427" fill="url(#nl-t-sky)"/>
+  <circle cx="590" cy="380" r="120" fill="url(#nl-t-sun)"/><circle cx="590" cy="380" r="34" fill="#FFE2A6"/>
+  <path d="M0 400Q200 386 400 396T800 390V500H0Z" fill="#8C9473"/>
+  <path d="M0 440Q300 430 600 444T800 438V500H0Z" fill="#5B6648"/>
+  <!-- palm -->
+  <path d="M650 500C644 420 642 340 652 260C656 230 660 210 664 190" fill="none" stroke="#6B4128" stroke-width="20" stroke-linecap="round"/>
+  <g fill="none" stroke="#3E5B3A" stroke-width="18" stroke-dasharray="2 4">
+    <path d="M664 190Q610 160 570 196"/><path d="M664 190Q724 154 768 190"/><path d="M664 190Q630 120 590 112"/><path d="M664 190Q700 120 746 116"/><path d="M664 190Q664 130 652 96"/>
+  </g>
+  <g fill="none" stroke="#2C4229" stroke-width="3"><path d="M664 190Q610 160 570 196"/><path d="M664 190Q724 154 768 190"/><path d="M664 190Q630 120 590 112"/><path d="M664 190Q700 120 746 116"/><path d="M664 190Q664 130 652 96"/></g>
+  <path d="M624 236C612 246 610 274 626 288C636 296 652 296 662 288C678 274 676 246 664 236Z" fill="url(#nl-t-clay)"/>
+  <rect x="626" y="230" width="38" height="8" rx="3" fill="#8E3E1E"/>
+  <!-- fog + wash -->
+  <g fill="#F4F3EE" filter="url(#nl-t-blur)"><ellipse cx="300" cy="420" rx="360" ry="24" opacity="0.9"/><ellipse cx="620" cy="440" rx="300" ry="26" opacity="0.8"/></g>
+  <rect y="73" width="800" height="427" fill="url(#nl-t-wash)"/>
+  <!-- drips under header -->
+  <rect y="73" width="800" height="9" fill="url(#nl-t-drips)"/>
+  <!-- hero copy -->
+  <rect x="34" y="110" width="140" height="18" rx="9" fill="#FFFFFF" opacity="0.85"/>
+  <text x="32" y="176" font-family="Galada, sans-serif" font-size="40" fill="#B65C34">নলেন গুড়</text>
+  <g font-family="Young Serif, Georgia, serif" font-size="34" fill="#3B2416"><text x="32" y="228">The first sweetness</text><text x="32" y="268">of winter.</text></g>
+  <g fill="#6F6358" opacity="0.5"><rect x="34" y="290" width="300" height="5" rx="2.5"/><rect x="34" y="302" width="270" height="5" rx="2.5"/></g>
+  <rect x="34" y="324" width="150" height="34" rx="17" fill="#4A2C1A"/><rect x="194" y="324" width="110" height="34" rx="17" fill="none" stroke="#4A2C1A" stroke-width="2"/>
+  <rect x="34" y="376" width="230" height="46" rx="12" fill="#FFFFFF" opacity="0.9"/><rect x="44" y="386" width="26" height="26" rx="7" fill="#E2E6DF"/><rect x="80" y="392" width="150" height="5" rx="2.5" fill="#3B2416" opacity="0.7"/><rect x="80" y="403" width="170" height="4" rx="2" fill="#6F6358" opacity="0.5"/>
+  <!-- strip with drips -->
+  <rect y="500" width="800" height="38" fill="#4A2C1A"/>
+  <g fill="#F8F5EE"><rect x="24" y="517" width="100" height="5" rx="2.5"/><rect x="160" y="517" width="140" height="5" rx="2.5" fill="#E0A040"/><rect x="336" y="517" width="150" height="5" rx="2.5"/><rect x="522" y="517" width="140" height="5" rx="2.5"/></g>
+  <rect y="538" width="800" height="9" fill="url(#nl-t-drips)"/>
+  <!-- forms -->
+  <rect y="547" width="800" height="53" fill="#F8F5EE"/>
+  <rect x="140" y="566" width="44" height="44" rx="10" fill="#E0A040"/><circle cx="400" cy="588" r="22" fill="#6B4128"/><rect x="616" y="566" width="44" height="44" rx="12" fill="#FBEBCF" stroke="#C4842A" stroke-dasharray="2 3"/>
+  </g>
+</svg>

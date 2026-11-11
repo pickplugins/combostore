@@ -1,18 +1,25 @@
+import { storeUrl } from "@/lib/storeUrl";
 
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
-const appUrl = process.env.NEXT_PUBLIC_STORE_URL;
+
+/* <loc> is XML: & and the like must be escaped. */
+const xmlEscape = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
 
 
 export async function GET() {
-  const baseUrl = appUrl;
 
-  // Example: dynamic routes (you can fetch from DB, CMS, API, etc.)
+  /*
+    URLs come from storeUrl(), which puts exactly one slash between the store
+    URL and the path: with NEXT_PUBLIC_STORE_URL ending in "/", every entry
+    used to read https://kidobazar.com//blog. "" is the home page, which
+    was missing. Login-only pages (account, create-ticket) are left out:
+    search engines cannot index them.
+  */
   const staticRoutes = [
-    "account",
+    "",
     "blog",
     "contact",
     "support",
-    "create-ticket",
     "terms",
     "privacy",
     "refund",
@@ -67,7 +74,7 @@ export async function GET() {
       .map((route) => {
         return `
         <url>
-          <loc>${baseUrl}/${route}</loc>
+          <loc>${xmlEscape(storeUrl(route))}</loc>
           <lastmod>${new Date().toISOString()}</lastmod>
           <changefreq>weekly</changefreq>
           <priority>0.8</priority>

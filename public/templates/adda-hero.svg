@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 460" width="520" height="460" role="img" aria-label="A kraft bag of Adda house blend coffee beside a takeaway cup with a tomato-red sleeve and scattered coffee beans">
+  <!-- Hero art for templates/Adda: a kraft stand-up coffee bag with its label, a takeaway cup and beans, in thick espresso outlines on a transparent background. -->
+  <defs>
+    <linearGradient id="ad-kraft" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#C99D6C"/><stop offset="0.55" stop-color="#D8B083"/><stop offset="1" stop-color="#B98A59"/></linearGradient>
+    <g id="ad-bean"><ellipse cx="0" cy="0" rx="11" ry="15" stroke="#2A1810" stroke-width="2.5"/><path d="M0 -12C-5 -4 5 4 0 12" fill="none" stroke="#2A1810" stroke-width="2.5" stroke-linecap="round"/></g>
+  </defs>
+  <!-- shadows -->
+  <ellipse cx="200" cy="430" rx="150" ry="14" fill="#2A1810" opacity="0.18"/>
+  <ellipse cx="400" cy="432" rx="62" ry="10" fill="#2A1810" opacity="0.18"/>
+  <!-- bag -->
+  <path d="M86 92H294L310 418Q196 432 70 418Z" fill="url(#ad-kraft)" stroke="#2A1810" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M100 100L92 410" stroke="#2A1810" stroke-width="2" opacity="0.18"/>
+  <path d="M280 100L292 410" stroke="#2A1810" stroke-width="2" opacity="0.18"/>
+  <path d="M80 92L90 56L104 66L118 56L132 66L146 56L160 66L174 56L188 66L202 56L216 66L230 56L244 66L258 56L272 66L286 56L300 92Z" fill="#B07F4F" stroke="#2A1810" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M84 92H296" stroke="#2A1810" stroke-width="5"/>
+  <g stroke="#2A1810" stroke-width="2" opacity="0.35"><path d="M110 70V90M130 70V90M150 70V90M170 70V90M190 70V90M210 70V90M230 70V90M250 70V90M270 70V90"/></g>
+  <circle cx="258" cy="132" r="11" fill="#3A1F10" stroke="#2A1810" stroke-width="3"/><circle cx="258" cy="132" r="4" fill="#C99D6C"/>
+  <!-- label -->
+  <rect x="112" y="166" width="160" height="200" rx="14" fill="#F4ECE0" stroke="#2A1810" stroke-width="4"/>
+  <circle cx="192" cy="202" r="22" fill="#D9472B" stroke="#2A1810" stroke-width="3"/>
+  <g transform="rotate(25 192 202)"><ellipse cx="192" cy="202" rx="9" ry="13" fill="#2A1810"/><path d="M192 191C188 198 196 206 192 213" fill="none" stroke="#D9472B" stroke-width="2.5" stroke-linecap="round"/></g>
+  <text x="192" y="264" text-anchor="middle" font-family="Anton, Impact, 'Arial Narrow', sans-serif" font-size="40" fill="#2A1810" letter-spacing="2">ADDA</text>
+  <text x="192" y="284" text-anchor="middle" font-family="'JetBrains Mono','Courier New',monospace" font-size="11" font-weight="700" fill="#D9472B" letter-spacing="2">HOUSE BLEND</text>
+  <g stroke="#2A1810" stroke-width="2"><rect x="137" y="298" width="20" height="10" fill="#C98B4E"/><rect x="159" y="298" width="20" height="10" fill="#A86B37"/><rect x="181" y="294" width="22" height="18" fill="#8A5228" stroke-width="3"/><rect x="205" y="298" width="20" height="10" fill="#5E3519"/><rect x="227" y="298" width="20" height="10" fill="#3A1F10"/></g>
+  <text x="192" y="330" text-anchor="middle" font-family="'JetBrains Mono','Courier New',monospace" font-size="9" fill="#75685C" letter-spacing="1.5">MEDIUM ROAST · 250 G</text>
+  <path d="M128 340H256" stroke="#2A1810" stroke-width="1.5" stroke-dasharray="4 4" opacity="0.5"/>
+  <text x="192" y="356" text-anchor="middle" font-family="'JetBrains Mono','Courier New',monospace" font-size="9" font-weight="700" fill="#2A1810" letter-spacing="1.5">ROASTED 11·11·26</text>
+  <!-- cup -->
+  <g fill="none" stroke="#2A1810" stroke-width="4" stroke-linecap="round" opacity="0.55">
+    <path d="M378 140C370 128 386 118 378 104"/><path d="M400 136C392 122 410 112 400 96"/><path d="M422 140C414 128 430 118 422 104"/>
+  </g>
+  <path d="M344 206H456L440 424H360Z" fill="#FFFFFF" stroke="#2A1810" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M338 270H462L455 350H345Z" fill="#D9472B" stroke="#2A1810" stroke-width="5" stroke-linejoin="round"/>
+  <text x="400" y="317" text-anchor="middle" font-family="Anton, Impact, 'Arial Narrow', sans-serif" font-size="24" fill="#FFFFFF" letter-spacing="2">ADDA</text>
+  <rect x="334" y="180" width="132" height="28" rx="9" fill="#2A1810"/>
+  <path d="M350 180Q352 160 372 160H428Q448 160 450 180Z" fill="#3A1F10" stroke="#2A1810" stroke-width="4" stroke-linejoin="round"/>
+  <ellipse cx="420" cy="170" rx="9" ry="3.5" fill="#E3A857"/>
+  <!-- beans -->
+  <g transform="translate(46 404) rotate(-30)"><use href="#ad-bean" fill="#5E3519"/></g>
+  <g transform="translate(330 424) rotate(40)"><use href="#ad-bean" fill="#8A5228"/></g>
+  <g transform="translate(486 410) rotate(-60)"><use href="#ad-bean" fill="#3A1F10"/></g>
+  <g transform="translate(476 222) rotate(20)"><use href="#ad-bean" fill="#A86B37"/></g>
+  <g transform="translate(40 150) rotate(15)"><use href="#ad-bean" fill="#8A5228"/></g>
+  <g transform="translate(28 196) rotate(-50)"><use href="#ad-bean" fill="#5E3519"/></g>
+</svg>

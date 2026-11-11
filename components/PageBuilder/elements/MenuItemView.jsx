@@ -3,7 +3,7 @@ import PropTypes from "prop-types";
 import React, { useState, useEffect, useRef, createContext, useContext } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import * as TablerIcons from '@tabler/icons-react';
+import { tablerIcon } from "@/components/icons/TablerIcon";
 import { IconChevronDown } from "@tabler/icons-react";
 import BlockRender from '../BlockRender';
 import { useMenu } from "../context/MenuContext";
@@ -58,7 +58,7 @@ export function MenuItemMarkup({ cls, id, index, type, options, hasChildren, ren
 
 	var url = String(options?.url ?? '').trim();
 	var label = options?.label ?? '';
-	var Icon = TablerIcons[options?.icon];
+	var Icon = tablerIcon(options?.icon);
 	var iconSize = Number(options?.iconSize) || 24;
 	var submenuId = id ? `${id}-submenu` : undefined;
 	var toggles = hasChildren && isDeadUrl(url);

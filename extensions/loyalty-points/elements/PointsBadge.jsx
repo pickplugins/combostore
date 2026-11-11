@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import * as TablerIcons from "@tabler/icons-react";
+import { tablerIcon } from "@/components/icons/TablerIcon";
 import { usePost } from "../../../components/PageBuilder/context/PostContext";
 
 /*
@@ -49,7 +49,7 @@ const PointsBadge = (props) => {
 	const price = Number(product?.price ?? 500);
 	const points = Number.isFinite(price * rate) ? Math.max(0, Math.round(price * rate)) : 0;
 
-	const IconX = TablerIcons[icon];
+	const IconX = tablerIcon(icon);
 
 	return (
 		<div

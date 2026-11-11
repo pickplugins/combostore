@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import * as TablerIcons from "@tabler/icons-react";
+import { tablerIcon } from "@/components/icons/TablerIcon";
 
 import { useCountdown } from "../lib/useCountdown";
 import { pad, formatCompact } from "../lib/time";
@@ -51,7 +51,7 @@ const Countdown = (props) => {
 	const { status, parts, labels, campaign } = useCountdown(campaignId);
 
 	const isEditor = typeof setSelectedId === "function";
-	const IconX = icon ? TablerIcons[icon] : null;
+	const IconX = icon ? tablerIcon(icon) : null;
 
 	/*
 		Before mount nothing has been counted yet, so the units read "--".

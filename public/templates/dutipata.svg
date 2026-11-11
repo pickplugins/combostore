@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600" role="img" aria-label="Dutipata Tea template preview">
+  <title>Dutipata Tea template preview</title>
+  <!-- Picker thumbnail for templates/Dutipata: a wireframe of its home page - tea-tin-label header with liquor-coloured menu dots, the top-down cup hero over terraces, and the liquor colour scale - in the template's palette. -->
+  <defs>
+    <clipPath id="dp-t-clip"><rect width="800" height="600"/></clipPath>
+    <radialGradient id="dp-t-liq" cx="0.42" cy="0.38" r="0.65"><stop offset="0" stop-color="#E7A35A"/><stop offset="0.45" stop-color="#C0702A"/><stop offset="1" stop-color="#7E3A12"/></radialGradient>
+    <pattern id="dp-t-terr" width="24" height="14" patternUnits="userSpaceOnUse"><circle cx="12" cy="14" r="10" fill="#5E8B4E"/></pattern>
+    <pattern id="dp-t-terr2" width="30" height="16" patternUnits="userSpaceOnUse"><circle cx="15" cy="16" r="12" fill="#1F3D2B"/></pattern>
+  </defs>
+  <g clip-path="url(#dp-t-clip)">
+  <rect width="800" height="600" fill="#FAF6EF"/>
+  <!-- header -->
+  <rect width="800" height="18" fill="#162E20"/>
+  <rect x="250" y="7" width="200" height="4" rx="2" fill="#F3E6D3" opacity="0.6"/><rect x="458" y="4" width="46" height="10" rx="5" fill="#B5651D"/>
+  <rect y="18" width="800" height="52" fill="#1F3D2B"/>
+  <path d="M20 22H780M20 25H780M20 63H780M20 66H780" stroke="#F3E6D3" stroke-opacity="0.3"/>
+  <rect x="26" y="30" width="150" height="30" rx="15" fill="none" stroke="#F3E6D3" stroke-opacity="0.6" stroke-width="3"/>
+  <circle cx="44" cy="45" r="11" fill="#FFFFFF"/><circle cx="44" cy="45" r="8" fill="#A0461A"/>
+  <text x="60" y="51" font-family="Caprasimo, Georgia, serif" font-size="17" fill="#F3E6D3">Dutipata</text>
+  <g><circle cx="230" cy="45" r="4" fill="#C7C46F"/><circle cx="282" cy="45" r="4" fill="#E6CF8C"/><circle cx="334" cy="45" r="4" fill="#D2933B"/><circle cx="386" cy="45" r="4" fill="#A0461A"/><circle cx="438" cy="45" r="4" fill="#B98256"/><circle cx="500" cy="45" r="4" fill="#B83A36"/></g>
+  <g fill="#F3E6D3" opacity="0.8"><rect x="238" y="43" width="32" height="4" rx="2"/><rect x="290" y="43" width="32" height="4" rx="2"/><rect x="342" y="43" width="32" height="4" rx="2"/><rect x="394" y="43" width="32" height="4" rx="2"/><rect x="446" y="43" width="44" height="4" rx="2"/><rect x="508" y="43" width="32" height="4" rx="2"/><rect x="556" y="43" width="40" height="4" rx="2"/></g>
+  <circle cx="726" cy="45" r="12" fill="#FFFFFF" fill-opacity="0.12"/><circle cx="756" cy="45" r="12" fill="#B5651D"/>
+  <rect y="70" width="800" height="10" fill="#1F3D2B"/><rect y="68" width="800" height="12" fill="url(#dp-t-terr)"/>
+  <!-- hero copy -->
+  <text x="40" y="122" font-family="Tiro Bangla, serif" font-size="16" fill="#B5651D">দুটি পাতা একটি কুঁড়ি</text>
+  <g font-family="Caprasimo, Georgia, serif" font-size="46" fill="#1C1A15"><text x="38" y="178">Two leaves</text><text x="38" y="228">and a bud.</text></g>
+  <g fill="#6C665A" opacity="0.5"><rect x="40" y="250" width="290" height="5" rx="2.5"/><rect x="40" y="262" width="260" height="5" rx="2.5"/></g>
+  <rect x="40" y="284" width="96" height="30" rx="15" fill="#1F3D2B"/><rect x="144" y="284" width="104" height="30" rx="15" fill="none" stroke="#1F3D2B" stroke-width="2"/>
+  <!-- cup -->
+  <circle cx="560" cy="210" r="122" fill="#F1ECE2"/>
+  <circle cx="560" cy="210" r="114" fill="none" stroke="#1F3D2B" stroke-opacity="0.3" stroke-dasharray="2 6"/>
+  <path d="M630 168Q666 152 674 176Q679 196 650 206" fill="none" stroke="#1F3D2B" stroke-width="18" stroke-linecap="round"/>
+  <path d="M630 168Q666 152 674 176Q679 196 650 206" fill="none" stroke="#FFFFFF" stroke-width="12" stroke-linecap="round"/>
+  <circle cx="560" cy="210" r="82" fill="#FFFFFF" stroke="#1F3D2B" stroke-width="4"/>
+  <circle cx="560" cy="210" r="67" fill="url(#dp-t-liq)"/>
+  <ellipse cx="534" cy="184" rx="26" ry="13" fill="#FFFFFF" opacity="0.28" transform="rotate(-30 534 184)"/>
+  <g transform="translate(450 260) rotate(-24)"><path d="M0 0C24-6 54-12 90-42" stroke="#3F6B35" stroke-width="3" fill="none"/><path d="M36-10C24-42 42-66 66-70C71-46 60-20 36-10Z" fill="#6F9A55"/><path d="M62-24C66-1 90 11 114 5C108-18 88-30 62-24Z" fill="#3F6B35"/></g>
+  <rect x="654" y="98" width="96" height="40" rx="10" fill="#1F3D2B" transform="rotate(6 702 118)"/>
+  <!-- terraces -->
+  <rect y="350" width="800" height="16" fill="url(#dp-t-terr)"/>
+  <rect y="364" width="800" height="236" fill="#1F3D2B"/>
+  <rect y="362" width="800" height="16" fill="url(#dp-t-terr)" opacity="0.6"/>
+  <!-- liquor scale -->
+  <rect x="200" y="400" width="400" height="10" rx="5" fill="#F3E6D3" opacity="0.9"/>
+  <rect x="80" y="440" width="640" height="6" rx="3" fill="#C7C46F"/>
+  <rect x="80" y="440" width="640" height="6" rx="3" fill="url(#dp-t-scale)"/>
+  <defs><linearGradient id="dp-t-scale" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#C7C46F"/><stop offset="0.2" stop-color="#E6CF8C"/><stop offset="0.4" stop-color="#D2933B"/><stop offset="0.6" stop-color="#A0461A"/><stop offset="0.8" stop-color="#B98256"/><stop offset="1" stop-color="#B83A36"/></linearGradient></defs>
+  <g>
+    <circle cx="133" cy="510" r="40" fill="#FFFFFF"/><circle cx="133" cy="510" r="32" fill="#C7C46F"/>
+    <circle cx="240" cy="510" r="40" fill="#FFFFFF"/><circle cx="240" cy="510" r="32" fill="#E6CF8C"/>
+    <circle cx="347" cy="510" r="40" fill="#FFFFFF"/><circle cx="347" cy="510" r="32" fill="#D2933B"/>
+    <circle cx="453" cy="510" r="40" fill="#FFFFFF"/><circle cx="453" cy="510" r="32" fill="#A0461A"/>
+    <circle cx="560" cy="510" r="40" fill="#FFFFFF"/><circle cx="560" cy="510" r="32" fill="#B98256"/>
+    <circle cx="667" cy="510" r="40" fill="#FFFFFF"/><circle cx="667" cy="510" r="32" fill="#B83A36"/>
+  </g>
+  </g>
+</svg>

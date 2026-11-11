@@ -1,19 +1,26 @@
 import React from "react";
+/*
+	Dashboard pages and builder options panels load on demand (next/dynamic):
+	the storefront loads this config for its blocks and runtime, and static
+	imports put the admin screens - rich-text editor, maps, the icon picker -
+	into every shop page. The blocks and the runtime stay static imports.
+*/
+import dynamic from "next/dynamic";
 import { IconFileInvoice, IconMessage2Question, IconClipboardList } from "@tabler/icons-react";
 
-import Quotes from "./pages/Quotes";
+const Quotes = dynamic(() => import("./pages/Quotes"));
 import QuoteRuntime from "./lib/QuoteRuntime";
 
 import QuoteButton from "./elements/QuoteButton";
-import QuoteButtonOptions from "./elements/QuoteButtonOptions";
+const QuoteButtonOptions = dynamic(() => import("./elements/QuoteButtonOptions"));
 import quoteButtonLayouts from "./elements/quoteButtonLayouts";
 
 import QuoteList from "./elements/QuoteList";
-import QuoteListOptions from "./elements/QuoteListOptions";
+const QuoteListOptions = dynamic(() => import("./elements/QuoteListOptions"));
 import quoteListLayouts from "./elements/quoteListLayouts";
 
 import QuoteCount from "./elements/QuoteCount";
-import QuoteCountOptions from "./elements/QuoteCountOptions";
+const QuoteCountOptions = dynamic(() => import("./elements/QuoteCountOptions"));
 
 /**
  * Request a Quote.

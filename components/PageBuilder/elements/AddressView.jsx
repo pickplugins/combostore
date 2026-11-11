@@ -1,6 +1,6 @@
 import PropTypes from "prop-types";
 import React from "react";
-import * as TablerIcons from '@tabler/icons-react';
+import { tablerIcon } from "@/components/icons/TablerIcon";
 import { elementCssClasses } from "../ElementsDefinition";
 
 /* A phone number as a tel: link - "+1 (555) 123-4567" becomes tel:+15551234567 (the old link kept the spaces and brackets). */
@@ -53,7 +53,7 @@ export function AddressMarkup({ cls, id, index, type, options, items, onLinkClic
 	return (
 		<ul id={id} index={index} type={type} className={`${cls('*')} ${rootClassName}`} {...rootProps}>
 			{items.map(item => {
-				var Icon = TablerIcons[item.icon];
+				var Icon = tablerIcon(item.icon);
 				var inner = (
 					<>
 						{Icon && <span className={cls('icon')}><Icon size={iconSize} /></span>}

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePost } from "../context/PostContext";
 import { postUrlFor } from "./PostTitleView";
 import { elementCssClasses } from "../ElementsDefinition";
+import { canOptimizeImage, sizesAuto } from "@/lib/imageOptimization.mjs";
 
 /* The post's title as plain text, for the image's alt text (titles may contain HTML entities or tags). */
 const plainTitle = (post) => String(post?.title ?? '')
@@ -30,7 +31,14 @@ export function PostThumbnailMarkup({ cls, id, index, type, options, post, href,
 	var src = post?.post_thumbnail?.src || '/thumb.png';
 	var alt = post?.post_thumbnail?.alt || plainTitle(post);
 
-	var image = <Image className={cls('image')} unoptimized src={src} width={400} height={400} alt={alt} />;
+	/*
+		Resized by next/image when it is on the store's server (see
+		lib/imageOptimization.mjs): product cards drew the full-size upload -
+		1024px PNGs of over a megabyte for a ~250px card. Chrome picks the size
+		from the laid-out width ("auto"); other browsers assume up to half the
+		screen, so a large blog thumbnail stays sharp.
+	*/
+	var image = <Image className={cls('image')} unoptimized={!canOptimizeImage(src)} sizes={sizesAuto('(max-width: 640px) 100vw, 50vw')} src={src} width={400} height={400} alt={alt} />;
 
 	return (
 		<div id={id} index={index} type={type} className={`${cls('*')} ${rootClassName}`} {...rootProps}>

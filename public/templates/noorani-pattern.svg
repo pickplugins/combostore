@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 140 140" width="140" height="140">
+  <!-- Tile for templates/Noorani.js: an eight-point star lattice (khatam), drawn in gold at low opacity so it sits on both the night-green bands and the ivory page heads. Repeats seamlessly. -->
+  <defs>
+    <g id="s">
+      <rect x="49" y="49" width="42" height="42"/>
+      <rect x="49" y="49" width="42" height="42" transform="rotate(45 70 70)"/>
+      <circle cx="70" cy="70" r="9"/>
+    </g>
+  </defs>
+  <g fill="none" stroke="#C9A24B" stroke-opacity="0.28" stroke-width="1">
+    <use href="#s" xlink:href="#s"/>
+    <use href="#s" xlink:href="#s" transform="translate(-70 -70)"/>
+    <use href="#s" xlink:href="#s" transform="translate(70 -70)"/>
+    <use href="#s" xlink:href="#s" transform="translate(-70 70)"/>
+    <use href="#s" xlink:href="#s" transform="translate(70 70)"/>
+    <path d="M100 70H140M0 70H40M70 0V40M70 100V140"/>
+    <path d="M91 49L119 21M49 49L21 21M91 91L119 119M49 91L21 119"/>
+  </g>
+</svg>

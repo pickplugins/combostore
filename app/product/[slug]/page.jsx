@@ -1,3 +1,4 @@
+import { storeUrl } from "@/lib/storeUrl";
 import { templateMetadata, slugToName } from "@/lib/templateSeo";
 import { sendMetaEvent } from "@/lib/sendMetaEvent";
 import { getStyledPageTemplate as getPageTemplate } from "@/lib/pageStyles";
@@ -127,7 +128,7 @@ export default async function page({ params }) {
     },
     "offers": {
       "@type": "Offer",
-      "url": `${appUrl}/product/${slug}`,
+      "url": storeUrl(`product/${slug}`),
       "priceCurrency": "BDT",
       "price": productData?.price,
       "availability": "https://schema.org/InStock",
@@ -208,7 +209,7 @@ export default async function page({ params }) {
       eventName: 'ViewContent',
       eventId,
       data: eventData,
-      sourceUrl: `${appUrl}/product/${slug}`,
+      sourceUrl: storeUrl(`product/${slug}`),
       ip, userAgent, fbp, fbc,
       test_event_code: META_test_event_code
     })

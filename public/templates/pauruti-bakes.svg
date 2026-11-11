@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 440" width="480" height="440" role="img" aria-label="A two-tier strawberry cake on a stand beside a croissant, a loaf of bread and a cupcake">
+  <!-- Hero art for templates/Pauruti: a flat, modern bakery still life - two-tier strawberry cake on a cake stand, a loaf, a croissant and a cupcake - on a transparent background (it sits on the butter banner). -->
+  <defs>
+    <linearGradient id="pr-loaf" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D99150"/><stop offset="1" stop-color="#A9622B"/></linearGradient>
+    <linearGradient id="pr-crois" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E8A55A"/><stop offset="1" stop-color="#B86A2C"/></linearGradient>
+    <linearGradient id="pr-stand" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#F1E6D8"/></linearGradient>
+  </defs>
+  <!-- ground shadow -->
+  <ellipse cx="240" cy="414" rx="210" ry="16" fill="#3B2416" opacity="0.16"/>
+  <!-- loaf (back right) -->
+  <g transform="translate(300 250)">
+    <path d="M10 120C0 120 -4 112 -2 100L8 40C12 14 40 0 80 0C120 0 148 14 152 40L162 100C164 112 160 120 150 120Z" fill="url(#pr-loaf)"/>
+    <path d="M36 30C48 22 58 22 68 30M70 24C82 16 94 16 104 24M104 32C114 26 124 26 132 34" fill="none" stroke="#FFE7B8" stroke-width="6" stroke-linecap="round" opacity="0.8"/>
+  </g>
+  <!-- cake stand -->
+  <path d="M218 402H262L254 352H226Z" fill="#F1E6D8"/>
+  <ellipse cx="240" cy="404" rx="54" ry="10" fill="#E6D4BD"/>
+  <ellipse cx="240" cy="352" rx="150" ry="20" fill="#E6D4BD"/>
+  <ellipse cx="240" cy="346" rx="150" ry="20" fill="url(#pr-stand)"/>
+  <!-- bottom tier -->
+  <path d="M120 240H360V336C360 346 300 352 240 352C180 352 120 346 120 336Z" fill="#FFF7EE"/>
+  <ellipse cx="240" cy="240" rx="120" ry="18" fill="#F7B9BE"/>
+  <path d="M120 240V262C128 270 136 270 140 262V250C146 274 160 276 164 256C170 266 182 266 186 254V246C194 282 210 282 214 252C222 264 234 264 238 252C246 272 262 272 266 250C274 262 286 262 290 248C296 276 312 276 316 254C324 266 334 266 338 252C344 266 356 264 360 252V240Z" fill="#F7B9BE"/>
+  <g fill="#E8505B"><circle cx="150" cy="300" r="4"/><circle cx="200" cy="314" r="4"/><circle cx="250" cy="304" r="4"/><circle cx="300" cy="316" r="4"/><circle cx="340" cy="298" r="4"/></g>
+  <!-- top tier -->
+  <path d="M168 150H312V230C312 240 280 246 240 246C200 246 168 240 168 230Z" fill="#E8505B"/>
+  <ellipse cx="240" cy="150" rx="72" ry="12" fill="#FFFFFF"/>
+  <path d="M168 150V168C174 176 182 176 186 166V158C192 182 204 182 208 160C214 170 224 170 228 158C234 178 248 178 252 156C258 168 268 168 272 158C278 182 290 182 294 160C300 170 308 168 312 160V150Z" fill="#FFFFFF"/>
+  <path d="M168 214C200 222 280 222 312 214" fill="none" stroke="#CC3B47" stroke-width="4" opacity="0.5"/>
+  <!-- strawberries + candle -->
+  <rect x="235" y="88" width="10" height="56" rx="3" fill="#FFFFFF"/>
+  <path d="M235 98L245 92M235 112L245 106M235 126L245 120M235 140L245 134" stroke="#E8505B" stroke-width="3"/>
+  <path d="M240 60C250 72 252 80 240 88C228 80 230 72 240 60Z" fill="#FFC94D"/>
+  <path d="M240 70C245 76 245 80 240 84C235 80 235 76 240 70Z" fill="#FFF3D1"/>
+  <g transform="translate(196 136)"><path d="M0 -10C10 -10 14 0 6 12C2 18 -2 18 -6 12C-14 0 -10 -10 0 -10Z" fill="#E8505B"/><path d="M-7 -10L0 -4L7 -10L0 -14Z" fill="#6FA14E"/></g>
+  <g transform="translate(286 138) rotate(12)"><path d="M0 -10C10 -10 14 0 6 12C2 18 -2 18 -6 12C-14 0 -10 -10 0 -10Z" fill="#E8505B"/><path d="M-7 -10L0 -4L7 -10L0 -14Z" fill="#6FA14E"/></g>
+  <g fill="#FFF3D1"><circle cx="194" cy="136" r="1.5"/><circle cx="199" cy="140" r="1.5"/><circle cx="286" cy="140" r="1.5"/><circle cx="290" cy="135" r="1.5"/></g>
+  <!-- croissant (front left) -->
+  <g transform="translate(20 330) rotate(-8)">
+    <path d="M6 54C-6 46 0 30 14 30L30 36Z" fill="url(#pr-crois)"/>
+    <path d="M150 54C162 46 156 30 142 30L126 36Z" fill="url(#pr-crois)"/>
+    <path d="M22 40C24 16 46 6 78 6C110 6 132 16 134 40C134 56 112 62 78 62C44 62 22 56 22 40Z" fill="url(#pr-crois)"/>
+    <path d="M52 14C46 30 46 46 52 60M78 8V62M104 14C110 30 110 46 104 60" fill="none" stroke="#8E4F1E" stroke-width="3" stroke-linecap="round" opacity="0.45"/>
+  </g>
+  <!-- cupcake (front right) -->
+  <g transform="translate(370 300)">
+    <path d="M6 50H78L70 106H14Z" fill="#FFC94D"/>
+    <path d="M20 50L24 106M34 50L36 106M50 50L48 106M64 50L60 106" stroke="#E0A63A" stroke-width="3"/>
+    <path d="M0 52C-4 34 10 24 20 26C20 10 36 2 46 8C56 0 72 8 70 24C84 24 90 40 84 52Z" fill="#FDE6E7"/>
+    <path d="M20 26C30 30 40 28 46 22M58 30C64 34 72 32 76 28" fill="none" stroke="#F7B9BE" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="44" cy="2" r="9" fill="#E8505B"/>
+    <g fill="#6FA14E"><rect x="22" y="38" width="8" height="3" rx="1.5" transform="rotate(30 26 39)"/><rect x="54" y="42" width="8" height="3" rx="1.5" transform="rotate(-20 58 43)"/></g>
+    <g fill="#3B2416"><rect x="38" y="36" width="8" height="3" rx="1.5" transform="rotate(-40 42 37)"/><rect x="68" y="38" width="7" height="3" rx="1.5" transform="rotate(50 71 39)"/></g>
+  </g>
+  <!-- sparkles -->
+  <g fill="#FFFFFF"><path d="M92 120L96 132L108 136L96 140L92 152L88 140L76 136L88 132Z"/><path d="M400 150L403 158L411 161L403 164L400 172L397 164L389 161L397 158Z"/></g>
+</svg>

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useCategory } from "../context/CategoryContext";
 import { termUrlFor } from "./TermTitleView";
 import { elementCssClasses } from "../ElementsDefinition";
+import { canOptimizeImage, sizesAuto } from "@/lib/imageOptimization.mjs";
 
 /*
 	The term's image: thumbnail.src, else the thumbnail_url get_terms
@@ -27,7 +28,9 @@ export function termImageSrc(term) {
 export function TermThumbnailMarkup({ cls, id, index, type, options, term, href, onLinkClick, rootClassName = '', rootProps = {} }) {
 
 	var alt = String(term?.name ?? '').replace(/<[^>]*>/g, '').replace(/&amp;/g, '&').trim();
-	var image = <Image className={cls('image')} unoptimized src={termImageSrc(term)} width={400} height={400} alt={alt} />;
+	/* Resized by next/image when it is on the store's server (lib/imageOptimization.mjs); it was the full-size upload. */
+	var src = termImageSrc(term);
+	var image = <Image className={cls('image')} unoptimized={!canOptimizeImage(src)} sizes={sizesAuto('(max-width: 640px) 50vw, 33vw')} src={src} width={400} height={400} alt={alt} />;
 	var linked = options?.linkTo === 'termUrl' && href;
 
 	return (

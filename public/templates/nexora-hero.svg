@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 460" fill="none" role="img" aria-label="Analytics dashboard with deployment and performance charts">
+  <!-- The Nexora Tech template's hero illustration: a product dashboard mockup. -->
+  <defs>
+    <linearGradient id="nx-area" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6366F1" stop-opacity="0.45"/><stop offset="1" stop-color="#6366F1" stop-opacity="0"/></linearGradient>
+    <linearGradient id="nx-line" x1="0" x2="1"><stop offset="0" stop-color="#818CF8"/><stop offset="1" stop-color="#22D3EE"/></linearGradient>
+    <linearGradient id="nx-bar" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#22D3EE"/><stop offset="1" stop-color="#6366F1"/></linearGradient>
+    <linearGradient id="nx-mark" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4F46E5"/><stop offset="0.5" stop-color="#8B5CF6"/><stop offset="1" stop-color="#06B6D4"/></linearGradient>
+  </defs>
+  <rect width="640" height="460" rx="18" fill="#0E1529"/>
+  <!-- window bar -->
+  <rect width="640" height="40" rx="18" fill="#131C36"/>
+  <rect y="22" width="640" height="18" fill="#131C36"/>
+  <circle cx="22" cy="20" r="5" fill="#F87171"/><circle cx="40" cy="20" r="5" fill="#FBBF24"/><circle cx="58" cy="20" r="5" fill="#34D399"/>
+  <rect x="220" y="12" width="200" height="16" rx="8" fill="#1C2645"/>
+  <!-- sidebar -->
+  <rect x="0" y="40" width="120" height="420" fill="#101831"/>
+  <rect x="18" y="58" width="26" height="26" rx="7" fill="url(#nx-mark)"/>
+  <rect x="52" y="66" width="48" height="10" rx="5" fill="#2A3557"/>
+  <rect x="14" y="108" width="92" height="26" rx="8" fill="#1E2A52"/>
+  <rect x="26" y="117" width="10" height="8" rx="2" fill="#818CF8"/><rect x="44" y="117" width="48" height="8" rx="4" fill="#A5B4FC"/>
+  <rect x="26" y="155" width="10" height="8" rx="2" fill="#334066"/><rect x="44" y="155" width="44" height="8" rx="4" fill="#334066"/>
+  <rect x="26" y="185" width="10" height="8" rx="2" fill="#334066"/><rect x="44" y="185" width="52" height="8" rx="4" fill="#334066"/>
+  <rect x="26" y="215" width="10" height="8" rx="2" fill="#334066"/><rect x="44" y="215" width="38" height="8" rx="4" fill="#334066"/>
+  <rect x="26" y="245" width="10" height="8" rx="2" fill="#334066"/><rect x="44" y="245" width="46" height="8" rx="4" fill="#334066"/>
+  <!-- KPI cards -->
+  <g>
+    <rect x="140" y="60" width="148" height="78" rx="12" fill="#141E3B" stroke="#1F2B50"/>
+    <rect x="156" y="76" width="54" height="8" rx="4" fill="#475477"/>
+    <rect x="156" y="94" width="82" height="16" rx="5" fill="#E0E7FF"/>
+    <rect x="156" y="118" width="40" height="8" rx="4" fill="#34D399"/>
+    <rect x="302" y="60" width="148" height="78" rx="12" fill="#141E3B" stroke="#1F2B50"/>
+    <rect x="318" y="76" width="64" height="8" rx="4" fill="#475477"/>
+    <rect x="318" y="94" width="70" height="16" rx="5" fill="#E0E7FF"/>
+    <rect x="318" y="118" width="36" height="8" rx="4" fill="#22D3EE"/>
+    <rect x="464" y="60" width="156" height="78" rx="12" fill="#141E3B" stroke="#1F2B50"/>
+    <rect x="480" y="76" width="50" height="8" rx="4" fill="#475477"/>
+    <rect x="480" y="94" width="90" height="16" rx="5" fill="#E0E7FF"/>
+    <rect x="480" y="118" width="44" height="8" rx="4" fill="#A78BFA"/>
+  </g>
+  <!-- area chart -->
+  <rect x="140" y="154" width="310" height="186" rx="12" fill="#141E3B" stroke="#1F2B50"/>
+  <rect x="156" y="170" width="90" height="9" rx="4.5" fill="#64739A"/>
+  <g stroke="#1F2B50"><path d="M156 220H434M156 255H434M156 290H434M156 325H434"/></g>
+  <path d="M156 300 C190 290 205 250 236 258 S286 300 312 262 S360 205 390 222 S420 196 434 188 V325 H156Z" fill="url(#nx-area)"/>
+  <path d="M156 300 C190 290 205 250 236 258 S286 300 312 262 S360 205 390 222 S420 196 434 188" stroke="url(#nx-line)" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="390" cy="222" r="5" fill="#0E1529" stroke="#22D3EE" stroke-width="3"/>
+  <!-- bar chart -->
+  <rect x="464" y="154" width="156" height="186" rx="12" fill="#141E3B" stroke="#1F2B50"/>
+  <rect x="480" y="170" width="64" height="9" rx="4.5" fill="#64739A"/>
+  <g fill="url(#nx-bar)">
+    <rect x="482" y="262" width="14" height="62" rx="4"/>
+    <rect x="504" y="236" width="14" height="88" rx="4"/>
+    <rect x="526" y="276" width="14" height="48" rx="4"/>
+    <rect x="548" y="214" width="14" height="110" rx="4"/>
+    <rect x="570" y="246" width="14" height="78" rx="4"/>
+    <rect x="592" y="200" width="14" height="124" rx="4"/>
+  </g>
+  <!-- table / deployments -->
+  <rect x="140" y="356" width="480" height="88" rx="12" fill="#141E3B" stroke="#1F2B50"/>
+  <circle cx="162" cy="380" r="5" fill="#34D399"/><rect x="176" y="375" width="120" height="9" rx="4.5" fill="#64739A"/><rect x="430" y="375" width="70" height="9" rx="4.5" fill="#334066"/><rect x="540" y="372" width="62" height="16" rx="8" fill="#064E3B"/><rect x="552" y="377" width="38" height="6" rx="3" fill="#34D399"/>
+  <circle cx="162" cy="414" r="5" fill="#22D3EE"/><rect x="176" y="409" width="150" height="9" rx="4.5" fill="#64739A"/><rect x="430" y="409" width="56" height="9" rx="4.5" fill="#334066"/><rect x="540" y="406" width="62" height="16" rx="8" fill="#1E2A52"/><rect x="552" y="411" width="38" height="6" rx="3" fill="#818CF8"/>
+</svg>

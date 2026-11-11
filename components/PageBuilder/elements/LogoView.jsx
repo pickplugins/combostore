@@ -4,6 +4,9 @@ import NextImage from "next/image";
 import Link from "next/link";
 import { isExternal } from "./ImageView";
 import { elementCssClasses } from "../ElementsDefinition";
+import { useAboveTheFold, imageLoadingProps } from "../aboveTheFold";
+/* Resized by next/image when it is on the store's server; logos are shown at most ~400px wide. */
+import { canOptimizeImage } from "@/lib/imageOptimization.mjs";
 
 /*
 	Which logo to draw: options.logoType 'text', 'image' or 'both'. Anything
@@ -29,7 +32,7 @@ export function logoMode(options) {
 	text: it was always empty, which left an image-only logo's home link with
 	no name for screen readers.
 */
-export function LogoMarkup({ cls, id, index, type, options, onLinkClick, rootClassName = '', rootProps = {} }) {
+export function LogoMarkup({ cls, id, index, type, options, onLinkClick, loadingProps = {}, rootClassName = '', rootProps = {} }) {
 
 	var mode = logoMode(options);
 	var src = String(options?.src ?? '').trim();
@@ -38,7 +41,7 @@ export function LogoMarkup({ cls, id, index, type, options, onLinkClick, rootCla
 	var alt = String(options?.altText ?? '').trim() || logoText.trim();
 
 	var image = mode !== 'text' && (
-		<NextImage src={src} width={500} height={500} alt={alt} className={cls('img')} unoptimized />
+		<NextImage src={src} width={500} height={500} alt={alt} className={cls('img')} unoptimized={!canOptimizeImage(src)} sizes="(max-width: 640px) 60vw, 400px" {...loadingProps} />
 	);
 	var text = mode === 'text'
 		? <span className={cls('text')}>{logoText}</span>
@@ -61,10 +64,13 @@ const LogoView = (props) => {
 	/* A key the block lacks falls back to the logo defaults in ElementsDefinition.js. */
 	var cls = elementCssClasses('logo', props?.cssSelectors);
 
+	/* The logo is in the header: eager rather than lazy (see aboveTheFold.js). */
+	var loadingProps = imageLoadingProps(useAboveTheFold());
+
 	var options = props?.options;
 	if (!String(options?.logoText ?? '').trim() && !String(options?.src ?? '').trim()) return null;
 
-	return <LogoMarkup cls={cls} id={props?.id} index={props?.index} type={props?.type} options={options} />;
+	return <LogoMarkup cls={cls} id={props?.id} index={props?.index} type={props?.type} options={options} loadingProps={loadingProps} />;
 };
 
 LogoView.propTypes = {

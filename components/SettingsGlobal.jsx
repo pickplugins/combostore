@@ -1,4 +1,5 @@
 "use client";
+import { storeUrl } from "@/lib/storeUrl";
 import { useState, useEffect, Component } from "react";
 import { IconChevronDown, IconChevronUp, IconPlug, IconTriangleSquareCircle, IconCreditCardPay, IconUserPentagon, IconMailSpark, IconBuildingStore, IconShip, IconStar, IconCashRegister, IconTrash, IconKey, IconTruckDelivery, IconSquareRoundedCheck, IconSquareRounded, IconDeviceFloppy, IconRestore, IconAlertTriangle } from "@tabler/icons-react";
 import Image from "next/image";
@@ -5067,7 +5068,7 @@ const SettingsGlobal = (props) => {
                                     name={'test_event_code'}
                                     placeholder={''}
                                     className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                    value={`${appUrl}facebook-product-feed`}
+                                    value={storeUrl("facebook-product-feed")}
 
 
 
@@ -5078,7 +5079,7 @@ const SettingsGlobal = (props) => {
                                     onClick={ev => {
 
 
-                                      navigator.clipboard.writeText(`${appUrl}facebook-product-feed`);
+                                      navigator.clipboard.writeText(storeUrl("facebook-product-feed"));
                                       addNotification({ type: 'success', title: 'Copy done', content: `Link copied.` })
 
                                     }}>Copy</div>

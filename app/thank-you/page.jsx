@@ -11,7 +11,8 @@ import InvoiceWithPDF from "@/components/InvoiceWithPDF";
 import { sendMetaEvent } from "@/lib/sendMetaEvent";
 import { clearCheckoutDraft } from "@/lib/checkoutDraft";
 import { getPageTemplate } from "@/lib/getPageTemplate";
-import PageBuilderContent from "@/components/PageBuilder/PageBuilderContent";
+/* The client half: this page is a client component, and the server half reads the icon data on the server (it fetches its icons instead). */
+import PageBuilderContent from "@/components/PageBuilder/PageBuilderContentClient";
 
 
 /*

@@ -279,7 +279,7 @@ const TermsQueryPrams = (props) => {
 
 
       <div className="flex justify-between items-center gap-2">
-        <label htmlFor="" className="text-xs font-medium text-gray-600">Query Prams</label>
+        <label htmlFor="" className="text-md font-medium text-gray-600">Query Prams</label>
         <div>
           <DropDown allowReset={true} multiple={false} value={''} position="right" options={queryArgs} label={`Choose`} labelClass={'inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-2 py-1 text-xs font-medium text-gray-600 cursor-pointer transition-colors hover:border-brand/40 hover:bg-brand/5 hover:text-brand-700 w-fit'} onOptionsChoose={(args) => {
             //setorderData({ ...orderData, payment_status: args?.value })
@@ -398,6 +398,40 @@ const TermsQueryPrams = (props) => {
 
                 </div>
               )}
+            {
+              (key == 'top_lavel'
+              )
+
+
+              && (
+
+                <div className="flex justify-between items-center">
+                  <div>{queryArgs[key]?.label}</div>
+                  {/* <input type="checkbox" className="w-16 !rounded-lg !border !border-gray-300 !bg-white !px-2.5 !py-1.5 !text-xs !text-gray-700 !shadow-none !outline-none transition-colors focus:!border-brand focus:!ring-4 focus:!ring-brand/10" checked={value} /> */}
+
+                  <div className="cursor-pointer " onClick={ev => {
+
+
+
+
+                    var queryPramsX = { ...queryPrams }
+
+                    queryPramsX[key] = !value
+
+
+
+                    setqueryPrams(queryPramsX)
+
+                  }}>
+                    {value ? <IconCheckbox /> : <IconSquare />}
+                  </div>
+
+                </div>
+              )}
+
+
+
+
             {
               (key == 'hierarchical'
               )

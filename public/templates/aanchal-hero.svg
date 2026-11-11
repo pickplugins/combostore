@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 520" width="400" height="520" role="img" aria-label="A red-bordered white saree draped beside a stack of folded handloom sarees, framed by an alpona">
+  <!-- Hero illustration for templates/Aanchal.js: a lal-paar saree draped over a wooden rod with its pallu falling in a fold, a stack of folded handloom sarees, an alpona rosette and marigold garland behind. -->
+  <defs>
+    <linearGradient id="ac-bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8E0E24"/><stop offset="1" stop-color="#3A0D17"/>
+    </linearGradient>
+    <linearGradient id="ac-cloth" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#EDE3D0"/><stop offset="0.5" stop-color="#FDF8EE"/><stop offset="1" stop-color="#E6DAC3"/>
+    </linearGradient>
+    <linearGradient id="ac-wood" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9A6233"/><stop offset="1" stop-color="#5E3417"/>
+    </linearGradient>
+    <radialGradient id="ac-glow" cx="0.5" cy="0.45" r="0.5">
+      <stop offset="0" stop-color="#F2B93B" stop-opacity="0.25"/><stop offset="1" stop-color="#F2B93B" stop-opacity="0"/>
+    </radialGradient>
+    <g id="ac-petal"><path d="M0-30C12-48 12-80 0-100C-12-80-12-48 0-30Z"/></g>
+  </defs>
+  <rect width="400" height="520" fill="url(#ac-bg)"/>
+  <ellipse cx="200" cy="250" rx="200" ry="230" fill="url(#ac-glow)"/>
+  <!-- alpona rosette -->
+  <g transform="translate(200 240)" fill="none" stroke="#F2B93B" stroke-opacity="0.35" stroke-width="1.5">
+    <circle r="150"/><circle r="164" stroke-dasharray="1 7" stroke-linecap="round" stroke-width="3"/><circle r="24"/>
+    <use href="#ac-petal"/><use href="#ac-petal" transform="rotate(30)"/><use href="#ac-petal" transform="rotate(60)"/><use href="#ac-petal" transform="rotate(90)"/>
+    <use href="#ac-petal" transform="rotate(120)"/><use href="#ac-petal" transform="rotate(150)"/><use href="#ac-petal" transform="rotate(180)"/><use href="#ac-petal" transform="rotate(210)"/>
+    <use href="#ac-petal" transform="rotate(240)"/><use href="#ac-petal" transform="rotate(270)"/><use href="#ac-petal" transform="rotate(300)"/><use href="#ac-petal" transform="rotate(330)"/>
+  </g>
+  <!-- marigold garland -->
+  <path d="M0 26C80 70 140 70 200 50C260 70 320 70 400 26" fill="none" stroke="#6B8E23" stroke-width="2"/>
+  <g fill="#F2B93B">
+    <circle cx="20" cy="38" r="7"/><circle cx="45" cy="50" r="7"/><circle cx="70" cy="58" r="7"/><circle cx="96" cy="62" r="7"/><circle cx="122" cy="62" r="7"/><circle cx="148" cy="59" r="7"/><circle cx="174" cy="54" r="7"/>
+    <circle cx="226" cy="54" r="7"/><circle cx="252" cy="59" r="7"/><circle cx="278" cy="62" r="7"/><circle cx="304" cy="62" r="7"/><circle cx="330" cy="58" r="7"/><circle cx="355" cy="50" r="7"/><circle cx="380" cy="38" r="7"/>
+  </g>
+  <g fill="#E07B12"><circle cx="45" cy="50" r="3.5"/><circle cx="96" cy="62" r="3.5"/><circle cx="148" cy="59" r="3.5"/><circle cx="252" cy="59" r="3.5"/><circle cx="304" cy="62" r="3.5"/><circle cx="355" cy="50" r="3.5"/></g>
+  <circle cx="200" cy="54" r="9" fill="#B3122E"/>
+  <!-- rod -->
+  <rect x="48" y="104" width="230" height="10" rx="5" fill="url(#ac-wood)"/>
+  <circle cx="48" cy="109" r="8" fill="#5E3417"/><circle cx="278" cy="109" r="8" fill="#5E3417"/>
+  <!-- saree body hanging from the rod -->
+  <path d="M64 112H262C270 220 272 330 256 450L76 462C62 350 58 230 64 112Z" fill="url(#ac-cloth)"/>
+  <!-- red paar down the left edge and along the hem -->
+  <path d="M64 112C58 230 62 350 76 462L98 461C84 350 80 232 86 112Z" fill="#B3122E"/>
+  <path d="M90 112C84 232 88 350 102 461" fill="none" stroke="#F2B93B" stroke-width="1.5"/>
+  <path d="M76 462L256 450L255 428L78 440Z" fill="#B3122E"/>
+  <path d="M78 436L255 424" stroke="#F2B93B" stroke-width="1.5"/>
+  <g fill="#FDF4E3"><path d="M100 458l6-9 6 9zM124 456l6-9 6 9zM148 455l6-9 6 9zM172 453l6-9 6 9zM196 452l6-9 6 9zM220 450l6-9 6 9z"/></g>
+  <!-- fringe -->
+  <g stroke="#B3122E" stroke-width="1.5">
+    <path d="M82 462v12M92 462v12M102 461v12M112 460v12M122 460v12M132 459v12M142 458v12M152 458v12M162 457v12M172 456v12M182 456v12M192 455v12M202 454v12M212 454v12M222 453v12M232 452v12M242 452v12M252 451v12"/>
+  </g>
+  <!-- buti motifs -->
+  <g fill="#B3122E" opacity="0.85">
+    <circle cx="130" cy="170" r="3"/><circle cx="180" cy="160" r="3"/><circle cx="230" cy="175" r="3"/>
+    <circle cx="150" cy="230" r="3"/><circle cx="205" cy="225" r="3"/>
+    <circle cx="125" cy="300" r="3"/><circle cx="175" cy="290" r="3"/><circle cx="228" cy="300" r="3"/>
+    <circle cx="150" cy="360" r="3"/><circle cx="205" cy="355" r="3"/>
+  </g>
+  <!-- pallu folded diagonally over the rod -->
+  <path d="M150 112H278C290 170 276 230 236 282L188 262C214 220 214 170 150 112Z" fill="#F7EEDC"/>
+  <path d="M236 282L188 262L196 246L242 266Z" fill="#B3122E"/>
+  <path d="M278 112C290 170 276 230 236 282L222 274C258 228 270 170 262 112Z" fill="#B3122E"/>
+  <path d="M266 112C276 170 264 226 228 276" fill="none" stroke="#F2B93B" stroke-width="1.5"/>
+  <g fill="#B3122E" opacity="0.8"><path d="M200 150c8 0 10 10 3 14c-6 3-12-2-9-8c2-3 6-6 6-6z"/><path d="M226 200c8 0 10 10 3 14c-6 3-12-2-9-8c2-3 6-6 6-6z"/></g>
+  <!-- folded saree stack -->
+  <g transform="translate(232 404)">
+    <rect x="0" y="62" width="150" height="30" rx="4" fill="#2E5E4E"/><rect x="0" y="62" width="150" height="7" fill="#F2B93B"/>
+    <rect x="6" y="32" width="140" height="30" rx="4" fill="#F2B93B"/><rect x="6" y="32" width="140" height="7" fill="#B3122E"/>
+    <rect x="12" y="2" width="128" height="30" rx="4" fill="#FDF8EE"/><rect x="12" y="2" width="128" height="7" fill="#B3122E"/><rect x="12" y="10" width="128" height="1.5" fill="#F2B93B"/>
+    <g fill="#B3122E"><circle cx="40" cy="22" r="2.5"/><circle cx="76" cy="22" r="2.5"/><circle cx="112" cy="22" r="2.5"/></g>
+    <g fill="#7F4805" opacity="0.6"><circle cx="40" cy="52" r="2.5"/><circle cx="76" cy="52" r="2.5"/><circle cx="112" cy="52" r="2.5"/></g>
+  </g>
+  <ellipse cx="200" cy="500" rx="170" ry="10" fill="#000" opacity="0.25"/>
+</svg>

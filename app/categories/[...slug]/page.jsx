@@ -1,3 +1,4 @@
+import { storeUrl } from "@/lib/storeUrl";
 
 import { templateMetadata, slugToName } from "@/lib/templateSeo";
 import Link from "next/link";
@@ -102,7 +103,7 @@ export default async function page({ params }) {
       eventName: 'ViewContent',
       eventId,
       data: eventData,
-      sourceUrl: `${appUrl}/categories/${lastParam}`,
+      sourceUrl: storeUrl(`categories/${lastParam}`),
       ip, userAgent, fbp, fbc,
     })
   );

@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600" role="img" aria-label="Posha Pet Shop template preview">
+  <title>Posha Pet Shop template preview</title>
+  <!-- Picker thumbnail for templates/Posha: a wireframe of its home page - cobalt promo line, white header with the paw logo, the coloured pet switcher, the food-bowl cart and the paw-print trail, the blob hero with the dog and cat, and the shop-by-pet cards - in the template's palette. -->
+  <defs>
+    <clipPath id="ps-t-clip"><rect width="800" height="600"/></clipPath>
+    <g id="ps-t-paw"><ellipse cx="0" cy="3" rx="4.5" ry="3.6"/><circle cx="-4.5" cy="-3" r="1.8"/><circle cx="0" cy="-5" r="1.8"/><circle cx="4.5" cy="-3" r="1.8"/></g>
+    <pattern id="ps-t-trail" width="48" height="18" patternUnits="userSpaceOnUse"><use href="#ps-t-paw" x="10" y="11" fill="#2B4BD8" fill-opacity="0.2"/><use href="#ps-t-paw" x="34" y="7" fill="#2B4BD8" fill-opacity="0.2"/></pattern>
+  </defs>
+  <g clip-path="url(#ps-t-clip)">
+  <rect width="800" height="600" fill="#FFF9F1"/>
+  <!-- header -->
+  <rect width="800" height="18" fill="#2B4BD8"/>
+  <rect x="250" y="7" width="220" height="4" rx="2" fill="#FFFFFF" opacity="0.85"/><rect x="478" y="4" width="36" height="10" rx="5" fill="#FFD23F"/>
+  <rect y="18" width="800" height="56" fill="#FFFFFF"/>
+  <path d="M30 28C42 24 56 30 58 44C60 58 48 66 36 64C22 62 16 50 18 40C20 34 24 30 30 28Z" fill="#FF7A3D"/>
+  <g transform="translate(38 46) scale(1.9)" fill="#FFFFFF"><use href="#ps-t-paw"/></g>
+  <text x="66" y="50" font-family="Grandstander, 'Comic Sans MS', 'Segoe UI', sans-serif" font-size="22" font-weight="800" fill="#1D2140">posha</text>
+  <g><rect x="250" y="39" width="8" height="8" rx="2" fill="#FF7A3D"/><rect x="304" y="39" width="8" height="8" rx="2" fill="#3DBB94"/><rect x="354" y="39" width="8" height="8" rx="2" fill="#E6A800"/><rect x="406" y="39" width="8" height="8" rx="2" fill="#3FA4E8"/><rect x="452" y="39" width="8" height="8" rx="2" fill="#9B7FEA"/><rect x="524" y="39" width="8" height="8" rx="2" fill="#2B4BD8"/><rect x="594" y="39" width="8" height="8" rx="2" fill="#E8601F"/></g>
+  <g fill="#1D2140"><rect x="262" y="40" width="30" height="6" rx="3"/><rect x="316" y="40" width="26" height="6" rx="3"/><rect x="366" y="40" width="30" height="6" rx="3"/><rect x="418" y="40" width="24" height="6" rx="3"/><rect x="464" y="40" width="48" height="6" rx="3"/><rect x="536" y="40" width="48" height="6" rx="3"/><rect x="606" y="40" width="32" height="6" rx="3"/></g>
+  <circle cx="722" cy="44" r="15" fill="#FFF9F1" stroke="#EEE8DE" stroke-width="2"/>
+  <path d="M746 32H776V40Q776 62 761 62Q746 62 746 40Z" fill="#E8601F" transform="translate(0 3)"/><path d="M746 32H776V40Q776 62 761 62Q746 62 746 40Z" fill="#FF7A3D"/>
+  <rect y="74" width="800" height="18" fill="#FFFFFF"/><rect y="74" width="800" height="18" fill="url(#ps-t-trail)"/>
+  <path d="M0 92H800" stroke="#EEE8DE" stroke-width="2"/>
+  <!-- hero copy -->
+  <rect x="32" y="116" width="180" height="24" rx="12" fill="#FFFFFF" stroke="#EEE8DE" stroke-width="2"/>
+  <circle cx="46" cy="128" r="8" fill="#FF7A3D"/><circle cx="64" cy="128" r="8" fill="#3DBB94"/><circle cx="82" cy="128" r="8" fill="#FFD23F"/><circle cx="100" cy="128" r="8" fill="#3FA4E8"/>
+  <rect x="32" y="152" width="130" height="8" rx="4" fill="#FF7A3D"/>
+  <g font-family="Grandstander, 'Comic Sans MS', 'Segoe UI', sans-serif" font-size="54" font-weight="800" fill="#1D2140"><text x="30" y="216">Happy pets,</text><text x="30" y="270">sorted.</text></g>
+  <g fill="#6B6F86" opacity="0.5"><rect x="32" y="292" width="280" height="6" rx="3"/><rect x="32" y="306" width="240" height="6" rx="3"/></g>
+  <rect x="32" y="334" width="118" height="32" rx="16" fill="#E8601F" transform="translate(0 4)"/><rect x="32" y="334" width="118" height="32" rx="16" fill="#FF7A3D"/>
+  <rect x="162" y="334" width="118" height="32" rx="16" fill="#1E37A8" transform="translate(0 4)"/><rect x="162" y="334" width="118" height="32" rx="16" fill="#2B4BD8"/>
+  <!-- hero art -->
+  <path d="M450 150C530 110 680 120 730 200C780 280 740 380 640 400C540 420 440 390 420 300C405 230 410 170 450 150Z" fill="#2B4BD8"/>
+  <circle cx="726" cy="140" r="34" fill="#FFD23F"/>
+  <g transform="translate(400 120) scale(0.62)">
+    <path d="M100 450C88 360 110 290 200 280C290 290 312 360 300 450Z" fill="#E8A55A"/>
+    <ellipse cx="200" cy="370" rx="52" ry="72" fill="#FBE3C2"/>
+    <circle cx="200" cy="200" r="84" fill="#E8A55A"/>
+    <path d="M132 150C88 146 72 240 104 278C126 296 146 240 148 188Z" fill="#9A5B2E"/><path d="M268 150C312 146 328 240 296 278C274 296 254 240 252 188Z" fill="#9A5B2E"/>
+    <ellipse cx="200" cy="240" rx="48" ry="36" fill="#FBE3C2"/><ellipse cx="200" cy="218" rx="15" ry="10" fill="#1D2140"/>
+    <circle cx="168" cy="188" r="9" fill="#1D2140"/><circle cx="232" cy="188" r="9" fill="#1D2140"/>
+    <path d="M130 268Q200 300 270 268L268 284Q200 318 132 284Z" fill="#FF7A3D"/>
+    <path d="M310 450C300 380 316 318 378 310C440 318 456 380 446 450Z" fill="#8C93A8"/>
+    <ellipse cx="378" cy="384" rx="36" ry="56" fill="#E7E9F0"/>
+    <path d="M316 232L320 168L362 206Z" fill="#8C93A8"/><path d="M440 232L436 168L394 206Z" fill="#8C93A8"/>
+    <ellipse cx="378" cy="252" rx="66" ry="58" fill="#8C93A8"/>
+    <ellipse cx="354" cy="250" rx="10" ry="12" fill="#C8E06B"/><ellipse cx="402" cy="250" rx="10" ry="12" fill="#C8E06B"/>
+    <path d="M330 298Q378 320 426 298L424 310Q378 334 332 310Z" fill="#3DBB94"/>
+  </g>
+  <rect x="426" y="176" width="110" height="26" rx="13" fill="#FFFFFF"/><circle cx="440" cy="189" r="8" fill="#3DBB94"/>
+  <rect x="640" y="378" width="120" height="26" rx="13" fill="#FFFFFF"/><circle cx="654" cy="391" r="8" fill="#FF7A3D"/>
+  <!-- pet cards -->
+  <rect y="430" width="800" height="170" fill="#FFFFFF"/>
+  <g>
+    <rect x="24" y="456" width="140" height="130" rx="22" fill="#FFEADF"/><rect x="179" y="456" width="140" height="130" rx="22" fill="#DFF5EC"/><rect x="334" y="456" width="140" height="130" rx="22" fill="#FFF6D6"/><rect x="489" y="456" width="140" height="130" rx="22" fill="#E2F2FC"/><rect x="644" y="456" width="132" height="130" rx="22" fill="#EFE9FD"/>
+  </g>
+  <g><circle cx="150" cy="580" r="44" fill="#FF7A3D"/><circle cx="305" cy="580" r="44" fill="#3DBB94"/><circle cx="460" cy="580" r="44" fill="#E6A800"/><circle cx="615" cy="580" r="44" fill="#3FA4E8"/><circle cx="764" cy="580" r="44" fill="#9B7FEA"/></g>
+  <g fill="#1D2140"><rect x="40" y="474" width="56" height="10" rx="4"/><rect x="195" y="474" width="50" height="10" rx="4"/><rect x="350" y="474" width="54" height="10" rx="4"/><rect x="505" y="474" width="44" height="10" rx="4"/><rect x="660" y="474" width="76" height="10" rx="4"/></g>
+  </g>
+</svg>

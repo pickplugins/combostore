@@ -1,7 +1,7 @@
 import PropTypes from "prop-types";
 import React from "react";
 import { usePost } from "../context/PostContext";
-import * as TablerIcons from '@tabler/icons-react';
+import { tablerIcon } from "@/components/icons/TablerIcon";
 import { useProductStore } from "../../../store/productStore";
 import { elementCssClasses } from "../ElementsDefinition";
 
@@ -54,9 +54,9 @@ export function ProductStockStatusMarkup({ cls, id, index, type, options, status
 
 	/* Unset, tabler draws 24px; kept as the fallback so existing blocks do not change size. */
 	var iconSize = Number(options?.iconSize) || 24;
-	var LabelIconX = TablerIcons[options?.labelIcon];
+	var LabelIconX = tablerIcon(options?.labelIcon);
 	var outOfStock = status === 'outofstock';
-	var StatusIconX = TablerIcons[outOfStock ? options?.outOfStockIcon : options?.inStockIcon];
+	var StatusIconX = tablerIcon(outOfStock ? options?.outOfStockIcon : options?.inStockIcon);
 	var state = outOfStock ? 'out-of-stock' : 'in-stock';
 	var text = outOfStock ? (options?.outOfStockText ?? 'Out of stock') : (options?.inStockText ?? 'In stock');
 

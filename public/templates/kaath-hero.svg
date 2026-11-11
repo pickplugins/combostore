@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 520" width="800" height="520" role="img" aria-label="A styled living room: terracotta sofa, round oak coffee table, arc floor lamp, plant and rug under an arched window">
+  <!-- Hero scene for templates/Kaath.js. The page places hotspot pins over it by percentage: plant 12%/55%, sofa 38%/63%, coffee table 50%/84%, lamp 79%/32%. Keep those pieces where they are if you edit this file. -->
+  <defs>
+    <linearGradient id="kc-wall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#EDE6DC"/><stop offset="1" stop-color="#E4DACC"/></linearGradient>
+    <linearGradient id="kc-floor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C9A57E"/><stop offset="1" stop-color="#B08A62"/></linearGradient>
+    <linearGradient id="kc-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F7EFE3"/><stop offset="1" stop-color="#E9EFE6"/></linearGradient>
+    <linearGradient id="kc-sofa" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C4613A"/><stop offset="1" stop-color="#A9502B"/></linearGradient>
+  </defs>
+  <rect width="800" height="520" fill="url(#kc-wall)"/>
+  <!-- arched window -->
+  <path d="M260 330V140a110 110 0 0 1 220 0v190z" fill="url(#kc-sky)"/>
+  <path d="M260 330V140a110 110 0 0 1 220 0v190z" fill="none" stroke="#FFFFFF" stroke-width="10"/>
+  <path d="M370 40v290M260 200h220" stroke="#FFFFFF" stroke-width="6"/>
+  <path d="M300 300c20-50 60-70 90-60" fill="none" stroke="#8FA68A" stroke-width="3" opacity="0.5"/>
+  <!-- wall art -->
+  <rect x="500" y="150" width="76" height="96" rx="4" fill="#F5F1EB" stroke="#2B2420" stroke-width="4"/>
+  <circle cx="538" cy="188" r="20" fill="#B8542D" opacity="0.85"/><path d="M511 232c16-19 37-19 54 0z" fill="#8FA68A"/>
+  <!-- floor -->
+  <rect y="370" width="800" height="150" fill="url(#kc-floor)"/>
+  <rect y="364" width="800" height="10" fill="#F5F1EB"/>
+  <!-- rug -->
+  <ellipse cx="380" cy="440" rx="280" ry="58" fill="#F1E7D6"/>
+  <ellipse cx="380" cy="440" rx="250" ry="48" fill="none" stroke="#B8542D" stroke-width="3" stroke-dasharray="2 10" opacity="0.6"/>
+  <!-- plant (12% / 55%) -->
+  <path d="M70 360h52l-8 54H78z" fill="#C9B79C"/>
+  <g fill="#5E7F57"><path d="M96 362c-40-30-50-80-30-110 18 30 24 70 30 110z"/><path d="M96 362c10-50 40-90 70-96-6 40-30 76-70 96z"/><path d="M96 362c-20-60-6-120 20-140 4 44-4 96-20 140z"/></g>
+  <g fill="#8FA68A"><path d="M96 362c-30-14-60-14-76 2 26 8 50 8 76-2z"/><path d="M96 362c30-20 60-24 80-12-24 14-52 18-80 12z"/></g>
+  <!-- sofa (38% / 63%) -->
+  <rect x="160" y="268" width="290" height="80" rx="30" fill="url(#kc-sofa)"/>
+  <rect x="140" y="300" width="330" height="70" rx="24" fill="#B8542D"/>
+  <rect x="140" y="292" width="50" height="78" rx="22" fill="#A54A26"/>
+  <rect x="420" y="292" width="50" height="78" rx="22" fill="#A54A26"/>
+  <path d="M196 312h108M308 312h108" stroke="#96421F" stroke-width="3" stroke-linecap="round"/>
+  <rect x="200" y="264" width="66" height="50" rx="14" fill="#E9EFE6" transform="rotate(-8 233 289)"/>
+  <rect x="350" y="266" width="60" height="46" rx="14" fill="#F1E7D6" transform="rotate(6 380 289)"/>
+  <g fill="#2B2420"><rect x="158" y="370" width="8" height="16" rx="2"/><rect x="444" y="370" width="8" height="16" rx="2"/></g>
+  <!-- coffee table (50% / 84%) -->
+  <ellipse cx="400" cy="420" rx="92" ry="20" fill="#9C6A3E"/>
+  <ellipse cx="400" cy="414" rx="92" ry="20" fill="#C8915A"/>
+  <g fill="#7A512C"><rect x="340" y="424" width="8" height="34" rx="3"/><rect x="452" y="424" width="8" height="34" rx="3"/><rect x="396" y="430" width="8" height="32" rx="3"/></g>
+  <rect x="372" y="394" width="40" height="12" rx="2" fill="#F5F1EB"/><rect x="376" y="386" width="32" height="9" rx="2" fill="#8FA68A"/>
+  <path d="M432 404c0-16 20-16 20 0z" fill="#2B2420"/>
+  <!-- side table + arc lamp (80% / 36%) -->
+  <rect x="560" y="330" width="70" height="10" rx="4" fill="#C8915A"/>
+  <path d="M572 340v40M618 340v40" stroke="#7A512C" stroke-width="6" stroke-linecap="round"/>
+  <path d="M700 400V250c0-90-50-120-70-122" fill="none" stroke="#C9A24B" stroke-width="6" stroke-linecap="round"/>
+  <ellipse cx="700" cy="404" rx="30" ry="8" fill="#2B2420"/>
+  <path d="M606 170c0-30 48-30 48 0z" fill="#2B2420"/>
+  <ellipse cx="630" cy="200" rx="60" ry="22" fill="#FFF3D6" opacity="0.5"/>
+  <!-- armchair corner -->
+  <rect x="660" y="300" width="120" height="70" rx="24" fill="#8FA68A"/>
+  <rect x="676" y="270" width="104" height="60" rx="22" fill="#7E9479"/>
+</svg>
