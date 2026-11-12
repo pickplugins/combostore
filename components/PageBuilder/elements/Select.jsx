@@ -70,7 +70,6 @@ const Button = (props) => {
 						var total = res?.total;
 						var max_pages = res?.max_pages;
 
-						console.log(terms);
 
 						if (!terms) return;
 
@@ -82,7 +81,6 @@ const Button = (props) => {
 							termsX.push({ label: item.name, value: item.term_id })
 						})
 
-						console.log(termsX);
 
 						setprams(termsX)
 
@@ -102,7 +100,6 @@ const Button = (props) => {
 
 	useEffect(() => {
 
-		console.log(pramsQuery);
 
 		fetchTerms();
 

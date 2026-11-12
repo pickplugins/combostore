@@ -87,6 +87,7 @@ import CartOptions from './elements/CartOptions';
 import ProductStockStatusOptions from './elements/ProductStockStatusOptions';
 import AddToCartOptions from './elements/AddToCartOptions';
 import PopoverButtonOptions from './elements/PopoverButtonOptions';
+import ProductQuickViewOptions from './elements/ProductQuickViewOptions';
 import LoginOptions from './elements/LoginOptions';
 import RegisterOptions from './elements/RegisterOptions';
 import LoginByPhoneOptions from './elements/LoginByPhoneOptions';
@@ -399,6 +400,9 @@ const ElementOptions = (props) => {
 			)}
 			{selectedBlock?.type == 'popoverButton' && (
 				<PopoverButtonOptions {...selectedBlock} updateBlock={updateBlock} handleMoveBlock={handleMoveBlock} />
+			)}
+			{selectedBlock?.type == 'productQuickView' && (
+				<ProductQuickViewOptions {...selectedBlock} updateBlock={updateBlock} handleMoveBlock={handleMoveBlock} />
 			)}
 			{selectedBlock?.type == 'login' && (
 				<LoginOptions {...selectedBlock} updateBlock={updateBlock} handleMoveBlock={handleMoveBlock} />

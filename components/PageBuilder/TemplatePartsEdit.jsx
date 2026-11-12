@@ -73,7 +73,7 @@ const TemplatePartsEdit = (props) => {
 		};
 		postData = JSON.stringify(postData);
 
-		console.log(postData);
+
 
 
 
@@ -141,7 +141,7 @@ const TemplatePartsEdit = (props) => {
 		};
 		postData = JSON.stringify(postData);
 
-		console.log(postData);
+
 
 
 
@@ -243,7 +243,6 @@ const TemplatePartsEdit = (props) => {
 
 						var isPage = pageData?.isPage ?? false;
 
-						console.log(isPage);
 
 
 						if (isPage) {

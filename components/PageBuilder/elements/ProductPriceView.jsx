@@ -4,7 +4,7 @@ import { useState } from "react";
 import { usePost } from "../context/PostContext";
 import { useUtilsStore } from '../../../store/useUtilsStore';
 import { useCounterStore } from '../../../store/useCounterStore';
-import { useProductStore } from "../../../store/productStore";
+import { useActiveVariation } from "../context/VariationScope";
 import { elementCssClasses } from "../ElementsDefinition";
 
 const toNumber = (value) => {
@@ -35,7 +35,10 @@ export function productPriceDisplay(product, activeVariation) {
 			.filter(v => v?.enable === 'yes')
 			.map(v => toNumber(v?.sale_price) > 0 ? toNumber(v?.sale_price) : toNumber(v?.regular_price))
 			.filter(p => p > 0);
-		return { mode: 'range', min: prices.length ? Math.min(...prices) : 0, max: prices.length ? Math.max(...prices) : 0 };
+		var min = prices.length ? Math.min(...prices) : 0, max = prices.length ? Math.max(...prices) : 0;
+		/* Every variation at one price: that price, not "৳500 - ৳500". */
+		if (min > 0 && min === max) return { mode: 'simple', price: min, regular: null };
+		return { mode: 'range', min, max };
 	}
 
 	var priceType = product?.price_type ?? product?.priceType ?? 'simple';
@@ -47,7 +50,8 @@ export function productPriceDisplay(product, activeVariation) {
 	var sale = toNumber(source?.sale_price);
 	var regular = toNumber(source?.regular_price);
 	var price = sale > 0 ? sale : (regular > 0 ? regular : toNumber(product?.price));
-	return { mode: 'simple', price, regular: sale > 0 && regular > 0 ? regular : null };
+	/* The regular price is struck through only when the sale price is below it - a sale price equal to it is no sale. */
+	return { mode: 'simple', price, regular: sale > 0 && regular > sale ? regular : null };
 }
 
 /*
@@ -135,7 +139,6 @@ const ProductPriceView = (props) => {
 	const { wrapCurrency } = useUtilsStore();
 	const addNotification = useCounterStore((state) => state.addNotification);
 	const purchaseGate = useCounterStore((state) => state.purchaseGate);
-	const storeActiveVariation = useProductStore((state) => state.activeVariation);
 
 	/* A key the block lacks falls back to the productPrice defaults in ElementsDefinition.js. */
 	var cls = elementCssClasses('productPrice', props?.cssSelectors);
@@ -149,11 +152,7 @@ const ProductPriceView = (props) => {
 		id, which is `product_id` here (get_product overwrites `id` with the
 		cstore row id).
 	*/
-	var activeVariation =
-		storeActiveVariation &&
-			String(storeActiveVariation?.product_id) === String(productData?.product_id ?? productData?.id)
-			? storeActiveVariation
-			: null;
+	var activeVariation = useActiveVariation(productData);
 
 	/* An extension may say this product's price is not to be shown - see `purchaseGate` in store/useCounterStore.js. */
 	const priceGate = purchaseGate ? purchaseGate(productData) : null;

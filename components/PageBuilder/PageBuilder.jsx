@@ -173,8 +173,13 @@ const PageBuilder = (props) => {
 		index: historyIndex,
 		limit: historyLimit,
 	} = useBlockHistory([
-		{ id: 'seed-heading', type: "heading", options: { text: "Build Pages Visually.", tag: "h1", }, cssSelectors: { '*': {} }, },
-		{ id: 'seed-text', type: "text", options: { text: "Build Pages Visually.", tag: "h1", }, cssSelectors: { '*': {} }, },
+		/*
+			What a fresh canvas shows before a page is opened: a welcome and how to
+			get started. Both said "Build Pages Visually.", and the text block asked
+			for an h1, which a text block does not support (it rendered a p).
+		*/
+		{ id: 'seed-heading', type: "heading", options: { text: "Welcome to the page builder", tag: "h1", }, cssSelectors: { '*': { classes: 'mt-16 text-center text-3xl font-bold tracking-tight text-gray-900 md:text-4xl' } }, },
+		{ id: 'seed-text', type: "text", options: { text: "This is placeholder content - replace it with your own.\nClick a block to edit its text and style, drag new blocks in from Elements, or start from a ready-made design in Templates. Delete these two blocks when you no longer need them.", tag: "p", }, cssSelectors: { '*': { classes: 'mx-auto mt-3 max-w-xl px-4 text-center text-base leading-relaxed text-gray-500' } }, },
 
 	], { limit: 20 });
 
@@ -307,7 +312,6 @@ const PageBuilder = (props) => {
 
 		const findAndPaste = (items) => {
 
-			console.log(selectedId);
 
 			if (selectedId == null) {
 				var index = 0;

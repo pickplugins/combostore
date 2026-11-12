@@ -96,7 +96,6 @@ const Templates = (props) => {
 
 	useEffect(() => {
 
-		console.log(LandingPages);
 
 
 		if (fullpagesGroup == 'Blog') {
@@ -214,7 +213,6 @@ const Templates = (props) => {
 								allowSearch={true}
 								onOptionsChoose={(args) => {
 
-									console.log(args);
 
 
 

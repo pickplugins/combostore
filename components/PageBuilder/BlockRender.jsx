@@ -95,6 +95,7 @@ import ProductVariationsView from './elements/ProductVariationsView';
 import ProductRatingsView from './elements/ProductRatingsView';
 import AddToCartView from './elements/AddToCartView';
 import RelatedProductsView from './elements/RelatedProductsView';
+import ProductQuickViewView from './elements/ProductQuickViewView';
 import ProductUpsellsView from './elements/ProductUpsellsView';
 import ProductCrosssellsView from './elements/ProductCrosssellsView';
 
@@ -213,6 +214,7 @@ const BlockRender = (props) => {
 			case "productRatings": return <ProductRatingsView {...block} index={index} />;
 			case "addToCart": return <AddToCartView {...block} index={index} />;
 			case "relatedProducts": return <RelatedProductsView {...block} index={index} />;
+			case "productQuickView": return <ProductQuickViewView {...block} index={index} />;
 			case "productUpsells": return <ProductUpsellsView {...block} index={index} />;
 			case "productCrosssells": return <ProductCrosssellsView {...block} index={index} />;
 			case "notify": return <NotifyView {...block} index={index} />;

@@ -5,6 +5,8 @@ import { IconSquareRoundedPlusFilled, IconSquareRoundedMinusFilled } from "@tabl
 import * as TablerIcons from '@tabler/icons-react';
 import { elementCssClasses } from "../ElementsDefinition";
 import { withLegacyStepperKeys } from "./AddToCartView";
+import BlockPreview from '../BlockPreview';
+import { usePost } from "../context/PostContext";
 
 /*
 	Builder (canvas) preview of the add-to-cart control.
@@ -17,24 +19,33 @@ import { withLegacyStepperKeys } from "./AddToCartView";
 */
 const AddToCart = (props) => {
 
-	var setDraggingBlock = props?.setDraggingBlock
 
-	var dragOverIndex = props?.dragOverIndex
-	var setDragOverIndex = props?.setDragOverIndex
 
-	var setSelectedId = props?.setSelectedId
-	var selectedId = props?.selectedId
-	var index = props?.index
+	const {
+		block,
+		draggingBlock,
+		setDraggingBlock,
+		dragOverIndex,
+		setDragOverIndex,
+		setSelectedId,
+		selectedId,
+		index,
+		id,
+		type,
+		handleMoveBlock // New prop for recursive drops
+	} = props;
+
+
+
 	var cssSelectors = withLegacyStepperKeys(props?.cssSelectors);
 	var cls = elementCssClasses('addToCart', cssSelectors);
-
-	var id = props?.id;
-	var type = props?.type;
+	const children = props?.children || [];
 
 	var options = props?.options;
 	var iconSize = options?.iconSize ?? 20;
 	var icon = options?.icon;
 	var buttonText = options?.buttonText;
+	var source = options?.source ?? props?.source;
 	/* Same rule as AddToCartView: either spelling being true hides the stepper. */
 	var hideQuantity = options?.hideQuantity === true || options?.hideQuanity === true;
 	var hideButton = options?.hideButton ?? false;
@@ -42,6 +53,11 @@ const AddToCart = (props) => {
 	var [quantity, setquantity] = useState(1);
 
 	const IconX = TablerIcons[icon];
+
+	var productData = usePost();
+
+	var [canAddToCart, setcanAddToCart] = useState(!productData?.addons?.includes('variations'));
+
 
 	return (
 
@@ -57,7 +73,18 @@ const AddToCart = (props) => {
 			onDragOver={e => { e.preventDefault(); setDragOverIndex(index); }}
 			onDragLeave={() => setDragOverIndex(null)}>
 
-			{!hideQuantity && (
+
+
+
+
+<>
+
+</>
+
+{canAddToCart && (
+
+<>
+{!hideQuantity && (
 				<div className={cls('quantity-wrapper')} >
 					<button type="button" aria-label="Decrease quantity" className={cls('quantity-decrease')}
 						onClick={e => { e.stopPropagation(); setquantity(Math.max(1, quantity - 1)); }}
@@ -84,6 +111,32 @@ const AddToCart = (props) => {
 				</div>
 			)}
 
+
+</>
+)}
+{!canAddToCart && (
+
+<>
+{children.map((child, idx) => (
+					<BlockPreview
+						key={child.id}
+						index={`${index}-${idx}`}
+						block={child}
+						draggingBlock={draggingBlock}
+						dragOverIndex={dragOverIndex}
+						setDragOverIndex={setDragOverIndex}
+						setDraggingBlock={setDraggingBlock}
+						setSelectedId={setSelectedId}
+						selectedId={selectedId}
+						handleMoveBlock={handleMoveBlock}
+					/>
+				))}
+
+</>
+)}
+
+
+			
 		</div>
 
 	);

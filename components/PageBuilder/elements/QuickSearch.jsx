@@ -250,9 +250,6 @@ const QuickSearch = (props) => {
 						setloading(false);
 
 
-						setTimeout(() => {
-							sendMetaEvent()
-						}, 500);
 					});
 				}
 			})
@@ -290,7 +287,6 @@ const QuickSearch = (props) => {
 	useEffect(() => {
 		if (debouncedQuery) {
 
-			console.log(debouncedQuery);
 
 
 

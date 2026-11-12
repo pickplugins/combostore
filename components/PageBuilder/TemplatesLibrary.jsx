@@ -97,7 +97,6 @@ const TemplatesLibrary = (props) => {
 						var status = res?.status;
 						var message = res?.message;
 
-						console.log(addNotification);
 
 						if (status == 'failed') {
 							addNotification({ type: 'error', title: 'Added failed', content: `Sorry,  added failed.${JSON.stringify(message)}` })
@@ -167,7 +166,6 @@ const TemplatesLibrary = (props) => {
 
 							var { checked, name } = ev.target;
 
-							console.log(checked);
 							setincludeHeaderFooter(checked)
 
 						}} />
@@ -194,7 +192,6 @@ const TemplatesLibrary = (props) => {
 									onClick={ev => {
 
 
-										console.log(template);
 
 
 										create_template(template);
@@ -218,7 +215,6 @@ const TemplatesLibrary = (props) => {
 
 											<div className={`rounded-md border border-gray-200 bg-white px-2 py-1 text-[11px] text-gray-600 cursor-pointer transition-colors hover:border-brand/40 hover:bg-brand/5 hover:text-brand-700`} onClick={ev => {
 
-												// console.log(template?.pages);
 
 												const headerPage = template?.pages.find(item => item.type === 'header');
 												const footerPage = template?.pages.find(item => item.type === 'footer');
@@ -227,7 +223,6 @@ const TemplatesLibrary = (props) => {
 												var header = headerPage.content
 												var footer = footerPage.content
 
-												// console.log([...header, ...content, ...footer]);
 
 												if (includeHeaderFooter) {
 													setBlocks([...header, ...content, ...footer])

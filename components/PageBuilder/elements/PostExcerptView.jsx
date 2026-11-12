@@ -3,7 +3,7 @@ import React from "react";
 import Link from "next/link";
 import { tablerIcon } from "@/components/icons/TablerIcon";
 import { usePost } from "../context/PostContext";
-import { useProductStore } from "../../../store/productStore";
+import { useActiveVariation } from "../context/VariationScope";
 import { postUrlFor } from "./PostTitleView";
 import { elementCssClasses } from "../ElementsDefinition";
 
@@ -64,16 +64,13 @@ export function PostExcerptMarkup({ cls, id, index, type, options, source, href,
 */
 const PostExcerptView = (props) => {
 
-	var storeActiveVariation = useProductStore((state) => state.activeVariation);
 
 	/* A key the block lacks falls back to the postExcerpt defaults in ElementsDefinition.js. */
 	var cls = elementCssClasses('postExcerpt', props?.cssSelectors);
 
 	const post = usePost();
 
-	var activeVariation = storeActiveVariation && String(storeActiveVariation?.product_id) === String(post?.product_id ?? post?.id)
-		? storeActiveVariation
-		: null;
+	var activeVariation = useActiveVariation(post);
 	var source = String(activeVariation?.description ?? '').trim() ? activeVariation.description : (post?.excerpt ?? '');
 
 	if (!String(source).trim()) return null;

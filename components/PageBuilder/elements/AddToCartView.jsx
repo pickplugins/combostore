@@ -4,11 +4,12 @@ import { useState, useEffect } from "react";
 import { IconSquareRoundedPlusFilled, IconSquareRoundedMinusFilled, IconStarFilled, IconStar, IconIdBadge2 } from "@tabler/icons-react";
 import { tablerIcon } from "@/components/icons/TablerIcon";
 
+import BlockRender from '../BlockRender';
 
 import { useCounterStore } from '../../../store/useCounterStore';
 import { useUtilsStore } from '../../../store/useUtilsStore';
 import { usePost } from "../context/PostContext";
-import { useProductStore } from "../../../store/productStore";
+import { useActiveVariation } from "../context/VariationScope";
 import { trackTikTokEvent } from '@/lib/tiktok';
 
 import { trackFacebookEvent } from '@/lib/facebook/pixel';
@@ -32,12 +33,23 @@ export function withLegacyStepperKeys(cssSelectors) {
 	return result;
 }
 
+/*
+	The cart line's picture, as the URL string the cart draws (CartView reads
+	item.thumbnail). Images arrive as { id, src } objects - a variation's
+	`thumbnail`, a product's `post_thumbnail` - or, from older data, a plain
+	URL. A variation without its own picture shows the product's. The add used
+	to read cartProduct.post_thumbnail, which was never set, and the stepper a
+	variation's post_thumbnail, which variations do not have, so every line
+	showed the placeholder - and a quantity change wiped any picture it had.
+*/
+export function cartThumbnail(product, variation) {
+	var src = (image) => typeof image === 'string' ? image : (image?.src ?? '');
+	return src(variation?.thumbnail) || src(product?.post_thumbnail) || src(product?.thumbnail) || product?.post_thumbnail_url || '';
+}
+
 const AddToCart = (props) => {
 
 
-	var activeVariation = useProductStore(
-		(state) => state.activeVariation
-	);
 
 
 
@@ -65,18 +77,26 @@ const AddToCart = (props) => {
 
 	var icon = options?.icon;
 	var buttonText = options?.buttonText;
+	var source = options?.source ?? props?.source;
+
 	/* The definition, panel and AI prompt write hideQuantity; older pages saved the misspelled
 		 hideQuanity, sometimes beside a hideQuantity: false from the definition, so either one
 		 being true hides it. The panel drops the misspelled key when it saves. */
 	var hideQuantity = options?.hideQuantity === true || options?.hideQuanity === true;
 	var hideButton = options?.hideButton ?? false;
 
+	var children = Array.isArray(props?.children) ? props.children : [];
+	var index = props?.index;
 
 
 	var productData = usePost();
 
+	/* The picked variation, for this product only: on an archive every card is
+		 a different product, and inside a quick view the pick is the quick view's
+		 own (VariationScope.jsx), so this card keeps showing its quick view. */
+	var activeVariation = useActiveVariation(productData);
 
-	console.log(productData);
+
 
 
 
@@ -184,7 +204,7 @@ const AddToCart = (props) => {
 			cartProduct.sale_price = activeVariation?.sale_price
 			cartProduct.regular_price = activeVariation?.regular_price
 			cartProduct.trade_price = activeVariation?.trade_price
-			cartProduct.thumbnail = activeVariation?.thumbnail
+			cartProduct.thumbnail = cartThumbnail(productData, activeVariation)
 			cartProduct.attributes = activeVariation?.attributes
 
 		}
@@ -194,7 +214,6 @@ const AddToCart = (props) => {
 
 			var price_type = productData?.price_type
 
-			console.log(productData);
 
 
 
@@ -209,7 +228,7 @@ const AddToCart = (props) => {
 				cartProduct.title = `${productData?.title}`
 
 				cartProduct.trade_price = productData?.trade_price
-				cartProduct.thumbnail = productData?.thumbnail
+				cartProduct.thumbnail = cartThumbnail(productData)
 				cartProduct.bulk_prices = productData?.bulk_prices
 				//return;
 			}
@@ -226,7 +245,7 @@ const AddToCart = (props) => {
 				cartProduct.title = `${productData?.title}`
 
 				cartProduct.trade_price = productData?.trade_price
-				cartProduct.thumbnail = productData?.thumbnail
+				cartProduct.thumbnail = cartThumbnail(productData)
 				//return;
 			}
 
@@ -266,19 +285,17 @@ const AddToCart = (props) => {
 			trade_price: cartProduct?.trade_price,
 
 			bulk_prices: cartProduct?.bulk_prices,
-			thumbnail: cartProduct?.post_thumbnail?.src,
+			thumbnail: cartProduct?.thumbnail,
 			metaData: cartProduct?.metaData,
 			attributes: cartProduct?.attributes
 		})
 
 
-		console.log(cartProduct);
 		setcartToggle(true)
 
 		var trackPrams = { productId: productId, userid: userDataX?.id, event: "addToCart", source: "cartButton" }
 
 		trackPageVisit(trackPrams);
-		// sendMetaEvent()
 		sendTikTokEvent()
 
 
@@ -286,7 +303,6 @@ const AddToCart = (props) => {
 
 		const eventId = generateFacebookEventId();
 
-		console.log(eventId);
 
 
 		trackFacebookEvent(
@@ -316,6 +332,9 @@ const AddToCart = (props) => {
 
 
 	}
+
+
+
 
 
 	const areAllAttributesSelected = (attributes, activeVariation) => {
@@ -423,6 +442,19 @@ const AddToCart = (props) => {
 		<>
 
 
+
+			{!canAddToCart && productData?.addons?.includes('variations') && (
+
+				<>
+					{children.map((child, idx) => (
+						<BlockRender key={child.id ?? idx} index={`${index}-${idx}`} block={child} />
+					))}
+
+				</>
+
+			)}
+
+
 			{/* Sold out: the button stays (so the layout holds) but cannot add, and the stepper goes. */}
 			{canAddToCart && !purchaseBlocked && outOfStock && !hideButton && (
 				<div id={id} type={type} className={cls('*')}>
@@ -493,7 +525,7 @@ const AddToCart = (props) => {
 											sale_price: activeVariation?.sale_price,
 											trade_price: activeVariation?.trade_price,
 											bulk_prices: activeVariation?.bulk_prices,
-											thumbnail: activeVariation?.post_thumbnail?.src,
+											thumbnail: cartThumbnail(productData, activeVariation),
 											attributes: activeVariation?.attributes,
 											metaData: activeVariation?.metaData
 										})
@@ -513,7 +545,7 @@ const AddToCart = (props) => {
 											sale_price: productData?.sale_price,
 											trade_price: productData?.trade_price,
 											bulk_prices: productData?.bulk_prices,
-											thumbnail: productData?.post_thumbnail?.src,
+											thumbnail: cartThumbnail(productData),
 											metaData: productData?.metaData
 										})
 
@@ -593,7 +625,7 @@ const AddToCart = (props) => {
 											sale_price: activeVariation?.sale_price,
 											trade_price: activeVariation?.trade_price,
 											bulk_prices: activeVariation?.bulk_prices,
-											thumbnail: activeVariation?.post_thumbnail?.src,
+											thumbnail: cartThumbnail(productData, activeVariation),
 											attributes: activeVariation?.attributes,
 											metaData: activeVariation?.metaData
 										})
@@ -613,7 +645,7 @@ const AddToCart = (props) => {
 											sale_price: productData?.sale_price,
 											trade_price: productData?.trade_price,
 											bulk_prices: productData?.bulk_prices,
-											thumbnail: productData?.post_thumbnail?.src,
+											thumbnail: cartThumbnail(productData),
 											metaData: productData?.metaData
 										})
 
@@ -635,6 +667,7 @@ const AddToCart = (props) => {
 							</button>
 						</div>
 					)}
+
 
 
 					{!hideButton && (

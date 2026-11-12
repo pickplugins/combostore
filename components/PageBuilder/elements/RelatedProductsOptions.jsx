@@ -39,7 +39,6 @@ const RelatedProductsOptions = (props) => {
 
 	function onChangeQuery(queryPrams) {
 
-		console.log(queryPrams);
 
 
 		var optionsX = { ...options }

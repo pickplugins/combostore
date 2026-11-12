@@ -69,6 +69,7 @@ import WhatsappButton from './element-layouts/WhatsappButton'
 import LoginByPhone from './element-layouts/LoginByPhone'
 import Cart from './element-layouts/Cart'
 import Button from './element-layouts/Button'
+import ProductQuickView from './element-layouts/ProductQuickView'
 
 
 
@@ -107,7 +108,6 @@ const Templates = (props) => {
 
 		var type = selectedBlock.type
 
-		console.log(type);
 
 
 		if (type == 'commentsGrid') {
@@ -279,6 +279,9 @@ const Templates = (props) => {
 		}
 		else if (type == 'button') {
 			setlayouts(Button)
+		}
+		else if (type == 'productQuickView') {
+			setlayouts(ProductQuickView)
 		}
 
 

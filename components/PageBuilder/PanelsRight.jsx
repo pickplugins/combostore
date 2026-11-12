@@ -60,7 +60,6 @@ const PanelsRight = (props) => {
 
 		const data = JSON.stringify(selectedBlock);
 
-		console.log(data);
 
 
 		//localStorage.setItem('combo_copied_blocks', data);

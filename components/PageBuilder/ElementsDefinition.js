@@ -1147,6 +1147,64 @@ const elements = [
 		},
 		group: ['layout']
 	},
+	{
+		type: "productQuickView",
+		label: "Product Quick View",
+		icon: null,
+		description: "A button that opens a popover containing additional content, actions, information, or interactive elements.",
+		ai: {
+			purpose: "Provide access to secondary content or actions without navigating away from the current page.",
+			useFor: [
+				"Additional product information",
+				"Help or instructions",
+				"Quick action panels",
+				"Product details",
+				"Filters or settings",
+				"Secondary navigation",
+				"Expandable content"
+			],
+			keywords: [
+				"popover",
+				"popup",
+				"popover button",
+				"overlay",
+				"quick view",
+				"additional information",
+				"secondary content",
+				"modal-like content"
+			],
+			rules: [
+				"Use when content should appear after clicking a button.",
+				"Use for secondary content that should not permanently occupy page space.",
+				"Place interactive or informational content inside the popover.",
+				"Keep the popover content focused on a single related purpose.",
+				"Use a clear and descriptive button label."
+			],
+			intent: [
+				"information",
+				"interaction",
+				"conversion",
+				"quick-action"
+			]
+		},
+		options: {
+			buttonLabel: 'Quick View',
+			buttonIcon: 'IconEye',
+			position: 'fixedMiddle',
+		},
+		children: [],
+		cssSelectors: {
+			'*': { classes: 'relative' },
+			'button': { classes: 'inline-flex items-center justify-center gap-2 max-w-fit cursor-pointer rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-gray-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-900/40 focus-visible:ring-offset-2' },
+			'button-icon': { classes: 'flex shrink-0 items-center' },
+			'button-label': { classes: 'whitespace-nowrap' },
+			'backdrop': { classes: 'fixed inset-0 z-[998] bg-gray-900/50 backdrop-blur-[2px]' },
+			'popover': { classes: 'z-[999] overflow-y-auto overscroll-contain bg-white text-gray-900 shadow-2xl ring-1 ring-black/5 rounded-2xl' },
+			'popover-close': { classes: 'mr-3 mt-3 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-white/90 text-gray-500 shadow-sm ring-1 ring-black/5 backdrop-blur transition-colors hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-900/40' },
+			'popover-content': { classes: 'p-5 sm:p-8' },
+		},
+		group: ['product']
+	},
 
 	/* ====================================================================
 		CONTENT BLOCKS (group 'blocks') - Ready-made content pieces: features, highlights, contact details.
@@ -4397,6 +4455,7 @@ const elements = [
 			block's old classes over to the new keys.
 		*/
 		deprecatedCssSelectors: ['quantity-plus', 'quantity-minus'],
+		children: [],
 		group: ['product']
 	},
 

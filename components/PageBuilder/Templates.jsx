@@ -335,7 +335,7 @@ const Templates = (props) => {
 						var meta = res?.meta;
 
 
-						console.log(res);
+
 						// return;
 
 						if (content == undefined) {
@@ -545,7 +545,6 @@ const Templates = (props) => {
 						var total = parseInt(res?.total);
 						var max_pages = parseInt(res?.max_pages);
 
-						console.log(orders);
 
 
 
@@ -645,7 +644,6 @@ const Templates = (props) => {
 
 	useEffect(() => {
 
-		console.log('useEffect called');
 
 		get_templates();
 		get_active_template()

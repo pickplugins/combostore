@@ -1,0 +1,52 @@
+/**
+ * Haatbox Grocery's demo catalog (lib/demo/catalog.js builds it). Slugs
+ * match the template's aisles (vegetables ... bazaar-box) and the deals /
+ * organic tags; a product sits in every aisle it belongs to.
+ */
+export default {
+  about: 'Fresh groceries delivered in 60 minutes across the city.',
+  colors: ['DCFCE7', 'ECFCCB', 'FEF9C3', 'FFEDD5', 'E0F2FE'],
+  ink: '14532D',
+  categories: [['Vegetables', 'vegetables'], ['Fruits', 'fruits'], ['Fish & Meat', 'fish-meat'], ['Dairy & Breakfast', 'dairy-breakfast'], ['Staples', 'staples'], ['Snacks & Beverages', 'snacks-beverages'], ['Household', 'household'], ['Bakery', 'bakery'], ['Spices', 'spices'], ['Beverages', 'beverages'], ['Baby Care', 'baby-care'], ['Pet Care', 'pet-care'], ['Bazaar Box', 'bazaar-box']],
+  tags: [['Deals', 'deals'], ['Organic', 'organic'], ['Bestseller', 'bestseller']],
+  brands: [['Pran', 'pran'], ['Radhuni', 'radhuni'], ['ACI Pure', 'aci-pure'], ['Fresh', 'fresh'], ['Haatbox Farm', 'haatbox-farm']],
+  options: {
+    weight: ['Weight', [['500g', 0], ['1kg', 60]]],
+  },
+  products: [
+    ['Fresh Potato (Alu)', 'vegetables', 60, { sale: 55, brand: 'haatbox-farm', tags: 'deals bestseller', vary: 'weight', featured: true }],
+    ['Deshi Tomato', 'vegetables', 90, { brand: 'haatbox-farm', tags: 'organic', vary: 'weight' }],
+    ['Green Chilli 250g', 'vegetables', 40, { brand: 'haatbox-farm' }],
+    ['Sagar Banana (12 pcs)', 'fruits', 140, { sale: 120, brand: 'haatbox-farm', tags: 'deals' }],
+    ['Himsagar Mango 1kg', 'fruits', 180, { brand: 'haatbox-farm', tags: 'organic bestseller' }],
+    ['Rui Fish (Whole) 1kg', 'fish-meat', 420, { brand: 'haatbox-farm', tags: 'bestseller' }],
+    ['Broiler Chicken (Skinless) 1kg', 'fish-meat', 330, { sale: 310, brand: 'haatbox-farm', tags: 'deals' }],
+    ['Farm Fresh Eggs (12 pcs)', 'dairy-breakfast', 165, { brand: 'haatbox-farm', tags: 'bestseller' }],
+    ['Pasteurised Milk 1L', 'dairy-breakfast beverages', 95, { brand: 'pran' }],
+    ['Miniket Rice 5kg', 'staples', 420, { sale: 395, brand: 'aci-pure', tags: 'deals bestseller' }],
+    ['Soybean Oil 2L', 'staples', 360, { brand: 'fresh' }],
+    ['Red Lentil (Masoor) 1kg', 'staples', 135, { brand: 'aci-pure', tags: 'organic' }],
+    ['Potato Crackers', 'snacks-beverages', 30, { brand: 'pran', tags: 'deals' }],
+    ['Mango Juice 1L', 'snacks-beverages beverages', 110, { brand: 'pran' }],
+    ['Black Tea 400g', 'beverages', 220, { brand: 'aci-pure' }],
+    ['Dishwashing Liquid 500ml', 'household', 145, { sale: 125, brand: 'aci-pure', tags: 'deals' }],
+    ['Laundry Powder 1kg', 'household', 180, { brand: 'fresh' }],
+    ['Milk Bread', 'bakery', 65, { brand: 'fresh', tags: 'bestseller' }],
+    ['Butter Cookies 300g', 'bakery snacks-beverages', 160, { brand: 'pran' }],
+    ['Turmeric Powder 200g', 'spices', 95, { brand: 'radhuni', tags: 'organic' }],
+    ['Biryani Masala', 'spices', 65, { brand: 'radhuni', tags: 'bestseller' }],
+    ['Baby Diapers M (40)', 'baby-care', 1290, { sale: 1190, brand: 'fresh', tags: 'deals' }],
+    ['Baby Wipes (80)', 'baby-care', 190, { brand: 'fresh' }],
+    ['Cat Food Tuna 1.2kg', 'pet-care', 890, { brand: 'fresh' }],
+    ['Dog Food Chicken 3kg', 'pet-care', 1650, { brand: 'fresh', stock: 0 }],
+    ['Weekly Bazaar Box (Family of 4)', 'bazaar-box vegetables fruits', 1990, { sale: 1790, brand: 'haatbox-farm', tags: 'deals bestseller' }],
+    ['Organic Veg Box', 'bazaar-box vegetables', 990, { brand: 'haatbox-farm', tags: 'organic' }],
+  ],
+  blogCategories: [['Recipes', 'recipes'], ['Healthy Living', 'healthy-living'], ['News', 'news']],
+  posts: [
+    ['A Week of Easy Weeknight Dinners', 'recipes', 'Seven family meals from one Bazaar Box.'],
+    ['How to Keep Vegetables Fresh Longer', 'healthy-living', 'Storage tips that cut waste and save money.'],
+    ['Why We Source From Local Farms', 'news', 'Meet the growers behind Haatbox Farm.'],
+    ['Five-Minute Breakfasts for Busy Mornings', 'recipes', 'Eggs, bread and fruit - done before the kettle boils.'],
+  ],
+};

@@ -121,7 +121,6 @@ const CROSS_SELL_BLOCKS = [{
 export default function CartCrossSells({ cls, cartItems, title = defaultCartCrossSellsTitle, limit = defaultCartCrossSellsLimit }) {
 	var query = useCartCrossSellsQuery(cartItems, limit);
 
-	console.log('CartCrossSells query:', query, 'cartItems:', cartItems, 'title:', title, 'limit:', limit);
 
 
 	if (!query) return null;

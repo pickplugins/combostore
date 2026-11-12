@@ -35,7 +35,7 @@ const manifest = {
 	version: "1.0.0",
 	description: "Order screening configuration - login and OTP requirements, rate limits by IP and phone, duplicate detection, reCAPTCHA and mobile fraud scoring.",
 
-	enabled: false,
+	enabled: true,
 
 	/*
 		`parent` names a core group from Sidebar.jsx's NAVS; an entry whose

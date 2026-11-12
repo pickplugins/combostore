@@ -172,7 +172,7 @@ const FraudChecker = () => {
 	const active = enabledCount(config);
 
 	return (
-		<div className="flex flex-col gap-5 py-5">
+		<div className="flex flex-col gap-5 p-10">
 
 			{/* Header */}
 			<div className="flex flex-wrap items-start justify-between gap-3">

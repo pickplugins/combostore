@@ -6,7 +6,7 @@ import { usePost } from "../context/PostContext";
 import { Splide, SplideSlide } from '@splidejs/react-splide';
 import '@splidejs/react-splide/css';
 import Image from "next/image";
-import { useProductStore } from "../../../store/productStore";
+import { useActiveVariation } from "../context/VariationScope";
 import { elementCssClasses } from "../ElementsDefinition";
 import { canOptimizeImage, sizesAuto } from "@/lib/imageOptimization.mjs";
 
@@ -23,7 +23,10 @@ import { canOptimizeImage, sizesAuto } from "@/lib/imageOptimization.mjs";
 export function productGalleryImages(product) {
 	var variationImages = (Array.isArray(product?.variations) ? product.variations : [])
 		.map(variation => variation?.thumbnail)
-		.filter(thumbnail => thumbnail && typeof thumbnail === 'object' && !Array.isArray(thumbnail));
+		.filter(thumbnail => thumbnail && typeof thumbnail === 'object' && !Array.isArray(thumbnail))
+		/* Variations often share a picture (one phone, several storage sizes): show it once. Repeats were
+		   duplicate slides with duplicate React keys. */
+		.filter((thumbnail, index, all) => all.findIndex(other => (other?.id ?? other?.src) === (thumbnail?.id ?? thumbnail?.src)) === index);
 	if (variationImages.length > 0) return variationImages;
 
 	var gallery = (Array.isArray(product?.gallery) ? product.gallery : []).filter(item => item && typeof item === 'object');
@@ -122,12 +125,13 @@ export function ProductGalleryMarkup({ cls, id, index, type, options, images, ti
 
 const ProductGalleryView = (props) => {
 
-	var activeVariation = useProductStore((state) => state.activeVariation);
 
 	/* A key the block lacks falls back to the productGallery defaults in ElementsDefinition.js. */
 	var cls = elementCssClasses('productGallery', props?.cssSelectors);
 
 	const product = usePost();
+	/* The picked variation, for this product only - see VariationScope.jsx. */
+	var activeVariation = useActiveVariation(product);
 
 	return (
 		<ProductGalleryMarkup

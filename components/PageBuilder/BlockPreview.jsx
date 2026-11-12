@@ -50,6 +50,7 @@ import Menu from './elements/Menu';
 import MenuItem from './elements/MenuItem';
 import Popup from './elements/Popup';
 import RelatedProducts from './elements/RelatedProducts';
+import ProductQuickView from './elements/ProductQuickView';
 // import Comments from './elements/Comments';
 // import CommentsForm from './elements/CommentsForm';
 // import CommentsList from './elements/CommentsList';
@@ -209,6 +210,7 @@ const BlockPreview = (props) => {
 			/* The type is relatedProducts; only the snake-case key was registered, so the canvas drew nothing. The old key is kept as an alias. */
 			relatedProducts: RelatedProducts,
 			related_products: RelatedProducts,
+			productQuickView: ProductQuickView,
 			// commentsForm: CommentsForm,
 			// comments: Comments,
 			// commentsList: CommentsList,

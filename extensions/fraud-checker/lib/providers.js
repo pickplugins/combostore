@@ -41,7 +41,7 @@ export const PROVIDERS = [
 	{
 		id: 'loginRequired',
 		label: 'Login Required',
-		comingSoon: true,
+		comingSoon: false,
 		summary: 'Only signed-in customers may place an order.',
 		fields: [
 			{ key: 'enabled', type: 'toggle', label: 'Enable', help: 'Require a customer to sign in before an order can be submitted' },

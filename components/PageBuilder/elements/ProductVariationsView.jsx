@@ -5,7 +5,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { usePost } from "../context/PostContext";
 import { useUtilsStore } from "../../../store/useUtilsStore";
 import { IconLibraryPhoto, IconCheckbox, IconSquare, IconFidgetSpinner, IconTrash, IconStarFilled, IconStar, IconX } from "@tabler/icons-react";
-import { useProductStore } from "../../../store/productStore";
+import { useSetActiveVariation } from "../context/VariationScope";
 import { elementCssClasses } from "../ElementsDefinition";
 import { isDefaultVariation, isVariationEnabled } from "../../../lib/variationDefaults";
 
@@ -90,14 +90,10 @@ const ProductVariationsView = (props) => {
 
 
 
-	var setActiveVariation = useProductStore(
-		(state) => state.setActiveVariation
-	);
+	/* The nearest VariationScope (a quick view) or, outside one, the global store. */
+	var setActiveVariation = useSetActiveVariation();
 
 
-	var activeVariation = useProductStore(
-		(state) => state.activeVariation
-	);
 
 
 

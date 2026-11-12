@@ -2,7 +2,7 @@ import PropTypes from "prop-types";
 import React from "react";
 import { usePost } from "../context/PostContext";
 import { tablerIcon } from "@/components/icons/TablerIcon";
-import { useProductStore } from "../../../store/productStore";
+import { useActiveVariation } from "../context/VariationScope";
 import { elementCssClasses } from "../ElementsDefinition";
 
 /*
@@ -40,7 +40,6 @@ export function ProductSkuMarkup({ cls, id, index, type, options, sku, rootClass
 
 const ProductSkuView = (props) => {
 
-	var storeActiveVariation = useProductStore((state) => state.activeVariation);
 
 	/* A key the block lacks falls back to the productSku defaults in ElementsDefinition.js. */
 	var cls = elementCssClasses('productSku', props?.cssSelectors);
@@ -48,9 +47,7 @@ const ProductSkuView = (props) => {
 	const product = usePost();
 
 	/* The picked variation lives in a global store; only honour it for this product (same check as the price block). */
-	var activeVariation = storeActiveVariation && String(storeActiveVariation?.product_id) === String(product?.product_id ?? product?.id)
-		? storeActiveVariation
-		: null;
+	var activeVariation = useActiveVariation(product);
 
 	var sku = skuFor(product, activeVariation);
 	/* Shoppers used to see a bare "SKU:" for products without one. */

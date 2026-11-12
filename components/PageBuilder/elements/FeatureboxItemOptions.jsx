@@ -47,7 +47,6 @@ const ListOptions = (props) => {
 
 				<div className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2 py-1 text-xs font-medium text-gray-600 cursor-pointer transition-colors hover:border-brand/40 hover:bg-brand/5 hover:text-brand-700 w-fit" onClick={ev => {
 
-					console.log(props);
 
 					handleMoveBlock({ paletteType: 'menuItem' }, id, 'inside')
 

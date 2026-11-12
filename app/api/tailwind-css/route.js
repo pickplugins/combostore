@@ -1,5 +1,6 @@
 import { generateTailwindCSS, normalizeClasses } from "../../../lib/generateTailwindCSS";
 import { templateFontTokens } from "../../../lib/templateTheme";
+import { DEMO_WITHOUT_SERVER } from "../../../lib/demo/config";
 
 /*
 	The active site template's custom font classes (font-<name>, set in
@@ -8,6 +9,11 @@ import { templateFontTokens } from "../../../lib/templateTheme";
 	the server unreachable, it is "" and those classes are simply not emitted.
 */
 async function activeTemplateFontTokens() {
+  /* A demo store with no server: the demo template's fonts (lib/demo/server.js). */
+  if (DEMO_WITHOUT_SERVER) {
+    const { demoTemplateSettings } = await import("../../../lib/demo/server");
+    return templateFontTokens((await demoTemplateSettings())?.meta ?? {});
+  }
   const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
   if (!serverUrl) return "";
   try {

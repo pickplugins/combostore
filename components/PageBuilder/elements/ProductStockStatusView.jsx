@@ -2,7 +2,7 @@ import PropTypes from "prop-types";
 import React from "react";
 import { usePost } from "../context/PostContext";
 import { tablerIcon } from "@/components/icons/TablerIcon";
-import { useProductStore } from "../../../store/productStore";
+import { useActiveVariation } from "../context/VariationScope";
 import { elementCssClasses } from "../ElementsDefinition";
 
 /*
@@ -82,7 +82,6 @@ export function ProductStockStatusMarkup({ cls, id, index, type, options, status
 
 const ProductStockStatusView = (props) => {
 
-	var storeActiveVariation = useProductStore((state) => state.activeVariation);
 
 	/* A key the block lacks falls back to the productStockStatus defaults in ElementsDefinition.js. */
 	var cls = elementCssClasses('productStockStatus', props?.cssSelectors);
@@ -90,9 +89,7 @@ const ProductStockStatusView = (props) => {
 	const product = usePost();
 
 	/* The picked variation lives in a global store; only honour it for this product (same check as the price block). */
-	var activeVariation = storeActiveVariation && String(storeActiveVariation?.product_id) === String(product?.product_id ?? product?.id)
-		? storeActiveVariation
-		: null;
+	var activeVariation = useActiveVariation(product);
 
 	return (
 		<ProductStockStatusMarkup

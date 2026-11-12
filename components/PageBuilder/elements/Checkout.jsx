@@ -182,7 +182,6 @@ const Checkout = (props) => {
 			next[index] = { label: name, value: index };
 		});
 
-		console.log(next);
 
 
 		setstatesList(next);
@@ -253,10 +252,6 @@ const Checkout = (props) => {
 			const latestOrderData = orderDataRef.current;
 			const latestCheckoutData = checkoutDataRef.current;
 
-			console.log("User left");
-			console.log("contactAdded:", latestContactAdded);
-			console.log("orderData:", latestOrderData);
-			console.log("checkoutData:", latestCheckoutData);
 
 			// Order already exists
 			if (latestOrderData?.order_id != null) {
@@ -338,10 +333,6 @@ const Checkout = (props) => {
 	// useEffect(() => {
 
 
-	// 	console.log(checkoutData?.billing_phone);
-	// 	console.log(checkoutData?.billing_name);
-
-
 
 
 	// 	if (checkoutData?.billing_name?.length == 0) {
@@ -391,10 +382,6 @@ const Checkout = (props) => {
 	// 	// }
 
 
-
-	// 	console.log(checkoutData);
-	// 	console.log(contactAdded);
-	// 	console.log(readyToSubmitOrder);
 
 
 
@@ -612,12 +599,8 @@ const Checkout = (props) => {
 
 						setloading(false);
 
-						sendMetaEvent({ event: 'Purchase' })
 
-						if (checkoutData?.subscription?.enable) {
-							sendMetaEvent({ event: 'Subscribe' })
 
-						}
 
 						setTimeout(() => {
 						}, 500);
@@ -693,21 +676,18 @@ const Checkout = (props) => {
 
 	function create_order(checkoutData) {
 
-		console.log('create_order #1');
 
 
 		if (readyToSubmitOrder?.error) {
 			return;
 		}
 
-		console.log('create_order #2');
 
 
 		if (orderData?.order_id) {
 			return;
 		}
 
-		console.log('create_order #3');
 
 
 		//setloading(true);
@@ -749,7 +729,7 @@ const Checkout = (props) => {
 						var status = res?.status;
 						var message = res?.message;
 
-						console.log(res);
+
 
 
 						setorderData(res)
@@ -768,12 +748,7 @@ const Checkout = (props) => {
 
 						//setloading(false);
 
-						//sendMetaEvent({ event: 'Purchase' })
 
-						if (checkoutData?.subscription?.enable) {
-							//sendMetaEvent({ event: 'Subscribe' })
-
-						}
 
 						setTimeout(() => {
 						}, 500);
@@ -841,12 +816,8 @@ const Checkout = (props) => {
 
 						setloading(false);
 
-						sendMetaEvent({ event: 'Purchase' })
 
-						if (checkoutData?.subscription?.enable) {
-							sendMetaEvent({ event: 'Subscribe' })
 
-						}
 
 						setTimeout(() => {
 						}, 500);
@@ -943,37 +914,6 @@ const Checkout = (props) => {
 
 	}
 
-	const sendMetaEvent = async (prams) => {
-
-		var eventName = prams?.event
-
-		const eventId = window.crypto.randomUUID();
-
-
-
-
-		// 1️⃣ Browser Pixel Event
-		if (window.fbq) {
-			window.fbq("track", eventName, {
-				value: cartTotalPay,
-				currency: "BDT",
-				eventID: eventId, // important!
-			});
-		}
-
-		// 2️⃣ Server-Side Event
-		await fetch("/api/meta-event", {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-			},
-			body: JSON.stringify({
-				event_name: eventName,
-				event_id: eventId,
-				value: cartTotalPay,
-			}),
-		});
-	};
 
 
 
@@ -1036,7 +976,6 @@ const Checkout = (props) => {
 							<input type="text" className={`${cssSelectors['input-text']?.classes}  `} value={checkoutData?.billing_phone} placeholder="" onChange={ev => {
 								var value = ev.target.value;
 
-								console.log(value);
 
 
 								setcheckoutData({ ...checkoutData, billing_phone: value })
@@ -1488,9 +1427,9 @@ const Checkout = (props) => {
 									if (enable) {
 										return (
 											/* Display only: choosing a method here would render the
-											   payment branches below, and several of those are live
-											   buttons this preview must not run. CheckoutView has the
-											   selectable tiles. */
+												 payment branches below, and several of those are live
+												 buttons this preview must not run. CheckoutView has the
+												 selectable tiles. */
 											<div key={key} className="flex items-center gap-2 p-2 rounded-sm border border-2 text-sm border-gray-200">
 
 
@@ -1578,7 +1517,7 @@ const Checkout = (props) => {
 										}}
 										onClose={() => setShowAamarPay(false)}
 										onPaymentStarted={(transactionId) => {
-											// console.log("aamarPay transaction started:", transactionId);
+											console.log("aamarPay transaction started:", transactionId);
 										}}
 									/>
 
@@ -1672,7 +1611,7 @@ const Checkout = (props) => {
 										total={checkoutData?.total_amount}
 										onPaymentSuccess={(payment) => {
 
-											// console.log("Bkash payment successful:", payment);
+											console.log("Bkash payment successful:", payment);
 
 											// clearCart();
 											// closeCart();

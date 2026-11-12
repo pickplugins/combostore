@@ -561,7 +561,6 @@ const EditorActions = (props) => {
 		};
 		postData = JSON.stringify(postData);
 
-		console.log(postData);
 
 
 		try {
@@ -580,7 +579,6 @@ const EditorActions = (props) => {
 
 			const res = await response.json();
 
-			console.log(res);
 
 			var message = res?.message;
 

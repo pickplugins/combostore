@@ -5,6 +5,9 @@ const storeHost = storeImageHost();
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  /* A second instance (e.g. a demo store beside the dev server) needs its own build folder. */
+  ...(process.env.NEXT_DIST_DIR ? { distDir: process.env.NEXT_DIST_DIR } : {}),
+
   // basePath: '/dashboard',
 
   publicRuntimeConfig: {

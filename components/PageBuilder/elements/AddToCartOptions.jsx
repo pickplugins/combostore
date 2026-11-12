@@ -76,6 +76,26 @@ const AddToCartOptions = (props) => {
 					</div>
 				</div>
 
+<div className="flex flex-col gap-2">
+					<label htmlFor="" className="text-xs font-medium text-gray-600">Source</label>
+					<div>
+						<select className="w-full !rounded-lg !border !border-gray-300 !bg-white !px-2.5 !py-1.5 !text-xs !text-gray-700 !shadow-none !outline-none transition-colors focus:!border-brand focus:!ring-4 focus:!ring-brand/10" value={options?.source || 'fixedMiddle'} onChange={ev => {
+
+							var value = ev.target.value;
+
+							var optionsX = { ...options }
+							optionsX.source = value
+							updateBlock('options', optionsX)
+
+						}} >
+							<option value="">Choose</option>
+							<option value="product">Product</option>
+							<option value="archive">Archive</option>
+
+						</select>
+					</div>
+				</div>
+
 				<CssSelectors cssSelectors={cssSelectors} updateBlock={updateBlock} />
 
 			</div>

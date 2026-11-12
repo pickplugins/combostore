@@ -264,7 +264,6 @@ const TemplateParts = (props) => {
 
 						var content = res?.content;
 
-						console.log(res);
 
 
 
@@ -357,7 +356,6 @@ const TemplateParts = (props) => {
 			scope: 'builder',
 		};
 
-		console.log(postData);
 
 
 		postData = JSON.stringify(postData);
@@ -383,7 +381,6 @@ const TemplateParts = (props) => {
 						var meta = res?.meta;
 
 
-						console.log(res);
 
 						// return;
 

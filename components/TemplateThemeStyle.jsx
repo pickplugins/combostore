@@ -1,4 +1,5 @@
 import { templateThemeCss, templateFontStylesheets } from "@/lib/templateTheme";
+import { DEMO_WITHOUT_SERVER } from "@/lib/demo/config";
 
 /*
 	The active site template's fonts and colors, for <head> (app/layout.jsx):
@@ -9,9 +10,14 @@ import { templateThemeCss, templateFontStylesheets } from "@/lib/templateTheme";
 
 	Fetched from combo-store/v2/get_template_settings and kept for a minute,
 	so a change in Template Settings shows within about that long. Renders
-	nothing when the request fails or nothing is set.
+	nothing when the request fails or nothing is set. A demo store with no
+	server reads the demo template's settings instead (lib/demo/server.js).
 */
 async function getTemplateSettings() {
+	if (DEMO_WITHOUT_SERVER) {
+		const { demoTemplateSettings } = await import("@/lib/demo/server");
+		return demoTemplateSettings();
+	}
 	const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 	if (!serverUrl) return null;
 	try {

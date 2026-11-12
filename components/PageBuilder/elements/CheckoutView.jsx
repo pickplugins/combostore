@@ -498,7 +498,6 @@ const CheckoutView = (props) => {
 		prams.country = country
 		prams.city = city
 
-		console.log(prams);
 
 
 
@@ -1080,7 +1079,7 @@ const CheckoutView = (props) => {
 
 						var methods = res?.methods;
 
-						console.log(res);
+
 
 
 

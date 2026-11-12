@@ -17,7 +17,6 @@ import { createRegistry } from "./registry";
 import loyaltyPoints from "./loyalty-points/extension.config";
 import discountRules from "./discount-rules/extension.config";
 import requestQuote from "./request-quote/extension.config";
-import quickView from "./quick-view/extension.config";
 import currencySwitcher from "./currency-switcher/extension.config";
 import countdownTimer from "./countdown-timer/extension.config";
 import fraudChecker from "./fraud-checker/extension.config";
@@ -29,7 +28,6 @@ const MANIFESTS = [
 	loyaltyPoints,
 	discountRules,
 	requestQuote,
-	quickView,
 	currencySwitcher,
 	countdownTimer,
 	fraudChecker,
