@@ -1,0 +1,60 @@
+/**
+ * Dolna Baby Essentials' demo catalog (lib/demo/catalog.js builds it).
+ * Slugs match the template: the eight need categories, the size and stage
+ * tags, bestseller / new / bundle, and the brands. `desc` is the card's
+ * mint line (pack size, weight range or stage).
+ */
+export default {
+  about: 'Genuine baby essentials, dates checked on every pack.',
+  colors: ['EAF3FF', 'FFF0E9', 'FFF8E3', 'E4F7F1', 'F1EDFF'],
+  ink: '1F2A44',
+  categories: [['Diapers', 'diapers'], ['Wipes', 'wipes'], ['Formula', 'formula'], ['Baby Food', 'baby-food'], ['Feeding', 'feeding'], ['Bath & Skin Care', 'bath-skincare'], ['Newborn', 'newborn'], ['Mum Care', 'mom-care']],
+  tags: [['Bestseller', 'bestseller'], ['New', 'new'], ['Bundle', 'bundle'], ['Size NB', 'size-nb'], ['Size S', 'size-s'], ['Size M', 'size-m'], ['Size L', 'size-l'], ['Size XL', 'size-xl'], ['Stage 1', 'stage-1'], ['Stage 2', 'stage-2'], ['Stage 3', 'stage-3'], ['Stage 4', 'stage-4'], ['Sensitive Skin', 'sensitive']],
+  brands: [['Snugglo', 'snugglo'], ['Milkway', 'milkway'], ['PureDrop', 'puredrop'], ['Nestling', 'nestling'], ['Bubba Care', 'bubba-care'], ['Tulip Baby', 'tulip-baby']],
+  options: {
+    size: ['Size', [['NB (up to 5 kg)', 0], ['S (3-8 kg)', 0], ['M (6-11 kg)', 0], ['L (9-14 kg)', 80], ['XL (12-17 kg)', 120]]],
+    pack: ['Pack', [['1 pack', 0], ['Pack of 3', 1890]]],
+    tin: ['Tin', [['400 g', 0], ['800 g', 1150]]],
+  },
+  products: [
+    ['Snugglo Pant Diapers', 'diapers', 1450, { sale: 1290, brand: 'snugglo', tags: 'bestseller size-m size-l size-xl', vary: 'size', desc: '52 pants · 12-hour dryness', featured: true }],
+    ['Snugglo Newborn Tape Diapers', 'diapers newborn', 990, { sale: 890, brand: 'snugglo', tags: 'size-nb bestseller', desc: '40 diapers · up to 5 kg' }],
+    ['Nestling Organic Cotton Diapers', 'diapers', 1690, { brand: 'nestling', tags: 'new sensitive size-s size-m', vary: 'size', desc: '44 diapers · for sensitive skin' }],
+    ['Snugglo Night Pants XL', 'diapers', 1550, { sale: 1390, brand: 'snugglo', tags: 'size-xl', desc: '36 pants · 12-17 kg' }],
+    ['Bubba Swim Diapers', 'diapers', 690, { brand: 'bubba-care', tags: 'new size-m size-l', desc: '12 pants · for pool and beach' }],
+    ['PureDrop Water Wipes (80)', 'wipes', 320, { sale: 280, brand: 'puredrop', tags: 'bestseller sensitive', vary: 'pack', desc: '99.9% water · fragrance-free' }],
+    ['PureDrop Sensitive Wipes (72)', 'wipes', 260, { brand: 'puredrop', tags: 'sensitive', desc: 'Alcohol-free · aloe' }],
+    ['Bubba Travel Wipes (20 x 3)', 'wipes', 290, { brand: 'bubba-care', tags: 'new', desc: 'Pocket packs · resealable' }],
+    ['Milkway Infant Formula Stage 1', 'formula', 1890, { sale: 1750, brand: 'milkway', tags: 'stage-1 bestseller', vary: 'tin', desc: 'Stage 1 · 0-6 months' }],
+    ['Milkway Follow-on Formula Stage 2', 'formula', 1850, { brand: 'milkway', tags: 'stage-2 bestseller', vary: 'tin', desc: 'Stage 2 · 6-12 months' }],
+    ['Milkway Growing-up Milk Stage 3', 'formula', 1650, { sale: 1520, brand: 'milkway', tags: 'stage-3', desc: 'Stage 3 · 1-3 years · 800 g' }],
+    ['Milkway Kids Milk Stage 4', 'formula', 1550, { brand: 'milkway', tags: 'stage-4 new', desc: 'Stage 4 · 3 years + · 800 g' }],
+    ['Tulip Comfort Formula (Lactose-reduced)', 'formula', 2150, { brand: 'tulip-baby', tags: 'stage-1 sensitive', desc: 'For fussy tummies · 400 g' }],
+    ['Tulip Rice Cereal', 'baby-food', 450, { sale: 399, brand: 'tulip-baby', tags: 'stage-2', desc: '6 months + · 250 g' }],
+    ['Tulip Apple & Pear Puree (4)', 'baby-food', 520, { brand: 'tulip-baby', tags: 'new stage-2', desc: '6 months + · 4 pouches' }],
+    ['Bubba Puffs, Banana', 'baby-food', 290, { brand: 'bubba-care', tags: 'stage-3', desc: '8 months + · melt-in-mouth' }],
+    ['Nestling Anti-colic Bottle 260 ml', 'feeding newborn', 690, { sale: 590, brand: 'nestling', tags: 'bestseller', desc: 'BPA-free · slow-flow teat' }],
+    ['Nestling Steam Steriliser', 'feeding', 3490, { sale: 3190, brand: 'nestling', tags: 'new', desc: 'Holds 6 bottles · 6 minutes' }],
+    ['Silicone Teats, Medium Flow (2)', 'feeding', 390, { brand: 'nestling', desc: '3 months + · fits wide-neck' }],
+    ['Bubba Head-to-Toe Wash 400 ml', 'bath-skincare', 590, { sale: 520, brand: 'bubba-care', tags: 'bestseller sensitive', desc: 'Tear-free · pH balanced' }],
+    ['Bubba Diaper Rash Cream', 'bath-skincare', 450, { brand: 'bubba-care', tags: 'bestseller sensitive', desc: 'Zinc oxide · 100 g' }],
+    ['Bubba Daily Lotion 200 ml', 'bath-skincare', 490, { brand: 'bubba-care', desc: 'Shea butter · fragrance-free' }],
+    ['Hooded Baby Towel', 'bath-skincare newborn', 790, { brand: 'tulip-baby', tags: 'new', desc: 'Bamboo cotton · 75 x 75 cm' }],
+    ['Muslin Swaddles (3)', 'newborn', 1190, { sale: 990, brand: 'tulip-baby', tags: 'bestseller', desc: '120 x 120 cm · breathable' }],
+    ['Newborn Mittens & Caps Set', 'newborn', 450, { brand: 'tulip-baby', desc: '0-3 months · 3 pairs' }],
+    ['Baby Nail Clipper & Thermometer Kit', 'newborn', 890, { brand: 'nestling', desc: 'Digital thermometer · 4 tools' }],
+    ['Newborn Starter Kit', 'newborn diapers', 4990, { sale: 4240, brand: 'snugglo', tags: 'bundle bestseller size-nb', desc: 'Bundle · save 15%', featured: true }],
+    ['Monthly Diaper Box', 'diapers wipes', 5490, { sale: 4830, brand: 'snugglo', tags: 'bundle', vary: 'size', desc: 'Bundle · 4 packs + wipes' }],
+    ['Travel & Outing Kit', 'wipes newborn', 1990, { sale: 1790, brand: 'bubba-care', tags: 'bundle new', desc: 'Bundle · save 10%' }],
+    ['Nursing Pads (60)', 'mom-care', 590, { brand: 'tulip-baby', tags: 'bestseller', desc: 'Disposable · leak-proof' }],
+    ['Manual Breast Pump', 'mom-care feeding', 2490, { sale: 2190, brand: 'nestling', desc: 'BPA-free · quiet' }],
+    ['Nipple Care Balm', 'mom-care', 650, { brand: 'tulip-baby', stock: 0, desc: 'Lanolin-free · 30 ml' }],
+  ],
+  blogCategories: [['Diapering', 'diapering'], ['Feeding', 'feeding-guides'], ['Newborn', 'newborn-guides']],
+  posts: [
+    ['How to Pick the Right Diaper Size', 'diapering', 'Weight beats age: the signs it is time to size up.'],
+    ['Formula Stages, Explained', 'feeding-guides', 'Stage 1, 2, 3 or 4? What changes and when to switch.'],
+    ['The Hospital Bag Checklist', 'newborn-guides', 'Everything for you and baby, packed by week 36.'],
+    ['Soothing Diaper Rash at Home', 'diapering', 'Air time, barrier cream and when to call the doctor.'],
+  ],
+};

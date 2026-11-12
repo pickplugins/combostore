@@ -49,9 +49,11 @@ import Adda from './Adda';
 import Pauruti from './Pauruti';
 import Ashbab from './Ashbab';
 import Posha from './Posha';
+import Khelaghor from './Khelaghor';
+import Dolna from './Dolna';
 // import EhansMart from './EhansMart';
 // import EhansMartV2 from './EhansMartV2';
 
-var templates = [...BikeParts, ...WonderJoy, ...Nexora, ...Noorani, ...Aanchal, ...Aurelle, ...Glowbie, ...Fashora, ...Voltix, ...Haatbox, ...Kaath, ...Oushodh, ...Pathok, ...Tuntuni, ...Kodom, ...Ghori, ...Sugondhi, ...Jhola, ...Muthofon, ...Upohar, ...Nolen, ...Dutipata, ...Adda, ...Pauruti, ...Ashbab, ...Posha];
+var templates = [...BikeParts, ...WonderJoy, ...Nexora, ...Noorani, ...Aanchal, ...Aurelle, ...Glowbie, ...Fashora, ...Voltix, ...Haatbox, ...Kaath, ...Oushodh, ...Pathok, ...Tuntuni, ...Kodom, ...Ghori, ...Sugondhi, ...Jhola, ...Muthofon, ...Upohar, ...Nolen, ...Dutipata, ...Adda, ...Pauruti, ...Ashbab, ...Posha, ...Khelaghor, ...Dolna];
 
 export default templates;
