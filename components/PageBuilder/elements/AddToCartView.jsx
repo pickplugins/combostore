@@ -12,9 +12,7 @@ import { usePost } from "../context/PostContext";
 import { useActiveVariation } from "../context/VariationScope";
 import { trackTikTokEvent } from '@/lib/tiktok';
 
-import { trackFacebookEvent } from '@/lib/facebook/pixel';
-import { generateFacebookEventId } from '@/lib/facebook/event-id';
-import { sendFacebookServerEvent } from '@/lib/facebook/capi';
+import { trackMetaEvent } from '@/lib/sendMetaEvent';
 import { elementCssClasses } from "../ElementsDefinition";
 import { stockStatusFor, availableStock } from "./ProductStockStatusView";
 
@@ -301,30 +299,36 @@ const AddToCart = (props) => {
 
 
 
-		const eventId = generateFacebookEventId();
+		/*
+			Meta AddToCart: the browser pixel and the Conversions API with one
+			event id (lib/sendMetaEvent.js). The server half goes through
+			/api/meta-event, which holds the pixel id and access token - they
+			must never reach the browser. Value is what was actually added:
+			the chosen variation's price times the quantity.
+		*/
+		/* The product id, as ViewContent and Purchase send it, so catalog ads see one product across all three. */
+		const metaContentId = String(cartProduct?.product_id || productData?.id || '');
+		const metaPrice = parseFloat(cartProduct?.price) || parseFloat(productData?.price) || 0;
 
-
-
-		trackFacebookEvent(
-			'AddToCart',
-			{
-				content_ids: [productData?.id],
-				content_type: 'product',
-				value: 500,
-				currency: 'BDT',
-			},
-			eventId
-		);
-
-		sendFacebookServerEvent({
+		trackMetaEvent({
 			eventName: 'AddToCart',
-			eventId,
-			data: {
-				content_ids: [productData?.id],
+			customData: {
 				content_type: 'product',
-				value: productData?.price,
+				content_ids: [metaContentId],
+				content_name: cartProduct?.title || productData?.title,
+				contents: [{ id: metaContentId, quantity: quantity, item_price: metaPrice }],
+				num_items: quantity,
+				value: metaPrice * quantity,
 				currency: 'BDT',
 			},
+			/* A logged-in customer's details; a guest sends none and is matched on the _fbp / _fbc cookies, IP and browser. */
+			user: userDataX?.id ? {
+				email: userDataX?.email,
+				phone: userDataX?.phone,
+				name: userDataX?.name,
+				country: userDataX?.billing_country,
+				external_id: userDataX?.id,
+			} : {},
 		});
 
 

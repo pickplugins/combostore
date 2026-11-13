@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600" role="img" aria-label="Juta Sneaker Store template preview">
+  <title>Juta Sneaker Store template preview</title>
+  <!-- Picker thumbnail for templates/Juta: a wireframe of its home page - the ink promo line, the bone header with the tilted orange J, the drop-stage hero (outlined wordmark, volt disc, tilted sneaker, spinning badge, spec callouts, size run) and the slanted orange ticker - in the template's palette. -->
+  <defs><clipPath id="jt-t-clip"><rect width="800" height="600"/></clipPath></defs>
+  <g clip-path="url(#jt-t-clip)">
+    <rect width="800" height="600" fill="#121212"/>
+    <!-- promo + header -->
+    <rect width="800" height="18" fill="#121212"/>
+    <rect x="290" y="6" width="190" height="6" rx="3" fill="#FFFFFF" opacity="0.5"/><rect x="488" y="5" width="34" height="8" rx="4" fill="#D4FF3F"/>
+    <rect y="18" width="800" height="54" fill="#F3F1EC"/>
+    <rect x="30" y="31" width="28" height="28" rx="8" fill="#FF5B1F" transform="rotate(-6 44 45)"/>
+    <text x="44" y="51" font-family="Arial, sans-serif" font-size="18" font-weight="800" fill="#121212" text-anchor="middle">J</text>
+    <text x="66" y="51" font-family="Arial, sans-serif" font-size="20" font-weight="800" fill="#121212" letter-spacing="-1">Juta</text>
+    <rect x="200" y="32" width="330" height="26" rx="13" fill="#FFFFFF" stroke="#121212" stroke-width="2"/>
+    <circle cx="720" cy="45" r="14" fill="#FFFFFF" stroke="#E3DFD7"/><circle cx="756" cy="45" r="14" fill="#121212"/><circle cx="766" cy="35" r="6" fill="#D4FF3F"/>
+    <!-- wordmark -->
+    <text x="400" y="560" font-family="Arial Black, Arial, sans-serif" font-size="250" font-weight="900" fill="none" stroke="#FFFFFF" stroke-opacity="0.1" stroke-width="2" text-anchor="middle" letter-spacing="-16">JUTA</text>
+    <!-- copy -->
+    <rect x="30" y="104" width="120" height="18" rx="9" fill="#FFFFFF" opacity="0.08"/><circle cx="42" cy="113" r="4" fill="#D4FF3F"/>
+    <text x="30" y="178" font-family="Arial, sans-serif" font-size="42" font-weight="800" fill="#FFFFFF" letter-spacing="-2">Built to move.</text>
+    <text x="30" y="222" font-family="Arial, sans-serif" font-size="42" font-weight="800" fill="none" stroke="#D4FF3F" stroke-width="1.2" letter-spacing="-2">Made to be seen.</text>
+    <rect x="30" y="242" width="250" height="7" rx="3.5" fill="#FFFFFF" opacity="0.3"/><rect x="30" y="256" width="200" height="7" rx="3.5" fill="#FFFFFF" opacity="0.3"/>
+    <rect x="30" y="282" width="128" height="36" rx="18" fill="#D4FF3F"/><rect x="168" y="282" width="118" height="36" rx="18" fill="none" stroke="#FFFFFF" stroke-opacity="0.3"/>
+    <!-- stage -->
+    <circle cx="560" cy="250" r="168" fill="none" stroke="#FFFFFF" stroke-opacity="0.2" stroke-dasharray="6 6"/>
+    <circle cx="560" cy="250" r="138" fill="#D4FF3F"/>
+    <ellipse cx="560" cy="320" rx="120" ry="10" fill="#000000" opacity="0.35"/>
+    <g transform="translate(352 150) rotate(-12 190 110) scale(0.6)" stroke="#121212" stroke-width="4" stroke-linejoin="round">
+      <path d="M44 300 L604 300 Q630 300 627 284 L622 270 L48 270 Q30 284 44 300 Z" fill="#121212"/>
+      <path d="M48 270 L622 270 Q632 248 604 236 L64 228 Q36 238 48 270 Z" fill="#FFFFFF"/>
+      <path d="M64 228 C50 188 54 140 80 110 L152 102 C178 120 208 126 238 116 L302 94 L332 66 Q348 60 354 76 L364 108 C424 138 504 172 566 196 C606 210 622 226 604 236 Z" fill="#F3F1EC"/>
+      <path d="M64 228 C50 188 54 140 80 110 L124 106 C112 148 122 196 154 232 Z" fill="#FF5B1F"/>
+      <path d="M170 230 C250 226 330 206 402 168 C420 160 436 166 432 180 C376 214 288 236 186 236 Z" fill="#D4FF3F"/>
+      <path d="M300 98 L356 108 C394 126 424 140 456 156 L446 174 C412 160 374 142 332 128 L292 120 Z" fill="#121212"/>
+    </g>
+    <circle cx="730" cy="118" r="38" fill="#FF5B1F"/><circle cx="730" cy="118" r="21" fill="#121212"/>
+    <path d="M723 125 L737 111 M726 111 H737 V122" fill="none" stroke="#D4FF3F" stroke-width="3.5" stroke-linecap="round"/>
+    <rect x="392" y="182" width="96" height="16" rx="8" fill="#121212" stroke="#FFFFFF" stroke-opacity="0.2"/>
+    <rect x="384" y="300" width="96" height="16" rx="8" fill="#121212" stroke="#FFFFFF" stroke-opacity="0.2"/>
+    <rect x="620" y="352" width="150" height="40" rx="12" fill="#FFFFFF"/><rect x="738" y="358" width="28" height="28" rx="8" fill="#121212"/>
+    <!-- size run -->
+    <line x1="30" y1="420" x2="770" y2="420" stroke="#FFFFFF" stroke-opacity="0.1"/>
+    <g fill="none" stroke="#FFFFFF" stroke-opacity="0.25">
+      <circle cx="300" cy="448" r="14"/><circle cx="334" cy="448" r="14"/><circle cx="368" cy="448" r="14"/><circle cx="402" cy="448" r="14"/>
+      <circle cx="470" cy="448" r="14"/><circle cx="504" cy="448" r="14"/><circle cx="538" cy="448" r="14"/><circle cx="572" cy="448" r="14"/>
+    </g>
+    <circle cx="436" cy="448" r="14" fill="#D4FF3F"/>
+    <rect x="30" y="440" width="110" height="9" rx="4.5" fill="#FFFFFF" opacity="0.5"/>
+    <!-- ticker -->
+    <g transform="rotate(-1.5 400 520)">
+      <rect x="-20" y="496" width="840" height="46" fill="#FF5B1F"/>
+      <g fill="#121212"><rect x="20" y="512" width="150" height="14" rx="3"/><rect x="200" y="512" width="130" height="14" rx="3"/><rect x="360" y="512" width="160" height="14" rx="3"/><rect x="550" y="512" width="140" height="14" rx="3"/><rect x="720" y="512" width="100" height="14" rx="3"/></g>
+    </g>
+    <rect y="560" width="800" height="40" fill="#F3F1EC"/>
+  </g>
+</svg>

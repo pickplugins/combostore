@@ -7,9 +7,8 @@ import PageBuilderContent from "@/components/PageBuilder/PageBuilderContent";
 import { getStyledPageTemplate as getPageTemplate } from "@/lib/pageStyles";
 
 import { generateFacebookEventId } from '@/lib/facebook/event-id';
-import { sendFacebookServerEvent } from '@/lib/facebook/capi';
+import { queueFacebookServerEvent } from '@/lib/facebook/serverEvent';
 import FacebookViewContent from '@/components/analytics/FacebookViewContent';
-import { after } from 'next/server';
 
 
 //hello
@@ -59,7 +58,8 @@ export default async function page({ params, searchParams }) {
     currency: 'BDT',
   };
 
-  after(() => sendFacebookServerEvent({ eventName: 'ViewContent', eventId, data: eventData }));
+  /* Server copy of the browser's ViewContent (same eventId), with the pixel settings and request details. */
+  await queueFacebookServerEvent({ eventName: 'ViewContent', eventId, data: eventData, path: 'shop' });
 
 
 

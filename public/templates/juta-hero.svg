@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 660 380" width="660" height="380" role="img" aria-label="A bone-white running sneaker with an orange heel and a volt-green side panel">
+  <!-- Hero art for templates/Juta: a side-on running sneaker, toe to the right, on a transparent ground so it sits on the hero's volt disc. Original drawing, no brand marks. -->
+  <defs>
+    <linearGradient id="jt-sole" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#E7E3DB"/>
+    </linearGradient>
+    <linearGradient id="jt-upper" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FBFAF7"/><stop offset="1" stop-color="#ECE8E0"/>
+    </linearGradient>
+  </defs>
+  <g stroke="#121212" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
+    <!-- outsole -->
+    <path d="M44 300 L604 300 Q630 300 627 284 L622 270 L48 270 Q30 284 44 300 Z" fill="#121212"/>
+    <!-- midsole -->
+    <path d="M48 270 L622 270 Q632 248 604 236 L64 228 Q36 238 48 270 Z" fill="url(#jt-sole)"/>
+    <!-- upper -->
+    <path d="M64 228 C50 188 54 140 80 110 L152 102 C178 120 208 126 238 116 L302 94 L332 66 Q348 60 354 76 L364 108 C424 138 504 172 566 196 C606 210 622 226 604 236 Z" fill="url(#jt-upper)"/>
+    <!-- heel counter -->
+    <path d="M64 228 C50 188 54 140 80 110 L124 106 C112 148 122 196 154 232 Z" fill="#FF5B1F"/>
+    <!-- toe cap -->
+    <path d="M522 180 C564 194 604 208 616 224 Q616 236 604 236 L500 234 C504 214 510 196 522 180 Z" fill="#E3DFD7"/>
+    <!-- side panel -->
+    <path d="M170 230 C250 226 330 206 402 168 C420 160 436 166 432 180 C376 214 288 236 186 236 Z" fill="#D4FF3F"/>
+    <!-- eyestay -->
+    <path d="M300 98 L356 108 C394 126 424 140 456 156 L446 174 C412 160 374 142 332 128 L292 120 Z" fill="#121212"/>
+    <!-- collar -->
+    <path d="M80 110 L152 102 C178 120 208 126 238 116" fill="none" stroke-width="7"/>
+    <!-- pull tab -->
+    <path d="M82 112 L70 76 Q68 66 78 66 L92 68 Q100 70 100 80 L104 110 Z" fill="#D4FF3F"/>
+  </g>
+  <!-- laces -->
+  <g stroke="#FFFFFF" stroke-width="5" stroke-linecap="round">
+    <path d="M312 112 L326 100"/><path d="M340 120 L354 108"/><path d="M368 132 L382 120"/><path d="M396 144 L410 132"/><path d="M424 156 L438 144"/>
+  </g>
+  <g fill="#FFFFFF"><circle cx="306" cy="112" r="3"/><circle cx="336" cy="122" r="3"/><circle cx="364" cy="134" r="3"/><circle cx="392" cy="146" r="3"/><circle cx="420" cy="158" r="3"/></g>
+  <!-- midsole wave + tread -->
+  <path d="M66 254 C160 242 252 262 352 252 S552 242 610 252" fill="none" stroke="#FF5B1F" stroke-width="5" stroke-linecap="round"/>
+  <g stroke="#3A3A3A" stroke-width="3" stroke-linecap="round">
+    <path d="M90 278v14M130 278v14M170 278v14M210 278v14M250 278v14M290 278v14M330 278v14M370 278v14M410 278v14M450 278v14M490 278v14M530 278v14M570 278v14"/>
+  </g>
+  <!-- stitching -->
+  <path d="M136 120 C130 160 138 196 166 226" fill="none" stroke="#121212" stroke-width="2" stroke-dasharray="5 6" opacity="0.5"/>
+  <path d="M508 196 C512 210 512 222 508 232" fill="none" stroke="#121212" stroke-width="2" stroke-dasharray="5 6" opacity="0.5"/>
+</svg>

@@ -11,9 +11,9 @@ import PageBuilderContent from "@/components/PageBuilder/PageBuilderContent";
 
 
 import { generateFacebookEventId } from '@/lib/facebook/event-id';
-import { sendFacebookServerEvent } from '@/lib/facebook/capi';
+import { queueFacebookServerEvent } from '@/lib/facebook/serverEvent';
+import { notFound } from 'next/navigation';
 import FacebookViewContent from '@/components/analytics/FacebookViewContent';
-import { after } from 'next/server';
 
 
 import { getBlogPost } from "@/lib/getBlogPost";
@@ -57,7 +57,8 @@ export default async function page({ params }) {
 
   const productResponse = await getBlogPost(slug);
 
-  if (!productResponse) return { title: "Blog Not Found" };
+  /* A page must return markup; notFound() renders the 404 page with a real 404 status. */
+  if (!productResponse) notFound();
 
   var postData = productResponse?.post;
 
@@ -73,7 +74,8 @@ export default async function page({ params }) {
     currency: 'BDT',
   };
 
-  after(() => sendFacebookServerEvent({ eventName: 'ViewContent', eventId, data: eventData }));
+  /* Server copy of the browser's ViewContent (same eventId), with the pixel settings and request details. */
+  await queueFacebookServerEvent({ eventName: 'ViewContent', eventId, data: eventData, path: `blog/${slug}` });
 
 
 

@@ -35,6 +35,7 @@ import { getAamarPayConfig } from "../../../lib/aamarpay";
 import { getBkashConfig } from "../../../lib/bkash";
 import { getNagadConfig } from "../../../lib/nagad";
 import { loadCheckoutDraft, saveCheckoutDraft, clearCheckoutDraft } from "../../../lib/checkoutDraft";
+import { trackMetaEvent } from "../../../lib/sendMetaEvent";
 
 
 
@@ -944,10 +945,12 @@ const CheckoutView = (props) => {
 		resetCartItems();
 		setcartToggle(!cartToggle);
 
-		sendMetaEvent({ event: 'Purchase' });
+		const paidOrderId = result?.order_id ?? orderDataRef.current?.order_id ?? orderDataRef.current?.id;
+
+		sendMetaEvent({ event: 'Purchase', orderId: paidOrderId });
 
 		if (checkoutDataRef.current?.subscription?.enable) {
-			sendMetaEvent({ event: 'Subscribe' });
+			sendMetaEvent({ event: 'Subscribe', orderId: paidOrderId });
 		}
 
 		const hash = result?.order_hash || orderDataRef.current?.order_hash;
@@ -1014,6 +1017,13 @@ const CheckoutView = (props) => {
 							resetCartItems();
 							setcartToggle(!cartToggle)
 
+							/* Only a created order is a purchase; the order id makes the event id, so a repeat report is merged. */
+							sendMetaEvent({ event: 'Purchase', orderId: order_id })
+
+							if (checkoutData?.subscription?.enable) {
+								sendMetaEvent({ event: 'Subscribe', orderId: order_id })
+							}
+
 							router.push(`/thank-you/${order_hash}`);
 
 
@@ -1022,13 +1032,6 @@ const CheckoutView = (props) => {
 						}
 
 						setloading(false);
-
-						sendMetaEvent({ event: 'Purchase' })
-
-						if (checkoutData?.subscription?.enable) {
-							sendMetaEvent({ event: 'Subscribe' })
-
-						}
 
 						setTimeout(() => {
 						}, 500);
@@ -1243,6 +1246,13 @@ const CheckoutView = (props) => {
 							resetCartItems();
 							setcartToggle(!cartToggle)
 
+							/* Only a created order is a purchase; the order id makes the event id, so a repeat report is merged. */
+							sendMetaEvent({ event: 'Purchase', orderId: order_id })
+
+							if (checkoutData?.subscription?.enable) {
+								sendMetaEvent({ event: 'Subscribe', orderId: order_id })
+							}
+
 							router.push(`/thank-you/${order_hash}`);
 
 
@@ -1251,13 +1261,6 @@ const CheckoutView = (props) => {
 						}
 
 						setloading(false);
-
-						sendMetaEvent({ event: 'Purchase' })
-
-						if (checkoutData?.subscription?.enable) {
-							sendMetaEvent({ event: 'Subscribe' })
-
-						}
 
 						setTimeout(() => {
 						}, 500);
@@ -1271,35 +1274,48 @@ const CheckoutView = (props) => {
 
 	}
 
-	const sendMetaEvent = async (prams) => {
+	/*
+		Purchase / Subscribe to Meta, from the browser and the server at once
+		(lib/sendMetaEvent.js). The buyer's details go with it - the server
+		hashes them - because email, phone, name and city are what Meta
+		matches the sale to an ad click on. The event id is built from the
+		order id, so the thank-you page reporting the same order is merged.
+	*/
+	const sendMetaEvent = (prams) => {
 
-		var eventName = prams?.event
+		const eventName = prams?.event;
+		const orderId = prams?.orderId;
+		const buyer = checkoutDataRef.current ?? checkoutData;
+		const items = cartItems ?? [];
+		const orderCurrency = String(buyer?.currency ?? currency ?? 'BDT').toUpperCase();
 
-		const eventId = window.crypto.randomUUID();
+		const contents = items.map(item => ({
+			id: String(item?.id ?? item?.product_id ?? ''),
+			quantity: parseInt(item?.quantity) || 1,
+			item_price: parseFloat(item?.price) || 0,
+		})).filter(item => item.id);
 
-
-
-
-		// 1️⃣ Browser Pixel Event
-		if (window.fbq) {
-			window.fbq("track", eventName, {
-				value: cartTotalPay,
-				currency: "BDT",
-				eventID: eventId, // important!
-			});
-		}
-
-		// 2️⃣ Server-Side Event
-		await fetch("/api/meta-event", {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
+		trackMetaEvent({
+			eventName,
+			eventId: orderId ? `${String(eventName).toLowerCase()}-${orderId}` : undefined,
+			once: Boolean(orderId),
+			customData: {
+				value: Number(cartTotalPay) || 0,
+				currency: /^[A-Z]{3}$/.test(orderCurrency) ? orderCurrency : 'BDT',
+				content_type: 'product',
+				content_ids: contents.map(item => item.id),
+				contents,
+				num_items: contents.reduce((sum, item) => sum + item.quantity, 0),
+				...(orderId ? { order_id: String(orderId) } : {}),
 			},
-			body: JSON.stringify({
-				event_name: eventName,
-				event_id: eventId,
-				value: cartTotalPay,
-			}),
+			user: {
+				email: buyer?.billing_email,
+				phone: buyer?.billing_phone,
+				name: buyer?.billing_name,
+				city: statesList?.[buyer?.billing_city]?.label,
+				country: buyer?.billing_country,
+				external_id: buyer?.userid ?? userDataX?.id,
+			},
 		});
 	};
 

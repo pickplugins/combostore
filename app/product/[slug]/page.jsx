@@ -1,21 +1,16 @@
 import { storeUrl } from "@/lib/storeUrl";
 import { templateMetadata, slugToName } from "@/lib/templateSeo";
-import { sendMetaEvent } from "@/lib/sendMetaEvent";
 import { getStyledPageTemplate as getPageTemplate } from "@/lib/pageStyles";
 import PageBuilderContent from "../../../components/PageBuilder/PageBuilderContent";
 import { PostProvider } from "@/components/PageBuilder/context/PostContext";
-import { trackFacebookEvent } from '@/lib/facebook/pixel';
 import { notFound } from 'next/navigation'
 
 import { generateFacebookEventId } from '@/lib/facebook/event-id';
-import { sendFacebookServerEvent } from '@/lib/facebook/capi';
+import { queueFacebookServerEvent } from '@/lib/facebook/serverEvent';
 import FacebookViewContent from '@/components/analytics/FacebookViewContent';
-import { after } from 'next/server';
-import { headers, cookies } from 'next/headers';
 
 
 const appUrl = process.env.NEXT_PUBLIC_STORE_URL;
-import { getSettings } from "@/lib/getSettings";
 
 
 // ⬅️ Force server-side rendering on every request
@@ -46,17 +41,12 @@ export async function generateMetadata({ params }) {
 export default async function page({ params }) {
 
 
-  const settings = await getSettings();
-  const FACEBOOK_PIXEL_ID = settings?.apiKeys?.facebookPixel?.pixel_id;
-  const META_ACCESS_TOKEN = settings?.apiKeys?.facebookPixel?.access_token;
-  const META_test_event_code = settings?.apiKeys?.facebookPixel?.test_event_code;
-
-
   const { slug } = await params; // ✅ await params
 
   const productResponse = await getProduct(slug);
 
-  if (!productResponse) return { title: "Product Not Found" };
+  /* A page must return markup; notFound() renders the 404 page with a real 404 status. */
+  if (!productResponse) notFound();
 
 
   var productData = productResponse?.product;
@@ -107,7 +97,7 @@ export default async function page({ params }) {
     "description": productData?.post_excerpt ? productData?.post_excerpt : productData?.title,
     "brand": {
       "@type": "Brand",
-      "name": productData?.brands[0]?.name || "ComboStore"
+      "name": productData?.brands?.[0]?.name || "ComboStore"
     },
     "review": {
       "@type": "Review",
@@ -174,69 +164,24 @@ export default async function page({ params }) {
 
 
 
-  // read request data BEFORE after(); headers()/cookies() can't be used inside it
-  const h = await headers();
-  const c = await cookies();
-  const ip = h.get('x-forwarded-for')?.split(',')[0]?.trim();
-  const userAgent = h.get('user-agent');
-  const fbp = c.get('_fbp')?.value;
-  const fbc = c.get('_fbc')?.value;
-
-
-
-
-  // sendMetaEvent({ event_name: 'ViewContent', url: `${appUrl}/product/${slug}`, value: productData?.price, currency: "BDT", content_name: productData?.title }); // Call the function here
-
-
-
-
+  /*
+    Meta ViewContent, sent twice with one event id: from the server here
+    (lib/facebook/serverEvent.js - pixel settings, IP, user agent, _fbp /
+    _fbc; skipped for crawlers) and from the browser by <FacebookViewContent>
+    below, so Meta keeps one. content_ids is the product id, as AddToCart
+    and Purchase send it.
+  */
   const eventId = generateFacebookEventId();
-
 
   const eventData = {
     content_ids: [String(productData?.id)],
     content_type: 'product',
-    value: Number(productData?.price),   // you hardcoded 500 for the browser event
+    content_name: productData?.title,
+    value: Number(productData?.sale_price || productData?.price) || 0,
     currency: 'BDT',
   };
 
-
-
-  after(() =>
-    sendFacebookServerEvent({
-      pixelId: FACEBOOK_PIXEL_ID,                          // from getSettings()
-      accessToken: META_ACCESS_TOKEN, // or process.env.FB_ACCESS_TOKEN
-      eventName: 'ViewContent',
-      eventId,
-      data: eventData,
-      sourceUrl: storeUrl(`product/${slug}`),
-      ip, userAgent, fbp, fbc,
-      test_event_code: META_test_event_code
-    })
-  );
-
-
-  // trackFacebookEvent(
-  //   'ViewContent',
-  //   {
-  //     content_ids: [productData?.id],
-  //     content_type: 'product',
-  //     value: 500,
-  //     currency: 'BDT',
-  //   },
-  //   eventId
-  // );
-
-  // sendFacebookServerEvent({
-  //   eventName: 'ViewContent',
-  //   eventId,
-  //   data: {
-  //     content_ids: [productData?.id],
-  //     content_type: 'product',
-  //     value: productData?.price,
-  //     currency: 'BDT',
-  //   },
-  // });
+  await queueFacebookServerEvent({ eventName: 'ViewContent', eventId, data: eventData, path: `product/${slug}` });
 
 
   return (

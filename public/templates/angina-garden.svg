@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400" role="img" aria-label="A balcony corner with a snake plant, a monstera in a terracotta pot and a trailing hanging plant">
+  <!-- Garden tile art for templates/Angina: a balcony corner on a transparent ground (the tile is sage). Original drawing. -->
+  <!-- railing -->
+  <g stroke="#2F4A36" stroke-width="6" stroke-linecap="round">
+    <path d="M0 250 H400"/><path d="M0 390 H400"/>
+    <path d="M30 250 V390 M80 250 V390 M130 250 V390 M180 250 V390 M230 250 V390 M280 250 V390 M330 250 V390 M380 250 V390"/>
+  </g>
+  <!-- hanging plant -->
+  <path d="M320 0 V60" stroke="#2F4A36" stroke-width="3"/>
+  <path d="M292 60 H348 L340 100 H300 Z" fill="#F5F0E8"/>
+  <g fill="#9DBB8E"><circle cx="298" cy="108" r="8"/><circle cx="294" cy="128" r="7"/><circle cx="296" cy="148" r="6"/><circle cx="342" cy="110" r="8"/><circle cx="346" cy="132" r="7"/><circle cx="344" cy="154" r="6"/><circle cx="346" cy="174" r="5"/></g>
+  <!-- snake plant -->
+  <g fill="#3E5C45" stroke="#F5F0E8" stroke-width="2">
+    <path d="M90 300 C80 230 84 170 96 120 C104 170 108 230 104 300 Z"/>
+    <path d="M70 300 C58 250 56 200 66 160 C80 200 86 250 86 300 Z"/>
+    <path d="M110 300 C112 240 122 190 140 150 C142 200 132 250 124 300 Z"/>
+  </g>
+  <path d="M58 296 H142 L132 370 H68 Z" fill="#F5F0E8"/>
+  <!-- monstera in terracotta -->
+  <g fill="#6F8F68">
+    <ellipse cx="220" cy="200" rx="50" ry="28" transform="rotate(-30 220 200)"/>
+    <ellipse cx="290" cy="190" rx="52" ry="30" transform="rotate(25 290 190)"/>
+    <ellipse cx="256" cy="150" rx="40" ry="24" transform="rotate(-80 256 150)"/>
+  </g>
+  <g stroke="#4E6B4E" stroke-width="4" stroke-linecap="round"><path d="M206 192 l16 10 M218 208 l14 2 M290 178 l-14 12 M282 198 l-14 6"/></g>
+  <path d="M256 300 C254 250 250 210 256 160 M256 300 C258 260 280 230 290 196 M256 300 C252 260 232 230 220 204" stroke="#2F4A36" stroke-width="4" fill="none"/>
+  <path d="M206 290 H306 L292 380 H220 Z" fill="#C65D3B"/>
+  <rect x="206" y="290" width="100" height="14" fill="#A7472A"/>
+</svg>

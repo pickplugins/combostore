@@ -300,11 +300,11 @@ const CartView = (props) => {
 
 		// 1️⃣ Browser Pixel Event
 		if (window.fbq) {
+			/* eventID belongs in the 4th argument, not the event data, or Meta cannot pair it with the server event. */
 			window.fbq("track", "InitiateCheckout", {
 				value: cartTotalPay,
 				currency: "BDT",
-				eventID: eventId, // important!
-			});
+			}, { eventID: eventId });
 		}
 
 		// 2️⃣ Server-Side Event

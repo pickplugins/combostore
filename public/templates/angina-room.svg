@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 600" width="960" height="600" preserveAspectRatio="xMidYMid slice" role="img" aria-label="A sunlit living room: a terracotta sofa under two framed prints, a monstera by an arched window, a brass floor lamp, a round coffee table on a cream rug">
+  <!-- Hero scene for templates/Angina: the "shop the look" living room. The hero places hotspots over the sofa (54% 62%), the lamp (83% 30%), the plant (31% 50%), the art (51% 32%) and the rug (40% 90%); keep the pieces there if you redraw it. Original drawing. -->
+  <defs>
+    <radialGradient id="ag-glow" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#F8D98E" stop-opacity="0.75"/><stop offset="1" stop-color="#F8D98E" stop-opacity="0"/></radialGradient>
+    <linearGradient id="ag-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D7E6D5"/><stop offset="1" stop-color="#F3EBDD"/></linearGradient>
+  </defs>
+  <!-- wall + floor -->
+  <rect width="960" height="600" fill="#EDE5D8"/>
+  <rect y="430" width="960" height="170" fill="#D8C3A5"/>
+  <g stroke="#C9B191" stroke-width="2">
+    <path d="M80 430 L20 600"/><path d="M200 430 L160 600"/><path d="M320 430 L300 600"/><path d="M440 430 L440 600"/><path d="M560 430 L580 600"/><path d="M680 430 L720 600"/><path d="M800 430 L860 600"/><path d="M920 430 L1000 600"/>
+  </g>
+  <rect y="420" width="960" height="12" fill="#E6DBC9"/>
+  <!-- arched window + light -->
+  <path d="M70 420 V170 A90 90 0 0 1 250 170 V420 Z" fill="url(#ag-sky)"/>
+  <path d="M70 420 V170 A90 90 0 0 1 250 170 V420 Z" fill="none" stroke="#FBF8F2" stroke-width="10"/>
+  <path d="M160 82 V420 M70 250 H250" stroke="#FBF8F2" stroke-width="7"/>
+  <path d="M70 432 L250 432 L360 600 L110 600 Z" fill="#FFFFFF" opacity="0.22"/>
+  <!-- lamp glow -->
+  <circle cx="800" cy="230" r="150" fill="url(#ag-glow)"/>
+  <!-- art -->
+  <rect x="430" y="118" width="112" height="142" fill="#F8F4EC" stroke="#2E2A25" stroke-width="6"/>
+  <circle cx="470" cy="170" r="22" fill="#C65D3B"/>
+  <path d="M452 240 V212 A34 34 0 0 1 520 212 V240 Z" fill="#D9A441"/>
+  <rect x="562" y="150" width="82" height="104" fill="#F8F4EC" stroke="#2E2A25" stroke-width="6"/>
+  <path d="M603 236 C580 214 586 186 603 170 C620 186 626 214 603 236 Z M603 236 V174" fill="#4E6B4E" stroke="#F8F4EC" stroke-width="2"/>
+  <!-- rug -->
+  <ellipse cx="520" cy="528" rx="320" ry="58" fill="#F5EEE2"/>
+  <ellipse cx="520" cy="528" rx="290" ry="44" fill="none" stroke="#D9A441" stroke-width="4" stroke-dasharray="14 10"/>
+  <!-- sofa -->
+  <rect x="340" y="288" width="380" height="112" rx="42" fill="#C65D3B"/>
+  <rect x="330" y="368" width="400" height="72" rx="28" fill="#B4522F"/>
+  <path d="M530 372 V436" stroke="#9E4526" stroke-width="3"/>
+  <rect x="308" y="318" width="64" height="124" rx="30" fill="#C65D3B"/>
+  <rect x="688" y="318" width="64" height="124" rx="30" fill="#C65D3B"/>
+  <rect x="352" y="440" width="10" height="28" rx="3" fill="#6B4A2E"/><rect x="698" y="440" width="10" height="28" rx="3" fill="#6B4A2E"/>
+  <rect x="384" y="318" width="92" height="70" rx="22" fill="#D9A441" transform="rotate(-7 430 353)"/>
+  <rect x="586" y="318" width="92" height="70" rx="22" fill="#4E6B4E" transform="rotate(7 632 353)"/>
+  <path d="M600 338 l50 30 M650 338 l-50 30" stroke="#6F8F68" stroke-width="3"/>
+  <!-- coffee table -->
+  <rect x="470" y="482" width="8" height="40" fill="#6B4A2E"/><rect x="562" y="482" width="8" height="40" fill="#6B4A2E"/>
+  <ellipse cx="520" cy="480" rx="92" ry="18" fill="#8A6240"/>
+  <ellipse cx="520" cy="476" rx="92" ry="16" fill="#A27650"/>
+  <path d="M500 472 C494 452 498 440 506 432 H520 C528 440 532 452 526 472 Z" fill="#FBF8F2"/>
+  <path d="M513 432 C506 410 494 400 486 396 M513 432 C516 408 528 398 538 394" stroke="#4E6B4E" stroke-width="3" fill="none"/>
+  <rect x="540" y="462" width="44" height="8" rx="2" fill="#4E6B4E"/><rect x="544" y="454" width="38" height="8" rx="2" fill="#D9A441"/>
+  <!-- monstera -->
+  <g fill="#4E6B4E">
+    <ellipse cx="270" cy="300" rx="52" ry="30" transform="rotate(-35 270 300)"/>
+    <ellipse cx="335" cy="268" rx="56" ry="32" transform="rotate(30 335 268)"/>
+    <ellipse cx="300" cy="230" rx="44" ry="26" transform="rotate(-80 300 230)"/>
+  </g>
+  <g fill="#6F8F68">
+    <ellipse cx="250" cy="360" rx="46" ry="26" transform="rotate(-15 250 360)"/>
+    <ellipse cx="350" cy="340" rx="48" ry="26" transform="rotate(20 350 340)"/>
+  </g>
+  <g stroke="#EDE5D8" stroke-width="4" stroke-linecap="round">
+    <path d="M250 288 l18 10 M262 304 l14 4 M336 256 l-14 12 M326 276 l-14 6 M240 352 l16 4 M356 330 l-14 8"/>
+  </g>
+  <path d="M300 440 C298 380 290 330 300 236 M300 440 C300 400 330 360 340 300 M300 440 C296 400 268 380 256 362" stroke="#3E5C45" stroke-width="4" fill="none"/>
+  <path d="M266 432 H334 L324 520 H276 Z" fill="#FBF8F2"/>
+  <rect x="266" y="448" width="68" height="10" fill="#C65D3B"/>
+  <!-- floor lamp -->
+  <ellipse cx="800" cy="524" rx="36" ry="9" fill="#2E2A25"/>
+  <rect x="797" y="190" width="6" height="334" fill="#2E2A25"/>
+  <path d="M748 214 Q800 124 852 214 Z" fill="#D9A441"/>
+  <path d="M748 214 H852" stroke="#B9862E" stroke-width="4"/>
+  <!-- hanging plant -->
+  <path d="M900 0 V110" stroke="#2E2A25" stroke-width="2"/>
+  <path d="M876 110 H924 L916 146 H884 Z" fill="#C65D3B"/>
+  <g fill="#6F8F68"><circle cx="882" cy="152" r="7"/><circle cx="878" cy="170" r="6"/><circle cx="880" cy="188" r="5"/><circle cx="918" cy="154" r="7"/><circle cx="922" cy="174" r="6"/><circle cx="920" cy="194" r="5"/><circle cx="922" cy="212" r="4"/></g>
+</svg>

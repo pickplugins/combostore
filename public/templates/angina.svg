@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600" role="img" aria-label="Angina Home and Garden template preview">
+  <title>Angina Home and Garden template preview</title>
+  <!-- Picker thumbnail for templates/Angina: a wireframe of its home page - the sage promo line, the header with the arch logo, linen search and department menu, the hero title and search, the shop-the-look room with hotspots and an open product card, the balcony-garden and flash-deal tiles, and the trust row - in the template palette. -->
+  <defs><clipPath id="ag-t-clip"><rect width="800" height="600"/></clipPath><clipPath id="ag-t-scene"><rect x="30" y="250" width="480" height="236" rx="18"/></clipPath></defs>
+  <g clip-path="url(#ag-t-clip)">
+    <rect width="800" height="600" fill="#F5F0E8"/>
+    <rect width="800" height="20" fill="#2F4A36"/><rect x="250" y="7" width="260" height="6" rx="3" fill="#FFFFFF" opacity="0.6"/><rect x="520" y="5" width="40" height="10" rx="5" fill="#D9A441"/>
+    <rect y="20" width="800" height="54" fill="#FFFFFF"/>
+    <path d="M30 66 V44 A14 14 0 0 1 58 44 V66 Z" fill="#C65D3B"/><path d="M38 66 V46 A6 6 0 0 1 50 46 V66 Z" fill="#F5F0E8"/><path d="M40 66 V58 A4 4 0 0 1 48 58 V66 Z" fill="#4E6B4E"/>
+    <text x="66" y="58" font-family="Georgia, serif" font-size="24" font-style="italic" fill="#24201B">angina</text>
+    <rect x="170" y="34" width="120" height="28" rx="12" fill="#E4EBDD"/>
+    <rect x="304" y="34" width="300" height="28" rx="14" fill="#F5F0E8" stroke="#E6DED2"/>
+    <circle cx="726" cy="48" r="14" fill="#F5F0E8"/><circle cx="762" cy="48" r="14" fill="#C65D3B"/>
+    <rect y="74" width="800" height="32" fill="#FFFFFF" stroke="#E6DED2"/>
+    <g fill="#24201B" opacity="0.5"><rect x="30" y="87" width="40" height="6" rx="3"/><rect x="92" y="87" width="50" height="6" rx="3"/><rect x="164" y="87" width="70" height="6" rx="3"/><rect x="256" y="87" width="40" height="6" rx="3"/><rect x="318" y="87" width="50" height="6" rx="3"/><rect x="390" y="87" width="40" height="6" rx="3"/><rect x="452" y="87" width="74" height="6" rx="3"/><rect x="548" y="87" width="44" height="6" rx="3"/></g>
+    <rect x="614" y="85" width="60" height="10" rx="5" fill="#9E3B22"/>
+    <!-- title row -->
+    <text x="30" y="168" font-family="Georgia, serif" font-size="50" fill="#24201B" letter-spacing="-1.5">Make it home,</text>
+    <text x="30" y="222" font-family="Georgia, serif" font-size="50" font-style="italic" fill="#C65D3B" letter-spacing="-1.5">then grow the garden.</text>
+    <rect x="530" y="140" width="240" height="7" rx="3.5" fill="#7A7167" opacity="0.4"/><rect x="530" y="154" width="190" height="7" rx="3.5" fill="#7A7167" opacity="0.4"/>
+    <rect x="530" y="174" width="240" height="34" rx="17" fill="#FFFFFF" stroke="#E6DED2"/>
+    <g fill="#FFFFFF" stroke="#E6DED2"><rect x="530" y="218" width="54" height="16" rx="8"/><rect x="590" y="218" width="64" height="16" rx="8"/><rect x="660" y="218" width="50" height="16" rx="8"/></g>
+    <!-- scene -->
+    <g clip-path="url(#ag-t-scene)">
+      <rect x="30" y="250" width="480" height="236" fill="#EDE5D8"/>
+      <rect x="30" y="420" width="480" height="66" fill="#D8C3A5"/>
+      <path d="M62 420 V318 A38 38 0 0 1 138 318 V420 Z" fill="#D7E6D5" stroke="#FBF8F2" stroke-width="5"/>
+      <rect x="240" y="300" width="44" height="56" fill="#F8F4EC" stroke="#2E2A25" stroke-width="3"/><circle cx="256" cy="320" r="8" fill="#C65D3B"/>
+      <ellipse cx="290" cy="462" rx="150" ry="20" fill="#F5EEE2"/>
+      <rect x="190" y="362" width="190" height="52" rx="20" fill="#C65D3B"/><rect x="184" y="396" width="202" height="34" rx="14" fill="#B4522F"/>
+      <rect x="208" y="374" width="40" height="30" rx="9" fill="#D9A441"/><rect x="316" y="374" width="40" height="30" rx="9" fill="#4E6B4E"/>
+      <g fill="#4E6B4E"><ellipse cx="160" cy="360" rx="28" ry="16" transform="rotate(-30 160 360)"/><ellipse cx="186" cy="340" rx="28" ry="16" transform="rotate(30 186 340)"/></g>
+      <path d="M152 420 H190 L184 460 H158 Z" fill="#FBF8F2"/>
+      <rect x="439" y="306" width="3" height="146" fill="#2E2A25"/><path d="M416 316 Q440 274 464 316 Z" fill="#D9A441"/>
+      <rect x="30" y="446" width="480" height="40" fill="#FFFFFF"/><rect x="44" y="458" width="150" height="8" rx="4" fill="#24201B" opacity="0.6"/><rect x="396" y="454" width="100" height="22" rx="11" fill="#C65D3B"/>
+    </g>
+    <g fill="#FFFFFF" stroke="#C65D3B" stroke-width="2"><circle cx="290" cy="392" r="8"/><circle cx="440" cy="300" r="8"/><circle cx="174" cy="350" r="8"/><circle cx="262" cy="320" r="8"/></g>
+    <rect x="384" y="236" width="112" height="52" rx="10" fill="#FFFFFF" stroke="#E6DED2"/><rect x="394" y="246" width="60" height="5" rx="2.5" fill="#4E6B4E"/><rect x="394" y="257" width="90" height="7" rx="3.5" fill="#24201B"/><rect x="394" y="271" width="40" height="7" rx="3.5" fill="#24201B" opacity="0.7"/>
+    <!-- side tiles -->
+    <rect x="526" y="250" width="244" height="112" rx="18" fill="#E4EBDD"/>
+    <rect x="542" y="268" width="70" height="6" rx="3" fill="#4E6B4E"/><rect x="542" y="282" width="110" height="12" rx="6" fill="#2F4A36"/><rect x="542" y="330" width="80" height="20" rx="10" fill="#2F4A36"/>
+    <path d="M690 362 L684 318 H736 L730 362 Z" fill="#C65D3B"/><g fill="#6F8F68"><ellipse cx="696" cy="300" rx="20" ry="11" transform="rotate(-30 696 300)"/><ellipse cx="724" cy="296" rx="20" ry="11" transform="rotate(30 724 296)"/></g>
+    <rect x="526" y="374" width="244" height="112" rx="18" fill="#C65D3B"/>
+    <rect x="542" y="392" width="60" height="6" rx="3" fill="#FFFFFF" opacity="0.7"/><rect x="542" y="406" width="150" height="12" rx="6" fill="#FFFFFF"/>
+    <g fill="#FFFFFF" opacity="0.2"><rect x="542" y="446" width="26" height="28" rx="6"/><rect x="574" y="446" width="26" height="28" rx="6"/><rect x="606" y="446" width="26" height="28" rx="6"/></g>
+    <rect x="676" y="450" width="80" height="22" rx="11" fill="#FFFFFF"/>
+    <!-- trust row -->
+    <g fill="#FFFFFF" stroke="#E6DED2"><rect x="30" y="500" width="176" height="46" rx="14"/><rect x="218" y="500" width="176" height="46" rx="14"/><rect x="406" y="500" width="176" height="46" rx="14"/><rect x="594" y="500" width="176" height="46" rx="14"/></g>
+    <g fill="#F5F0E8"><circle cx="52" cy="523" r="12"/><circle cx="240" cy="523" r="12"/><circle cx="428" cy="523" r="12"/><circle cx="616" cy="523" r="12"/></g>
+    <g fill="#24201B" opacity="0.6"><rect x="72" y="516" width="90" height="6" rx="3"/><rect x="260" y="516" width="100" height="6" rx="3"/><rect x="448" y="516" width="80" height="6" rx="3"/><rect x="636" y="516" width="60" height="6" rx="3"/></g>
+    <g fill="#7A7167" opacity="0.4"><rect x="72" y="528" width="70" height="5" rx="2.5"/><rect x="260" y="528" width="70" height="5" rx="2.5"/><rect x="448" y="528" width="50" height="5" rx="2.5"/><rect x="636" y="528" width="70" height="5" rx="2.5"/></g>
+    <rect y="560" width="800" height="40" fill="#FFFFFF"/>
+  </g>
+</svg>

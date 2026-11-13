@@ -1,0 +1,61 @@
+/**
+ * Handi Kitchen & Catering's demo catalog (lib/demo/catalog.js builds it).
+ * Slugs match the template: the nine menu categories, the meal-time,
+ * special and tiffin-plan tags, and the kitchens (product_brand). `desc` is
+ * the card's line under the name (portion and how many it serves). The
+ * kitchens are invented.
+ */
+export default {
+  about: 'Home-style meals cooked every morning, delivered hot, and catering for 25 to 1,000 guests.',
+  colors: ['FBEBD3', 'FFF2CC', 'FDE7DF', 'E3F0E9', 'F6E3D3'],
+  ink: '1E1A14',
+  categories: [['Biryani & Rice', 'biryani-rice'], ['Curries', 'curries'], ['Kebab & Grill', 'kebab-grill'], ['Bhorta & Veg', 'bhorta-veg'], ['Snacks', 'snacks'], ['Desserts', 'desserts'], ['Drinks', 'drinks'], ['Meal Boxes', 'meal-boxes'], ['Party Trays', 'party-trays']],
+  tags: [['Today’s Special', 'today'], ['Bestseller', 'bestseller'], ['Breakfast', 'breakfast'], ['Lunch', 'lunch'], ['Dinner', 'dinner'], ['Snacks', 'snacks'], ['Spicy', 'spicy'], ['Vegetarian', 'vegetarian'], ['Tiffin Plan', 'tiffin-plan'], ['Office Lunch', 'office-lunch'], ['Family Dinner', 'family-dinner'], ['Healthy Bowl', 'healthy-bowl']],
+  brands: [['Handi Main Kitchen', 'handi-main'], ['Ammu’s Kitchen', 'ammus-kitchen'], ['Old Dhaka Grill', 'old-dhaka-grill'], ['Mishti Ghor', 'mishti-ghor']],
+  options: {
+    portion: ['Portion', [['Half', 0], ['Full', 160]]],
+    spice: ['Spice', [['Mild', 0], ['Medium', 0], ['Hot', 0]]],
+    tray: ['Tray', [['Serves 10', 0], ['Serves 20', 2400], ['Serves 40', 6200]]],
+  },
+  products: [
+    ['Kacchi Biryani', 'biryani-rice', 420, { brand: 'handi-main', tags: 'bestseller today lunch dinner', vary: 'portion', desc: 'Full plate · mutton, aloo, egg · serves 1', featured: true }],
+    ['Chicken Biryani', 'biryani-rice', 280, { sale: 250, brand: 'handi-main', tags: 'bestseller lunch dinner', vary: 'portion', desc: 'Full plate · serves 1' }],
+    ['Morog Polao', 'biryani-rice', 320, { brand: 'handi-main', tags: 'lunch', desc: 'Chicken polao · serves 1' }],
+    ['Bhuna Khichuri with Beef', 'biryani-rice', 260, { brand: 'ammus-kitchen', tags: 'today lunch', desc: 'Rainy-day special · serves 1' }],
+    ['Beef Rezala', 'curries', 340, { brand: 'handi-main', tags: 'bestseller dinner', vary: 'spice', desc: '4 pcs · rich and mild' }],
+    ['Chicken Roast', 'curries', 220, { brand: 'handi-main', tags: 'bestseller lunch', desc: '2 pcs · wedding style' }],
+    ['Mutton Kosha', 'curries', 450, { sale: 410, brand: 'ammus-kitchen', tags: 'spicy dinner', vary: 'spice', desc: '5 pcs · slow-cooked' }],
+    ['Rui Fish Curry', 'curries', 240, { brand: 'ammus-kitchen', tags: 'lunch', desc: '2 pcs · with potato' }],
+    ['Prawn Malai Curry', 'curries', 390, { brand: 'ammus-kitchen', tags: 'today dinner', desc: '6 prawns · coconut milk' }],
+    ['Shami Kebab (6)', 'kebab-grill snacks', 240, { brand: 'old-dhaka-grill', tags: 'bestseller snacks', desc: '6 pcs · beef' }],
+    ['Chicken Tikka Platter', 'kebab-grill', 380, { sale: 340, brand: 'old-dhaka-grill', tags: 'spicy dinner', desc: '8 pcs · naan + chutney' }],
+    ['Beef Sheek Kebab', 'kebab-grill', 320, { brand: 'old-dhaka-grill', tags: 'spicy today', desc: '4 skewers · charcoal' }],
+    ['Bhorta Platter (6 kinds)', 'bhorta-veg', 220, { brand: 'ammus-kitchen', tags: 'vegetarian bestseller lunch', desc: 'Aloo, begun, shutki & more' }],
+    ['Mixed Vegetable & Dal', 'bhorta-veg', 140, { brand: 'ammus-kitchen', tags: 'vegetarian lunch', desc: 'Serves 1 · daily veg' }],
+    ['Shorshe Ilish', 'curries', 520, { brand: 'ammus-kitchen', tags: 'today', desc: '1 piece · mustard gravy' }],
+    ['Singara (6)', 'snacks', 90, { brand: 'handi-main', tags: 'snacks vegetarian', desc: '6 pcs · with tamarind' }],
+    ['Chicken Samosa (6)', 'snacks', 120, { brand: 'handi-main', tags: 'snacks', desc: '6 pcs · crispy' }],
+    ['Beef Chop (4)', 'snacks', 160, { sale: 140, brand: 'old-dhaka-grill', tags: 'snacks', desc: '4 pcs · potato and mince' }],
+    ['Firni (Clay Pot)', 'desserts', 90, { brand: 'mishti-ghor', tags: 'bestseller', desc: 'Single · served cold' }],
+    ['Shahi Tukra', 'desserts', 140, { brand: 'mishti-ghor', tags: 'today', desc: '2 pcs · saffron rabri' }],
+    ['Mishti Doi (500 g)', 'desserts', 180, { brand: 'mishti-ghor', desc: 'Clay pot · serves 3' }],
+    ['Borhani (1 L)', 'drinks', 160, { brand: 'handi-main', tags: 'bestseller', desc: 'Spiced yoghurt drink' }],
+    ['Lemon Mint Cooler', 'drinks', 90, { brand: 'handi-main', desc: '500 ml · fresh' }],
+    ['Executive Lunch Box', 'meal-boxes', 280, { brand: 'handi-main', tags: 'lunch bestseller office-lunch', desc: 'Rice, chicken, dal, veg, salad' }],
+    ['Fish Lunch Box', 'meal-boxes', 260, { brand: 'ammus-kitchen', tags: 'lunch', desc: 'Rice, rui curry, dal, bhorta' }],
+    ['Healthy Grilled Bowl', 'meal-boxes', 320, { brand: 'handi-main', tags: 'healthy-bowl lunch', desc: 'Brown rice, grilled chicken · 520 kcal' }],
+    ['Office Lunch Plan (5 days)', 'meal-boxes', 1250, { brand: 'handi-main', tags: 'tiffin-plan office-lunch', desc: 'Weekly plan · steel tiffin' }],
+    ['Family Dinner Plan (7 days)', 'meal-boxes', 4900, { brand: 'handi-main', tags: 'tiffin-plan family-dinner', desc: 'Weekly plan · serves 3' }],
+    ['Healthy Bowl Plan (5 days)', 'meal-boxes', 1650, { brand: 'handi-main', tags: 'tiffin-plan healthy-bowl', desc: 'Weekly plan · calories listed' }],
+    ['Kacchi Party Tray', 'party-trays biryani-rice', 4200, { brand: 'handi-main', vary: 'tray', desc: 'Serves 10 · order a day ahead', featured: true }],
+    ['Kebab Party Platter', 'party-trays kebab-grill', 3200, { sale: 2900, brand: 'old-dhaka-grill', vary: 'tray', desc: 'Serves 10 · 3 kinds' }],
+    ['Iftar Box (10 boxes)', 'party-trays snacks', 2500, { brand: 'handi-main', stock: 0, desc: '10 boxes · seasonal' }],
+  ],
+  blogCategories: [['Recipes', 'recipes'], ['Catering', 'catering-stories'], ['Kitchen Notes', 'kitchen-notes']],
+  posts: [
+    ['Ammu’s Beef Rezala, Step by Step', 'recipes', 'The family recipe behind our most ordered curry, scaled down for a home kitchen.'],
+    ['How We Cook Kacchi for 500 Guests', 'catering-stories', 'Forty handis, a 3 am start and the one rule we never break on a wedding day.'],
+    ['Planning an Office Lunch That Everyone Eats', 'catering-stories', 'Portions, spice levels and the vegetarian question, sorted.'],
+    ['Why We Start Cooking at 6 am', 'kitchen-notes', 'Fresh bazaar meat, whole spices and no yesterday’s leftovers.'],
+  ],
+};

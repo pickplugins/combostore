@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 580" width="420" height="580" role="img" aria-label="A three-tier enamel tiffin carrier in green, turmeric and chilli red, steaming">
+  <!-- Hero art for templates/Handi: a stacked tiffin carrier (three enamel tiers, steel clamps and handle) with steam, on a transparent ground so it sits on the hero's green arch. Original drawing. -->
+  <defs>
+    <linearGradient id="hd-shine" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0"/><stop offset="0.18" stop-color="#FFFFFF" stop-opacity="0.28"/><stop offset="0.3" stop-color="#FFFFFF" stop-opacity="0"/>
+      <stop offset="0.82" stop-color="#000000" stop-opacity="0"/><stop offset="1" stop-color="#000000" stop-opacity="0.18"/>
+    </linearGradient>
+    <linearGradient id="hd-steel" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#B9C0C6"/><stop offset="0.45" stop-color="#F1F3F5"/><stop offset="1" stop-color="#A9B1B8"/>
+    </linearGradient>
+  </defs>
+  <!-- steam -->
+  <g fill="none" stroke="#FFF8EE" stroke-width="7" stroke-linecap="round" opacity="0.85">
+    <path d="M168 78 C152 58 184 44 168 18"/><path d="M210 70 C194 48 226 34 210 6"/><path d="M252 78 C236 58 268 44 252 18"/>
+  </g>
+  <!-- shadow -->
+  <ellipse cx="210" cy="560" rx="150" ry="14" fill="#000000" opacity="0.25"/>
+  <g stroke="#1E1A14" stroke-width="3.5" stroke-linejoin="round">
+    <!-- handle -->
+    <path d="M132 176 C132 70 288 70 288 176" fill="none" stroke-width="22" stroke-linecap="round"/>
+    <path d="M132 176 C132 70 288 70 288 176" fill="none" stroke="url(#hd-steel)" stroke-width="13" stroke-linecap="round"/>
+    <!-- side rods -->
+    <rect x="94" y="160" width="14" height="380" rx="7" fill="url(#hd-steel)"/>
+    <rect x="312" y="160" width="14" height="380" rx="7" fill="url(#hd-steel)"/>
+    <!-- lid -->
+    <path d="M118 196 Q210 120 302 196 Z" fill="url(#hd-steel)"/>
+    <circle cx="210" cy="140" r="13" fill="url(#hd-steel)"/>
+    <rect x="108" y="190" width="204" height="20" rx="10" fill="#1E1A14"/>
+    <!-- tier 1 -->
+    <rect x="112" y="210" width="196" height="100" rx="20" fill="#E4572E"/>
+    <rect x="112" y="210" width="196" height="100" rx="20" fill="url(#hd-shine)" stroke="none"/>
+    <rect x="106" y="306" width="208" height="16" rx="8" fill="url(#hd-steel)"/>
+    <!-- tier 2 -->
+    <rect x="112" y="322" width="196" height="100" rx="20" fill="#F4B400"/>
+    <rect x="112" y="322" width="196" height="100" rx="20" fill="url(#hd-shine)" stroke="none"/>
+    <rect x="106" y="418" width="208" height="16" rx="8" fill="url(#hd-steel)"/>
+    <!-- tier 3 -->
+    <rect x="112" y="434" width="196" height="100" rx="20" fill="#FBEBD3"/>
+    <rect x="112" y="434" width="196" height="100" rx="20" fill="url(#hd-shine)" stroke="none"/>
+    <rect x="120" y="530" width="180" height="14" rx="7" fill="#1E1A14"/>
+    <!-- clamps -->
+    <g fill="url(#hd-steel)">
+      <rect x="88" y="246" width="26" height="28" rx="6"/><rect x="306" y="246" width="26" height="28" rx="6"/>
+      <rect x="88" y="358" width="26" height="28" rx="6"/><rect x="306" y="358" width="26" height="28" rx="6"/>
+      <rect x="88" y="470" width="26" height="28" rx="6"/><rect x="306" y="470" width="26" height="28" rx="6"/>
+    </g>
+  </g>
+  <!-- painted motifs on the tiers -->
+  <g fill="none" stroke="#FFF8EE" stroke-width="4" stroke-linecap="round" opacity="0.9">
+    <path d="M176 262 q17 -22 34 0 q17 22 34 0"/>
+    <path d="M176 374 q17 -22 34 0 q17 22 34 0" stroke="#1E1A14" opacity="0.55"/>
+    <path d="M176 486 q17 -22 34 0 q17 22 34 0" stroke="#0E4D3A" opacity="1"/>
+  </g>
+  <g fill="#FFF8EE"><circle cx="160" cy="262" r="4"/><circle cx="260" cy="262" r="4"/></g>
+  <g fill="#0E4D3A"><circle cx="160" cy="486" r="4"/><circle cx="260" cy="486" r="4"/></g><g fill="#1E1A14" opacity="0.55"><circle cx="160" cy="374" r="4"/><circle cx="260" cy="374" r="4"/></g>
+</svg>

@@ -9,6 +9,16 @@ import { useAuthStore } from "@/store/authStore";
 import Spinner from "@/components/Spinner";
 import InvoiceWithPDF from "@/components/InvoiceWithPDF";
 import { sendMetaEvent } from "@/lib/sendMetaEvent";
+
+/* The buyer, for Meta's matching (hashed on our server before it is sent). */
+const metaUser = (order) => ({
+  email: order?.billing_email ?? order?.email,
+  phone: order?.billing_phone,
+  name: order?.billing_name,
+  city: order?.billing_city ?? order?.city,
+  country: order?.billing_country ?? order?.country,
+  external_id: order?.customer_id ?? order?.user_id ?? order?.userid,
+});
 import { clearCheckoutDraft } from "@/lib/checkoutDraft";
 import { getPageTemplate } from "@/lib/getPageTemplate";
 /* The client half: this page is a client component, and the server half reads the icon data on the server (it fetches its icons instead). */
@@ -187,7 +197,7 @@ const page = ({ params }) => {
 
 
     setinvoiceData(data)
-    sendMetaEvent({ event_name: 'VisitThankYou', value: orderData?.total_amount, currency: "BDT", }); // Call the function here
+    sendMetaEvent({ event_name: 'VisitThankYou', value: orderData?.total_amount, currency: orderData?.currency || "BDT", user: metaUser(orderData) });
   }, [orderData]);
 
 
@@ -238,7 +248,21 @@ const page = ({ params }) => {
     resetCartItems();
     setcartToggle(!cartToggle);
 
-    sendMetaEvent({ event_name: 'Purchase', value: orderData?.total_amount, currency: orderData?.currency || "BDT" });
+    /* Same event id as the checkout's (purchase-<order id>), so Meta counts this order once. */
+    sendMetaEvent({
+      event_name: 'Purchase',
+      eventId: orderData?.id ? `purchase-${orderData.id}` : undefined,
+      once: true,
+      value: orderData?.total_amount,
+      currency: orderData?.currency || "BDT",
+      customData: {
+        content_type: 'product',
+        content_ids: (lineItems ?? []).map(item => String(item?.product_id ?? item?.id)).filter(Boolean),
+        num_items: (lineItems ?? []).reduce((sum, item) => sum + (parseInt(item?.quantity) || 1), 0),
+        ...(orderData?.id ? { order_id: String(orderData.id) } : {}),
+      },
+      user: metaUser(orderData),
+    });
 
   }, [orderData, slug]);
 
