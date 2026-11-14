@@ -372,7 +372,7 @@ const TagEdit = ({ id }) => {
                   </div>
                   {currentObject?.thumbnail?.src && (
                     <div className="overflow-hidden rounded-lg border border-gray-200">
-                      <Image src={entry?.thumbnail?.src} width={400} height={400} alt={``} />
+                      <Image src={currentObject?.thumbnail?.src} width={400} height={400} alt={``} />
                     </div>
                   )}
 

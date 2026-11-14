@@ -673,7 +673,7 @@ const Products = () => {
 						{renderTermOptions(brands)}
 					</select>
 
-					<PopoverButton wrapperClass={``} enableCloseBtn={false} buttonLabel={moreFilterCount > 0 ? `${("More Filters")} (${moreFilterCount})` : ("More Filters")} buttonIcon={<IconFilter size={16} />} title={"More Filters"} position={"bottomLeft"} buttonClass={TOOLBAR_BUTTON} popoverClass={`absolute z-[999] w-[360px] overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg`}>
+					<PopoverButton wrapperClass={``} enableCloseBtn={false} buttonLabel={moreFilterCount > 0 ? `${("More Filters")} (${moreFilterCount})` : ("More Filters")} buttonIcon={<IconFilter size={16} />} title={"More Filters"} position={"bottomLeft"} buttonClass={TOOLBAR_BUTTON} popoverClass={`absolute z-[999] w-[360px]  rounded-xl border border-gray-200 bg-white shadow-lg`}>
 
 						<div className="p-4">
 							<div className="flex flex-col gap-3">

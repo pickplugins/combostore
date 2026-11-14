@@ -717,22 +717,22 @@ const Orders = (props) => {
               )}
 
               {orderItems?.length > 0 && (
-              <div className="inline-flex h-8 w-fit cursor-pointer items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 text-xs font-medium text-gray-700 transition-colors hover:border-gray-400 hover:bg-gray-50" onClick={() => {
-                var copyText = '';
-                orderItems.map(item => {
+                <div className="inline-flex h-8 w-fit cursor-pointer items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 text-xs font-medium text-gray-700 transition-colors hover:border-gray-400 hover:bg-gray-50" onClick={() => {
+                  var copyText = '';
+                  orderItems.map(item => {
 
-                  copyText += `${item.product_name} \n`;
-                  copyText += `Quantity: ${item.quantity} \n`;
-                  copyText += `Unit Price: ${item.price} \n`;
-                  copyText += `\n`;
+                    copyText += `${item.product_name} \n`;
+                    copyText += `Quantity: ${item.quantity} \n`;
+                    copyText += `Unit Price: ${item.price} \n`;
+                    copyText += `\n`;
 
-                })
+                  })
 
-                navigator.clipboard.writeText(`${copyText}`)
-                addNotification({ type: 'success', title: 'Info Copied', content: "Order items detail coppied." })
-              }}>
-                <IconCopy size={16} /> Copy
-              </div>
+                  navigator.clipboard.writeText(`${copyText}`)
+                  addNotification({ type: 'success', title: 'Info Copied', content: "Order items detail coppied." })
+                }}>
+                  <IconCopy size={16} /> Copy
+                </div>
               )}
 
 
@@ -1038,7 +1038,7 @@ const Orders = (props) => {
             ))}
           </select>
 
-          <PopoverButton wrapperClass={``} enableCloseBtn={false} buttonClass={TOOLBAR_BUTTON} buttonLabel={moreFilterCount > 0 ? `${("More Filters")} (${moreFilterCount})` : ("More Filters")} buttonIcon={<IconFilter size={16} />} title={"More Filters"} position={"bottomLeft"} popoverClass={`absolute z-[999] w-[380px] overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg`}>
+          <PopoverButton wrapperClass={``} enableCloseBtn={false} buttonClass={TOOLBAR_BUTTON} buttonLabel={moreFilterCount > 0 ? `${("More Filters")} (${moreFilterCount})` : ("More Filters")} buttonIcon={<IconFilter size={16} />} title={"More Filters"} position={"bottomLeft"} popoverClass={`absolute z-[999] w-[380px]  rounded-xl border border-gray-200 bg-white shadow-lg`}>
 
             <div className="p-4">
               <div className="flex flex-col gap-3">
@@ -1109,22 +1109,22 @@ const Orders = (props) => {
             <span className="text-sm font-medium text-gray-700">{selectedRows.length} {("selected")}</span>
             <button type="button" className="!h-8 rounded-md !border-0 !bg-transparent px-2 text-sm !text-gray-500 !shadow-none hover:!bg-white hover:!text-gray-800" onClick={() => { setselectedRows([]); setselectedOrdersData(null); }}>{("Clear")}</button>
 
-            <PopoverButton wrapperClass={``} buttonClass={TOOLBAR_BUTTON} buttonLabel={("Receipts")} buttonIcon={<IconPrinter size={16} />} title={"Print Receipts"} position={"bottomRight"}>
+            <PopoverButton wrapperClass={``} buttonClass={TOOLBAR_BUTTON} buttonLabel={("Receipts")} buttonIcon={<IconPrinter size={16} />} title={"Print Receipts"} position={""}>
               <div className="p-5 bg-gray-50">
                 <OrdersReceipt ids={selectedRows} ordersData={selectedOrdersData} />
               </div>
             </PopoverButton>
-            <PopoverButton wrapperClass={``} buttonClass={TOOLBAR_BUTTON} buttonLabel={("Overview")} buttonIcon={<IconNotes size={16} />} title={"Orders Overview"} position={"bottomRight"}>
+            <PopoverButton wrapperClass={``} buttonClass={TOOLBAR_BUTTON} buttonLabel={("Overview")} buttonIcon={<IconNotes size={16} />} title={"Orders Overview"} position={""}>
               <div className="p-5 bg-gray-50">
                 <OrdersOverview ids={selectedRows} ordersData={selectedOrdersData} />
               </div>
             </PopoverButton>
-            <PopoverButton wrapperClass={``} buttonClass={TOOLBAR_BUTTON} buttonLabel={("Product List")} buttonIcon={<IconListDetails size={16} />} title={"Product List"} position={"bottomRight"}>
+            <PopoverButton wrapperClass={``} buttonClass={TOOLBAR_BUTTON} buttonLabel={("Product List")} buttonIcon={<IconListDetails size={16} />} title={"Product List"} position={""}>
               <div className="p-5 bg-gray-50">
                 <OrdersProductList ids={selectedRows} ordersData={selectedOrdersData} />
               </div>
             </PopoverButton>
-            <PopoverButton wrapperClass={``} buttonClass={TOOLBAR_BUTTON} buttonLabel={("Bulk Update")} buttonIcon={<IconEdit size={16} />} title={"Bulk Update"} position={"bottomRight"}>
+            <PopoverButton wrapperClass={``} buttonClass={TOOLBAR_BUTTON} buttonLabel={("Bulk Update")} buttonIcon={<IconEdit size={16} />} title={"Bulk Update"} position={""}>
               <div className="p-5 bg-gray-50">
                 <OrderBulkUpdate onOrderBulkUpdated={onOrderBulkUpdated} ids={selectedRows} />
               </div>

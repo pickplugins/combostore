@@ -68,7 +68,7 @@ const OrderUpdate = (props) => {
 
     var items = {};
 
-    countries.map(country => {
+    countries?.map(country => {
       items[country.code2] = { label: country.name, value: country.code2, states: country.states }
     })
 
@@ -98,7 +98,7 @@ const OrderUpdate = (props) => {
     })
     setstatesList(statesListX)
 
-    var city = orderData?.billing_city.length > 0 ? orderData?.billing_city : orderData?.billing_city
+    var city = orderData?.billing_city?.length > 0 ? orderData?.billing_city : orderData?.billing_city
 
     if (!city || city == null || city == undefined) {
 
@@ -1350,7 +1350,7 @@ const OrderUpdate = (props) => {
 
                       {item?.attributes && (
                         <div className="flex gap-4 flex-wrap">
-                          {Object.entries(item?.attributes).map((args) => {
+                          {Object.entries(item?.attributes)?.map((args) => {
 
                             var attrId = args[0];
                             var attr = args[1];
@@ -1893,13 +1893,13 @@ const OrderUpdate = (props) => {
               <option value="sundarban">Sundarban Courier</option>
             </select> */}
 
-            {shippingMethods.length == 0 ? (
+            {shippingMethods?.length == 0 ? (
               <div tone="muted">
                 No shipping methods yet. Choose your country and city to see the available options.
               </div>
             ) : (
               <div role="radiogroup" aria-label="Shipping method" className="flex flex-col gap-2">
-                {shippingMethods.map(method => {
+                {shippingMethods?.map(method => {
                   var id = method?.id;
                   var amount = parseFloat(method?.amount);
 
@@ -2001,7 +2001,7 @@ const OrderUpdate = (props) => {
 
 
 
-                  {Object.entries(countriesList).length > 0 && (
+                  {Object.entries(countriesList)?.length > 0 && (
                     <DropDown allowReset={false} multiple={false} labelClass={dropDownClass} value={orderData?.billing_country ?? defaultCountry} options={countriesList} label={countryLabel(orderData?.billing_country)} onOptionsChoose={(args) => {
                       setorderData({ ...orderData, billing_country: args?.value })
                     }} />
@@ -2019,7 +2019,7 @@ const OrderUpdate = (props) => {
                 <div className="">
 
 
-                  {Object.entries(statesList).length > 0 && (
+                  {Object.entries(statesList)?.length > 0 && (
                     <DropDown allowReset={false} multiple={false} labelClass={dropDownClass} value={orderData?.billing_city} options={statesList} label={cityLabel(orderData?.billing_city)} onOptionsChoose={(args) => {
                       setorderData({ ...orderData, billing_city: args?.value })
                     }} />
