@@ -2,13 +2,16 @@
 
 import PropTypes from "prop-types";
 import React from "react";
-import { useState, useEffect } from "react";
-import { IconPackage, IconShoppingBag } from "@tabler/icons-react";
+import { useState, useEffect, useCallback } from "react";
+import { IconFileInvoice, IconPackage, IconShoppingBag } from "@tabler/icons-react";
 import { useUtilsStore } from '../../../store/useUtilsStore';
 import { useCounterStore } from '../../../store/useCounterStore';
 import { useSavedToken } from './useSavedToken';
 import { StatusBadge, AccountEmptyState, AccountListSkeleton, AccountPager, AccountNotice, formatAccountDate } from './accountUi';
 import { elementCssClasses } from "../ElementsDefinition";
+import OrderLicenseList from './OrderLicenseList';
+import OrderDownloadList from './OrderDownloadList';
+import OrderInvoiceModal from './OrderInvoiceModal';
 
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
@@ -79,6 +82,90 @@ const CustomerOrdersView = (props) => {
 	}, [token, page]);
 
 	var orders = ordersData?.posts ?? [];
+	var showLicenses = !props?.options?.hideLicenses;
+
+	/* License keys for the orders on this page, by order id. One request per
+	   page; get_licenses only returns the signed-in customer's own. A failure
+	   just leaves the cards without keys. */
+	var [licensesByOrder, setlicensesByOrder] = useState({});
+	var orderIdsKey = orders.map(order => order.id).join(",");
+
+	useEffect(() => {
+		if (!token || !showLicenses || !orderIdsKey) return;
+
+		var cancelled = false;
+		var order_ids = orderIdsKey.split(",").map(Number);
+
+		fetch(serverUrl + "wp-json/combo-store/v2/get_licenses", {
+			method: "POST",
+			headers: {
+				'Content-Type': 'application/json',
+				'Authorization': `Bearer ${token}`
+			},
+			body: JSON.stringify({ order_ids, per_page: 100, order: "ASC" }),
+		})
+			.then((response) => response.ok ? response.json() : null)
+			.then((res) => {
+				if (cancelled || !res) return;
+				var grouped = {};
+				for (var license of res?.posts ?? []) {
+					(grouped[license.order_id] = grouped[license.order_id] ?? []).push(license);
+				}
+				setlicensesByOrder(grouped);
+			})
+			.catch(() => { });
+
+		return () => { cancelled = true; };
+
+	}, [token, orderIdsKey, showLicenses]);
+
+
+	/* Files the orders on this page can download (only paid / completed
+	   orders have any), with signed links that last an hour. */
+	var showDownloads = !props?.options?.hideDownloads;
+	var [downloadsByOrder, setdownloadsByOrder] = useState({});
+
+	function fetchDownloads(order_ids) {
+		return fetch(serverUrl + "wp-json/combo-store/v2/get_order_downloads", {
+			method: "POST",
+			headers: {
+				'Content-Type': 'application/json',
+				'Authorization': `Bearer ${token}`
+			},
+			body: JSON.stringify({ order_ids }),
+		})
+			.then((response) => response.ok ? response.json() : null)
+			.then((res) => res?.downloads ?? null)
+			.catch(() => null);
+	}
+
+	useEffect(() => {
+		if (!token || !showDownloads || !orderIdsKey) return;
+
+		var cancelled = false;
+		fetchDownloads(orderIdsKey.split(",").map(Number)).then((downloads) => {
+			if (!cancelled && downloads) setdownloadsByOrder(downloads);
+		});
+
+		return () => { cancelled = true; };
+
+	}, [token, orderIdsKey, showDownloads]);
+
+	/* A link left open past its hour: fetch that order's links again and hand
+	   back the new one for this file. */
+	function renewDownload(file) {
+		return fetchDownloads([file.order_id]).then((downloads) => {
+			var fresh = downloads?.[file.order_id];
+			if (!fresh) return null;
+			setdownloadsByOrder(prev => ({ ...prev, [file.order_id]: fresh }));
+			return fresh.find(item => item.file_id === file.file_id)?.url ?? null;
+		});
+	}
+
+	/* The order whose invoice is open, if any. Built from the loaded row. */
+	var showInvoice = !props?.options?.hideInvoice;
+	var [invoiceOrder, setinvoiceOrder] = useState(null);
+	var closeInvoice = useCallback(() => setinvoiceOrder(null), []);
 
 	function paymentLabel(method) {
 		return paymentGatewaysArgs?.[method]?.label ?? method ?? "";
@@ -146,6 +233,10 @@ const CustomerOrdersView = (props) => {
 										</ul>
 									)}
 
+									{showLicenses && <OrderLicenseList licenses={licensesByOrder[order.id]} cls={cls} />}
+
+									{showDownloads && <OrderDownloadList downloads={downloadsByOrder[order.id]} cls={cls} onRenew={renewDownload} />}
+
 									<div className={cls('order-footer')}>
 										<div className={cls('payment')}>
 											{order.payment_method && <span>{paymentLabel(order.payment_method)}</span>}
@@ -156,7 +247,15 @@ const CustomerOrdersView = (props) => {
 												</>
 											)}
 										</div>
-										<div className={cls('order-total')}>{wrapCurrency(order.total_amount)}</div>
+										<div className={cls('order-actions')}>
+											{showInvoice && (
+												<button type="button" className={cls('invoice-button')} onClick={() => setinvoiceOrder(order)}
+													aria-label={`View invoice for order #${order.id}`}>
+													<IconFileInvoice size={14} /> Invoice
+												</button>
+											)}
+											<div className={cls('order-total')}>{wrapCurrency(order.total_amount)}</div>
+										</div>
 									</div>
 
 								</li>
@@ -166,6 +265,8 @@ const CustomerOrdersView = (props) => {
 				)}
 
 				<AccountPager page={page} maxPages={ordersData?.maxPages} loading={loading} onChange={setpage} />
+
+				{invoiceOrder && <OrderInvoiceModal order={invoiceOrder} onClose={closeInvoice} />}
 
 			</div>
 		</div>

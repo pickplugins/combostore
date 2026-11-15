@@ -457,11 +457,16 @@ const Products = () => {
 								<span className={`${META_PILL} bg-indigo-50 text-indigo-700`}>{entry.variations.length} {("variations")}</span>
 							)}
 
-							<PopoverButton buttonLabel={" "} buttonIcon={<IconEdit size={18} />} title={`Edit ${entry?.title ?? "product"}`} drawer={"right"} buttonClass={ICON_BUTTON}>
-								<div className="p-5 bg-gray-50 text-left">
-									<ProductEdit id={entry?.id} />
-								</div>
-							</PopoverButton>
+
+							{!variation_id && (
+								<PopoverButton buttonLabel={" "} buttonIcon={<IconEdit size={18} />} title={`Edit ${entry?.title ?? "product"}`} drawer={"right"} buttonClass={ICON_BUTTON}>
+									<div className="p-5 bg-gray-50 text-left">
+										<ProductEdit id={entry?.id} />
+									</div>
+								</PopoverButton>
+							)}
+
+
 						</div>
 					</div>
 				</div>

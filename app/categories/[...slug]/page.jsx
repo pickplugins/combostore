@@ -12,7 +12,7 @@ import { PageProvider } from "@/components/PageBuilder/context/PageContext";
 
 
 import { generateFacebookEventId } from '@/lib/facebook/event-id';
-import { sendFacebookServerEvent } from '@/lib/facebook/capi';
+import { queueFacebookServerEvent } from '@/lib/facebook/serverEvent';
 import FacebookViewContent from '@/components/analytics/FacebookViewContent';
 import { after } from 'next/server';
 import { headers, cookies } from 'next/headers';
@@ -96,17 +96,8 @@ export default async function page({ params }) {
 
 
 
-  after(() =>
-    sendFacebookServerEvent({
-      pixelId: FACEBOOK_PIXEL_ID,                          // from getSettings()
-      accessToken: META_ACCESS_TOKEN, // or process.env.FB_ACCESS_TOKEN
-      eventName: 'ViewContent',
-      eventId,
-      data: eventData,
-      sourceUrl: storeUrl(`categories/${lastParam}`),
-      ip, userAgent, fbp, fbc,
-    })
-  );
+  /* Bot filter, IP, _fbp / _fbc and external_id are handled by the helper. */
+  await queueFacebookServerEvent({ eventName: 'ViewContent', eventId, data: eventData, path: `categories/${lastParam}` });
 
 
 

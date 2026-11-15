@@ -16,6 +16,9 @@ const CustomerOrdersOptions = (props) => {
 
 	var options = props?.options ?? {};
 	var hideTitle = !!options?.hideTitle;
+	var hideLicenses = !!options?.hideLicenses;
+	var hideDownloads = !!options?.hideDownloads;
+	var hideInvoice = !!options?.hideInvoice;
 	/* Every current key, filled from defaults where the block lacks it, so all of them show up for editing. */
 	var cssSelectors = withElementCssDefaults('customerOrders', props?.cssSelectors);
 
@@ -34,6 +37,42 @@ const CustomerOrdersOptions = (props) => {
 						updateBlock('options', optionsX)
 					}}>
 						{hideTitle ? <IconCheckbox /> : <IconSquare />}
+					</div>
+				</div>
+
+				<div className="flex justify-between items-center">
+					<label htmlFor="" className="text-xs font-medium text-gray-600">Hide license keys</label>
+
+					<div className="cursor-pointer" onClick={() => {
+						var optionsX = { ...(Array.isArray(options) ? {} : options) }
+						optionsX.hideLicenses = !hideLicenses
+						updateBlock('options', optionsX)
+					}}>
+						{hideLicenses ? <IconCheckbox /> : <IconSquare />}
+					</div>
+				</div>
+
+				<div className="flex justify-between items-center">
+					<label htmlFor="" className="text-xs font-medium text-gray-600">Hide downloads</label>
+
+					<div className="cursor-pointer" onClick={() => {
+						var optionsX = { ...(Array.isArray(options) ? {} : options) }
+						optionsX.hideDownloads = !hideDownloads
+						updateBlock('options', optionsX)
+					}}>
+						{hideDownloads ? <IconCheckbox /> : <IconSquare />}
+					</div>
+				</div>
+
+				<div className="flex justify-between items-center">
+					<label htmlFor="" className="text-xs font-medium text-gray-600">Hide invoice button</label>
+
+					<div className="cursor-pointer" onClick={() => {
+						var optionsX = { ...(Array.isArray(options) ? {} : options) }
+						optionsX.hideInvoice = !hideInvoice
+						updateBlock('options', optionsX)
+					}}>
+						{hideInvoice ? <IconCheckbox /> : <IconSquare />}
 					</div>
 				</div>
 

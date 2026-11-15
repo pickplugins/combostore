@@ -5,7 +5,7 @@ import Link from "next/link";
 
 import { useCounterStore } from '../../store/useCounterStore'
 import { useUtilsStore } from '../../store/useUtilsStore';
-import { IconClipboardText, IconRouteSquare, IconTruckDelivery, IconRepeat, IconFileInvoice, IconReceipt, IconShoppingBag, IconRefresh, IconAlertTriangle, IconArrowLeft, IconArrowUpRight, IconCalendarTime, IconUser, IconCash, IconCreditCard } from "@tabler/icons-react";
+import { IconClipboardText, IconRouteSquare, IconTruckDelivery, IconRepeat, IconFileInvoice, IconReceipt, IconShoppingBag, IconRefresh, IconAlertTriangle, IconArrowLeft, IconArrowUpRight, IconCalendarTime, IconUser, IconCash, IconCreditCard, IconKey } from "@tabler/icons-react";
 import { BADGE_BASE, titleCase, parseDate, timeAgo, hasId } from "./deliveryUi";
 
 import Tabs from '../../components/Tabs';
@@ -15,6 +15,7 @@ import OrderInvoice from '../../components/OrderInvoice';
 import OrderTrackings from '../../components/OrderTrackings';
 import OrderNotes from '../../components/OrderNotes';
 import OrderSubscription from '../../components/OrderSubscription';
+import OrderLicenses from '../../components/OrderLicenses';
 import OrderUpdate from '../../components/OrderUpdate';
 import OrderDelivery from '../../components/OrderDelivery';
 
@@ -270,6 +271,7 @@ const OrderEdit = ({ id, variant = "page" }) => {
               { label: "Invoice", id: 'invoice', icon: <IconFileInvoice size={18} /> },
               { label: "Receipt", id: 'receipt', icon: <IconReceipt size={18} /> },
               { label: "Subscription", id: 'subscription', icon: <IconRepeat size={18} /> },
+              { label: "Licenses", id: 'licenses', icon: <IconKey size={18} /> },
               { label: "Delivery", id: 'delivery', icon: <IconTruckDelivery size={18} /> },
               { label: "Trackings", id: 'trackings', icon: <IconRouteSquare size={18} /> },
               { label: "Order Notes", id: 'notes', icon: <IconClipboardText size={18} /> },
@@ -287,13 +289,16 @@ const OrderEdit = ({ id, variant = "page" }) => {
             <Tab index={3} id="subscription">
               <OrderSubscription order_id={id} />
             </Tab>
-            <Tab index={4} id="delivery">
+            <Tab index={4} id="licenses">
+              <OrderLicenses order_id={id} />
+            </Tab>
+            <Tab index={5} id="delivery">
               <OrderDelivery order_id={id} orderData={orderData} />
             </Tab>
-            <Tab index={5} id="trackings">
+            <Tab index={6} id="trackings">
               <OrderTrackings order_id={id} />
             </Tab>
-            <Tab index={6} id="notes">
+            <Tab index={7} id="notes">
               <OrderNotes order_id={id} />
             </Tab>
 

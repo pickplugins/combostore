@@ -2,15 +2,26 @@
 
 import PropTypes from "prop-types";
 import React from "react";
-import { IconPackage } from "@tabler/icons-react";
+import { IconFileInvoice, IconPackage } from "@tabler/icons-react";
 import { StatusBadge } from './accountUi';
 import { elementCssClasses } from "../ElementsDefinition";
 import { editorRelative } from '../editorPosition';
+import OrderLicenseList from './OrderLicenseList';
+import OrderDownloadList from './OrderDownloadList';
 
 /* Sample orders for the canvas: the builder never fetches a customer's real ones. */
 const sampleOrders = [
 	{ id: 1042, date: '2 Nov 2026', status: 'processing', items: [{ name: 'Organic honey 500g', quantity: 2 }, { name: 'Mustard oil 1L', quantity: 1 }, { name: 'Basmati rice 5kg', quantity: 1 }], more: 2, payment: 'Cash on delivery', paymentStatus: 'unpaid', total: '৳ 2,350' },
-	{ id: 1017, date: '18 Oct 2026', status: 'completed', items: [{ name: 'Green tea, 100 bags', quantity: 1 }], more: 0, payment: 'bKash', paymentStatus: 'paid', total: '৳ 640' },
+	{
+		id: 1017, date: '18 Oct 2026', status: 'completed', items: [{ name: 'Pro plugin, 5 sites', quantity: 1 }], more: 0, payment: 'bKash', paymentStatus: 'paid', total: '৳ 640',
+		/* Same shape as a get_licenses row, so OrderLicenseList renders it like the shop does. */
+		licenses: [{ id: 1, license_key: 'A1B2C3D4-E5F60718-293A4B5C-6D7E8F90', status: 'active', product_title: 'Pro plugin', domains: ['example.com', 'shop.example.com'], activation_limit: 5, expires_at: '2027-10-18 10:00:00', is_lifetime: false, is_expired: false }],
+		/* Same shape as get_order_downloads rows. */
+		downloads: [
+			{ order_id: 1017, file_id: 1, title: 'pro-plugin-2.4.1', extension: 'zip', size: 4286175, product_title: 'Pro plugin', url: '#' },
+			{ order_id: 1017, file_id: 2, title: 'Getting started guide', extension: 'pdf', size: 812000, product_title: 'Pro plugin', url: '#' },
+		],
+	},
 ];
 
 /*
@@ -100,13 +111,25 @@ const CustomerOrders = (props) => {
 								)}
 							</ul>
 
+							{!options?.hideLicenses && <OrderLicenseList licenses={order.licenses} cls={cls} preview />}
+
+							{!options?.hideDownloads && <OrderDownloadList downloads={order.downloads} cls={cls} preview />}
+
 							<div className={cls('order-footer')}>
 								<div className={cls('payment')}>
 									<span>{order.payment}</span>
 									<span aria-hidden="true">·</span>
 									<span>Payment {order.paymentStatus}</span>
 								</div>
-								<div className={cls('order-total')}>{order.total}</div>
+								<div className={cls('order-actions')}>
+									{/* On the shop this opens the order's invoice (print / PDF); here it is only shown. */}
+									{!options?.hideInvoice && (
+										<span className={cls('invoice-button')}>
+											<IconFileInvoice size={14} /> Invoice
+										</span>
+									)}
+									<div className={cls('order-total')}>{order.total}</div>
+								</div>
 							</div>
 
 						</li>

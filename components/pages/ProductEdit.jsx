@@ -16,12 +16,13 @@ import ProductsVariations from "../../components/shop-elements/ProductsVariation
 import ProductsTemplatePicker from "../../components/shop-elements/ProductsTemplatePicker";
 import ProductsPicker from "../../components/shop-elements/ProductsPicker";
 import GalleryPicker from "../../components/shop-elements/GalleryPicker";
+import MediaThumb from "../../components/shop-elements/MediaThumb";
 import TermsPicker from "../../components/shop-elements/TermsPicker";
 import TagsPicker from "../../components/shop-elements/TagsPicker";
 import Spinner from "../../components/Spinner";
 import HtmlEditor from "../../components/HtmlEditor";
 
-import { IconLockOpen, IconLock, IconCheckbox, IconSquare, IconFidgetSpinner, IconTrash, IconStarFilled, IconStar, IconX, IconExternalLink } from "@tabler/icons-react";
+import { IconLockOpen, IconLock, IconCheckbox, IconSquare, IconFidgetSpinner, IconTrash, IconStarFilled, IconStar, IconX, IconExternalLink, IconPlus } from "@tabler/icons-react";
 
 
 
@@ -242,7 +243,7 @@ const ProductEdit = ({ id }) => {
     { label: "Visibility", value: 'visibility' },
 
     { label: "Shipping", value: 'shipping' },
-    // { label: "Downloads", value: 'downloads' },
+    { label: "Downloads", value: 'downloads' },
     // { label: "Tax", value: 'tax' },
     { label: "Gallery", value: 'gallery' },
     // { label: "Warranty", value: 'warranty' },
@@ -251,6 +252,7 @@ const ProductEdit = ({ id }) => {
     // { label: "Compliance", value: 'compliance ' },
     // { label: "Warehouse", value: 'warehouse' },
     { label: "FAQ", value: 'faq' },
+    { label: "License", value: 'license' },
     // { label: "Unit & Quantity", value: 'unit_quantity' },
     { label: "Upsells & Cross-sells", value: 'upsellsCrosssells' },
     { label: "Related Products", value: 'related_products' },
@@ -310,19 +312,32 @@ const ProductEdit = ({ id }) => {
     )
 
   }
-  const DownloadsTitle = ({ text, index }) => {
+  const DownloadsTitle = ({ item, index }) => {
 
     return (
       <div className="flex gap-3 items-center">
 
         <div className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600 cursor-pointer [&>svg]:size-4" onClick={ev => {
+          ev.stopPropagation();
 
-          var downloads = currentObject.downloads;
+          var downloads = [...(currentObject?.downloads ?? [])];
           downloads.splice(index, 1);
           setcurrentObject({ ...currentObject, downloads: downloads });
 
         }}><IconTrash /></div>
-        <div>{text}</div>
+
+        {/* The file's own thumbnail or type icon; a restricted image loads a private preview. */}
+        <div className="h-9 w-9 shrink-0 overflow-hidden rounded-md border border-gray-200 [&_span]:hidden">
+          {item?.src ? <MediaThumb item={item} size={96} /> : null}
+        </div>
+
+        <div className="min-w-0 truncate">{item?.title || "Untitled file"}</div>
+
+        {item?.restricted ? (
+          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-gray-900 px-2 py-0.5 text-[10px] font-medium text-white"><IconLock size={10} /> Restricted</span>
+        ) : item?.src ? (
+          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-700 ring-1 ring-inset ring-amber-200" title="Anyone with the link can download this file. Upload it with “Restricted upload” ticked to keep it for buyers.">Public</span>
+        ) : null}
       </div>
     )
 
@@ -496,16 +511,27 @@ const ProductEdit = ({ id }) => {
 
 
   }
+  /* A download is a media file, picked from the media library (ideally a
+     restricted upload). Kept: id, title, src, mime, restricted. Picking the
+     same file twice adds it once. */
   function onPickDownloads(item) {
+    if (!item?.id) return;
 
+    setcurrentObject(prev => {
+      var downloads = Array.isArray(prev?.downloads) ? prev.downloads : [];
+      if (downloads.some(download => download?.id === item.id)) return prev;
 
-
-    var downloads = currentObject?.downloads ? currentObject.downloads : [];
-    downloads.push({ id: item.id, title: item.title })
-
-    setcurrentObject({ ...currentObject, downloads: downloads });
-
-
+      return {
+        ...prev,
+        downloads: [...downloads, {
+          id: item.id,
+          title: item.title,
+          src: item.src,
+          mime: item.mime,
+          restricted: !!item.restricted,
+        }],
+      };
+    });
   }
   function onPickGallery(item) {
 
@@ -1310,6 +1336,124 @@ const ProductEdit = ({ id }) => {
               </>
 
             )}
+            {currentObject?.addons?.includes('license') && (
+              <>
+
+                <WidgetWrapper className={CARD_CLASSES} collapsible={true} title="License Management">
+                  <div className="p-4 flex flex-col gap-3 ">
+
+                    <div className="flex flex-col gap-1.5">
+
+
+                      <div className="flex gap-2 cursor-pointer items-center">
+
+                        <label htmlFor="stockStatusInstock" className="flex gap-2 cursor-pointer">
+
+                          <input
+                            id="stockStatusInstock"
+                            type="checkbox"
+                            className=""
+                            checked={currentObject?.license?.enable ? true : false}
+                            onChange={(ev) => {
+
+                              var license = currentObject?.license ? currentObject.license : {};
+                              license.enable = !license.enable
+
+                              setcurrentObject({ ...currentObject, license: license });
+
+
+                            }}
+                          />
+                          <span>Enable License</span>
+                        </label>
+
+                      </div>
+
+
+                    </div>
+
+                    {currentObject?.license?.enable && (
+                      <>
+
+                        <div className="flex flex-col gap-1.5">
+                          <label htmlFor="" className="block text-sm font-medium text-gray-700">
+                            {("License Limit Count?")}
+                          </label>
+                          <input
+                            type="number"
+                            className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 w-full rounded-lg bg-white px-3 py-2 text-sm"
+                            value={currentObject?.license?.limit}
+                            onChange={(ev) => {
+                              var value = ev.target.value;
+
+                              setcurrentObject({ ...currentObject, license: { ...currentObject.license, limit: value } });
+
+
+                            }}
+                          />
+                        </div>
+
+
+                        <div className="flex flex-col gap-1.5">
+                          <label htmlFor="" className="block text-sm font-medium text-gray-700">
+                            {("License Interval?")}
+                          </label>
+                          <select name="" id="" className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 w-full rounded-lg bg-white px-3 py-2 text-sm mb-5"
+                            value={currentObject?.license?.interval}
+                            onChange={(ev) => {
+                              var value = ev.target.value;
+
+                              setcurrentObject({ ...currentObject, license: { ...currentObject.license, interval: value } });
+                            }}
+                          >
+                            <option value="day">Day</option>
+                            <option value="week">Week</option>
+                            <option value="month">Month</option>
+                            <option value="year">Year</option>
+                          </select>
+                        </div>
+
+                        <div className="flex flex-col gap-1.5">
+                          <label htmlFor="" className="block text-sm font-medium text-gray-700">
+                            {("License Interval Count?")}
+                          </label>
+                          <input
+                            type="number"
+                            className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 w-full rounded-lg bg-white px-3 py-2 text-sm"
+                            value={currentObject?.license?.interval_count}
+                            onChange={(ev) => {
+                              var value = ev.target.value;
+
+                              setcurrentObject({ ...currentObject, license: { ...currentObject.license, interval_count: value } });
+
+
+                            }}
+                          />
+                        </div>
+
+
+
+
+
+
+
+
+
+
+                      </>
+                    )}
+
+
+
+
+                  </div>
+
+
+                </WidgetWrapper>
+
+              </>
+
+            )}
 
             {currentObject?.addons?.includes('gallery') && (
               <>
@@ -1386,21 +1530,23 @@ const ProductEdit = ({ id }) => {
                 <div className="p-4 ">
 
 
-                  <div className="flex justify-between">
-                    <div></div>
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <p className="text-xs text-gray-500">
+                      {("Files buyers get with this product. Use restricted uploads so only buyers can download them.")}
+                    </p>
                     <div>
-                      <ProductsPicker onPick={onPickDownloads} />
+                      <GalleryPicker title="Choose download files" buttonLabel={("Add files")} buttonIcon={<IconPlus size={16} />} defaultRestricted="only" onPick={onPickDownloads} />
                     </div>
 
                   </div>
 
-                  {currentObject?.downloads && (
+                  {currentObject?.downloads?.length > 0 && (
 
                     <div className="my-4">
                       {currentObject?.downloads.map((item, index) => {
 
                         return (
-                          <ToggleContent key={index} title={<DownloadsTitle text={item.title} index={index} />}
+                          <ToggleContent key={item?.id ?? index} title={<DownloadsTitle item={item} index={index} />}
                             contentClass=""
                             headerClass=""
                             headerTitleClass=""
@@ -1416,18 +1562,23 @@ const ProductEdit = ({ id }) => {
                                 <input
                                   type="text"
                                   className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 w-full rounded-lg bg-white px-3 py-2 text-sm"
-                                  value={item.title}
+                                  value={item.title ?? ""}
                                   onChange={(ev) => {
                                     var value = ev.target.value;
 
-                                    var downloads = currentObject?.downloads ? currentObject?.downloads : {};
-                                    downloads[index].title = value
+                                    var downloads = [...(currentObject?.downloads ?? [])];
+                                    downloads[index] = { ...downloads[index], title: value };
 
                                     setcurrentObject({ ...currentObject, downloads: downloads });
 
 
                                   }}
                                 />
+                              </div>
+
+                              <div className="text-xs text-gray-500">
+                                {("File")} #{item?.id}{item?.mime ? ` · ${item.mime}` : ""}
+                                {!item?.src && <span className="ml-1 text-amber-600">{("Picked before downloads used media files: pick the file again.")}</span>}
                               </div>
 
 

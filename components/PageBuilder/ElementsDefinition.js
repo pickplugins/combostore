@@ -5768,6 +5768,9 @@ const elements = [
 		},
 		options: {
 			hideTitle: false,
+			hideLicenses: false,
+			hideDownloads: false,
+			hideInvoice: false,
 		},
 		/*
 			The single source of the order list's default classes:
@@ -5776,6 +5779,12 @@ const elements = [
 			this file) when a block lacks a key. list-loading is added to list
 			while the next page loads. The status badge, pager and the empty,
 			loading and error states come from accountUi.jsx and have no key.
+			The license-* keys style the license keys an order issued, shown
+			between its items and its footer (hidden with options.hideLicenses).
+			The download-* keys style the files a paid / completed order can
+			download, below the licenses (hidden with options.hideDownloads).
+			invoice-button opens the order's invoice (print / PDF) in a modal; it
+			sits in order-actions beside the total (hidden with options.hideInvoice).
 		*/
 		cssSelectors: {
 			'*': { classes: '' },
@@ -5796,9 +5805,33 @@ const elements = [
 			'item-name': { classes: 'min-w-0 truncate' },
 			'item-quantity': { classes: 'shrink-0 text-gray-500' },
 			'items-more': { classes: 'text-xs text-gray-500' },
+			'licenses': { classes: 'mt-3 flex flex-col gap-2 border-t border-gray-100 pt-3' },
+			'licenses-title': { classes: 'flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-gray-500' },
+			'license': { classes: 'flex flex-col gap-2 rounded-lg border border-gray-200 bg-gray-50 p-3' },
+			'license-header': { classes: 'flex flex-wrap items-center justify-between gap-2' },
+			'license-product': { classes: 'min-w-0 truncate text-sm font-medium text-gray-900' },
+			'license-key-row': { classes: 'flex items-center gap-2' },
+			'license-key': { classes: 'min-w-0 flex-1 break-all rounded-md border border-gray-200 bg-white px-2.5 py-1.5 font-mono text-xs text-gray-800 select-all' },
+			'license-button': { classes: 'inline-flex shrink-0 items-center gap-1 rounded-md border border-gray-300 bg-white px-2 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-100 cursor-pointer' },
+			'license-meta': { classes: 'flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-500' },
+			'downloads': { classes: 'mt-3 flex flex-col gap-2.5 border-t border-gray-100 pt-3' },
+			'downloads-header': { classes: 'flex items-center justify-between gap-2' },
+			'downloads-title': { classes: 'flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-gray-500' },
+			'downloads-count': { classes: 'rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium normal-case tracking-normal text-gray-600' },
+			'downloads-list': { classes: 'flex flex-col divide-y divide-gray-100 overflow-hidden rounded-lg border border-gray-200 bg-white' },
+			'download': { classes: 'flex items-center gap-3 px-3 py-2.5 transition-colors hover:bg-gray-50' },
+			'download-icon': { classes: 'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg' },
+			'download-info': { classes: 'flex min-w-0 flex-1 flex-col gap-0.5' },
+			'download-name': { classes: 'truncate text-sm font-medium text-gray-900' },
+			'download-meta': { classes: 'flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-gray-500' },
+			'download-ext': { classes: 'rounded bg-gray-100 px-1.5 py-px font-mono text-[10px] font-semibold uppercase text-gray-600' },
+			'download-error': { classes: 'text-xs text-red-600' },
+			'download-button': { classes: 'inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-[#1b0e9f]/25 bg-[#1b0e9f]/5 px-3 py-1.5 text-xs font-semibold text-[#1b0e9f] transition-colors hover:border-[#1b0e9f] hover:bg-[#1b0e9f] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1b0e9f]/40 cursor-pointer' },
 			'order-footer': { classes: 'mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-gray-100 pt-3' },
 			'payment': { classes: 'flex flex-wrap items-center gap-2 text-xs text-gray-500' },
 			'order-total': { classes: 'text-base font-semibold text-gray-900' },
+			'order-actions': { classes: 'flex items-center gap-3' },
+			'invoice-button': { classes: 'inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-700 shadow-xs transition-colors hover:border-gray-400 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1b0e9f]/30 cursor-pointer' },
 		},
 		group: ['shop'],
 		children: [],

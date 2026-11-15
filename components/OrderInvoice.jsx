@@ -3,6 +3,7 @@ import { useState, useEffect, useMemo } from "react";
 import { IconAlertTriangle, IconRefresh, IconFileInvoice } from "@tabler/icons-react";
 
 import InvoiceWithPDF from '../components/InvoiceWithPDF';
+import { orderToInvoice } from './orderInvoiceData';
 
 import { useCounterStore } from '../store/useCounterStore'
 
@@ -34,31 +35,8 @@ const OrderInvoice = (props) => {
   var [errorMessage, seterrorMessage] = useState("");
 
 
-  /* No `from`: InvoiceWithPDF fills the sender from the shop's Settings
-     (site title, address, email, WhatsApp, logo). */
-  var invoiceData = useMemo(() => {
-
-    if (!orderData) return null;
-
-    return {
-      to: {
-        name: orderData?.billing_name,
-        address: orderData?.billing_address,
-        city: [orderData?.billing_city, orderData?.billing_country].filter(Boolean).join(", "),
-        phone: orderData?.billing_phone,
-      },
-      items: (lineItems ?? []).map(item => ({ id: item.id, product_name: item.product_name, qty: item.quantity, price: item.price })),
-      payment_method: orderData?.payment_method,
-      payment_status: orderData?.payment_status,
-      total: orderData?.total_amount,
-      discount: orderData?.discount_amount,
-      shipping: orderData?.shipping_amount,
-      advance: orderData?.advance_payment,
-      subtotal: orderData?.subtotal_amount,
-      invoiceNumber: orderData?.id,
-      date: orderData?.created_at,
-    }
-  }, [orderData, lineItems]);
+  /* Shared with the customer's order list, so both print the same invoice. */
+  var invoiceData = useMemo(() => orderToInvoice(orderData, lineItems ?? []), [orderData, lineItems]);
 
 
   function get_order() {

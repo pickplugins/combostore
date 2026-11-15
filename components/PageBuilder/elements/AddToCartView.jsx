@@ -180,7 +180,7 @@ const AddToCart = (props) => {
 
 		var cartProduct = {}
 
-
+		console.log("productData", productData)
 
 
 		if (addons?.includes('variations')) {
@@ -205,12 +205,22 @@ const AddToCart = (props) => {
 			cartProduct.thumbnail = cartThumbnail(productData, activeVariation)
 			cartProduct.attributes = activeVariation?.attributes
 
+			if (activeVariation?.license) {
+				cartProduct.license = activeVariation?.license
+			}
+
+
+
+
+
+
 		}
 
 		if (!addons?.includes('variations')) {
 
 
-			var price_type = productData?.price_type
+			var price_type = productData?.price_type ?? 'simple'
+			var license = productData?.license ?? null
 
 
 
@@ -228,6 +238,10 @@ const AddToCart = (props) => {
 				cartProduct.trade_price = productData?.trade_price
 				cartProduct.thumbnail = cartThumbnail(productData)
 				cartProduct.bulk_prices = productData?.bulk_prices
+
+
+
+
 				//return;
 			}
 
@@ -247,7 +261,18 @@ const AddToCart = (props) => {
 				//return;
 			}
 
+			if (productData?.license) {
+				cartProduct.license = productData?.license
+			}
 
+			console.log("cartProduct", cartProduct)
+
+			if (!cartProduct) {
+
+				addNotification({ type: 'error', title: 'Cant add to cart', content: "Sorry this product is invalid" })
+
+				return;
+			}
 
 		}
 
@@ -285,7 +310,10 @@ const AddToCart = (props) => {
 			bulk_prices: cartProduct?.bulk_prices,
 			thumbnail: cartProduct?.thumbnail,
 			metaData: cartProduct?.metaData,
-			attributes: cartProduct?.attributes
+			attributes: cartProduct?.attributes,
+			/* For showing "includes a license" in the cart. The server issues the
+			   key from the product / variation's own license settings, not this. */
+			license: cartProduct?.license ?? null
 		})
 
 

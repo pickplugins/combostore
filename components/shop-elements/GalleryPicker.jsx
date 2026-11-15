@@ -9,8 +9,20 @@ import {
 	IconPhoto,
 	IconCheck,
 	IconPhotoOff,
+	IconLock,
 } from "@tabler/icons-react";
 import UploadMedia from "./UploadMedia";
+import MediaThumb from "./MediaThumb";
+import { useCounterStore } from '../../store/useCounterStore'
+
+const STAFF_ROLES = ["administrator", "store_manager"];
+
+/* get_medias `restricted` values. The server lists restricted media to staff only. */
+const RESTRICTED_FILTERS = [
+	{ value: "all", label: "All" },
+	{ value: "exclude", label: "Public" },
+	{ value: "only", label: "Restricted" },
+];
 
 import Image from "next/image";
 
@@ -35,7 +47,14 @@ const GalleryPicker = (props) => {
 	var title = props.title;
 	var onPick = props.onPick;
 
-	var [queryPrams, setqueryPrams] = useState({ keyword: "", paged: 1, order: "DESC", per_page: 20, });
+	const { token, userDataX } = useCounterStore()
+	const isStaff = STAFF_ROLES.some(role => userDataX?.roles?.includes(role));
+
+	/* `restricted` picks which media to list: all, public only, or only the
+	   restricted files in uploads/combostore. Only staff get the filter (and
+	   only a staff token makes the server return restricted items). A caller
+	   choosing a paid download can start on "only" with defaultRestricted. */
+	var [queryPrams, setqueryPrams] = useState({ keyword: "", paged: 1, order: "DESC", per_page: 20, restricted: props.defaultRestricted ?? "all" });
 	var [loading, setloading] = useState(false);
 	var [failed, setfailed] = useState(false);
 	var [products, setproducts] = useState(null);
@@ -55,13 +74,20 @@ const GalleryPicker = (props) => {
 		setloading(true);
 		setfailed(false);
 
-		fetch(serverUrl + "wp-json/combo-store/v2/get_medias", {
+		const request = (withToken) => fetch(serverUrl + "wp-json/combo-store/v2/get_medias", {
 			method: "POST",
 			headers: {
 				'Content-Type': 'application/json',
+				...(withToken ? { 'Authorization': `Bearer ${token}` } : {}),
 			},
 			body: JSON.stringify(query),
-		})
+		});
+
+		/* The token only unlocks restricted media. The JWT plugin rejects an
+		   expired one outright, so fall back to the public list rather than
+		   failing the whole picker. */
+		request(!!token)
+			.then((response) => (token && (response.status === 401 || response.status === 403)) ? request(false) : response)
 			.then((response) => {
 				if (!response.ok) {
 					throw new Error('Token validation failed');
@@ -89,7 +115,7 @@ const GalleryPicker = (props) => {
 
 		const timer = setTimeout(() => fetchPosts(), keyword.length ? SEARCH_DELAY_MS : 0);
 		return () => clearTimeout(timer);
-	}, [isOpen, queryPrams.paged, queryPrams.keyword]);
+	}, [isOpen, queryPrams.paged, queryPrams.keyword, queryPrams.restricted, token]);
 
 	// Escape closes; lock page scroll while open.
 	useEffect(() => {
@@ -179,6 +205,22 @@ const GalleryPicker = (props) => {
 						)}
 					</div>
 
+					{isStaff && (
+						<div role="group" aria-label="Filter by access" className="inline-flex h-9 overflow-hidden rounded-lg border border-gray-300 bg-white">
+							{RESTRICTED_FILTERS.map(filter => {
+								const active = queryPrams.restricted === filter.value;
+								return (
+									<button key={filter.value} type="button" aria-pressed={active}
+										className={`inline-flex items-center gap-1.5 border-r border-gray-200 px-3 text-sm font-medium transition-colors last:border-r-0 cursor-pointer ${active ? "bg-gray-900 text-white" : "text-gray-600 hover:bg-gray-50"}`}
+										onClick={() => setqueryPrams(prev => ({ ...prev, restricted: filter.value, paged: 1 }))}>
+										{filter.value === "only" && <IconLock size={14} />}
+										{filter.label}
+									</button>
+								);
+							})}
+						</div>
+					)}
+
 					<button type="button" aria-pressed={enableUpload}
 						className={`inline-flex h-9 items-center gap-2 rounded-lg border px-3 text-sm font-medium transition-colors cursor-pointer ${enableUpload ? "border-gray-900 bg-gray-900 text-white" : "border-gray-300 bg-white text-gray-700 hover:border-gray-400 hover:bg-gray-50"}`}
 						onClick={() => setenableUpload(!enableUpload)}>
@@ -207,7 +249,7 @@ const GalleryPicker = (props) => {
 
 					{enableUpload && (
 						<div className="mb-4 rounded-lg border border-dashed border-gray-300 bg-gray-50 p-3">
-							<UploadMedia onUploadComplete={() => {
+							<UploadMedia defaultSecure={queryPrams.restricted === "only"} onUploadComplete={() => {
 								setqueryPrams(prev => ({ ...prev, keyword: "", paged: 1 }));
 								fetchPosts({ ...queryPrams, keyword: "", paged: 1 });
 							}} />
@@ -239,10 +281,10 @@ const GalleryPicker = (props) => {
 						<div className="flex flex-col items-center gap-1 py-12 text-center">
 							<IconPhotoOff size={24} className="text-gray-300" />
 							<div className="text-sm font-medium text-gray-700">
-								{keyword ? `No media matches “${keyword}”` : "No media yet"}
+								{keyword ? `No media matches “${keyword}”` : queryPrams.restricted === "only" ? "No restricted files yet" : "No media yet"}
 							</div>
 							<div className="text-xs text-gray-500">
-								{keyword ? "Try a different search." : "Upload an image to get started."}
+								{keyword ? "Try a different search." : queryPrams.restricted === "only" ? "Upload with “Restricted upload” ticked to add one." : "Upload an image to get started."}
 							</div>
 						</div>
 					)}
@@ -255,7 +297,8 @@ const GalleryPicker = (props) => {
 									<button key={item?.id ?? index} type="button" title={item.title}
 										className={`group relative overflow-hidden rounded-lg border bg-gray-50 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 cursor-pointer ${picked ? "border-gray-900 ring-2 ring-gray-900" : "border-gray-200 hover:border-gray-400"}`}
 										onClick={() => handlePick(item)}>
-										<Image className="aspect-square w-full object-cover" src={item.src} alt={item.title || ""} width={200} height={200} unoptimized />
+										{/* Restricted images load a private preview; other files show a type icon. */}
+										<MediaThumb item={item} />
 										<div className="truncate border-t border-gray-200 bg-white px-2 py-1.5 text-xs text-gray-600">
 											{item.title || "Untitled"}
 										</div>
@@ -274,7 +317,7 @@ const GalleryPicker = (props) => {
 				{/* Footer */}
 				<div className="flex items-center justify-between gap-3 border-t border-gray-200 px-4 py-3">
 					<span className="text-xs text-gray-500">
-						{pickedIds.length > 0 ? `${pickedIds.length} added` : "Click an image to add it."}
+						{pickedIds.length > 0 ? `${pickedIds.length} added` : queryPrams.restricted === "only" ? "Click a file to add it." : "Click an image to add it."}
 					</span>
 					<button type="button" className="inline-flex h-9 items-center rounded-lg bg-gray-900 px-4 text-sm font-medium text-white hover:bg-gray-800 cursor-pointer" onClick={close}>
 						Done
@@ -287,8 +330,8 @@ const GalleryPicker = (props) => {
 	return (
 		<div className="flex items-center gap-2">
 			<button type="button" className={TRIGGER_BUTTON} onClick={() => (isOpen ? close() : open())}>
-				<IconPhoto size={16} />
-				Media Library
+				{props.buttonIcon ?? <IconPhoto size={16} />}
+				{props.buttonLabel ?? "Media Library"}
 			</button>
 
 			{isOpen && mounted && createPortal(modal, document.body)}

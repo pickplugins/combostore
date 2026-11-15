@@ -76,6 +76,7 @@ const NAVS = [
 	{ label: ("Incomplete"), value: "incomplete", icon: <IconClipboardX />, parent: "sell", roles: ['administrator', 'store_manager'] },
 	{ label: ("Refunds"), value: "refunds", icon: <IconReceiptRefund />, parent: "sell", roles: ['administrator', 'store_manager'] },
 	{ label: ("Subscriptions"), value: "subscriptions", icon: <IconRotateRectangle />, parent: "sell", roles: ['administrator', 'store_manager'] },
+	{ label: ("Licenses"), value: "licenses", icon: <IconRotateRectangle />, parent: "sell", roles: ['administrator', 'store_manager'] },
 
 	// { label: ("Deliveries"), value: "deliveries", icon: <IconTruckDelivery />, roles: ['administrator', 'rider'] },
 

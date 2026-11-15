@@ -1559,7 +1559,7 @@ const Checkout = (props) => {
 
 									<div className="flex flex-col gap-2">
 										<label htmlFor="">Upload Receipt</label>
-										<UploadMedia onUploadComplete={(medias) => {
+										<UploadMedia allowSecure={false} onUploadComplete={(medias) => {
 
 
 											var media = medias[0];

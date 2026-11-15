@@ -14,6 +14,7 @@ import ProductBulkUpdate from "../../components/shop-elements/ProductBulkUpdate"
 
 import Image from "next/image";
 import UploadMedia from "../../components/shop-elements/UploadMedia";
+import MediaThumb from "../../components/shop-elements/MediaThumb";
 
 
 const MediaLibrary = (props) => {
@@ -335,11 +336,10 @@ const MediaLibrary = (props) => {
 
 
 
-            <div className="w-18 h-18 overflow-hidden border" >
-              {entry?.src && (
-                <Image unoptimized className="w-full" src={entry?.src} width={100} height={100} alt={``} />
-
-              )}
+            <div className="w-18 h-18 overflow-hidden border [&_span]:hidden" >
+              {/* Restricted images load a private preview; other files show a type icon.
+                  The badge is hidden at this size; the row shows it beside the title. */}
+              {entry?.src && <MediaThumb item={entry} size={160} />}
             </div>
 
           </div>
@@ -347,6 +347,9 @@ const MediaLibrary = (props) => {
           <div className="text-left flex flex-col gap-2 flex-wrap flex-1 group ">
             <div className="text-left text-sm text-gray-600 font-medium " >
               {entry?.title}
+              {entry?.restricted && (
+                <span className="ml-2 inline-flex items-center rounded-full bg-gray-900 px-1.5 py-0.5 align-middle text-[10px] font-medium text-white">Restricted</span>
+              )}
 
             </div>
 
@@ -621,7 +624,8 @@ const MediaLibrary = (props) => {
                       {selectedRows.includes(entry?.id) ? (<IconSquareCheckFilled />) : (<IconSquareCheck />)}
 
                     </div>
-                    <Image unoptimized className="w-full" src={entry?.src} width={100} height={100} alt={``} />
+                    {/* Restricted images load a private preview; other files show a type icon. */}
+                    <MediaThumb item={entry} className="rounded-lg" />
 
                   </div>
                 )

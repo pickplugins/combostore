@@ -2,6 +2,7 @@ import { Geist, Geist_Mono, DM_Sans, Figtree, Hind_Siliguri } from "next/font/go
 import "./globals.css";
 import TikTokPixel from '@/components/analytics/TikTokPixel';
 import FacebookPixel from '@/components/analytics/FacebookPixel';
+import FacebookUserMatching from '@/components/analytics/FacebookUserMatching';
 import { AuthProvider } from "../components/auth-context";
 import ExtensionsRuntime from "../components/ExtensionsRuntime";
 import NextTopLoader from 'nextjs-toploader';
@@ -193,6 +194,11 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 					    tied to a screen or a block - see
 					    components/ExtensionsRuntime.jsx. */}
 					<ExtensionsRuntime />
+
+					{/* Adds a signed-in customer's email / phone to the Meta pixel. Renders nothing. */}
+					{FacebookPixel_ID && (
+						<FacebookUserMatching pixelId={FacebookPixel_ID} />
+					)}
 
 					<div>{children}</div>
 

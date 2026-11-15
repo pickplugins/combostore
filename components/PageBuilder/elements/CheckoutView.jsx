@@ -1798,7 +1798,7 @@ const CheckoutView = (props) => {
 										{/* UploadMedia sizes its file input to fit, which is wider
 											  than the drawer; let it shrink beside the Upload button. */}
 										<div className="min-w-0 [&_input[type=file]]:w-full [&_input[type=file]]:min-w-0 [&_input[type=file]]:flex-1 [&_input[type=file]]:text-sm">
-											<UploadMedia onUploadComplete={(medias) => {
+											<UploadMedia allowSecure={false} onUploadComplete={(medias) => {
 												var media = medias[0];
 												setcheckoutData({ ...checkoutData, bank_recipt: media })
 											}} />
