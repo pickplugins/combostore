@@ -253,6 +253,7 @@ const ProductEdit = ({ id }) => {
     // { label: "Warehouse", value: 'warehouse' },
     { label: "FAQ", value: 'faq' },
     { label: "License", value: 'license' },
+    { label: "Subscription", value: 'subscription' },
     // { label: "Unit & Quantity", value: 'unit_quantity' },
     { label: "Upsells & Cross-sells", value: 'upsellsCrosssells' },
     { label: "Related Products", value: 'related_products' },
@@ -964,6 +965,7 @@ const ProductEdit = ({ id }) => {
 
                       }}>
 
+                      <option value="">Choose</option>
                       <option value="simple">Simple</option>
                       <option value="pwyw">Pay what you want</option>
                       <option value="bargain">Bargain Price</option>
@@ -1430,6 +1432,173 @@ const ProductEdit = ({ id }) => {
                             }}
                           />
                         </div>
+
+
+
+
+
+
+
+
+
+
+                      </>
+                    )}
+
+
+
+
+                  </div>
+
+
+                </WidgetWrapper>
+
+              </>
+
+            )}
+            {currentObject?.addons?.includes('subscription') && (
+              <>
+
+                <WidgetWrapper className={CARD_CLASSES} collapsible={true} title="Subscription Management">
+                  <div className="p-4 flex flex-col gap-3 ">
+
+                    <div className="flex flex-col gap-1.5">
+
+
+                      <div className="flex gap-2 cursor-pointer items-center">
+
+                        <label htmlFor="stockStatusInstock" className="flex gap-2 cursor-pointer">
+
+                          <input
+                            id="stockStatusInstock"
+                            type="checkbox"
+                            className=""
+                            checked={currentObject?.subscription?.enable ? true : false}
+                            onChange={(ev) => {
+
+                              /* Defaults so a freshly enabled product is buyable as a subscription. */
+                              var subscription = { interval: "month", interval_count: 1, ...(currentObject?.subscription ?? {}) };
+                              subscription.enable = !subscription.enable
+
+                              setcurrentObject({ ...currentObject, subscription: subscription });
+
+
+                            }}
+                          />
+                          <span>Enable Subscription</span>
+                        </label>
+
+                      </div>
+
+
+                    </div>
+
+                    {currentObject?.subscription?.enable && (
+                      <>
+
+
+
+
+                        <p className="text-xs text-gray-500">
+                          {("Customers choose “One-time purchase” or “Subscribe” on the product page. A subscription starts when the order is paid or completed; on each billing date a new pending renewal order is created for the customer to pay.")}
+                        </p>
+
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                          <div className="flex flex-col gap-1.5">
+                            <label htmlFor="subscription-interval-count" className="block text-sm font-medium text-gray-700">
+                              {("Bill every")}
+                            </label>
+                            <input
+                              id="subscription-interval-count"
+                              type="number"
+                              min="1"
+                              step="1"
+                              className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 w-full rounded-lg bg-white px-3 py-2 text-sm"
+                              value={currentObject?.subscription?.interval_count ?? 1}
+                              onChange={(ev) => {
+                                var value = ev.target.value;
+                                setcurrentObject({ ...currentObject, subscription: { ...currentObject.subscription, interval_count: value } });
+                              }}
+                              onBlur={(ev) => {
+                                /* At least 1: a zero or empty count cannot be billed. */
+                                var value = Math.max(1, parseInt(ev.target.value) || 1);
+                                setcurrentObject({ ...currentObject, subscription: { ...currentObject.subscription, interval_count: value } });
+                              }}
+                            />
+                          </div>
+
+                          <div className="flex flex-col gap-1.5">
+                            <label htmlFor="subscription-interval" className="block text-sm font-medium text-gray-700">
+                              {("Interval")}
+                            </label>
+                            <select id="subscription-interval" className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 w-full rounded-lg bg-white px-3 py-2 text-sm"
+                              value={currentObject?.subscription?.interval ?? "month"}
+                              onChange={(ev) => {
+                                var value = ev.target.value;
+                                setcurrentObject({ ...currentObject, subscription: { ...currentObject.subscription, interval: value } });
+                              }}
+                            >
+                              <option value="day">Day(s)</option>
+                              <option value="week">Week(s)</option>
+                              <option value="month">Month(s)</option>
+                              <option value="year">Year(s)</option>
+                            </select>
+                          </div>
+
+                          <div className="flex flex-col gap-1.5">
+                            <label htmlFor="subscription-discount" className="block text-sm font-medium text-gray-700">
+                              {("Subscribe discount (%)")}
+                            </label>
+                            <input
+                              id="subscription-discount"
+                              type="number"
+                              min="0"
+                              max="100"
+                              step="any"
+                              placeholder="0"
+                              className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 w-full rounded-lg bg-white px-3 py-2 text-sm"
+                              value={currentObject?.subscription?.discount ?? ""}
+                              onChange={(ev) => {
+                                var value = ev.target.value;
+                                setcurrentObject({ ...currentObject, subscription: { ...currentObject.subscription, discount: value } });
+                              }}
+                            />
+                            <span className="text-xs text-gray-500">{("Off the price on every subscription order.")}</span>
+                          </div>
+
+                          <div className="flex flex-col gap-1.5">
+                            <label htmlFor="subscription-setup-fee" className="block text-sm font-medium text-gray-700">
+                              {("Setup fee")}
+                            </label>
+                            <input
+                              id="subscription-setup-fee"
+                              type="number"
+                              min="0"
+                              step="any"
+                              placeholder="0"
+                              className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 w-full rounded-lg bg-white px-3 py-2 text-sm"
+                              value={currentObject?.subscription?.setup_fee ?? ""}
+                              onChange={(ev) => {
+                                var value = ev.target.value;
+                                setcurrentObject({ ...currentObject, subscription: { ...currentObject.subscription, setup_fee: value } });
+                              }}
+                            />
+                            <span className="text-xs text-gray-500">{("Charged once, on the first order only.")}</span>
+                          </div>
+                        </div>
+
+                        {(() => {
+                          var count = Math.max(1, parseInt(currentObject?.subscription?.interval_count) || 1);
+                          var unit = currentObject?.subscription?.interval ?? "month";
+                          var discount = parseFloat(currentObject?.subscription?.discount) || 0;
+                          var fee = parseFloat(currentObject?.subscription?.setup_fee) || 0;
+                          return (
+                            <div className="rounded-lg border border-[#634FE5]/20 bg-[#634FE5]/5 px-3 py-2 text-xs text-gray-700">
+                              {("Customers see:")} <strong>Subscribe — every {count > 1 ? `${count} ${unit}s` : unit}{discount > 0 ? ` (save ${discount}%)` : ""}</strong>
+                              {fee > 0 ? `, plus a one-time setup fee of ${fee}` : ""}.
+                            </div>
+                          );
+                        })()}
 
 
 

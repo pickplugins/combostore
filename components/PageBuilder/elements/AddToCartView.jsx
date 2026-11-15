@@ -6,7 +6,8 @@ import { tablerIcon } from "@/components/icons/TablerIcon";
 
 import BlockRender from '../BlockRender';
 
-import { useCounterStore } from '../../../store/useCounterStore';
+import { useCounterStore, cartLineKey } from '../../../store/useCounterStore';
+import { productSubscription, subscriptionCycle, subscriptionPrice } from '@/lib/subscriptionCart';
 import { useUtilsStore } from '../../../store/useUtilsStore';
 import { usePost } from "../context/PostContext";
 import { useActiveVariation } from "../context/VariationScope";
@@ -117,6 +118,7 @@ const AddToCart = (props) => {
 	const IconX = tablerIcon(icon);
 
 	const trackPageVisit = useUtilsStore((state) => state.trackPageVisit);
+	const wrapCurrency = useUtilsStore((state) => state.wrapCurrency);
 
 	const { cartToggle, setcartToggle, notifications, addNotification, setcartStep, cartItems, addCartItems, removeCartItems, resetCartItems, updateCartItems, userDataX, setUserDataX, navToggle, setnavToggle, lang, coupons, setCoupons, cartTotalPay, setcartTotalPay, cartTotal, setcartTotal, shippingCost, setshippingCost } = useCounterStore()
 	var [quantity, setquantity] = useState(0);
@@ -161,6 +163,31 @@ const AddToCart = (props) => {
 	var hideButtonText = props?.hideButtonText
 	var quantitySyncwithCart = props?.quantitySyncwithCart
 	var onChangeCartBtn = props?.onChangeCartBtn
+
+	/*
+		Subscribe option. A product with subscription enabled (product editor)
+		offers "One-time purchase" or "Subscribe"; subscribing takes the
+		subscribe discount off the price and adds the setup fee once at
+		checkout. Variations use their product's option.
+	*/
+	var subscription = productSubscription(productData);
+	var [purchaseType, setpurchaseType] = useState("one_time");
+	var subscribing = !!subscription && purchaseType === "subscription";
+
+	/* The price a cart line is sold at, for how it is being bought. */
+	function linePrice(price) {
+		return subscribing ? subscriptionPrice(price, subscription) : price;
+	}
+
+	/* The cart line this button adds to and the stepper changes. */
+	var currentLineKey = cartLineKey({
+		product_id: productId,
+		variation_id: addons?.includes('variations') ? activeVariation?.id : 0,
+		purchase_type: subscribing ? "subscription" : "one_time",
+	});
+	var lineFields = subscribing
+		? { product_id: productId, purchase_type: "subscription", subscription }
+		: { product_id: productId, purchase_type: "one_time" };
 
 
 
@@ -219,7 +246,9 @@ const AddToCart = (props) => {
 		if (!addons?.includes('variations')) {
 
 
-			var price_type = productData?.price_type ?? 'simple'
+			/* A product saved without a price type (""), as the product editor
+			   allows, is simple: `??` kept "" and the line got no title or price. */
+			var price_type = productData?.price_type || 'simple'
 			var license = productData?.license ?? null
 
 
@@ -302,7 +331,10 @@ const AddToCart = (props) => {
 			crosssells: cartProduct?.crosssells,
 			title: cartProduct?.title,
 			quantity: quantity,
-			price: cartProduct?.price,
+			price: linePrice(cartProduct?.price),
+			/* "subscription" lines keep the cycle for the cart's badge and setup fee. */
+			purchase_type: subscribing ? "subscription" : "one_time",
+			subscription: subscribing ? subscription : null,
 			regular_price: cartProduct?.regular_price,
 			sale_price: cartProduct?.sale_price,
 			trade_price: cartProduct?.trade_price,
@@ -422,11 +454,11 @@ const AddToCart = (props) => {
 
 
 
+	/* The quantity of the line this button adds to: the picked variation and
+	   purchase type, so a one-time line and a subscription show their own. */
 	function getQuantityById(id) {
-
-
-		const item = cartItems?.find(obj => obj.id === id);
-		return item ? item.quantity : 0; // returns null if not found
+		const item = cartItems?.find(obj => cartLineKey(obj) === currentLineKey);
+		return item ? item.quantity : 0;
 	}
 
 	useEffect(() => {
@@ -463,7 +495,7 @@ const AddToCart = (props) => {
 		setquantity(quantity)
 
 
-	}, [cartItems]);
+	}, [cartItems, currentLineKey]);
 
 
 
@@ -504,6 +536,48 @@ const AddToCart = (props) => {
 					</button>
 				</div>
 			)}
+
+			{/* One-time or subscribe, for products that offer a subscription. */}
+			{subscription && canAddToCart && !purchaseBlocked && !outOfStock && !hideButton && (() => {
+				var basePrice = addons?.includes('variations')
+					? (activeVariation?.sale_price || activeVariation?.regular_price)
+					: productData?.price;
+				var options = [
+					{ value: "one_time", title: "One-time purchase", price: basePrice, note: null },
+					{
+						value: "subscription",
+						title: `Subscribe — ${subscriptionCycle(subscription)}`,
+						price: subscriptionPrice(basePrice, subscription),
+						note: [
+							subscription.discount > 0 ? `Save ${subscription.discount}%` : null,
+							subscription.setup_fee > 0 ? `${wrapCurrency ? wrapCurrency(subscription.setup_fee) : subscription.setup_fee} setup fee on the first order` : null,
+							"Renews automatically; you pay each renewal order",
+						].filter(Boolean).join(" · "),
+					},
+				];
+				return (
+					<div role="radiogroup" aria-label="How would you like to buy?" className="mb-3 flex w-full flex-col gap-2">
+						{options.map(option => {
+							var selected = purchaseType === option.value;
+							return (
+								<label key={option.value}
+									className={`flex cursor-pointer items-start gap-3 rounded-lg border px-3 py-2.5 transition-colors ${selected ? "border-[#1b0e9f] bg-[#1b0e9f]/5 ring-1 ring-[#1b0e9f]" : "border-gray-200 bg-white hover:border-gray-300"}`}>
+									<input type="radio" name={`purchase-type-${productId}`} value={option.value} checked={selected}
+										onChange={() => setpurchaseType(option.value)}
+										className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer accent-[#1b0e9f]" />
+									<span className="flex min-w-0 flex-1 flex-col">
+										<span className="flex flex-wrap items-baseline justify-between gap-x-3">
+											<span className="text-sm font-medium text-gray-900">{option.title}</span>
+											{basePrice ? <span className="text-sm font-semibold text-gray-900">{wrapCurrency ? wrapCurrency(option.price) : option.price}</span> : null}
+										</span>
+										{option.note && <span className="text-xs text-gray-500">{option.note}</span>}
+									</span>
+								</label>
+							);
+						})}
+					</div>
+				);
+			})()}
 
 			{canAddToCart && !purchaseBlocked && !outOfStock && (
 
@@ -547,12 +621,13 @@ const AddToCart = (props) => {
 
 									if (addons?.includes('variations')) {
 
-										updateCartItems(productId, {
+										updateCartItems(currentLineKey, {
+											...lineFields,
 											id: productId,
 											variation_id: activeVariation?.id,
 											title: `${productData?.title} - ${activeVariation?.title}`,
 											quantity: quantityX,
-											price: activeVariation?.sale_price ? activeVariation?.sale_price : activeVariation?.regular_price,
+											price: linePrice(activeVariation?.sale_price ? activeVariation?.sale_price : activeVariation?.regular_price),
 											regular_price: activeVariation?.regular_price,
 											sale_price: activeVariation?.sale_price,
 											trade_price: activeVariation?.trade_price,
@@ -568,11 +643,12 @@ const AddToCart = (props) => {
 
 
 
-										updateCartItems(productId, {
+										updateCartItems(currentLineKey, {
+											...lineFields,
 											id: productId,
 											title: productData?.title,
 											quantity: quantityX,
-											price: productData?.price,
+											price: linePrice(productData?.price),
 											regular_price: productData?.regular_price,
 											sale_price: productData?.sale_price,
 											trade_price: productData?.trade_price,
@@ -647,12 +723,13 @@ const AddToCart = (props) => {
 
 									if (addons?.includes('variations')) {
 
-										updateCartItems(productId, {
+										updateCartItems(currentLineKey, {
+											...lineFields,
 											id: productId,
 											variation_id: activeVariation?.id,
 											title: `${productData?.title} - ${activeVariation?.title}`,
 											quantity: quantityX,
-											price: activeVariation?.sale_price ? activeVariation?.sale_price : activeVariation?.regular_price,
+											price: linePrice(activeVariation?.sale_price ? activeVariation?.sale_price : activeVariation?.regular_price),
 											regular_price: activeVariation?.regular_price,
 											sale_price: activeVariation?.sale_price,
 											trade_price: activeVariation?.trade_price,
@@ -668,11 +745,12 @@ const AddToCart = (props) => {
 
 
 
-										updateCartItems(productId, {
+										updateCartItems(currentLineKey, {
+											...lineFields,
 											id: productId,
 											title: productData?.title,
 											quantity: quantityX,
-											price: productData?.price,
+											price: linePrice(productData?.price),
 											regular_price: productData?.regular_price,
 											sale_price: productData?.sale_price,
 											trade_price: productData?.trade_price,

@@ -36,6 +36,10 @@ import { getBkashConfig } from "../../../lib/bkash";
 import { getNagadConfig } from "../../../lib/nagad";
 import { loadCheckoutDraft, saveCheckoutDraft, clearCheckoutDraft } from "../../../lib/checkoutDraft";
 import { trackMetaEvent } from "../../../lib/sendMetaEvent";
+import { withSetupFeeLines, isSubscriptionLine, subscriptionCycle, cartSetupFees } from "../../../lib/subscriptionCart";
+
+/* Meta's "Subscribe" event: the order has at least one line bought with Subscribe. */
+const hasSubscriptionLine = (data) => (data?.cartItems ?? []).some(isSubscriptionLine);
 
 
 
@@ -250,7 +254,8 @@ const CheckoutView = (props) => {
 
 
 	const [checkoutData, setcheckoutData] = useState({
-		cartItems: cartItems,
+		/* With a "Setup fee" line for each subscribed line that has one; cartTotal already counts them. */
+		cartItems: withSetupFeeLines(cartItems),
 		"userid": userDataX?.id,
 		"status": "pending",
 		"currency": currency,
@@ -266,7 +271,7 @@ const CheckoutView = (props) => {
 		"transaction_id": "",
 		"order_note": "",
 		"shipping_method": "",
-		"subscription": { enable: false, interval: "month", interval_count: 1 },
+		/* No whole-order "subscription" any more: subscriptions are chosen per product. */
 
 
 		"billing_name": userDataX?.name,
@@ -619,8 +624,8 @@ const CheckoutView = (props) => {
 
 
 
-			var quantity = parseInt(item.quantity)
-			var price = parseInt(item.price)
+			var quantity = parseInt(item.quantity) || 0
+			var price = parseFloat(item.price) || 0
 			var trade_price = item.trade_price ? parseFloat(item.trade_price) : parseFloat(item.price)
 
 
@@ -949,7 +954,7 @@ const CheckoutView = (props) => {
 
 		sendMetaEvent({ event: 'Purchase', orderId: paidOrderId });
 
-		if (checkoutDataRef.current?.subscription?.enable) {
+		if (hasSubscriptionLine(checkoutDataRef.current)) {
 			sendMetaEvent({ event: 'Subscribe', orderId: paidOrderId });
 		}
 
@@ -1020,7 +1025,7 @@ const CheckoutView = (props) => {
 							/* Only a created order is a purchase; the order id makes the event id, so a repeat report is merged. */
 							sendMetaEvent({ event: 'Purchase', orderId: order_id })
 
-							if (checkoutData?.subscription?.enable) {
+							if (hasSubscriptionLine(checkoutData)) {
 								sendMetaEvent({ event: 'Subscribe', orderId: order_id })
 							}
 
@@ -1183,7 +1188,7 @@ const CheckoutView = (props) => {
 
 						//sendMetaEvent({ event: 'Purchase' })
 
-						if (checkoutData?.subscription?.enable) {
+						if (hasSubscriptionLine(checkoutData)) {
 							//sendMetaEvent({ event: 'Subscribe' })
 
 						}
@@ -1249,7 +1254,7 @@ const CheckoutView = (props) => {
 							/* Only a created order is a purchase; the order id makes the event id, so a repeat report is merged. */
 							sendMetaEvent({ event: 'Purchase', orderId: order_id })
 
-							if (checkoutData?.subscription?.enable) {
+							if (hasSubscriptionLine(checkoutData)) {
 								sendMetaEvent({ event: 'Subscribe', orderId: order_id })
 							}
 
@@ -1332,7 +1337,8 @@ const CheckoutView = (props) => {
 		less the coupon and any automatic discounts - so the rows add up to the
 		total shown under them.
 	*/
-	const summarySubtotal = (cartItems ?? []).reduce((sum, item) => sum + (parseInt(item?.price) || 0) * (parseInt(item?.quantity) || 0), 0);
+	/* parseFloat (parseInt dropped paisa), plus subscribed lines' one-time setup fees. */
+	const summarySubtotal = (cartItems ?? []).reduce((sum, item) => sum + (parseFloat(item?.price) || 0) * (parseInt(item?.quantity) || 0), 0) + cartSetupFees(cartItems);
 	const summaryShippingFree = cartDiscount?.freeShipping === true;
 	const summaryShipping = parseFloat(shippingCost) || 0;
 	const summaryCoupon = coupons?.applied ? (parseFloat(coupons?.discountAmount) || 0) : 0;
@@ -1406,7 +1412,7 @@ const CheckoutView = (props) => {
 					</Field>
 
 					{/* ---------- Optional extras ---------- */}
-					{(cartOptions?.deliveryLocation || cartOptions?.shippingAddress || cartOptions?.orderSubscription) && (
+					{(cartOptions?.deliveryLocation || cartOptions?.shippingAddress) && (
 						<div className="flex flex-col gap-2 border-t border-gray-100 pt-4">
 
 							{cartOptions?.deliveryLocation && (
@@ -1468,51 +1474,12 @@ const CheckoutView = (props) => {
 								</ToggleContent>
 							)}
 
-							{cartOptions?.orderSubscription && (
-								<ToggleContent isOpen={false} labelIcon={<IconRepeat size={18} className="text-gray-500" />} iconPosition="right" title="Subscribe & repeat this order?" headerClass={toggleHeaderClass} contentClass="mt-2 rounded-lg border border-gray-200 bg-white p-4">
-									<div className="flex flex-col gap-4">
-
-										<label className="flex cursor-pointer items-center gap-3 text-sm font-medium text-gray-800">
-											<input type="checkbox" className="h-4 w-4 cursor-pointer accent-[#1b0e9f]" checked={!!checkoutData?.subscription?.enable} onChange={() => {
-												var subscription = { ...checkoutData.subscription }
-												subscription.enable = !subscription.enable
-												setcheckoutData({ ...checkoutData, subscription: subscription })
-											}} />
-											Enable subscription
-										</label>
-
-										{checkoutData?.subscription?.enable && (
-											<>
-												<div className="grid grid-cols-2 gap-4">
-													<Field label="Every" htmlFor="checkout-subscription-count">
-														<input id="checkout-subscription-count" type="number" min={1} className={inputClass} value={checkoutData?.subscription.interval_count} onChange={ev => {
-															var subscription = { ...checkoutData.subscription }
-															subscription.interval_count = ev.target.value
-															setcheckoutData({ ...checkoutData, subscription: subscription })
-														}} />
-													</Field>
-													<Field label="Interval" htmlFor="checkout-subscription-interval">
-														<select id="checkout-subscription-interval" className={`${inputClass} cursor-pointer`} value={checkoutData?.subscription.interval} onChange={ev => {
-															var subscription = { ...checkoutData.subscription }
-															subscription.interval = ev.target.value
-															setcheckoutData({ ...checkoutData, subscription: subscription })
-														}}>
-															<option value={'day'}>Day</option>
-															<option value={'week'}>Week</option>
-															<option value={'month'}>Month</option>
-															<option value={'year'}>Year</option>
-														</select>
-													</Field>
-												</div>
-
-												<Notice tone="info">
-													Your items will be shipped every <strong>{checkoutData?.subscription.interval_count} {checkoutData?.subscription.interval}</strong> from the date of your order. Cancel anytime — no questions asked.
-												</Notice>
-											</>
-										)}
-
-									</div>
-								</ToggleContent>
+							{/* The whole-order "Subscribe & repeat this order?" box was removed:
+							    customers subscribe per product, on the product page. */}
+							{hasSubscriptionLine(checkoutData) && (
+								<Notice tone="info">
+									Your subscription starts once this order is paid. On each renewal date we create a new order for you to pay; the setup fee is charged on this first order only.
+								</Notice>
 							)}
 
 						</div>
@@ -1573,8 +1540,16 @@ const CheckoutView = (props) => {
 									<div className="min-w-0 flex-1">
 										<div className="truncate text-sm font-medium text-gray-900">{item?.title}</div>
 										<div className="text-xs text-gray-500">{item?.quantity} × {wrapCurrency(item?.price)}</div>
+										{isSubscriptionLine(item) && (
+											<div className="mt-0.5 flex flex-wrap gap-x-2 text-[11px]">
+												<span className="font-medium text-[#1b0e9f]">Subscription · {subscriptionCycle(item?.subscription)}</span>
+												{parseFloat(item?.subscription?.setup_fee) > 0 && (
+													<span className="text-gray-500">+ {wrapCurrency(item.subscription.setup_fee)} setup fee (first order)</span>
+												)}
+											</div>
+										)}
 									</div>
-									<div className="shrink-0 text-sm font-medium text-gray-900">{wrapCurrency((parseInt(item?.price) || 0) * (parseInt(item?.quantity) || 0))}</div>
+									<div className="shrink-0 text-sm font-medium text-gray-900">{wrapCurrency((parseFloat(item?.price) || 0) * (parseInt(item?.quantity) || 0))}</div>
 								</li>
 							))}
 						</ul>

@@ -40,6 +40,8 @@ const PageBuilderContentClient = (props) => {
 						{render(block, start + i)}
 					</AboveTheFold.Provider>
 				))}
+				{/* What the route adds after the template's content (the thank-you page's order). */}
+				{props?.children}
 			</main>
 			{blocks.slice(end).map((block, i) => render(block, end + i))}
 		</div>

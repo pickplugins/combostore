@@ -136,9 +136,12 @@ const OrderEdit = ({ id, variant = "page" }) => {
       .finally(() => setrefreshing(false));
   }
 
+  /* Waits for the login token: it is restored from storage after the first
+     render, and asking before then sent "Bearer null" and showed a 403. */
   useEffect(() => {
+    if (!token) return;
     get_order();
-  }, [id]);
+  }, [id, token]);
 
 
   var created = parseDate(orderData?.created_at);

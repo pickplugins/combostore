@@ -16,7 +16,6 @@ const toggleDefaults = {
 	shippingAddress: true,
 	shippingMethods: true,
 	orderNotes: true,
-	orderSubscription: true,
 	countryCity: true,
 };
 
@@ -26,7 +25,6 @@ const toggles = [
 	['shippingAddress', 'Enable Shipping?'],
 	['shippingMethods', 'Enable Shipping Methods?'],
 	['orderNotes', 'Enable Order Notes?'],
-	['orderSubscription', 'Enable Order Subscription?'],
 	['countryCity', 'Enable Country & City?'],
 ];
 

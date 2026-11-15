@@ -117,8 +117,10 @@ const CustomerSubscriptionsView = (props) => {
 											<IconRepeat size={20} />
 										</span>
 										<div>
-											<div className={cls('subscription-number')}>Subscription #{subscription.id}</div>
+											{/* The product it renews; older whole-order subscriptions have none. */}
+											<div className={cls('subscription-number')}>{subscription.product_title || `Subscription #${subscription.id}`}</div>
 											<div className={cls('subscription-schedule')}>
+												{subscription.product_title ? `#${subscription.id} · ` : ''}
 												{describeInterval(subscription.renewal_interval, subscription.interval_count)}
 												{subscription.order_id ? ` · from order #${subscription.order_id}` : ''}
 											</div>

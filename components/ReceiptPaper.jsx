@@ -88,7 +88,7 @@ export default function ReceiptPaper(props) {
 	/* What is still owed on delivery. An advance used to be listed as a
 		 negative line above a total it had not been taken off, which left the
 		 customer to do the arithmetic on the one number they care about. */
-	const due = total - advance;
+	const due = total;
 
 
 	const storeBlock = (
@@ -193,26 +193,26 @@ export default function ReceiptPaper(props) {
 			{shipping > 0 && (
 				<Row style={row} label="Shipping" value={money(shipping)} />
 			)}
-
+			{advance > 0 && (
+				<>
+					<Row style={row} label="Advance paid" value={`- ${money(advance)}`} />
+					{/* <Row
+						style={{ ...row, fontWeight: "bold" }}
+						label="Due"
+						value={money(due)}
+					/> */}
+				</>
+			)}
 			<div style={rule}></div>
 
 			<Row
 				style={{ ...row, fontSize: template.fontSize + 2 }}
-				label="Total"
+				label="Due"
 				value={money(total)}
 				valueStyle={{ fontWeight: "bold", color: template.accent }}
-				/>
+			/>
 
-			{advance > 0 && (
-				<>
-					<Row style={row} label="Advance paid" value={`- ${money(advance)}`} />
-					<Row
-						style={{ ...row, fontWeight: "bold" }}
-						label="Due"
-						value={money(due)}
-						/>
-				</>
-			)}
+
 
 		</div>
 	);
@@ -313,7 +313,7 @@ export default function ReceiptPaper(props) {
 						label="Items"
 						value="Amount"
 						valueStyle={{ fontWeight: "bold" }}
-						/>
+					/>
 
 					<div style={rule}></div>
 

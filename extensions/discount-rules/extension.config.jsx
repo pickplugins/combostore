@@ -34,7 +34,7 @@ const manifest = {
 	version: "1.0.0",
 	description: "Conditional discounts applied to the cart automatically - spend thresholds, bulk tiers, buy X get Y, free shipping and scheduled offers.",
 
-	enabled: false,
+	enabled: true,
 
 	/*
 		`parent` names a core group from Sidebar.jsx's NAVS; an entry whose

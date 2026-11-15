@@ -10,8 +10,8 @@ import { editorRelative } from '../editorPosition';
 
 /* Sample subscriptions for the canvas: the builder never fetches a customer's real ones. */
 const sampleSubscriptions = [
-	{ id: 208, interval: 'month', count: 1, orderId: 1017, status: 'active', started: '18 Oct 2026', next: '18 Nov 2026', total: '৳ 640' },
-	{ id: 191, interval: 'week', count: 2, orderId: 984, status: 'paused', started: '2 Sep 2026', next: '—', total: '৳ 1,180' },
+	{ id: 208, product: 'Organic coffee beans 1kg', interval: 'month', count: 1, orderId: 1017, status: 'active', started: '18 Oct 2026', next: '18 Nov 2026', total: '৳ 640' },
+	{ id: 191, product: 'Pro plugin, 5 sites', interval: 'week', count: 2, orderId: 984, status: 'paused', started: '2 Sep 2026', next: '—', total: '৳ 1,180' },
 ];
 
 /*
@@ -83,9 +83,9 @@ const CustomerSubscriptions = (props) => {
 										<IconRepeat size={20} />
 									</span>
 									<div>
-										<div className={cls('subscription-number')}>Subscription #{subscription.id}</div>
+										<div className={cls('subscription-number')}>{subscription.product}</div>
 										<div className={cls('subscription-schedule')}>
-											{describeInterval(subscription.interval, subscription.count)} · from order #{subscription.orderId}
+											#{subscription.id} · {describeInterval(subscription.interval, subscription.count)} · from order #{subscription.orderId}
 										</div>
 									</div>
 								</div>

@@ -14,7 +14,8 @@ import dynamic from "next/dynamic";
 const loadCheckoutView = () => import("./CheckoutView");
 const CheckoutView = dynamic(loadCheckoutView);
 import CartCrossSells, { defaultCartCrossSellsTitle, defaultCartCrossSellsLimit } from "./CartCrossSellsView";
-import { useCounterStore } from '../../../store/useCounterStore'
+import { useCounterStore, cartLineKey } from '../../../store/useCounterStore'
+import { cartSetupFees, isSubscriptionLine, subscriptionCycle, subscriptionPrice } from '@/lib/subscriptionCart';
 import { useUtilsStore } from '../../../store/useUtilsStore'
 import { useAuthStore } from '../../../store/authStore';
 import Spinner from "../../../components/Spinner";
@@ -41,7 +42,6 @@ const CartView = (props) => {
 		orderNotes: true,
 		deliveryLocation: true,
 		shippingAddress: true,
-		orderSubscription: true,
 		shippingMethods: true,
 	};
 	var tag = options?.tag ?? 'h1';
@@ -68,13 +68,17 @@ const CartView = (props) => {
 
 		cartItems?.map(item => {
 
-			var quantity = parseInt(item.quantity)
-			var price = parseInt(item.price)
+			var quantity = parseInt(item.quantity) || 0
+			/* parseFloat: parseInt dropped the paisa, e.g. a 10%-off subscription price of 89.10. */
+			var price = parseFloat(item.price) || 0
 
 			total += (price * quantity);
 			totalQuantity += quantity;
 
 		})
+
+		/* Setup fees of subscribed lines: charged once, sent as their own order lines. */
+		total += cartSetupFees(cartItems);
 
 
 
@@ -174,15 +178,20 @@ const CartView = (props) => {
 			const sortedBulkPrices = [...item.bulk_prices].sort((a, b) => parseInt(b.quantity) - parseInt(a.quantity));
 			const applicableTier = sortedBulkPrices.find(tier => quantity >= parseInt(tier?.quantity));
 
+			/* A subscribed line keeps its subscribe discount on the tier price. */
+			var priced = (price) => isSubscriptionLine(item) ? subscriptionPrice(price, item?.subscription) : price;
+
 			if (applicableTier) {
-				updateCartItems(item.id, { price: applicableTier?.unitPrice, quantity: quantity })
+				updateCartItems(cartLineKey(item), { price: priced(applicableTier?.unitPrice), quantity: quantity })
 			} else {
-				updateCartItems(item.id, { price: item?.regular_price, quantity: quantity })
+				updateCartItems(cartLineKey(item), { price: priced(item?.regular_price), quantity: quantity })
 			}
 			return;
 		}
 
-		updateCartItems(item.id, { quantity: quantity })
+		/* By line key: by product id it changed the first line of that product,
+		   which could be the other variation or the one-time line. */
+		updateCartItems(cartLineKey(item), { quantity: quantity })
 	}
 
 
@@ -521,6 +530,17 @@ export function CartMarkup(props) {
 															</button>
 														</div>
 
+														{isSubscriptionLine(item) && (
+															<div className={cls('item-tags')}>
+																<span className={`${cls('item-tag')} !bg-[#1b0e9f]/10 !text-[#1b0e9f]`}>
+																	Subscription · {subscriptionCycle(item?.subscription)}
+																</span>
+																{parseFloat(item?.subscription?.setup_fee) > 0 && (
+																	<span className={cls('item-tag')}>+ {wrapCurrency(item.subscription.setup_fee)} setup fee</span>
+																)}
+															</div>
+														)}
+
 														{(item?.attributes || item?.metaData) && (
 															<div className={cls('item-tags')}>
 																{item?.attributes && Object.entries(item.attributes).map(([attrId, attr]) => (
@@ -612,6 +632,13 @@ export function CartMarkup(props) {
 											<dt className={cls('total-label')}>Subtotal</dt>
 											<dd className={cls('total-value')}>{wrapCurrency(cartTotal)}</dd>
 										</div>
+
+										{cartSetupFees(cartItems) > 0 && (
+											<div className={cls('total-row')}>
+												<dt className={cls('total-label')}>Includes one-time setup fees</dt>
+												<dd className={cls('total-label')}>{wrapCurrency(cartSetupFees(cartItems))}</dd>
+											</div>
+										)}
 
 										{couponAmount > 0 && (
 											<div className={cls('total-row')}>

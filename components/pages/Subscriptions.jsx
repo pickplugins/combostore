@@ -198,6 +198,10 @@ const Subscriptions = () => {
 								<SubscriptionEdit id={entry.id} onSaved={fetchPosts} />
 							</div>
 						</PopoverButton>
+						{/* The subscribed product; older whole-order subscriptions have none. */}
+						<div className="truncate text-xs font-medium text-gray-700">
+							{entry?.product_title || (entry?.product_id ? `Product #${entry.product_id}` : <span className="font-normal italic text-gray-400">Whole order (older subscription)</span>)}
+						</div>
 						<div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
 							<span>{billingCycle(entry)}</span>
 							{entry?.order_id > 0 && (

@@ -1227,75 +1227,7 @@ const Checkout = (props) => {
 							</div>
 						</ToggleContent>
 					)}
-					{cartOptions?.orderSubscription && (
-						<ToggleContent isOpen={false} labelIcon={``} iconPosition={`right`} title={"Enable Subscription?"} headerClass={`  mb-2 rounded-sm   border-2 border-gray-400 bg-gray-300  cursor-pointer px-4 py-2 flex items-center gap-2`} headerTitleClass={``} contentClass={`bg-white`}>
-							<div className="p-4 flex flex-col gap-4">
-
-								<div className="flex cursor-pointer text-lg gap-3" >
-									<div>
-										{checkoutData.subscription.enable && (
-											<IconSquareCheck />
-										)}
-										{!checkoutData.subscription.enable && (
-											<IconSquare />
-										)}
-									</div>
-									<div className="text-sm" onClick={ev => {
-
-										var subscription = { ...checkoutData.subscription }
-										subscription.enable = !subscription.enable
-										setcheckoutData({ ...checkoutData, subscription: subscription })
-									}}>Enable Subscription?</div>
-
-								</div>
-
-								{checkoutData.subscription.enable && (
-
-									<div className="flex flex-col gap-3">
-
-										<div className="flex flex-col gap-2">
-											<label htmlFor="">Interval</label>
-											<select value={checkoutData?.subscription.interval} placeholder="" onChange={ev => {
-												var value = ev.target.value;
-
-												var subscription = { ...checkoutData.subscription }
-												subscription.interval = value
-												setcheckoutData({ ...checkoutData, subscription: subscription })
-
-											}} >
-												<option value={'day'}>Day</option>
-												<option value={'week'}>Week</option>
-												<option value={'month'}>Month</option>
-												<option value={'year'}>Year</option>
-											</select>
-
-										</div>
-
-										<div className="flex flex-col gap-2">
-											<label htmlFor="">Count</label>
-											<input type="number" value={checkoutData?.subscription.interval_count} placeholder="" onChange={ev => {
-												var value = ev.target.value;
-
-												var subscription = { ...checkoutData.subscription }
-												subscription.interval_count = value
-												setcheckoutData({ ...checkoutData, subscription: subscription })
-
-
-
-											}} />
-										</div>
-
-
-										<div className="bg-[#9a90ff] p-2 rounded-sm">
-											Your items will be shipped every <strong>{checkoutData?.subscription.interval_count} {checkoutData?.subscription.interval}</strong> from the date of your order. Enjoy the flexibility to cancel your subscription anytime—no questions asked!
-										</div>
-
-									</div>
-								)}
-
-							</div>
-						</ToggleContent>
-					)}
+					{/* The whole-order "Enable Subscription?" box was removed: customers subscribe per product. */}
 
 
 

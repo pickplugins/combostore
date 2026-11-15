@@ -1,323 +1,85 @@
-'use client'
-import React, { use } from 'react'
-import { useState, useEffect, useContext } from "react";
+import { templateMetadata } from "@/lib/templateSeo";
+import { getStyledPageTemplate as getPageTemplate } from "@/lib/pageStyles";
+import PageBuilderContent from "@/components/PageBuilder/PageBuilderContent";
+import ThankYouOrder from "@/components/ThankYouOrder";
 
 
-import { useCounterStore } from '@/store/useCounterStore'
-import { useUtilsStore } from "@/store/useUtilsStore";
-import { useAuthStore } from "@/store/authStore";
-import Spinner from "@/components/Spinner";
-import InvoiceWithPDF from "@/components/InvoiceWithPDF";
-import { sendMetaEvent } from "@/lib/sendMetaEvent";
+// ⬅️ Force server-side rendering on every request: the order's payment status changes.
+export const dynamic = "force-dynamic";
 
-/* The buyer, for Meta's matching (hashed on our server before it is sent). */
-const metaUser = (order) => ({
-  email: order?.billing_email ?? order?.email,
-  phone: order?.billing_phone,
-  name: order?.billing_name,
-  city: order?.billing_city ?? order?.city,
-  country: order?.billing_country ?? order?.country,
-  external_id: order?.customer_id ?? order?.user_id ?? order?.userid,
-});
-import { clearCheckoutDraft } from "@/lib/checkoutDraft";
-import { getPageTemplate } from "@/lib/getPageTemplate";
-/* The client half: this page is a client component, and the server half reads the icon data on the server (it fetches its icons instead). */
-import PageBuilderContent from "@/components/PageBuilder/PageBuilderContentClient";
+
+/* The order behind the link (its hash), or null when there is none. */
+async function getOrderByHash(slug) {
+  const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
+  try {
+    const res = await fetch(`${serverUrl}wp-json/combo-store/v2/get_order_by_hash`, {
+      cache: "no-store",
+      method: "POST",
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ slug: slug }),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    /* An unknown hash comes back as an order without an id. */
+    return data?.order?.id ? data : null;
+  } catch (error) {
+    return null;
+  }
+}
+
+
+/* Template Part Settings > SEO for the Thank You template. An order's page is never indexed. */
+export async function generateMetadata({ params }) {
+  const { slug } = await params;
+  const metadata = await templateMetadata('thank_you', { item: { title: 'Thank you for your order' }, path: `thank-you/${slug}`, single: true });
+  return { ...metadata, robots: { index: false, follow: false } };
+}
 
 
 /*
-  One marker per gateway the buyer is redirected away to. Each is set by that
-  gateway's checkout button and read back here; see the effect below for why
-  the cart is emptied on this page rather than at checkout.
+  The thank-you page, built like the product page: the Thank You template
+  (Templates > Thank You) with the site header and footer, and its styles.
+  The order's invoice follows the template's own content, inside the page's
+  <main>. With no Thank You template, a plain heading stands in for it.
+
+  The order is loaded here on the server; ThankYouOrder does the browser
+  parts (Meta events, emptying the cart after a redirect payment). It used
+  to be one client page that printed a stray "Hello" and no template.
 */
-const REDIRECT_PAYMENT_MARKERS = ['aamarpay:pending_order', 'stripe:pending_order', 'eps:pending_order', 'bkash:pending_order', 'nagad:pending_order'];
-
-
-const page = ({ params }) => {
-
-
-
-
-
-
-
-
-  const { slug } = use(params)
-  const { wrapCurrency } = useUtilsStore()
-  const token = useAuthStore((state) => state.token);
-  // const token = localStorage.getItem("token");
-
-
-
-
-  if (!slug) {
-
-    return (
-      <div className='p-10 text-center text-red-400'>You are not authorized to access this page, Plesae login to see your order details.</div>
-    )
-  }
-
-
-  const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
-  const { appData, notifications, addNotification, cartItems, addCartItems, removeCartItems, resetCartItems, updateCartItems, userDataX, setUserDataX, cartToggle, setcartToggle } = useCounterStore()
-
-
-  var [orderData, setorderData] = useState(null);
-  var [subscriptionData, setsubscriptionData] = useState(null);
-  var [deliveryData, setdeliveryData] = useState(null);
-  var [lineItems, setlineItems] = useState(null);
-  var [loading, setloading] = useState(false);
-  var [invoiceData, setinvoiceData] = useState(null);
-
-
-
-
-  function get_order() {
-
-
-    if (!slug) {
-      return null;
-    }
-
-    setloading(true)
-
-
-    var postData = {
-      slug: slug,
-    };
-    postData = JSON.stringify(postData);
-
-    fetch(serverUrl + "wp-json/combo-store/v2/get_order_by_hash", {
-      method: "POST",
-      headers: {
-        'Content-Type': 'application/json',
-        // 'Authorization': `Bearer ${token}`
-      },
-      body: postData,
-    })
-      .then((response) => {
-
-        if (!response.ok) {
-          setloading(false)
-
-          throw new Error('Token validation failed');
-        }
-
-        if (response.ok && response.status < 400) {
-          response.json().then((res) => {
-
-
-
-
-
-
-            var order = res?.order;
-            // var downloads = res?.downloads;
-            // var license = res?.license;
-            var subscription = res?.subscription;
-            var delivery = res?.delivery;
-            var line_items = res?.line_items;
-
-
-
-
-            setorderData(order)
-            // setdownloadsData(downloads)
-            // setlicenseData(license)
-            setsubscriptionData(subscription)
-            setdeliveryData(delivery)
-            setlineItems(line_items)
-
-
-
-
-
-            setTimeout(() => {
-              setloading(false)
-
-            }, 500);
-          });
-        }
-      })
-      .catch((_error) => {
-        //this.saveAsStatus = 'error';
-        // handle the error
-      });
-
-  }
-
-
-
-
-
-  // useEffect(() => {
-  // 	get_order();
-  // }, []);
-
-  useEffect(() => {
-    get_order();
-  }, [slug]);
-
-  useEffect(() => {
-
-    var items = []
-
-    lineItems?.map(item => {
-
-      items.push({ id: item.id, product_name: item.product_name || item.title, qty: item.quantity, price: item.price })
-
-    })
-
-
-    var data = {
-      from: {
-        name: "",
-        address: "",
-        city: "",
-      },
-      to: {
-        name: orderData?.billing_name,
-        address: orderData?.billing_address,
-        city: orderData?.city,
-        phone: orderData?.billing_phone,
-      },
-      items: items,
-      taxPercent: 10,
-      payment_method: orderData?.payment_method,
-      payment_status: orderData?.payment_status,
-      total: orderData?.total_amount,
-      discount: orderData?.discount_amount,
-      shipping: orderData?.shipping_amount,
-      subtotal: orderData?.subtotal_amount,
-      taxPercent: 10,
-      invoiceNumber: orderData?.id,
-      date: orderData?.created_at,
-    }
-
-
-
-    setinvoiceData(data)
-    sendMetaEvent({ event_name: 'VisitThankYou', value: orderData?.total_amount, currency: orderData?.currency || "BDT", user: metaUser(orderData) });
-  }, [orderData]);
-
-
-  /*
-    A gateway the buyer is redirected away to - aamarPay, Stripe, EPS, bKash, Nagad -
-    cannot empty the cart itself: the checkout page is gone by the time the payment
-    lands, and the order is marked paid on the server. So the cart is emptied
-    here instead, on the way back.
-
-    The marker the checkout left behind is what makes that safe. Without it,
-    anyone reopening an old paid order would lose the cart they had just
-    filled; with it, only the order this browser was sent off to pay for
-    clears anything, and only once.
-
-    Every redirect gateway's marker is checked, because the buyer may have
-    started at one and paid at another - and only the markers naming this order
-    are cleared, so a stale one cannot empty a cart filled since.
-  */
-  useEffect(() => {
-
-    if (orderData?.payment_status !== 'paid') {
-      return;
-    }
-
-    /* A buyer sent back from a failed payment still needs what they typed. */
-    clearCheckoutDraft();
-
-    const matched = REDIRECT_PAYMENT_MARKERS.filter(key => {
-      try {
-        return window.sessionStorage.getItem(key) === slug;
-      } catch (error) {
-        /* Private mode, or storage switched off. Nothing to clear. */
-        return false;
-      }
-    });
-
-    if (!matched.length) {
-      return;
-    }
-
-    matched.forEach(key => {
-      try {
-        window.sessionStorage.removeItem(key);
-      } catch (error) {
-      }
-    });
-
-    resetCartItems();
-    setcartToggle(!cartToggle);
-
-    /* Same event id as the checkout's (purchase-<order id>), so Meta counts this order once. */
-    sendMetaEvent({
-      event_name: 'Purchase',
-      eventId: orderData?.id ? `purchase-${orderData.id}` : undefined,
-      once: true,
-      value: orderData?.total_amount,
-      currency: orderData?.currency || "BDT",
-      customData: {
-        content_type: 'product',
-        content_ids: (lineItems ?? []).map(item => String(item?.product_id ?? item?.id)).filter(Boolean),
-        num_items: (lineItems ?? []).reduce((sum, item) => sum + (parseInt(item?.quantity) || 1), 0),
-        ...(orderData?.id ? { order_id: String(orderData.id) } : {}),
-      },
-      user: metaUser(orderData),
-    });
-
-  }, [orderData, slug]);
-
-
-
-
-
-
-  const requiredRoles = ["administrator", "rider", ""];
-  const hasAccess = requiredRoles.some(role => userDataX?.roles?.includes(role));
-
-
-
-
+export default async function page({ params }) {
+
+  const { slug } = await params;
+
+  const [orderResponse, pageTemplateData] = await Promise.all([
+    getOrderByHash(slug),
+    getPageTemplate({ type: 'thank_you' }),
+  ]);
+
+  const pageTemplatecontent = pageTemplateData?.content ? JSON.parse(pageTemplateData?.content) : [];
+  const pageTemplateHeader = pageTemplateData?.header ? JSON.parse(pageTemplateData?.header?.content || '[]') : [];
+  const pageTemplateFooter = pageTemplateData?.footer ? JSON.parse(pageTemplateData?.footer?.content || '[]') : [];
+  const pageTemplate = [...pageTemplateHeader, ...pageTemplatecontent, ...pageTemplateFooter];
 
   return (
-    <div>
+    <>
+      <PageBuilderContent blocks={pageTemplate}>
 
+        {pageTemplatecontent.length === 0 && (
+          <div className="mx-auto w-full max-w-[900px] px-5 pt-10 pb-5 text-center">
+            <h1 className="text-2xl font-semibold text-gray-900">Thank you for your order</h1>
+            <p className="mt-2 text-sm text-gray-600">Here are your order details. Log in to your account to see tracking, payments and more.</p>
+          </div>
+        )}
 
-
-
-
-      <div className="p-5 grid grid-cols-1 gap-5 w-full xl:w-[900px] mx-auto pb-60">
-
-
-        <div className='text-center'>
-          Thank you for your order, Here are the order details, Please login to Account to see order trackings, payments and more.
+        <div className="mx-auto w-full  px-5 pt-10 pb-5">
+          <ThankYouOrder slug={slug} order={orderResponse?.order ?? null} lineItems={orderResponse?.line_items ?? []} />
         </div>
 
+      </PageBuilderContent>
 
-
-        {loading && (
-
-          <div className='flex justify-center '>
-
-            <Spinner />
-
-          </div>
-
-        )}
-
-        {(!loading && orderData) && (
-
-          <InvoiceWithPDF invoice={invoiceData} />
-
-
-        )}
-
-
-
-
-      </div>
-
-    </div>
-  )
+      <style>
+        {[pageTemplateData?.style, pageTemplateData?.header?.style, pageTemplateData?.footer?.style].filter(Boolean).join("\n")}
+      </style>
+    </>
+  );
 }
-
-export default page

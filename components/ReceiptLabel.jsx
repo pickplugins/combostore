@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect } from "react";
-import { IconPrinter } from "@tabler/icons-react";
+import { IconPrinter, IconLayoutGrid, IconChevronDown, IconCheck } from "@tabler/icons-react";
+import PopoverButton from "./PopoverButton";
 
 import Spinner from '../components/Spinner';
 import ReceiptPaper from './ReceiptPaper';
@@ -26,6 +27,9 @@ const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 	 Tailwind utilities and anything that has to differ marks itself important. */
 const OPTION_BUTTON =
 	"!rounded-lg !border !border-gray-200 !bg-white !px-3 !py-1.5 !text-xs !font-medium !text-gray-600 !shadow-none transition-colors hover:!border-gray-300 hover:!bg-gray-50 hover:!text-gray-900";
+
+const SECONDARY_BUTTON =
+	"inline-flex h-9 items-center gap-2 !rounded-lg !border !border-gray-200 !bg-white !px-3.5 !text-sm !font-medium !text-gray-700 !shadow-none transition-colors hover:!border-gray-300 hover:!bg-gray-50";
 
 const OPTION_BUTTON_ACTIVE =
 	"!border-brand !bg-brand/5 !text-brand";
@@ -132,6 +136,7 @@ export default function ReceiptLabel(props) {
 	var hidePrintButton = props?.hidePrintButton;
 	var [orderData, setorderData] = useState(props?.orderData);
 	var [lineItems, setlineItems] = useState(props?.lineItems);
+	var [loadFailed, setloadFailed] = useState(false);
 
 	/*
 		Which template the receipt is printed with, and how wide the paper is.
@@ -169,13 +174,19 @@ export default function ReceiptLabel(props) {
 	}, [width]);
 
 
+	/*
+		Loads the order unless the caller passed it. Waits for the login token:
+		it is restored from storage after the first render, and asking before
+		then sent "Bearer null", failed, and was never asked again - so the
+		receipt stayed on "Loading the order…" and Print receipt stayed off.
+	*/
 	useEffect(() => {
 
-		if (!props?.orderData) {
+		if (!props?.orderData && token && order_id) {
 			get_order();
 		}
 
-	}, []);
+	}, [token, order_id]);
 
 
 	function applyPrefs(next) {
@@ -188,6 +199,21 @@ export default function ReceiptLabel(props) {
 		setPrefs(merged);
 		writeReceiptPrefs(merged);
 	}
+
+
+	/*
+		A width typed into the box is taken when the field is left - but the
+		box sits in a popover, and closing that by clicking outside unmounts the
+		box without a blur. So closing it takes the typed width too. Through a
+		ref: the popover's outside-click handler keeps the callback from the
+		render it opened in, which would see a stale draft.
+	*/
+	const latestWidth = useRef(null);
+	latestWidth.current = () => {
+		if (widthDraft !== String(width)) {
+			applyPrefs({ width: widthDraft });
+		}
+	};
 
 
 	function selectTemplate(id) {
@@ -209,6 +235,8 @@ export default function ReceiptLabel(props) {
 			id: order_id,
 		};
 		postData = JSON.stringify(postData);
+
+		setloadFailed(false);
 
 		fetch(serverUrl + "wp-json/combo-store/v2/get_order", {
 			method: "POST",
@@ -237,8 +265,8 @@ export default function ReceiptLabel(props) {
 				}
 			})
 			.catch((_error) => {
-				//this.saveAsStatus = 'error';
-				// handle the error
+				/* Said on screen, instead of "Loading the order…" for ever. */
+				setloadFailed(true);
 			});
 
 	}
@@ -247,7 +275,7 @@ export default function ReceiptLabel(props) {
 	/**
 	 * Print the slip that is on screen.
 	 *
-	 * The markup goes into a blank window with the template's own stylesheet -
+	 * The markup goes into a blank frame with the template's own stylesheet -
 	 * see receiptPrintCss - because the preview is styled by the dashboard and
 	 * the paper copy cannot be.
 	 *
@@ -265,18 +293,38 @@ export default function ReceiptLabel(props) {
 			return;
 		}
 
-		const win = window.open("", "", "width=900,height=1000");
+		/*
+			Printed from a hidden frame in this page, not a pop-up window. The
+			pop-up was opened, printed and closed by this page's script: Chrome
+			can return from a print() called on another window before its dialog
+			is done, so the close() that followed shut the window - and the
+			print - straight away. Pop-up blockers stopped it too. A frame needs
+			neither, and is removed once its print dialog closes.
+		*/
+		document.getElementById("receipt-print-frame")?.remove();
+
+		const frame = document.createElement("iframe");
+		frame.id = "receipt-print-frame";
+		frame.setAttribute("aria-hidden", "true");
+		frame.setAttribute("tabindex", "-1");
+		/* Off screen but laid out: a display:none frame can print blank. */
+		frame.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0;opacity:0;pointer-events:none;";
+		document.body.appendChild(frame);
+
+		const win = frame.contentWindow;
 
 		if (!win) {
+			frame.remove();
 			addNotification({
 				type: 'error',
-				title: 'Could not open the print window',
-				content: 'Allow pop-ups for this site and try again.',
+				title: 'Could not print the receipt',
+				content: 'Try again, or reload the page.',
 			})
 
 			return;
 		}
 
+		win.document.open();
 		win.document.write(`<!doctype html>
 <html>
 <head>
@@ -291,17 +339,31 @@ export default function ReceiptLabel(props) {
 
 		var printed = false;
 
+		const cleanup = () => frame.remove();
+
 		const run = () => {
 
-			if (printed || win.closed) {
+			if (printed || !frame.isConnected) {
 				return;
 			}
 
 			printed = true;
 
-			win.focus();
-			win.print();
-			win.close();
+			/* Removed after the dialog, not straight after print(), for the same reason as above; a minute's fallback for browsers without afterprint. */
+			win.addEventListener("afterprint", () => window.setTimeout(cleanup, 500));
+			window.setTimeout(cleanup, 60000);
+
+			try {
+				win.focus();
+				win.print();
+			} catch (error) {
+				cleanup();
+				addNotification({
+					type: 'error',
+					title: 'Could not print the receipt',
+					content: error?.message ?? 'Try again, or reload the page.',
+				})
+			}
 		};
 
 		const images = Array.from(win.document.images ?? []);
@@ -341,22 +403,24 @@ export default function ReceiptLabel(props) {
 						<div className="min-w-0">
 							<h3 className="text-sm font-semibold text-gray-900">Receipt template</h3>
 							<p className="mt-0.5 text-xs text-gray-500">
-								Pick a layout, check the preview below, then print. The choice is kept for the next order.
+								Pick a layout and paper width under Template, check the preview below, then print. The choice is kept for the next order.
 							</p>
 						</div>
 
-						<button
-							type="button"
-							disabled={!ready}
-							onClick={handlePrint}
-							className="inline-flex h-9 items-center gap-2 !rounded-lg !border-0 !bg-brand !px-4 !text-sm !font-semibold !text-white !shadow-sm transition-colors hover:!bg-brand-600 disabled:!cursor-not-allowed disabled:!opacity-60">
-							<IconPrinter size={18} />
-							Print receipt
-						</button>
+						<div className="flex flex-wrap items-center gap-2">
 
-					</div>
+						{/* The templates and the paper width, in a popover: as a grid they took most of the card. */}
+						<PopoverButton
+							title="Receipt template & paper"
+							position="bottomRight"
+							closeOnOutsideClick
+							onTriggerOpen={wasOpen => { if (wasOpen) latestWidth.current?.(); }}
+							buttonClass={`${SECONDARY_BUTTON} cursor-pointer`}
+							buttonIcon={<IconLayoutGrid size={18} />}
+							buttonLabel={<span className="flex items-center gap-1">Template: <span className="font-semibold text-gray-900">{template.name}</span><span className="text-gray-400">·</span><span className="font-semibold text-gray-900">{width}px</span><IconChevronDown size={16} className="text-gray-400" /></span>}
+							popoverClass="absolute z-[60] mt-2 w-[min(92vw,560px)] max-h-[70vh] overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-xl">
 
-					<div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-4">
+					<div className="grid grid-cols-1 gap-2 p-3 sm:grid-cols-2">
 						{RECEIPT_TEMPLATES.map(item => {
 
 							const active = item.id === template.id;
@@ -375,8 +439,9 @@ export default function ReceiptLabel(props) {
 									<TemplateThumb template={item} />
 
 									<span className="min-w-0 flex-1">
-										<span className={`block text-xs font-semibold ${active ? "text-brand" : "text-gray-900"}`}>
+										<span className={`flex items-center gap-1 text-xs font-semibold ${active ? "text-brand" : "text-gray-900"}`}>
 											{item.name}
+											{active && <IconCheck size={14} />}
 										</span>
 										<span className="mt-1 block text-[11px] leading-snug text-gray-500">
 											{item.hint}
@@ -391,7 +456,7 @@ export default function ReceiptLabel(props) {
 						})}
 					</div>
 
-					<div className="mt-4 flex flex-wrap items-center gap-2 border-t border-gray-100 pt-4">
+					<div className="flex flex-wrap items-center gap-2 border-t border-gray-100 px-3 py-3">
 
 						<label htmlFor="receipt-width" className="text-xs font-medium text-gray-600">
 							Paper width
@@ -434,11 +499,33 @@ export default function ReceiptLabel(props) {
 
 					</div>
 
+						</PopoverButton>
+
+						<button
+							type="button"
+							disabled={!ready}
+							onClick={handlePrint}
+							className="inline-flex h-9 items-center gap-2 !rounded-lg !border-0 !bg-brand !px-4 !text-sm !font-semibold !text-white !shadow-sm transition-colors hover:!bg-brand-600 disabled:!cursor-not-allowed disabled:!opacity-60">
+							<IconPrinter size={18} />
+							Print receipt
+						</button>
+
+						</div>
+
+					</div>
+
 				</div>
 			)}
 
 
-			{!ready && (
+			{!ready && loadFailed && (
+				<div className="flex flex-col items-center justify-center gap-2 py-10 text-sm text-gray-600">
+					<span>Couldn&apos;t load the order for this receipt.</span>
+					<button type="button" onClick={get_order} className={`${SECONDARY_BUTTON} cursor-pointer`}>Try again</button>
+				</div>
+			)}
+
+			{!ready && !loadFailed && (
 				<div className="flex items-center justify-center gap-2 py-10 text-sm text-gray-500">
 					<Spinner size={18} fill="#9ca3af" />
 					<span>Loading the order…</span>

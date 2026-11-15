@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { IconFileTypePdf, IconPrinter } from "@tabler/icons-react";
+import { IconFileTypePdf, IconPrinter, IconLayoutGrid, IconChevronDown, IconCheck } from "@tabler/icons-react";
 
 import Spinner from "./Spinner";
+import PopoverButton from "./PopoverButton";
 import InvoicePaper from "./InvoicePaper";
 import { downloadInvoicePdf } from "./invoicePdf";
 import {
@@ -193,7 +194,7 @@ export default function InvoiceWithPDF({ invoice = null, template: pinnedTemplat
 	/**
 	 * Print the invoice that is on screen.
 	 *
-	 * The markup goes into a blank window with the template's own page setup -
+	 * The markup goes into a blank frame with the template's own page setup -
 	 * see invoicePrintCss - because the preview is styled by the dashboard and
 	 * the printed copy cannot be. It waits for the images, so a template with
 	 * a logo does not print the hole where one goes.
@@ -206,18 +207,39 @@ export default function InvoiceWithPDF({ invoice = null, template: pinnedTemplat
 			return;
 		}
 
-		const win = window.open("", "", "width=900,height=1100");
+		/*
+			Printed from a hidden frame in this page, not a pop-up window. The
+			pop-up was opened, printed and closed by this page's script: Chrome
+			can return from a print() called on another window before its dialog
+			is done, so the close() that followed shut the window - and the
+			print - straight away. Pop-up blockers stopped it too. A frame needs
+			neither, and is removed once its print dialog closes. (ReceiptLabel
+			prints the same way.)
+		*/
+		document.getElementById("invoice-print-frame")?.remove();
+
+		const frame = document.createElement("iframe");
+		frame.id = "invoice-print-frame";
+		frame.setAttribute("aria-hidden", "true");
+		frame.setAttribute("tabindex", "-1");
+		/* Off screen but laid out: a display:none frame can print blank. */
+		frame.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0;opacity:0;pointer-events:none;";
+		document.body.appendChild(frame);
+
+		const win = frame.contentWindow;
 
 		if (!win) {
+			frame.remove();
 			addNotification({
 				type: 'error',
-				title: 'Could not open the print window',
-				content: 'Allow pop-ups for this site and try again.',
+				title: 'Could not print the invoice',
+				content: 'Try again, or download the PDF instead.',
 			})
 
 			return;
 		}
 
+		win.document.open();
 		win.document.write(`<!doctype html>
 <html>
 <head>
@@ -232,17 +254,31 @@ export default function InvoiceWithPDF({ invoice = null, template: pinnedTemplat
 
 		var printed = false;
 
+		const cleanup = () => frame.remove();
+
 		const run = () => {
 
-			if (printed || win.closed) {
+			if (printed || !frame.isConnected) {
 				return;
 			}
 
 			printed = true;
 
-			win.focus();
-			win.print();
-			win.close();
+			/* Removed after the dialog, not straight after print(), for the same reason as above; a minute's fallback for browsers without afterprint. */
+			win.addEventListener("afterprint", () => window.setTimeout(cleanup, 500));
+			window.setTimeout(cleanup, 60000);
+
+			try {
+				win.focus();
+				win.print();
+			} catch (error) {
+				cleanup();
+				addNotification({
+					type: 'error',
+					title: 'Could not print the invoice',
+					content: error?.message ?? 'Try again, or download the PDF instead.',
+				})
+			}
 		};
 
 		const images = Array.from(win.document.images ?? []);
@@ -312,11 +348,79 @@ export default function InvoiceWithPDF({ invoice = null, template: pinnedTemplat
 						<div className="min-w-0">
 							<h3 className="text-sm font-semibold text-gray-900">Invoice template</h3>
 							<p className="mt-0.5 text-xs text-gray-500">
-								Pick a layout, check the preview below, then print or download. The choice is kept for the next invoice.
+								Pick a layout and paper under Template, check the preview below, then print or download. The choice is kept for the next invoice.
 							</p>
 						</div>
 
-						<div className="flex items-center gap-2">
+						<div className="flex flex-wrap items-center gap-2">
+
+							{/* The templates, in a popover: as a grid they took most of the card. */}
+							<PopoverButton
+								title="Invoice template &amp; paper"
+								position="bottomRight"
+								closeOnOutsideClick
+								buttonClass={`${SECONDARY_BUTTON} cursor-pointer`}
+								buttonIcon={<IconLayoutGrid size={18} />}
+								buttonLabel={<span className="flex items-center gap-1">Template: <span className="font-semibold text-gray-900">{template.name}</span><span className="text-gray-400">·</span><span className="font-semibold text-gray-900">{paper.label}</span><IconChevronDown size={16} className="text-gray-400" /></span>}
+								popoverClass="absolute z-[60] mt-2 w-[min(92vw,560px)] max-h-[70vh] overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-xl">
+
+								<div className="grid grid-cols-1 gap-2 p-3 sm:grid-cols-2">
+									{INVOICE_TEMPLATES.map(item => {
+
+										const active = item.id === template.id;
+
+										return (
+											<button
+												key={item.id}
+												type="button"
+												aria-pressed={active}
+												title={item.hint}
+												onClick={() => applyPrefs({ templateId: item.id })}
+												className={`flex items-start gap-3 !rounded-xl !border !p-3 !text-left !shadow-none transition-colors ${active
+													? "!border-brand !bg-brand/5"
+													: "!border-gray-200 !bg-white hover:!border-gray-300 hover:!bg-gray-50"}`}>
+
+												<TemplateThumb template={item} />
+
+												<span className="min-w-0 flex-1">
+													<span className={`flex items-center gap-1 text-xs font-semibold ${active ? "text-brand" : "text-gray-900"}`}>
+														{item.name}
+														{active && <IconCheck size={14} />}
+													</span>
+													<span className="mt-1 block text-[11px] leading-snug text-gray-500">
+														{item.hint}
+													</span>
+												</span>
+
+											</button>
+										);
+									})}
+								</div>
+
+								{/* The sheet it is printed on. */}
+								<div className="flex flex-wrap items-center gap-2 border-t border-gray-100 px-3 py-3">
+
+									<span className="text-xs font-medium text-gray-600">Paper</span>
+
+									{PAPER_SIZES.map(size => (
+										<button
+											key={size.id}
+											type="button"
+											aria-pressed={size.id === paper.id}
+											onClick={() => applyPrefs({ paperId: size.id })}
+											className={`${OPTION_BUTTON} ${size.id === paper.id ? OPTION_BUTTON_ACTIVE : ""}`}>
+											{size.label}
+										</button>
+									))}
+
+									<span className="text-[11px] text-gray-400">
+										{paper.width}×{paper.height}mm · {template.pageMargin}mm margin
+									</span>
+
+								</div>
+
+							</PopoverButton>
+
 							<button
 								type="button"
 								disabled={!ready}
@@ -337,59 +441,6 @@ export default function InvoiceWithPDF({ invoice = null, template: pinnedTemplat
 								{working ? "Preparing…" : "Download PDF"}
 							</button>
 						</div>
-
-					</div>
-
-					<div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-4">
-						{INVOICE_TEMPLATES.map(item => {
-
-							const active = item.id === template.id;
-
-							return (
-								<button
-									key={item.id}
-									type="button"
-									aria-pressed={active}
-									title={item.hint}
-									onClick={() => applyPrefs({ templateId: item.id })}
-									className={`flex items-start gap-3 !rounded-xl !border !p-3 !text-left !shadow-none transition-colors ${active
-										? "!border-brand !bg-brand/5"
-										: "!border-gray-200 !bg-white hover:!border-gray-300 hover:!bg-gray-50"}`}>
-
-									<TemplateThumb template={item} />
-
-									<span className="min-w-0 flex-1">
-										<span className={`block text-xs font-semibold ${active ? "text-brand" : "text-gray-900"}`}>
-											{item.name}
-										</span>
-										<span className="mt-1 block text-[11px] leading-snug text-gray-500">
-											{item.hint}
-										</span>
-									</span>
-
-								</button>
-							);
-						})}
-					</div>
-
-					<div className="mt-4 flex flex-wrap items-center gap-2 border-t border-gray-100 pt-4">
-
-						<span className="text-xs font-medium text-gray-600">Paper</span>
-
-						{PAPER_SIZES.map(size => (
-							<button
-								key={size.id}
-								type="button"
-								aria-pressed={size.id === paper.id}
-								onClick={() => applyPrefs({ paperId: size.id })}
-								className={`${OPTION_BUTTON} ${size.id === paper.id ? OPTION_BUTTON_ACTIVE : ""}`}>
-								{size.label}
-							</button>
-						))}
-
-						<span className="text-[11px] text-gray-400">
-							{paper.width}×{paper.height}mm · {template.pageMargin}mm margin
-						</span>
 
 					</div>
 

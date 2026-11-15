@@ -5,6 +5,16 @@ import { create } from 'zustand'
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 const appUrl = process.env.NEXT_PUBLIC_APP_URL;
 
+/*
+  The identity of a cart line: product, variation and how it is bought
+  ("one_time" or "subscription"). Lines saved before keys existed get theirs
+  computed from the same fields.
+*/
+export function cartLineKey(item) {
+  const id = item?.product_id ?? item?.id ?? 0;
+  return `${id}:${item?.variation_id || 0}:${item?.purchase_type || "one_time"}`;
+}
+
 
 
 export const useCounterStore = create((set) => ({
@@ -816,27 +826,18 @@ export const useCounterStore = create((set) => ({
   })),
 
 
+  /*
+    A cart line is one product + variation + purchase type, so buying a
+    product once and also subscribing to it are two lines (with two prices).
+    Each line carries that as `key` (see cartLineKey); adding the same key
+    again adds to its quantity.
+  */
   addCartItems: (newCartItem) =>
     set((state) => {
-      const isVariableProduct = !!newCartItem?.variation_id;
+      const key = cartLineKey(newCartItem);
+      const lineToAdd = { ...newCartItem, key };
 
-      const existingItem = state.cartItems.find((item) => {
-        if (isVariableProduct) {
-          // Variable product:
-          // Match both product ID and variation ID
-          return (
-            item.id === newCartItem.id &&
-            item.variation_id === newCartItem.variation_id
-          );
-        }
-
-        // Simple product:
-        // Match only product ID
-        return (
-          item.id === newCartItem.id &&
-          !item.variation_id
-        );
-      });
+      const existingItem = state.cartItems.find((item) => cartLineKey(item) === key);
 
       if (existingItem) {
         state.addNotification({
@@ -864,7 +865,7 @@ export const useCounterStore = create((set) => ({
       });
 
       return {
-        cartItems: [...state.cartItems, newCartItem],
+        cartItems: [...state.cartItems, lineToAdd],
       };
     }),
   // addCartItems: (newCartItem) =>
@@ -918,9 +919,16 @@ export const useCounterStore = create((set) => ({
   //   ),
   // })),
 
+  /*
+    `id` is a line key (cartLineKey) - which updates only that line - or, as
+    older callers pass, a product id, which updates the first line of that
+    product. It used to update every line with that product id, so changing
+    one variation's quantity changed all of them.
+  */
   updateCartItems: (id, updatedFields) =>
     set((state) => {
-      const existingItem = state.cartItems.find((item) => item.id === id);
+      const isKey = typeof id === "string" && id.includes(":");
+      const existingItem = state.cartItems.find((item) => isKey ? cartLineKey(item) === id : item.id === id);
 
       if (existingItem) {
         // ✅ Item exists → update it
@@ -928,12 +936,12 @@ export const useCounterStore = create((set) => ({
 
         return {
           cartItems: state.cartItems.map((item) =>
-            item.id === id ? { ...item, ...updatedFields } : item
+            item === existingItem ? { ...item, ...updatedFields, key: cartLineKey({ ...item, ...updatedFields }) } : item
           ),
         };
       } else {
         // ✅ Item does not exist → call addCartItems
-        const newCartItem = { id, ...updatedFields };
+        const newCartItem = isKey ? { ...updatedFields } : { id, ...updatedFields };
 
         // Instead of duplicating code, reuse addCartItems
         state.addCartItems(newCartItem);

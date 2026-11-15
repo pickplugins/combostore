@@ -4901,7 +4901,6 @@ const elements = [
 			orderNotes: true,
 			deliveryLocation: true,
 			shippingAddress: true,
-			orderSubscription: true,
 			shippingMethods: true,
 			/* "Frequently bought together" under the items: the cart products' cross-sells (elements/CartCrossSellsView.jsx). */
 			crossSells: true,
