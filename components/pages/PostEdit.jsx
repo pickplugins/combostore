@@ -190,6 +190,8 @@ const PostEdit = ({ id }) => {
             var errors = res?.errors;
             var success = res?.success;
 
+            console.log(res);
+
 
             setloading(false);
             //setcurrentObject(res)
@@ -417,6 +419,9 @@ const PostEdit = ({ id }) => {
                 )}
 
               </div>
+
+
+
               <Link className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs font-medium text-gray-700" href={`${storeUrl}/product/${currentObject?.slug}`}>
                 <IconExternalLink /> View
               </Link>

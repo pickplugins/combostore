@@ -13,6 +13,18 @@ const toNumber = (value) => {
 };
 
 /*
+	A variation's `enable` comes back as "1"/"0" from the database, as a
+	boolean from the product editor, and as 'yes'/'no' in older data. Only an
+	explicit off value disables it; a missing flag counts as enabled, as the
+	editor defaults it to true.
+*/
+export const isVariationEnabled = (v) => {
+	var e = v?.enable;
+	if (e == null) return true;
+	return !(e === false || e === 0 || ['0', 'no', 'false', ''].includes(String(e).toLowerCase()));
+};
+
+/*
 	What a product's price block shows, worked out once for the shop and the
 	builder:
 
@@ -32,7 +44,7 @@ export function productPriceDisplay(product, activeVariation) {
 
 	if (hasVariations && !activeVariation) {
 		var prices = (Array.isArray(product?.variations) ? product.variations : [])
-			.filter(v => v?.enable === 'yes')
+			.filter(isVariationEnabled)
 			.map(v => toNumber(v?.sale_price) > 0 ? toNumber(v?.sale_price) : toNumber(v?.regular_price))
 			.filter(p => p > 0);
 		var min = prices.length ? Math.min(...prices) : 0, max = prices.length ? Math.max(...prices) : 0;

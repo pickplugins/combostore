@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useUtilsStore } from '../../store/useUtilsStore';
 import Spinner from '../Spinner';
 import { useCounterStore } from '../../store/useCounterStore'
+import { isVariationEnabled } from '../PageBuilder/elements/ProductPriceView';
 
 /* Icon buttons, in place of small dark slabs around a bare icon. */
 const ICON_BUTTON =
@@ -120,7 +121,7 @@ const ProductsPicker = (props) => {
 		const list = Array.isArray(variations) ? variations : [];
 
 		const prices = list
-			.filter(v => v?.enable === 'yes')
+			.filter(isVariationEnabled)
 			.map(v => {
 				const sale = parseFloat(v?.sale_price);
 				const regular = parseFloat(v?.regular_price);

@@ -170,6 +170,7 @@ const ProductEdit = ({ id }) => {
 
     var postData = JSON.stringify(currentObject);
 
+    console.log(postData);
 
 
 
@@ -193,14 +194,25 @@ const ProductEdit = ({ id }) => {
 
         if (response.ok && response.status < 400) {
           response.json().then((res) => {
-            var errors = res?.errors;
             var success = res?.success;
+            var message = res?.message;
 
+            console.log(res);
 
             setloading(false);
             //setcurrentObject(res)
 
             onUpdateProduct(currentObject)
+
+
+
+            if (success) {
+              addNotification({ type: 'success', title: 'Updated', content: message })
+
+            } else {
+              addNotification({ type: 'error', title: ' Update Error', content: message })
+
+            }
 
             // setTimeout(() => {
             // 	setaddTask({ ...addTask, title: "", success: null, errors: null })
