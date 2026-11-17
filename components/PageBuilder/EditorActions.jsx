@@ -709,7 +709,10 @@ const EditorActions = (props) => {
 
 
 
-			var isPage = pageData?.isPage ?? false;
+			var isPage = pageData?.post_type ?? false;
+
+			console.log(pageData);
+
 
 			if (isPage) {
 				await update_page({ classes, css });

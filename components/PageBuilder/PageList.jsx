@@ -366,6 +366,7 @@ const PageList = (props) => {
 		};
 		postData = JSON.stringify(postData);
 
+		console.log(postData);
 
 
 
