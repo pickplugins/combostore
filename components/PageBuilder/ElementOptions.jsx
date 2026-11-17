@@ -25,6 +25,7 @@ import TermsSliderOptions from './elements/TermsSliderOptions';
 import TermTitleOptions from './elements/TermTitleOptions';
 import TermThumbnailOptions from './elements/TermThumbnailOptions';
 import ImageOptions from './elements/ImageOptions';
+import ImageLightboxOptions from './elements/ImageLightboxOptions';
 import QuickSearchOptions from './elements/QuickSearchOptions';
 import LogoOptions from './elements/LogoOptions';
 import MenuOptions from './elements/MenuOptions';
@@ -295,6 +296,9 @@ const ElementOptions = (props) => {
 
 			{selectedBlock?.type == 'image' && (
 				<ImageOptions {...selectedBlock} updateBlock={updateBlock} />
+			)}
+			{selectedBlock?.type == 'imageLightbox' && (
+				<ImageLightboxOptions {...selectedBlock} updateBlock={updateBlock} />
 			)}
 			{selectedBlock?.type == 'logo' && (
 				<LogoOptions {...selectedBlock} updateBlock={updateBlock} />

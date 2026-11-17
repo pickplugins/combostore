@@ -435,6 +435,8 @@ const CanvasFrame = (props) => {
 			<iframe
 				ref={frameRef}
 				title="Page canvas"
+				/* So a block can go full screen in the canvas (the lightbox gallery's full-screen button). */
+				allowFullScreen
 				className={className}
 				style={{
 					/* A device width is a viewport width, so it has to be the box

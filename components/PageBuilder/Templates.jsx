@@ -918,7 +918,7 @@ const Templates = (props) => {
 														<div className="flex items-center gap-3">
 															<div className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2 py-1 text-xs font-medium text-gray-600 cursor-pointer transition-colors hover:border-brand/40 hover:bg-brand/5 hover:text-brand-700 w-fit" onClick={ev => {
 
-																if (newTemplatePart.name.length == 0) {
+																if (newTemplatePart?.title?.length == 0) {
 																	addNotification({ type: 'error', title: 'Title is empty', content: `Please add title text.` })
 																	return;
 

@@ -38,6 +38,7 @@ import PostSliderView from './elements/PostSliderView';
 import PostTitleView from './elements/PostTitleView';
 import PostThumbnailView from './elements/PostThumbnailView';
 import ImageView from './elements/ImageView';
+import ImageLightboxView from './elements/ImageLightboxView';
 import LogoView from './elements/LogoView';
 // import FooterLinksView from './elements/FooterLinksView';
 import SiteHeaderView from './elements/SiteHeaderView';
@@ -164,6 +165,7 @@ const BlockRender = (props) => {
 			case "list": return <ListView {...block} index={index} />;
 			case "video": return <VideoView {...block} index={index} />;
 			case "image": return <ImageView {...block} index={index} />;
+			case "imageLightbox": return <ImageLightboxView {...block} index={index} />;
 			case "logo": return <LogoView {...block} index={index} />;
 			case "menu": return <MenuView {...block} index={index} />;
 			case "menuItem": return <MenuItemView {...block} index={index} />;

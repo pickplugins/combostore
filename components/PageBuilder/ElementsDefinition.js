@@ -1,4 +1,4 @@
-import { IconHeading, IconColumns, IconSection, IconFileText, IconXboxB, IconList, IconBrandYoutube, IconPolaroid, IconListDetails, IconLayout2, IconMenu2, IconListSearch, IconLayoutNavbar, IconLayoutBottombar, IconLayoutSidebar, IconColumns3, IconLayoutList, IconAddressBook, IconIcons, IconLayoutNavbarCollapse, IconTable, IconBasketCheck, IconLogin, IconUserPlus, IconShoppingCart, IconSlideshow } from "@tabler/icons-react";
+import { IconHeading, IconColumns, IconSection, IconFileText, IconXboxB, IconList, IconBrandYoutube, IconPolaroid, IconListDetails, IconLayout2, IconMenu2, IconListSearch, IconLayoutNavbar, IconLayoutBottombar, IconLayoutSidebar, IconColumns3, IconLayoutList, IconAddressBook, IconIcons, IconLayoutNavbarCollapse, IconTable, IconBasketCheck, IconLogin, IconUserPlus, IconShoppingCart, IconSlideshow, IconLibraryPhoto } from "@tabler/icons-react";
 
 
 const elements = [
@@ -358,6 +358,95 @@ const elements = [
 		cssSelectors: {
 			'*': { classes: '' },
 			'frame': { classes: 'aspect-video w-full' },
+		},
+		group: ['basic']
+	},
+
+	{
+		type: "imageLightbox",
+		label: "Lightbox Gallery",
+		icon: <IconLibraryPhoto />,
+		description: "A grid of images that opens a full-screen-capable lightbox to browse them one by one, with arrows, swipe, keyboard, captions and thumbnails.",
+		ai: {
+			purpose: "Let visitors view several images large, one after another, without leaving the page.",
+			useFor: [
+				"Photo galleries",
+				"Portfolio or project images",
+				"Lookbooks",
+				"Store or event photos",
+				"Before / after sets",
+				"Customer photos"
+			],
+			keywords: [
+				"gallery",
+				"lightbox",
+				"image gallery",
+				"photo gallery",
+				"fullscreen",
+				"zoom",
+				"portfolio",
+				"lookbook"
+			],
+			rules: [
+				"Put the images in options.images as { id, src, alt, caption }; with none it shows nothing on the shop.",
+				"Lay the grid out with classes on '*' (grid-cols-*) or 'columns-*' for masonry.",
+				"Set visibleCount to show a few tiles with a \"+N\" badge on the last; the lightbox still has every image.",
+				"For a single product's images use productGallery instead."
+			]
+		},
+		/*
+			images: [{ id, src, alt, caption }]. visibleCount 0 shows every tile.
+			The lightbox toggles default on (false turns them off) except
+			openFullscreen and showGridCaptions. width/height are the tiles'
+			<img> attributes. See ImageLightboxView.jsx.
+		*/
+		options: {
+			images: [
+				{ id: 'lb-1', src: 'https://placehold.co/1200x900?text=1', alt: '', caption: '' },
+				{ id: 'lb-2', src: 'https://placehold.co/1200x900?text=2', alt: '', caption: '' },
+				{ id: 'lb-3', src: 'https://placehold.co/1200x900?text=3', alt: '', caption: '' },
+				{ id: 'lb-4', src: 'https://placehold.co/1200x900?text=4', alt: '', caption: '' },
+			],
+			visibleCount: 0,
+			showGridCaptions: false,
+			showFullscreen: true,
+			openFullscreen: false,
+			showThumbnails: true,
+			showCaptions: true,
+			showCounter: true,
+			loop: true,
+			closeOnBackdrop: true,
+			label: '',
+		},
+		/*
+			ImageLightboxView (through its ImageLightboxMarkup, which the builder's
+			ImageLightbox.jsx also renders) reads these with elementCssClasses.
+			The grid: '*', figure (a tile), item (its button), image, more (the
+			"+N" badge on the last tile), caption. The lightbox, portalled to the
+			body: overlay, toolbar, counter, button (full screen / close), stage,
+			stage-image, arrow + prev / next, lightbox-caption, thumbnails,
+			thumbnail, thumbnail-active.
+		*/
+		cssSelectors: {
+			'*': { classes: 'grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4' },
+			'figure': { classes: 'm-0' },
+			'item': { classes: 'group relative block w-full cursor-zoom-in overflow-hidden rounded-lg bg-gray-100 p-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-black/40' },
+			'image': { classes: 'aspect-square w-full object-cover transition-transform duration-300 group-hover:scale-105' },
+			'more': { classes: 'absolute inset-0 flex items-center justify-center bg-black/50 text-2xl font-semibold text-white' },
+			'caption': { classes: 'mt-1.5 text-xs text-gray-600' },
+			'overlay': { classes: 'fixed inset-0 z-[1000] flex flex-col bg-black/95 text-white' },
+			'toolbar': { classes: 'flex shrink-0 items-center justify-between gap-2 px-4 py-3 text-sm' },
+			'counter': { classes: 'tabular-nums text-white/70' },
+			'button': { classes: 'inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60' },
+			'stage': { classes: 'relative flex min-h-0 flex-1 items-center justify-center px-4 sm:px-16' },
+			'stage-image': { classes: 'max-h-full max-w-full select-none object-contain' },
+			'arrow': { classes: 'absolute top-1/2 inline-flex h-12 w-12 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60' },
+			'prev': { classes: 'left-2 sm:left-4' },
+			'next': { classes: 'right-2 sm:right-4' },
+			'lightbox-caption': { classes: 'shrink-0 px-4 pt-3 text-center text-sm text-white/80' },
+			'thumbnails': { classes: 'flex shrink-0 justify-start gap-2 overflow-x-auto px-4 py-3 sm:justify-center' },
+			'thumbnail': { classes: 'h-14 w-14 shrink-0 cursor-pointer overflow-hidden rounded-md p-0 opacity-50 transition-opacity hover:opacity-100' },
+			'thumbnail-active': { classes: 'opacity-100 ring-2 ring-white' },
 		},
 		group: ['basic']
 	},

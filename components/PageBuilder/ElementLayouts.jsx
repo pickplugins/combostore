@@ -47,6 +47,7 @@ import Login from './element-layouts/Login'
 import Heading from './element-layouts/Heading'
 import List from './element-layouts/List'
 import Image from './element-layouts/Image'
+import ImageLightbox from './element-layouts/ImageLightbox'
 import Icon from './element-layouts/Icon'
 import Logo from './element-layouts/Logo'
 import PostThumbnail from './element-layouts/PostThumbnail'
@@ -221,6 +222,9 @@ const Templates = (props) => {
 		else if (type == 'image') {
 			setlayouts(Image)
 		}
+		else if (type == 'imageLightbox') {
+			setlayouts(ImageLightbox)
+		}
 		else if (type == 'icon') {
 			setlayouts(Icon)
 		}
@@ -383,6 +387,10 @@ const Templates = (props) => {
 											if (selectedBlock?.options?.[key] !== undefined) kept[key] = selectedBlock.options[key];
 										});
 										content = { ...content, options: { ...content.options, ...kept } };
+									}
+									/* A lightbox gallery keeps its images: a preset carries only looks. */
+									if (content?.type === 'imageLightbox' && selectedBlock?.type === 'imageLightbox' && Array.isArray(selectedBlock?.options?.images)) {
+										content = { ...content, options: { ...content.options, images: selectedBlock.options.images, label: selectedBlock.options.label ?? '' } };
 									}
 									handleReplaceBlock(content);
 

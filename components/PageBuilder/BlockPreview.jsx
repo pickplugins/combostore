@@ -32,6 +32,7 @@ import PostGridPagination from './elements/PostGridPagination';
 import PostSlider from './elements/PostSlider';
 
 import Image from './elements/Image';
+import ImageLightbox from './elements/ImageLightbox';
 import Logo from './elements/Logo';
 import LinkList from './elements/LinkList';
 import SiteHeader from './elements/SiteHeader';
@@ -194,6 +195,7 @@ const BlockPreview = (props) => {
 			list: List,
 			video: Video,
 			image: Image,
+			imageLightbox: ImageLightbox,
 			logo: Logo,
 			menu: Menu,
 			menuItem: MenuItem,

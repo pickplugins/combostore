@@ -11,7 +11,8 @@ import {
     IconColumns,
     IconVideo,
     IconPhoto,
-    IconSlideshow
+    IconSlideshow,
+    IconLibraryPhoto
 } from '@tabler/icons-react';
 
 const getIcon = (type) => {
@@ -23,6 +24,7 @@ const getIcon = (type) => {
         case 'button': return <IconPointer size={16} />;
         case 'video': return <IconVideo size={16} />;
         case 'image': return <IconPhoto size={16} />;
+        case 'imageLightbox': return <IconLibraryPhoto size={16} />;
         case 'contentSlider': return <IconSlideshow size={16} />;
         default: return <IconChevronRight size={16} />;
     }
