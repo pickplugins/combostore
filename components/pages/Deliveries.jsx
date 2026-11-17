@@ -7,8 +7,9 @@ import EntriesTable from "../../components/EntriesTable";
 import PopoverButton from '../../components/PopoverButton';
 import DeliveryEdit from '../../components/pages/DeliveryEdit';
 import { useCounterStore } from '../../store/useCounterStore'
-import { IconTrash, IconRefresh, IconTruckDelivery, IconExternalLink, IconPencil, IconMotorbike, IconUser, IconReceipt } from "@tabler/icons-react";
-import { StatusBadge, CopyValue, courierName, trackingLink, parseDate, timeAgo, hasId } from "./deliveryUi";
+import { IconTrash, IconRefresh, IconTruckDelivery, IconExternalLink, IconPencil, IconMotorbike, IconUser, IconReceipt, IconCalendar } from "@tabler/icons-react";
+import DateRangeFilter, { dateRangeLabel, matchDateRange } from "../DateRangeFilter";
+import { StatusBadge, CopyValue, courierName, trackingLink, parseDate, timeAgo, hasId, statusBadge, STATUS_GROUPS, DELIVERY_STATUSES, groupCounts } from "./deliveryUi";
 
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
@@ -26,7 +27,50 @@ const Deliveries = () => {
 	const { token, addNotification } = useCounterStore()
 
 	var [productsData, setproductsData] = useState({ posts: [], total: 0, maxPages: 1 });
-	var [queryPrams, setqueryPrams] = useState({ keyword: "", paged: 1, order: "DESC", per_page: 20, });
+	/* rider_id: "" all, "none" unassigned, or a rider's user id (get_deliveries reads it for staff). */
+	/* status: "" all, a group (in_progress / done / failed), or one status. */
+	/* from_date / to_date: "yyyy-MM-dd" or "" (on when the delivery started). */
+	var [queryPrams, setqueryPrams] = useState({ keyword: "", paged: 1, order: "DESC", per_page: 20, rider_id: "", status: "", from_date: "", to_date: "" });
+	/* Bumped when the dates are cleared from a chip or "Clear filters" (DateRangeFilter leaves Custom). */
+	var [dateResetKey, setdateResetKey] = useState(0);
+	/* {status: n} for the current rider filter, from get_deliveries. */
+	var [statusCounts, setstatusCounts] = useState({});
+
+	/* Riders for the filter and for names in the Rider column. */
+	var [riders, setriders] = useState([]);
+	const riderName = (id) => riders.find((r) => String(r.id) === String(id))?.name;
+
+	useEffect(() => {
+		if (!token) return;
+		fetch(serverUrl + "wp-json/combo-store/v2/get_users", {
+			method: "POST",
+			headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+			body: JSON.stringify({ role: "rider", number: 200, paged: 1, order: "ASC" }),
+		})
+			.then((response) => (response.ok ? response.json() : null))
+			.then((res) => {
+				var list = (res?.posts ?? []).map((u) => ({ id: u.id ?? u.ID, name: u.display_name || u.user_login || `Rider #${u.id ?? u.ID}` }));
+				setriders(list.sort((a, b) => String(a.name).localeCompare(String(b.name))));
+			})
+			.catch(() => { });
+	}, [token]);
+
+	/* ?rider_id= from the rider page. Read after mount, so the server render matches. */
+	useEffect(() => {
+		try {
+			var search = new URLSearchParams(window.location.search);
+			var value = search.get("rider_id");
+			var status = search.get("status");
+			var next = {};
+			if (value && (/^\d+$/.test(value) || value === "none")) next.rider_id = value;
+			if (status && /^[a-z_]+$/.test(status)) next.status = status;
+			for (var key of ["from_date", "to_date"]) {
+				var day = search.get(key);
+				if (day && /^\d{4}-\d{2}-\d{2}$/.test(day)) next[key] = day;
+			}
+			if (Object.keys(next).length) setqueryPrams((q) => ({ ...q, ...next, paged: 1 }));
+		} catch (_e) { }
+	}, []);
 
 	var [loading, setloading] = useState(false);
 	var [selectedRows, setselectedRows] = useState([]);
@@ -105,6 +149,7 @@ const Deliveries = () => {
 			})
 			.then((res) => {
 				setproductsData({ posts: Array.isArray(res?.posts) ? res.posts : [], total: parseInt(res?.total, 10) || 0, maxPages: parseInt(res?.max_pages, 10) || 1 })
+				setstatusCounts(res?.status_counts && typeof res.status_counts === "object" ? res.status_counts : {});
 				setloading(false);
 			})
 			.catch((error) => {
@@ -113,9 +158,11 @@ const Deliveries = () => {
 			});
 	}
 
+	/* After a reload the token arrives from an effect above this page; loading without it failed. */
 	useEffect(() => {
+		if (!token) return;
 		fetchPosts();
-	}, [queryPrams]);
+	}, [queryPrams, token]);
 
 	/* The effect above refetches when the query changes; this used to fetch a second time with the old query. */
 	function onChangeQueryPrams(next) {
@@ -214,7 +261,7 @@ const Deliveries = () => {
 			<td data-label="Rider" className="!px-5 py-3 text-left text-sm" key={columnIndex}>
 				{hasId(entry?.rider_id) ? (
 					<Link className={`${LINK} inline-flex items-center gap-1.5`} href={`/dashboard/riders/${entry.rider_id}`}>
-						<IconMotorbike size={14} className="text-gray-400" /> Rider #{entry.rider_id}
+						<IconMotorbike size={14} className="text-gray-400" /> {riderName(entry.rider_id) ?? `Rider #${entry.rider_id}`}
 					</Link>
 				) : <span className="text-gray-300">—</span>}
 			</td>
@@ -247,6 +294,43 @@ const Deliveries = () => {
 
 	var total = productsData?.total ?? 0;
 
+	/* Status dropdown: groups summed from statusCounts, the known delivery
+	   statuses, plus any other status the data actually has. */
+	var groups = groupCounts(statusCounts);
+	var statusTotal = Object.values(statusCounts).reduce((a, b) => a + b, 0);
+	var statusOptions = [...DELIVERY_STATUSES, ...Object.keys(statusCounts).filter(s => !DELIVERY_STATUSES.includes(s))];
+	if (queryPrams?.status && !statusOptions.includes(queryPrams.status) && !STATUS_GROUPS.some(g => g.value === queryPrams.status)) {
+		statusOptions.push(queryPrams.status);
+	}
+	const statusFilterLabel = (value) => STATUS_GROUPS.find(g => g.value === value)?.label ?? statusBadge(value)?.label ?? value;
+	var hasDates = !!(queryPrams?.from_date || queryPrams?.to_date);
+	var filtered = !!(queryPrams?.rider_id || queryPrams?.status || hasDates);
+
+	/* "No delivered deliveries for this rider in the last 30 days". */
+	function emptyMessage() {
+		var who = queryPrams.rider_id ? (queryPrams.rider_id === "none" ? " without a rider" : " for this rider") : "";
+		var when = hasDates ? ` ${datePhrase(queryPrams.from_date, queryPrams.to_date)}` : "";
+		if (queryPrams.status) return `No ${statusFilterLabel(queryPrams.status).toLowerCase()} deliveries${who}${when}`;
+		if (!hasDates) return queryPrams.rider_id === "none" ? ("Every delivery has a rider or courier") : ("No deliveries for this rider");
+		return `No deliveries${who}${when}`;
+	}
+
+	/* The dates for a sentence: "today", "in the last 7 days", "between 2026-02-01 and 2026-02-24"... */
+	function datePhrase(from, to) {
+		var range = matchDateRange(from, to);
+		if (range && range !== "custom") {
+			var label = dateRangeLabel(from, to).toLowerCase();
+			return /^last \d/.test(label) ? `in the ${label}` : label;
+		}
+		if (from && to) return from === to ? `on ${from}` : `between ${from} and ${to}`;
+		return from ? `since ${from}` : `until ${to}`;
+	}
+
+	function clearDates() {
+		setdateResetKey((k) => k + 1);
+		setqueryPrams({ ...queryPrams, from_date: "", to_date: "", paged: 1 });
+	}
+
 	return (
 
 		<div className="page-shell">
@@ -267,8 +351,58 @@ const Deliveries = () => {
 			</div>
 
 			<div className="flex flex-wrap items-center justify-between gap-3">
-				{/* Sorting and page size are what get_deliveries supports; it has no search or status filter. */}
+				{/* Rider, status, dates, sorting and page size are what get_deliveries supports; it has no search. */}
 				<div className="flex flex-wrap items-center gap-2">
+					<select aria-label="Rider" className={FILTER_SELECT} value={queryPrams?.rider_id ?? ""} onChange={ev => setqueryPrams({ ...queryPrams, rider_id: ev.target.value, paged: 1 })}>
+						<option value="">{("All riders")}</option>
+						<option value="none">{("Unassigned")}</option>
+						{riders.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+						{/* A rider_id from the link that is not in the list (not a rider any more). */}
+						{/^\d+$/.test(String(queryPrams?.rider_id)) && !riders.some(r => String(r.id) === String(queryPrams.rider_id)) && (
+							<option value={queryPrams.rider_id}>{`Rider #${queryPrams.rider_id}`}</option>
+						)}
+					</select>
+					<select aria-label="Status" className={FILTER_SELECT} value={queryPrams?.status ?? ""} onChange={ev => setqueryPrams({ ...queryPrams, status: ev.target.value, paged: 1 })}>
+						<option value="">{("All statuses")}{statusTotal ? ` (${statusTotal})` : ""}</option>
+						<optgroup label={("Groups")}>
+							{STATUS_GROUPS.map(g => <option key={g.value} value={g.value}>{g.label} ({groups[g.value]})</option>)}
+						</optgroup>
+						<optgroup label={("Status")}>
+							{statusOptions.map(s => (
+								<option key={s} value={s}>{statusBadge(s)?.label ?? s} ({statusCounts[s] ?? 0})</option>
+							))}
+						</optgroup>
+					</select>
+					<DateRangeFilter
+						from={queryPrams?.from_date ?? ""}
+						to={queryPrams?.to_date ?? ""}
+						resetKey={dateResetKey}
+						selectClass={FILTER_SELECT}
+						onChange={(from, to) => setqueryPrams({ ...queryPrams, from_date: from, to_date: to, paged: 1 })}
+					/>
+					{hasDates && (
+						<span className="flex items-center gap-1 rounded-full border border-indigo-200 bg-indigo-50 py-0.5 pl-2.5 pr-1 text-xs text-indigo-700">
+							<IconCalendar size={13} />
+							{dateRangeLabel(queryPrams.from_date, queryPrams.to_date)}
+							<button type="button" aria-label="Clear date filter" className="inline-flex h-5 w-5 items-center justify-center rounded-full !border-0 !bg-transparent !p-0 text-indigo-400 !shadow-none hover:!bg-indigo-200 hover:text-indigo-800"
+								onClick={clearDates}>×</button>
+						</span>
+					)}
+					{queryPrams?.status && (
+						<span className="flex items-center gap-1 rounded-full border border-indigo-200 bg-indigo-50 py-0.5 pl-2.5 pr-1 text-xs text-indigo-700">
+							{statusFilterLabel(queryPrams.status)}
+							<button type="button" aria-label="Clear status filter" className="inline-flex h-5 w-5 items-center justify-center rounded-full !border-0 !bg-transparent !p-0 text-indigo-400 !shadow-none hover:!bg-indigo-200 hover:text-indigo-800"
+								onClick={() => setqueryPrams({ ...queryPrams, status: "", paged: 1 })}>×</button>
+						</span>
+					)}
+					{queryPrams?.rider_id && (
+						<span className="flex items-center gap-1 rounded-full border border-indigo-200 bg-indigo-50 py-0.5 pl-2.5 pr-1 text-xs text-indigo-700">
+							<IconMotorbike size={13} />
+							{queryPrams.rider_id === "none" ? ("Unassigned") : (riderName(queryPrams.rider_id) ?? `Rider #${queryPrams.rider_id}`)}
+							<button type="button" aria-label="Clear rider filter" className="inline-flex h-5 w-5 items-center justify-center rounded-full !border-0 !bg-transparent !p-0 text-indigo-400 !shadow-none hover:!bg-indigo-200 hover:text-indigo-800"
+								onClick={() => setqueryPrams({ ...queryPrams, rider_id: "", paged: 1 })}>×</button>
+						</span>
+					)}
 					<select aria-label="Sort" className={FILTER_SELECT} value={queryPrams?.order ?? "DESC"} onChange={ev => setqueryPrams({ ...queryPrams, order: ev.target.value, paged: 1 })}>
 						<option value="DESC">{("Newest first")}</option>
 						<option value="ASC">{("Oldest first")}</option>
@@ -290,7 +424,15 @@ const Deliveries = () => {
 				)}
 			</div>
 
-			{!loading && total === 0 && (productsData?.posts ?? []).length === 0 ? (
+			{!loading && total === 0 && filtered ? (
+				<div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-gray-200 bg-white px-6 py-14 text-center">
+					<div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 text-gray-400"><IconMotorbike size={24} /></div>
+					<div className="text-sm font-semibold text-gray-800">
+						{emptyMessage()}
+					</div>
+					<button type="button" className={`${TOOLBAR_BUTTON} mt-2`} onClick={() => { setdateResetKey((k) => k + 1); setqueryPrams({ ...queryPrams, rider_id: "", status: "", from_date: "", to_date: "", paged: 1 }); }}>{("Clear filters")}</button>
+				</div>
+			) : !loading && total === 0 && (productsData?.posts ?? []).length === 0 ? (
 				<div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-gray-200 bg-white px-6 py-14 text-center">
 					<div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 text-gray-400"><IconTruckDelivery size={24} /></div>
 					<div className="text-sm font-semibold text-gray-800">{("No deliveries yet")}</div>

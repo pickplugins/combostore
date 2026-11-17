@@ -6,6 +6,7 @@ import { useCounterStore } from '../store/useCounterStore'
 import PopoverButton from './PopoverButton';
 import Spinner from './Spinner';
 import Image from "next/image";
+import { sortProviderEntries } from "../lib/sortProviders";
 
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
@@ -195,7 +196,7 @@ const OrderCourier = ({ order_id, deliveryData }) => {
               }}>
                 <option value="">Choose</option>
 
-                {Object.entries(couriersPrams)?.map((args, index) => {
+                {sortProviderEntries(Object.entries(couriersPrams || {}), couriers).map((args, index) => {
                   var index = args[0];
                   var item = args[1];
 

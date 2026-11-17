@@ -16,6 +16,7 @@ import GoogleMapDirections from '../components/GoogleMapDirections';
 import PopoverButton from '../components/PopoverButton';
 import UsersPicker from '../components/shop-elements/UsersPicker';
 import Spinner from "../components/Spinner";
+import { sortProviderEntries } from "../lib/sortProviders";
 
 
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
@@ -477,7 +478,7 @@ const OrderDelivery = (props) => {
                     setdeliveryData({ ...deliveryData, courier: ev.target.value });
                   }}>
                   <option value="">{("Choose")}</option>
-                  {Object.entries(couriersPrams ?? {}).map(([key, item]) => (
+                  {sortProviderEntries(Object.entries(couriersPrams ?? {}), couriers).map(([key, item]) => (
                     couriers?.[key]?.enabled ? <option key={key} value={item.id}>{item.label}</option> : null
                   ))}
                 </select>

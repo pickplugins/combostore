@@ -9,6 +9,8 @@ import Spinner from './Spinner';
 import { IconAlertCircle, IconEye, IconEyeOff, IconLock, IconUser } from "@tabler/icons-react";
 import { ADORNMENT_CLASSES, FIELD_CLASSES, LABEL_CLASSES, SUBMIT_CLASSES } from "./AuthShell";
 import { DEMO_MODE } from "@/lib/demo/config";
+import { redirectFromLocation } from "@/lib/authRedirect";
+import ResendVerificationButton from "./ResendVerificationButton";
 
 export default function Login() {
 
@@ -25,7 +27,7 @@ export default function Login() {
 	/* `error` comes from the provider now. This component used to keep an
 		 `error` state of its own that nothing ever wrote to, so a rejected
 		 sign-in showed no message. */
-	const { user, error, handleLogin, logging } = useAuth();
+	const { user, error, resendUrl, handleLogin, logging } = useAuth();
 	const router = useRouter();
 
 	/* Demo mode accepts any credentials; prefilled so one click signs in. */
@@ -33,9 +35,15 @@ export default function Login() {
 	const [password, setPassword] = useState(DEMO_MODE ? "demo" : "");
 	const [showPassword, setShowPassword] = useState(false);
 
+	/*
+		`/login?redirect=/checkout` returns a shopper to where they came from
+		(the checkout's sign-in notice links here); lib/authRedirect.js only
+		follows a path on this site. Without it, the default destination (the
+		dashboard) is unchanged.
+	*/
 	const onSubmit = (e) => {
 		e.preventDefault();
-		const success = handleLogin(username, password);
+		const success = handleLogin(username, password, redirectFromLocation());
 
 		// if (success) {
 		// 	router.push("/"); // redirect after login
@@ -83,7 +91,11 @@ export default function Login() {
 					role="alert"
 					className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
 					<IconAlertCircle size={16} className="mt-0.5 shrink-0" />
-					<span>{error}</span>
+					<span>
+						{error}
+						{/* Keyed on the link, so a new failed sign-in resets the button. */}
+						<ResendVerificationButton key={resendUrl} url={resendUrl} className="mt-1 block" />
+					</span>
 				</p>
 			)}
 

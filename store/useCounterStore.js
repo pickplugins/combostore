@@ -15,6 +15,41 @@ export function cartLineKey(item) {
   return `${id}:${item?.variation_id || 0}:${item?.purchase_type || "one_time"}`;
 }
 
+/*
+  A product's categories or tags as a list of slugs, for a cart line. Products
+  carry term objects ({ id, name, slug }); the cart keeps only the slugs, which
+  is what cart rules (the Discount Rules extension) match on. Strings pass
+  through. Anything that is not a list is an empty one.
+*/
+export function cartTermSlugs(terms) {
+  if (!Array.isArray(terms)) return [];
+  return terms
+    .map((t) => (typeof t === "string" ? t : t?.slug ?? t?.name))
+    .map((s) => String(s ?? "").trim())
+    .filter(Boolean);
+}
+
+/* A minimum order quantity as a whole number of at least 1 (unset, 0, "" and junk are 1). */
+export function normalizeMoq(value) {
+  const n = parseInt(value, 10);
+  return Number.isFinite(n) && n >= 1 ? n : 1;
+}
+
+/*
+  The MOQ for buying a product: the picked variation's own MOQ when it has
+  one saved, otherwise the product's. Cart lines carry it as `moq`, and the
+  cart never holds a line below it.
+*/
+export function productMoq(product, variation) {
+  const own = variation?.moq;
+  return normalizeMoq(own !== undefined && own !== null && own !== "" ? own : product?.moq);
+}
+
+function notifyMoq(state, moq) {
+  if (moq <= 1) return;
+  state.addNotification({ type: "error", title: "Minimum order quantity", content: `The minimum order for this item is ${moq}.` });
+}
+
 
 
 export const useCounterStore = create((set) => ({
@@ -260,6 +295,13 @@ export const useCounterStore = create((set) => ({
       "comingSoon": true,
       "label": "Paystation",
       "value": "paystation",
+    },
+    "uddoktapay": {
+      "id": 'uddoktapay',
+      "enable": false,
+      "comingSoon": true,
+      "label": "UddoktaPay",
+      "value": "uddoktapay",
     },
 
 
@@ -784,6 +826,16 @@ export const useCounterStore = create((set) => ({
   shippingMethod: "free",
   setshippingMethod: (value) => set({ shippingMethod: value }),
 
+  /*
+    The shipping method picked at checkout, as { id, name } (or null). Kept
+    apart from `shippingMethod`, the cart drawer's own free/normal/express
+    switch: writing a checkout id there would make the drawer recalculate
+    shippingCost from it and overwrite the checkout's price. Cart rules read
+    this one first.
+  */
+  checkoutShippingMethod: null,
+  setcheckoutShippingMethod: (value) => set({ checkoutShippingMethod: value }),
+
   shippingCost: 0,
   setshippingCost: (amount) => set({ shippingCost: amount }),
   cartStep: 0,
@@ -832,14 +884,30 @@ export const useCounterStore = create((set) => ({
     Each line carries that as `key` (see cartLineKey); adding the same key
     again adds to its quantity.
   */
+  /*
+    MOQ: a new line goes in at no less than its `moq`. A negative quantity
+    (quick search's minus button) that would take a line below its MOQ
+    removes the line instead, as nothing below the MOQ can be bought.
+  */
   addCartItems: (newCartItem) =>
     set((state) => {
       const key = cartLineKey(newCartItem);
-      const lineToAdd = { ...newCartItem, key };
-
       const existingItem = state.cartItems.find((item) => cartLineKey(item) === key);
+      const moq = normalizeMoq(newCartItem?.moq ?? existingItem?.moq);
+      const adding = parseInt(newCartItem?.quantity, 10) || 0;
+      /* Slugs only; a caller that passes no terms keeps what the line has. */
+      const terms = {
+        categories: newCartItem?.categories !== undefined ? cartTermSlugs(newCartItem.categories) : (existingItem?.categories ?? []),
+        tags: newCartItem?.tags !== undefined ? cartTermSlugs(newCartItem.tags) : (existingItem?.tags ?? []),
+      };
 
       if (existingItem) {
+        const quantity = (parseInt(existingItem.quantity, 10) || 0) + adding;
+
+        if (quantity < moq && adding < 0) {
+          return { cartItems: state.cartItems.filter((item) => item !== existingItem) };
+        }
+
         state.addNotification({
           type: 'success',
           title: 'Item updated to cart',
@@ -851,12 +919,19 @@ export const useCounterStore = create((set) => ({
             item === existingItem
               ? {
                 ...item,
-                quantity: item.quantity + newCartItem.quantity,
+                ...terms,
+                moq,
+                quantity: Math.max(quantity, moq),
               }
               : item
           ),
         };
       }
+
+      if (adding < 0) return {};
+
+      if (adding < moq) notifyMoq(state, moq);
+      const lineToAdd = { ...newCartItem, ...terms, key, moq, quantity: Math.max(adding, moq) };
 
       state.addNotification({
         type: 'success',
@@ -931,12 +1006,19 @@ export const useCounterStore = create((set) => ({
       const existingItem = state.cartItems.find((item) => isKey ? cartLineKey(item) === id : item.id === id);
 
       if (existingItem) {
-        // ✅ Item exists → update it
-        state.addNotification({ type: "success", title: "Cart updated", content: "" });
+        /* MOQ: a quantity below the line's minimum is held at the minimum. */
+        const moq = normalizeMoq(updatedFields?.moq ?? existingItem?.moq);
+        const fields = { ...updatedFields, moq };
+        if (updatedFields?.quantity !== undefined && (parseInt(updatedFields.quantity, 10) || 0) < moq) {
+          notifyMoq(state, moq);
+          fields.quantity = moq;
+        } else {
+          state.addNotification({ type: "success", title: "Cart updated", content: "" });
+        }
 
         return {
           cartItems: state.cartItems.map((item) =>
-            item === existingItem ? { ...item, ...updatedFields, key: cartLineKey({ ...item, ...updatedFields }) } : item
+            item === existingItem ? { ...item, ...fields, key: cartLineKey({ ...item, ...fields }) } : item
           ),
         };
       } else {

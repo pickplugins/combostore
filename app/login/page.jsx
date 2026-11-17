@@ -7,6 +7,7 @@ import { useCounterStore } from '../../store/useCounterStore'
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
 import Login from '../../components/Login';
+import { redirectFromLocation, withRedirect } from '@/lib/authRedirect';
 
 // import Register from '../../../../components/Register';
 
@@ -17,6 +18,10 @@ const page = () => {
 
 
 	const { token, appData, notifications, addNotification, userDataX, setUserDataX } = useCounterStore()
+
+	/* `?redirect=` carried onto the Register link, so switching pages keeps it. Read after mount so the server and first client render agree. */
+	const [redirect, setRedirect] = useState(undefined);
+	useEffect(() => { setRedirect(redirectFromLocation()); }, []);
 
 
 
@@ -48,7 +53,7 @@ const page = () => {
 					<Login />
 
 					<div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 border-t border-gray-100 pt-4 text-sm">
-						<Link href="/register" className="font-medium text-brand transition-colors hover:text-brand-600 hover:underline">
+						<Link href={withRedirect("/register", redirect)} className="font-medium text-brand transition-colors hover:text-brand-600 hover:underline">
 							Dont have an account? Register
 						</Link>
 						<Link href="/" className="text-gray-500 transition-colors hover:text-gray-900 hover:underline">

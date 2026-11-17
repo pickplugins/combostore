@@ -1,12 +1,12 @@
 "use client";
 
 import React from "react";
-import Riders from "../../../components/pages/Riders";
+import StoreManagers from "../../../components/pages/StoreManagers";
 
 const page = () => {
 
 	return (
-		<Riders role="store_manager" />
+		<StoreManagers />
 	);
 };
 

@@ -523,7 +523,7 @@ const QuickSearchView = (props) => {
 									var quantityInCart = getQuantityById(product?.id)
 									quantityInCart = quantityInCart ? quantityInCart : 0;
 
-									var cartLine = { id: product?.id, title: product?.title, price: product?.price, regular_price: product?.regular_price, sale_price: product?.sale_price, priceHtml: product?.price_html, thumbnail: product?.post_thumbnail?.src };
+									var cartLine = { id: product?.id, title: product?.title, price: product?.price, regular_price: product?.regular_price, sale_price: product?.sale_price, priceHtml: product?.price_html, thumbnail: product?.post_thumbnail?.src, moq: product?.moq, categories: product?.categories, tags: product?.tags };
 
 									return (
 										<li key={product?.id ?? index} className={cls('result')}>

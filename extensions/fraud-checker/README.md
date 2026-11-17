@@ -15,8 +15,8 @@ the stored data changed.
 | `routes` | `fraud-checker` → the screen |
 
 No blocks: none of this is something a merchant places on a page. No runtime:
-nothing is enforced yet, and a runtime that does nothing would still be
-mounted on every storefront page.
+what is enforced runs on the server, so there is nothing for the storefront to
+mount.
 
 ## The checks
 
@@ -40,18 +40,24 @@ Three more (`tempEmail`, `smsOtp`, `phoneCall`) had branches in core but were
 commented out of the list that drove them, so they never rendered. They are
 recorded in `NOT_YET_OFFERED` rather than dropped silently.
 
-## None of this is enforced
+## What is enforced
 
-**Nothing in the app reads `settings.fraudCheck`.** It did not before this
-extension existed either — every check ships `comingSoon: true`. The screen
-says so, because a merchant who switches these on and believes orders are
-being screened is worse off than one who knows they are not.
+Two checks run on the server, in `create_order` (combostore-server,
+`ComboStoreRest.php`), before the order is written:
 
-When screening does ship it has to run **server-side**. An extension is
-front-end code; anything it decides is bypassed by posting an order straight
-to the API, which is exactly the class of thing a fraud check exists to stop.
-The configuration living here is still the right shape — the WordPress side
-reads the same `fraudCheck` key.
+| Check | Rule | Refusal |
+| --- | --- | --- |
+| `loginRequired` | The request must carry a valid customer token. The order is then placed as that customer: the body's `userid` is overwritten, because anyone can write any id into it. | `{ status: "failed", code: "login_required" }` |
+| `limitPhone` | At most `order_count` orders per phone number in the last hour. Billing and shipping phones are compared on their last 10 digits, so `+8801711…` and `01711…` are the same number. Incomplete, draft, trashed, failed and cancelled orders do not count. 0 or blank means no limit. | `{ status: "failed", code: "phone_limit" }` |
+
+Both are skipped for `incomplete` orders (the checkout's abandoned-cart
+capture) and for `administrator` / `store_manager` tokens, the same as the MOQ
+check. The checkout sends the signed-in customer's token with every
+`create_order` call so the server can see who is ordering.
+
+Every other check is still **Coming Soon**: saved, but nothing reads it. When
+those ship they belong in the same place. Anything decided in the browser is
+bypassed by posting an order straight to the API.
 
 ## Storage
 

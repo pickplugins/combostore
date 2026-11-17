@@ -500,7 +500,10 @@ const Dashboard = (props) => {
 
     var days = 7;
 
-    if (queryPrams?.range == '7days') {
+    if (queryPrams?.range == 'today') {
+      days = 1;
+    }
+    else if (queryPrams?.range == '7days') {
       days = 7;
     }
     else if (queryPrams?.range == '15days') {
@@ -1059,6 +1062,7 @@ const Dashboard = (props) => {
 
 
   var dateRanges = {
+    'today': { label: 'Today', value: 'today' },
     '7days': { label: '7 Days', value: '7days' },
     '15days': { label: '15 Days', value: '15days' },
     '30days': { label: '30 Days', value: '30days' },
@@ -1068,6 +1072,7 @@ const Dashboard = (props) => {
   }
 
   var rangeLabels = {
+    'today': ("Today"),
     '7days': ("Last 7 days"),
     '15days': ("Last 15 days"),
     '30days': ("Last 30 days"),

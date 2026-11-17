@@ -31,6 +31,9 @@ function sameId(a, b) {
 	return String(a ?? "").trim() === String(b ?? "").trim();
 }
 
+/* Slugs are compared ignoring case: they are typed by hand. */
+const lower = (v) => String(v ?? "").trim().toLowerCase();
+
 function asList(value) {
 	if (Array.isArray(value)) return value;
 	if (value == null || value === "") return [];
@@ -76,12 +79,12 @@ export function selectItems(items, target) {
 		if (mode === "all") return true;
 		if (mode === "products") return products.some((id) => sameId(id, item?.id));
 		if (mode === "categories") {
-			const own = itemCategories(item);
-			return categories.some((slug) => own.includes(slug));
+			const own = itemCategories(item).map(lower);
+			return categories.some((slug) => own.includes(lower(slug)));
 		}
 		if (mode === "tags") {
-			const own = itemTags(item);
-			return tags.some((slug) => own.includes(slug));
+			const own = itemTags(item).map(lower);
+			return tags.some((slug) => own.includes(lower(slug)));
 		}
 		return false;
 	});
@@ -207,7 +210,7 @@ export const CONDITIONS = {
 		fields: [F.slugList("categories", "Category slugs")],
 		defaults: { operator: "any", categories: [] },
 		summary: (c) => `Cart ${setLabel(c.operator)} category ${asList(c.categories).join(", ") || "-"}`,
-		evaluate: (c, ctx) => compareSet((ctx.items ?? []).flatMap(itemCategories), c.operator, c.categories),
+		evaluate: (c, ctx) => compareSet((ctx.items ?? []).flatMap(itemCategories).map(lower), c.operator, asList(c.categories).map(lower)),
 	},
 
 	tags_in_cart: {
@@ -217,7 +220,7 @@ export const CONDITIONS = {
 		fields: [F.slugList("tags", "Tag slugs")],
 		defaults: { operator: "any", tags: [] },
 		summary: (c) => `Cart ${setLabel(c.operator)} tag ${asList(c.tags).join(", ") || "-"}`,
-		evaluate: (c, ctx) => compareSet((ctx.items ?? []).flatMap(itemTags), c.operator, c.tags),
+		evaluate: (c, ctx) => compareSet((ctx.items ?? []).flatMap(itemTags).map(lower), c.operator, asList(c.tags).map(lower)),
 	},
 
 	matching_quantity: {
@@ -311,7 +314,17 @@ export const CONDITIONS = {
 		fields: [F.slugList("methods", "Methods")],
 		defaults: { operator: "any", methods: ["free"] },
 		summary: (c) => `Shipping ${c.operator === "none" ? "is none of" : "is one of"} ${asList(c.methods).join(", ") || "-"}`,
-		evaluate: (c, ctx) => compareSet([ctx.shippingMethod].filter(Boolean), c.operator, c.methods),
+		/* The cart drawer gives a plain value ("free", "express"); checkout gives
+		   the chosen method as { id, name }. Either the id or the name matches,
+		   ignoring case, so a merchant can type what the shopper sees. */
+		evaluate: (c, ctx) => {
+			const m = ctx.shippingMethod;
+			const present = (m && typeof m === "object" ? [m.id, m.name] : [m])
+				.map((v) => String(v ?? "").trim().toLowerCase())
+				.filter(Boolean);
+			const wanted = asList(c.methods).map((v) => String(v).trim().toLowerCase());
+			return compareSet(present, c.operator, wanted);
+		},
 	},
 
 	date_range: {

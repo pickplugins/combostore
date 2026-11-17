@@ -27,6 +27,13 @@ import CommentsGrid from './element-layouts/CommentsGrid'
 import RelatedProducts from './element-layouts/RelatedProducts'
 import ProductVariations from './element-layouts/ProductVariations'
 import ProductSku from './element-layouts/ProductSku'
+import ProductMoq from './element-layouts/ProductMoq'
+import OrderTracking from './element-layouts/OrderTracking'
+import ProductDimensions from './element-layouts/ProductDimensions'
+import ProductSizeGuide from './element-layouts/ProductSizeGuide'
+import ProductFaq from './element-layouts/ProductFaq'
+import CountdownTimer from './element-layouts/CountdownTimer'
+import Popup from './element-layouts/Popup'
 import ProductPrice from './element-layouts/ProductPrice'
 import ProductDiscount from './element-layouts/ProductDiscount'
 import ProductRatings from './element-layouts/ProductRatings'
@@ -153,6 +160,27 @@ const Templates = (props) => {
 		}
 		else if (type == 'productSku') {
 			setlayouts(ProductSku)
+		}
+		else if (type == 'productMoq') {
+			setlayouts(ProductMoq)
+		}
+		else if (type == 'orderTracking') {
+			setlayouts(OrderTracking)
+		}
+		else if (type == 'productDimensions') {
+			setlayouts(ProductDimensions)
+		}
+		else if (type == 'productSizeGuide') {
+			setlayouts(ProductSizeGuide)
+		}
+		else if (type == 'productFaq') {
+			setlayouts(ProductFaq)
+		}
+		else if (type == 'countdownTimer') {
+			setlayouts(CountdownTimer)
+		}
+		else if (type == 'popup') {
+			setlayouts(Popup)
 		}
 		else if (type == 'productPrice') {
 			setlayouts(ProductPrice)
@@ -347,6 +375,15 @@ const Templates = (props) => {
 								onClick={ev => {
 
 									var content = item?.content
+									/* A countdown keeps what it counts to: Replace swaps the whole block, and a
+									   preset carries only looks, so the merchant's end date would be wiped. */
+									if (content?.type === 'countdownTimer' && selectedBlock?.type === 'countdownTimer') {
+										var kept = {};
+										['mode', 'endDate', 'endsAt', 'durationMinutes'].forEach(key => {
+											if (selectedBlock?.options?.[key] !== undefined) kept[key] = selectedBlock.options[key];
+										});
+										content = { ...content, options: { ...content.options, ...kept } };
+									}
 									handleReplaceBlock(content);
 
 								}} >

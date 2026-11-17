@@ -7,15 +7,12 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { IconPlus, IconFilter, IconDotsVertical, IconTrash, IconX, IconEdit, IconEyeShare, IconCopy, IconPackages, IconRefresh, IconTruckLoading } from "@tabler/icons-react";
 
-import DatePicker from "react-datepicker";
+import DateRangeFilter, { dateRangeLabel } from "../DateRangeFilter";
 import "react-datepicker/dist/react-datepicker.css";
-import { format } from "date-fns";
 
 import PopoverButton from '../../components/PopoverButton';
 import PurchaseEdit from '../../components/pages/PurchaseEdit';
-import UsersPicker from '../../components/shop-elements/UsersPicker';
 import DropDown from '../../components/DropDown';
-import ProductsPicker from '../../components/shop-elements/ProductsPicker';
 
 import { useCounterStore } from '../../store/useCounterStore'
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
@@ -95,17 +92,6 @@ const TOOLBAR_BUTTON =
 const PRIMARY_BUTTON =
   "inline-flex !h-9 items-center gap-2 !rounded-lg !border-0 !bg-[#634FE5] !px-4 !py-0 !text-sm !font-semibold !text-white !shadow-sm transition-colors hover:!bg-[#5540d4] disabled:opacity-50 cursor-pointer";
 
-const DATE_INPUT =
-  "w-44 !h-9 !rounded-lg !border !border-gray-300 !bg-white !px-3 !py-0 !text-sm !text-gray-700 !shadow-none transition-colors hover:!border-gray-400 focus:!border-[#634FE5] focus:!outline-none";
-
-/* The query keeps dates as "yyyy-MM-dd HH:mm:ss" strings (that is what is
-   sent); react-datepicker needs a Date. */
-function toPickerDate(value) {
-  if (!value) return null;
-  var date = new Date(String(value).replace(" ", "T"));
-  return isNaN(date) ? null : date;
-}
-
 
 const Purchases = (props) => {
 
@@ -121,6 +107,37 @@ const Purchases = (props) => {
   var [loading, setloading] = useState(false);
   var [selectedRows, setselectedRows] = useState([]);
   var [sumData, setsumData] = useState(null);
+
+  /*
+    The supplier filter: every supplier account, and how many purchases each has
+    under the other filters (get_purchases' supplier_counts, "0" = no supplier).
+    queryPrams.customer holds the pick as {id, display_name}; id "none" = no supplier.
+  */
+  var [suppliers, setsuppliers] = useState([]);
+  var [supplierCounts, setsupplierCounts] = useState({});
+  /* Names on the purchases of deleted supplier accounts (get_purchases' supplier_names). */
+  var [supplierNames, setsupplierNames] = useState({});
+
+  /* The product filter: products bought under the other filters ({id, name, count}). */
+  var [productOptions, setproductOptions] = useState([]);
+
+  /* Bumped when the dates are cleared from a chip or "Clear all" (DateRangeFilter leaves Custom). */
+  var [dateResetKey, setdateResetKey] = useState(0);
+
+  useEffect(() => {
+    if (!token) return;
+    fetch(serverUrl + "wp-json/combo-store/v2/get_users", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ role: "supplier", number: 200, paged: 1, order: "ASC" }),
+    })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((res) => {
+        var list = (res?.posts ?? []).map((u) => ({ id: String(u.id ?? u.ID), name: u.display_name || u.user_login || `Supplier #${u.id ?? u.ID}` }));
+        setsuppliers(list.sort((a, b) => String(a.name).localeCompare(String(b.name))));
+      })
+      .catch(() => { });
+  }, [token]);
 
   function onSelectRows(rows) {
     setselectedRows(rows);
@@ -272,6 +289,9 @@ const Purchases = (props) => {
 
         setordersData({ posts: orders, total: total, maxPages: max_pages })
         setsumData(sumPurchaseAmounts(orders));
+        setsupplierCounts(res?.supplier_counts && typeof res.supplier_counts === "object" ? res.supplier_counts : {});
+        if (res?.supplier_names && typeof res.supplier_names === "object") setsupplierNames((prev) => ({ ...prev, ...res.supplier_names }));
+        setproductOptions(Array.isArray(res?.product_options) ? res.product_options : []);
         setloading(false);
       })
       .catch((error) => {
@@ -311,6 +331,19 @@ const Purchases = (props) => {
   */
   const requestRef = useRef(0);
   const lastKeyword = useRef(queryPrams.keyword);
+
+  /* ?supplier_id=&supplier_name= from a supplier's page. Read after mount, so the server render matches. */
+  useEffect(() => {
+    try {
+      var search = new URLSearchParams(window.location.search);
+      var supplierId = search.get("supplier_id");
+      if (supplierId === "none") {
+        setqueryPrams((prev) => ({ ...prev, customer: { id: "none", display_name: "No supplier" }, paged: 1 }));
+      } else if (supplierId && /^\d+$/.test(supplierId)) {
+        setqueryPrams((prev) => ({ ...prev, customer: { id: supplierId, display_name: search.get("supplier_name") || `Supplier #${supplierId}` }, paged: 1 }));
+      }
+    } catch (_e) { }
+  }, []);
 
   useEffect(() => {
 
@@ -566,30 +599,53 @@ const Purchases = (props) => {
   }
 
 
-  /* get_users returns `id`; this read `args.ID`, so the filter never sent an id. */
-  function onPickCustomer(args) {
-    setqueryPrams({ ...queryPrams, customer: { id: args?.id ?? args?.ID, display_name: args?.display_name, avatar: args?.avatar }, paged: 1 })
-  }
 
   /* DropDown hands back the whole option; only its value belongs in the query. */
   function onFilterByPaymentMethod(args) {
     setqueryPrams({ ...queryPrams, payment_method: args?.value ?? "", paged: 1 })
   }
 
-  function onAddProducts(item) {
-    setqueryPrams({ ...queryPrams, product: { id: item?.id, title: item?.title }, paged: 1 })
-  }
-
-
   /* Filters inside the "More Filters" popover, and every active filter (for the chips). */
   const moreFilterCount = [
     queryPrams?.payment_method,
-    queryPrams?.customer?.display_name,
-    queryPrams?.product?.title,
-    queryPrams?.from_date,
-    queryPrams?.to_date,
   ].filter(Boolean).length;
-  const activeFilterCount = moreFilterCount + [queryPrams?.status, queryPrams?.payment_status].filter(Boolean).length;
+  const hasDates = Boolean(queryPrams?.from_date || queryPrams?.to_date);
+  const activeFilterCount = moreFilterCount + [queryPrams?.status, queryPrams?.payment_status, queryPrams?.customer?.id, queryPrams?.product?.id, hasDates].filter(Boolean).length;
+
+
+  /*
+    Product options: the products bought under the other filters (get_purchases'
+    product_options, most bought first), alphabetical. The picked product stays
+    listed even when the other filters leave it with no purchases.
+  */
+  const productPick = queryPrams?.product?.id ? String(queryPrams.product.id) : "";
+  const productChoices = (() => {
+    var list = productOptions.map((p) => ({ id: String(p.id), name: p.name, count: p.count }));
+    if (productPick && !list.some((p) => p.id === productPick)) {
+      list.push({ id: productPick, name: queryPrams.product.title || `Product #${productPick}`, count: 0 });
+    }
+    return list.sort((a, b) => String(a.name).localeCompare(String(b.name)));
+  })();
+
+  /*
+    Supplier options: the supplier accounts, plus any id that purchases point at
+    but is not one (a deleted account, or a user whose role changed), so those
+    purchases can still be found. Counts follow the other filters.
+  */
+  const supplierPick = queryPrams?.customer?.id ? String(queryPrams.customer.id) : "";
+  const supplierOptions = (() => {
+    var list = suppliers.map((s) => ({ ...s, count: supplierCounts[s.id] ?? 0 }));
+    var known = new Set(list.map((s) => s.id));
+    var others = Object.entries(supplierCounts)
+      .filter(([id]) => id !== "0" && !known.has(id))
+      .map(([id, n]) => ({ id, name: supplierNames[id] ? `${supplierNames[id]} (#${id}, deleted)` : `Supplier #${id}`, count: n, other: true }));
+    if (supplierPick && supplierPick !== "none" && !known.has(supplierPick) && !others.some((o) => o.id === supplierPick)) {
+      others.push({ id: supplierPick, name: queryPrams.customer.display_name || `Supplier #${supplierPick}`, count: 0, other: true });
+    }
+    return { list, others };
+  })();
+  const countLabel = (n) => (n ? ` (${n})` : "");
+  const allCount = Object.values(supplierCounts).reduce((sum, n) => sum + n, 0);
 
   const statusLabel = (value) => STATUS_OPTIONS.find((o) => o.value === value)?.label ?? titleCase(value);
   const paymentStatusLabel = (value) => PAYMENT_STATUS_OPTIONS.find((o) => o.value === value)?.label ?? titleCase(value);
@@ -638,6 +694,46 @@ const Purchases = (props) => {
             ))}
           </select>
 
+          <select className={FILTER_SELECT} value={supplierPick} onChange={ev => {
+            var value = ev.target.value;
+            var picked = [...supplierOptions.list, ...supplierOptions.others].find((s) => s.id === value);
+            setqueryPrams({
+              ...queryPrams,
+              customer: !value ? {} : value === "none" ? { id: "none", display_name: "No supplier" } : { id: value, display_name: picked?.name ?? `Supplier #${value}` },
+              paged: 1,
+            });
+          }}>
+            <option value="">{("All Suppliers")}{countLabel(allCount)}</option>
+            <option value="none">{("No supplier")}{countLabel(supplierCounts["0"])}</option>
+            {supplierOptions.list.length > 0 && (
+              <optgroup label={("Suppliers")}>
+                {supplierOptions.list.map((s) => <option key={s.id} value={s.id}>{s.name}{countLabel(s.count)}</option>)}
+              </optgroup>
+            )}
+            {supplierOptions.others.length > 0 && (
+              <optgroup label={("Other accounts")}>
+                {supplierOptions.others.map((s) => <option key={s.id} value={s.id}>{s.name}{countLabel(s.count)}</option>)}
+              </optgroup>
+            )}
+          </select>
+
+          <select className={FILTER_SELECT} value={productPick} onChange={ev => {
+            var value = ev.target.value;
+            var picked = productChoices.find((p) => p.id === value);
+            setqueryPrams({ ...queryPrams, product: value ? { id: value, title: picked?.name || `Product #${value}` } : {}, paged: 1 });
+          }}>
+            <option value="">{("All Products")}</option>
+            {productChoices.map((p) => <option key={p.id} value={p.id}>{p.name || `Product #${p.id}`}{countLabel(p.count)}</option>)}
+          </select>
+
+          <DateRangeFilter
+            from={queryPrams?.from_date ?? ""}
+            to={queryPrams?.to_date ?? ""}
+            resetKey={dateResetKey}
+            selectClass={FILTER_SELECT}
+            onChange={(from, to) => setqueryPrams({ ...queryPrams, from_date: from, to_date: to, paged: 1 })}
+          />
+
           <PopoverButton wrapperClass={``} enableCloseBtn={false} buttonClass={TOOLBAR_BUTTON} buttonLabel={moreFilterCount > 0 ? `${("More Filters")} (${moreFilterCount})` : ("More Filters")} buttonIcon={<IconFilter size={16} />} title={"More Filters"} position={"bottomLeft"} popoverClass={`absolute z-[999] w-[380px] overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg`}>
 
             <div className="p-4">
@@ -646,50 +742,6 @@ const Purchases = (props) => {
                   <div className="text-sm font-medium text-gray-700">Payment Method</div>
                   <div>
                     <DropDown multiple={false} value={queryPrams?.payment_method} options={paymentGateways} label={`Payment Method`} onOptionsChoose={onFilterByPaymentMethod} />
-                  </div>
-                </div>
-                <div className="flex items-center justify-between gap-3">
-                  <div className="text-sm font-medium text-gray-700">Supplier</div>
-                  <div>
-                    <UsersPicker placeholder={"Search Supplier"} role={`supplier`} onPick={onPickCustomer} />
-                  </div>
-                </div>
-                <div className="flex items-center justify-between gap-3">
-                  <div className="text-sm font-medium text-gray-700">Product</div>
-                  <div>
-                    <ProductsPicker placeholder="Search product..." onPick={onAddProducts} />
-                  </div>
-                </div>
-                <div className="flex items-center justify-between gap-3">
-                  <div className="text-sm font-medium text-gray-700">From</div>
-                  <div>
-                    <DatePicker
-                      isClearable
-                      placeholderText="Any date"
-                      dateFormat="yyyy-MM-dd"
-                      className={DATE_INPUT}
-                      selected={toPickerDate(queryPrams?.from_date)}
-                      maxDate={toPickerDate(queryPrams?.to_date)}
-                      onChange={(date) => {
-                        setqueryPrams({ ...queryPrams, from_date: date ? format(date, "yyyy-MM-dd") : "", paged: 1 });
-                      }}
-                    />
-                  </div>
-                </div>
-                <div className="flex items-center justify-between gap-3">
-                  <div className="text-sm font-medium text-gray-700">To</div>
-                  <div>
-                    <DatePicker
-                      isClearable
-                      placeholderText="Any date"
-                      dateFormat="yyyy-MM-dd"
-                      className={DATE_INPUT}
-                      selected={toPickerDate(queryPrams?.to_date)}
-                      minDate={toPickerDate(queryPrams?.from_date)}
-                      onChange={(date) => {
-                        setqueryPrams({ ...queryPrams, to_date: date ? format(date, "yyyy-MM-dd") : "", paged: 1 });
-                      }}
-                    />
                   </div>
                 </div>
               </div>
@@ -749,19 +801,14 @@ const Purchases = (props) => {
               <span className={FILTER_CHIP_X} onClick={() => setqueryPrams({ ...queryPrams, product: {}, paged: 1 })}><IconX size={13} /></span>
             </div>
           )}
-          {queryPrams?.from_date && (
+          {hasDates && (
             <div className={FILTER_CHIP}>
-              <span>{('From')}: {String(queryPrams.from_date).slice(0, 10)}</span>
-              <span className={FILTER_CHIP_X} onClick={() => setqueryPrams({ ...queryPrams, from_date: "", paged: 1 })}><IconX size={13} /></span>
-            </div>
-          )}
-          {queryPrams?.to_date && (
-            <div className={FILTER_CHIP}>
-              <span>{('To')}: {String(queryPrams.to_date).slice(0, 10)}</span>
-              <span className={FILTER_CHIP_X} onClick={() => setqueryPrams({ ...queryPrams, to_date: "", paged: 1 })}><IconX size={13} /></span>
+              <span>{('Date')}: {dateRangeLabel(queryPrams.from_date, queryPrams.to_date)}</span>
+              <span className={FILTER_CHIP_X} onClick={() => { setdateResetKey((k) => k + 1); setqueryPrams({ ...queryPrams, from_date: "", to_date: "", paged: 1 }); }}><IconX size={13} /></span>
             </div>
           )}
           <button type="button" className="!border-0 !bg-transparent !p-0 !text-xs !font-medium !text-gray-500 !shadow-none hover:!text-red-600" onClick={() => {
+            setdateResetKey((k) => k + 1);
             setqueryPrams({ ...queryPrams, status: "", payment_method: "", payment_status: "", customer: {}, product: {}, from_date: "", to_date: "", paged: 1 });
           }}>{("Clear all")}</button>
         </div>

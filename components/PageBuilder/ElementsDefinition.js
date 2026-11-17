@@ -4187,6 +4187,525 @@ const elements = [
 	},
 
 	{
+		type: "productMoq",
+		label: "Product MOQ",
+		icon: null,
+		description: "Displays the minimum order quantity (MOQ) of the current product or picked variation.",
+		ai: {
+			purpose: "Tell shoppers the fewest units they can order, before they reach the cart.",
+			useFor: [
+				"Minimum order quantity",
+				"Wholesale / bulk products",
+				"Purchase requirements"
+			],
+			keywords: [
+				"MOQ",
+				"minimum order",
+				"minimum order quantity",
+				"minimum quantity",
+				"wholesale"
+			],
+			rules: [
+				"Place near the price or add to cart on product pages.",
+				"Display the current product's actual minimum order quantity.",
+				"It shows nothing for products with a minimum of 1 unless hideWhenOne is false."
+			]
+		},
+		/* The quantity comes from the product (or the picked variation) - the minimum the cart enforces. */
+		options: {
+			label: 'Minimum order:',
+			unit: '',
+			icon: '',
+			iconSize: 20,
+			hideWhenOne: true
+		},
+		/*
+			ProductMoqView (through its ProductMoqMarkup, which the builder's
+			ProductMoq.jsx also renders) reads these with elementCssClasses: an
+			optional icon, the label and unit (each only when set) and the quantity.
+		*/
+		cssSelectors: {
+			'*': { classes: 'flex items-center gap-1.5' },
+			'icon': { classes: '' },
+			'label': { classes: '' },
+			'value': { classes: 'font-semibold' },
+			'unit': { classes: '' }
+		},
+		group: ['product']
+	},
+
+	{
+		type: "productDimensions",
+		label: "Product Dimensions",
+		icon: null,
+		description: "Displays the weight and size (length, width, height) of the current product or picked variation.",
+		ai: {
+			purpose: "Show the product's physical size and weight as product specifications.",
+			useFor: [
+				"Product dimensions",
+				"Product weight",
+				"Size specifications",
+				"Package size"
+			],
+			keywords: [
+				"dimensions",
+				"size",
+				"weight",
+				"length",
+				"width",
+				"height",
+				"specifications"
+			],
+			rules: [
+				"Use on product pages, typically in a specifications or details area.",
+				"Display the current product's actual dimensions; set weightUnit and dimensionUnit to the units the store enters them in.",
+				"It shows nothing for products without dimensions."
+			]
+		},
+		/*
+			Values are the product editor's plain numbers (the picked variation's
+			where set); the units are the block's. format "list" draws a row per
+			dimension, "inline" one L × W × H row plus the weight.
+		*/
+		options: {
+			format: 'list',
+			weightUnit: 'kg',
+			dimensionUnit: 'cm',
+			showWeight: true,
+			label: '',
+			icon: '',
+			iconSize: 20,
+			weightLabel: 'Weight',
+			lengthLabel: 'Length',
+			widthLabel: 'Width',
+			heightLabel: 'Height',
+			sizeLabel: 'Dimensions'
+		},
+		/*
+			ProductDimensionsView (through its ProductDimensionsMarkup, which the
+			builder's ProductDimensions.jsx also renders) reads these with
+			elementCssClasses: the optional heading (label / icon / label-text),
+			then items, and per row item plus item-<key>, item-label, item-value
+			and unit.
+		*/
+		cssSelectors: {
+			'*': { classes: 'flex flex-col gap-2' },
+			'label': { classes: 'flex items-center gap-2' },
+			'icon': { classes: '' },
+			'label-text': { classes: 'font-semibold' },
+			'items': { classes: 'flex flex-col gap-1' },
+			'item': { classes: 'flex items-center gap-1' },
+			'item-weight': { classes: '' },
+			'item-length': { classes: '' },
+			'item-width': { classes: '' },
+			'item-height': { classes: '' },
+			'item-size': { classes: '' },
+			'item-label': { classes: 'mr-1 text-gray-500' },
+			'item-value': { classes: 'font-medium' },
+			'unit': { classes: '' }
+		},
+		group: ['product']
+	},
+
+	{
+		type: "productSizeGuide",
+		label: "Product Size Guide",
+		icon: null,
+		description: "Shows the product's size chart (from its Size Guide addon) as a link that opens a popup, or inline on the page.",
+		ai: {
+			purpose: "Help shoppers pick the right size with the product's own size chart.",
+			useFor: [
+				"Size guide link next to size options",
+				"Size chart",
+				"Fit guide",
+				"How to measure"
+			],
+			keywords: [
+				"size guide",
+				"size chart",
+				"fit",
+				"measurements",
+				"sizing"
+			],
+			rules: [
+				"Use on product pages; display popup suits the buy column next to productVariations, display inline suits a tab or details area.",
+				"The chart is the product's own; it shows nothing for products without a size guide."
+			]
+		},
+		/*
+			display "popup": a trigger link opening a modal; "inline": the chart in
+			place. The guide's own title replaces `heading`.
+		*/
+		options: {
+			display: 'popup',
+			buttonText: 'Size guide',
+			icon: 'IconRuler2',
+			iconSize: 18,
+			showHeading: true,
+			heading: 'Size guide',
+			showUnit: true,
+			unitPrefix: 'Measurements in',
+			showNote: true,
+			showImage: true
+		},
+		/*
+			ProductSizeGuideView (whose parts the builder's ProductSizeGuide.jsx
+			also renders) reads these with elementCssClasses: trigger / icon /
+			trigger-text, overlay > panel > header (title, close), then body with
+			unit, table-wrap > table (thead, th, tr, td, td-first for each row's
+			size), note and image. Inline display uses header and body only.
+		*/
+		cssSelectors: {
+			'*': { classes: 'flex flex-col gap-3' },
+			'trigger': { classes: 'inline-flex w-fit cursor-pointer items-center gap-1.5 text-sm font-medium underline underline-offset-4' },
+			'icon': { classes: 'flex items-center' },
+			'trigger-text': { classes: '' },
+			'overlay': { classes: 'fixed inset-0 z-[999] flex items-center justify-center bg-black/50 p-4' },
+			'panel': { classes: 'relative flex max-h-[85vh] w-full max-w-2xl flex-col gap-4 overflow-y-auto rounded-xl bg-white p-5 shadow-xl' },
+			'header': { classes: 'flex items-center justify-between gap-4' },
+			'title': { classes: 'text-lg font-semibold' },
+			'close': { classes: 'inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-gray-500 hover:bg-gray-100' },
+			'body': { classes: 'flex flex-col gap-3' },
+			'unit': { classes: 'text-xs text-gray-500' },
+			'table-wrap': { classes: 'overflow-x-auto rounded-lg border border-gray-200' },
+			'table': { classes: 'w-full border-collapse text-sm' },
+			'thead': { classes: 'bg-gray-50' },
+			'th': { classes: 'whitespace-nowrap px-3 py-2 text-left font-semibold' },
+			'tr': { classes: 'border-t border-gray-100' },
+			'td': { classes: 'whitespace-nowrap px-3 py-2 text-left font-normal' },
+			'td-first': { classes: '!font-medium' },
+			'note': { classes: 'whitespace-pre-line text-sm text-gray-600' },
+			'image': { classes: 'max-w-full rounded-lg' }
+		},
+		group: ['product']
+	},
+
+	{
+		type: "productFaq",
+		label: "Product FAQ",
+		icon: null,
+		description: "Shows the product's own questions and answers (from its FAQ addon) as an accordion or an open list.",
+		ai: {
+			purpose: "Answer common questions about this product on its page.",
+			useFor: [
+				"Product FAQ",
+				"Questions and answers",
+				"Product Q&A section"
+			],
+			keywords: [
+				"faq",
+				"questions",
+				"answers",
+				"q&a",
+				"accordion"
+			],
+			rules: [
+				"Use on product pages, typically below the description or in a tab.",
+				"The questions are the product's own; it shows nothing for products without any. For store-wide FAQs use the accordion element instead."
+			]
+		},
+		/*
+			display "accordion": a question header toggling its answer; "list":
+			every answer shown. multiple false lets one answer open at a time.
+		*/
+		options: {
+			display: 'accordion',
+			toggleIcon: 'chevron',
+			openFirst: false,
+			multiple: true,
+			showHeading: true,
+			heading: 'Frequently asked questions'
+		},
+		/*
+			ProductFaqView (through its ProductFaqMarkup, which the builder's
+			ProductFaq.jsx also renders) reads these with elementCssClasses: the
+			optional header (title), then items, and per question item (plus
+			item-open while open), question (question-text, toggle) and answer.
+		*/
+		cssSelectors: {
+			'*': { classes: 'flex flex-col gap-3' },
+			'header': { classes: '' },
+			'title': { classes: 'text-lg font-semibold' },
+			'items': { classes: 'flex flex-col divide-y divide-gray-200 border-y border-gray-200' },
+			'item': { classes: '' },
+			'item-open': { classes: '' },
+			'question': { classes: 'flex cursor-pointer items-center justify-between gap-4 py-3 text-left font-medium' },
+			'question-text': { classes: '' },
+			'toggle': { classes: 'flex shrink-0 items-center text-gray-500' },
+			'answer': { classes: 'whitespace-pre-line pb-3 text-sm text-gray-600' }
+		},
+		group: ['product']
+	},
+
+	{
+		type: "countdownTimer",
+		label: "Countdown Timer",
+		icon: null,
+		description: "Counts down to a fixed date, or a time window from each visitor's first view, in boxes or one inline line.",
+		ai: {
+			purpose: "Create urgency by showing how long is left on an offer or sale.",
+			useFor: [
+				"Sale ends countdown",
+				"Limited-time offer",
+				"Launch countdown",
+				"Hero or banner urgency"
+			],
+			keywords: [
+				"countdown",
+				"timer",
+				"sale ends",
+				"limited time",
+				"deadline",
+				"urgency",
+				"offer"
+			],
+			rules: [
+				"It needs an end: set mode \"date\" with endsAt (an ISO UTC time), or mode \"evergreen\" with durationMinutes.",
+				"With no end set it shows nothing on the shop.",
+				"Choose expired: \"hide\" (default), \"message\" with expiredText, or \"zero\"."
+			]
+		},
+		/*
+			mode "date" counts to endsAt (UTC; endDate is the wall-clock value
+			the date field shows), "evergreen" to durationMinutes after the
+			visitor's first view. See CountdownTimerView.jsx.
+		*/
+		options: {
+			mode: 'date',
+			endDate: '',
+			endsAt: '',
+			durationMinutes: 60,
+			layout: 'boxes',
+			showDays: true,
+			showSeconds: true,
+			showLabels: true,
+			separator: ':',
+			daysLabel: 'Days',
+			hoursLabel: 'Hours',
+			minutesLabel: 'Minutes',
+			secondsLabel: 'Seconds',
+			expired: 'hide',
+			expiredText: 'This offer has ended.',
+			prefix: '',
+			icon: '',
+			iconSize: 18
+		},
+		/*
+			CountdownTimerView (through its CountdownTimerMarkup, which the
+			builder's CountdownTimer.jsx also renders) reads these with
+			elementCssClasses: prefix / icon / prefix-text, then units with a
+			unit (plus unit-<days|hours|minutes|seconds>) holding value and label,
+			and separator between - or inline for the one-line layout. expired is
+			the message at zero.
+		*/
+		cssSelectors: {
+			'*': { classes: 'flex flex-wrap items-center gap-3' },
+			'prefix': { classes: 'flex items-center gap-1.5 text-sm font-medium' },
+			'icon': { classes: 'flex items-center' },
+			'prefix-text': { classes: '' },
+			'units': { classes: 'flex items-start gap-2' },
+			'unit': { classes: 'flex min-w-12 flex-col items-center rounded-lg bg-gray-900 px-2.5 py-1.5' },
+			'unit-days': { classes: '' },
+			'unit-hours': { classes: '' },
+			'unit-minutes': { classes: '' },
+			'unit-seconds': { classes: '' },
+			'value': { classes: 'text-lg font-bold tabular-nums leading-tight text-white' },
+			'label': { classes: 'text-[10px] uppercase tracking-wide text-gray-400' },
+			'separator': { classes: 'pt-1.5 text-lg font-bold text-gray-400' },
+			'inline': { classes: 'font-semibold tabular-nums' },
+			'expired': { classes: 'text-sm text-gray-500' }
+		},
+		group: ['content']
+	},
+
+	{
+		type: "popup",
+		label: "Popup",
+		icon: null,
+		description: "Shows its blocks in an overlay dialog when a trigger fires - page load, a delay, scrolling, exit intent, a click - and closes on its button, Escape or a close trigger.",
+		ai: {
+			purpose: "Present an offer, signup or announcement above the page without navigating away.",
+			useFor: [
+				"Promotional offers",
+				"Newsletter signup",
+				"Exit-intent offers",
+				"Important announcements",
+				"Discount codes"
+			],
+			keywords: [
+				"popup",
+				"modal",
+				"dialog",
+				"overlay",
+				"exit intent",
+				"lightbox"
+			],
+			rules: [
+				"It needs at least one entry in options.triggers ({ id, ...fields }, ids from popupTriggers.js: initial, delay, scrollPercent, onExit, clickElement...); with none it never shows.",
+				"Set showAgain (\"session\" or \"days\") so it does not reappear on every page view.",
+				"Keep it short: a heading, a line of text and one button. A child with the class popup-close closes it.",
+				"Do not put primary page content in a popup."
+			],
+			canContain: [
+				"heading",
+				"text",
+				"image",
+				"button",
+				"container",
+				"countdownTimer"
+			]
+		},
+		/*
+			triggers / closeTriggers: lists of { id, ...fields } (popupTriggers.js).
+			editMode is the builder's only - the dialog drawn open on the canvas.
+			See PopupView.jsx for showAgain, position and the rest.
+		*/
+		options: {
+			editMode: true,
+			triggers: [{ id: 'delay', value: 3000 }],
+			closeTriggers: [{ id: 'clickOutside' }],
+			showAgain: 'session',
+			showAgainDays: 7,
+			position: 'center',
+			entranceAnimation: 'fadeIn',
+			closeAnimation: 'fadeOut',
+			overlay: true,
+			lockScroll: true,
+			closeButton: true,
+			closeIcon: 'IconX',
+			closeIconSize: 20,
+			ariaLabel: ''
+		},
+		/*
+			PopupView (through its PopupMarkup, which the builder's Popup.jsx also
+			renders) reads these with elementCssClasses. `*` is the full-viewport
+			wrapper (its position classes come from options.position), overlay the
+			backdrop, content the dialog, close-button / close-icon the close
+			control.
+		*/
+		cssSelectors: {
+			'*': { classes: 'p-4' },
+			'overlay': { classes: 'bg-black/50' },
+			'content': { classes: 'flex w-full max-w-md flex-col gap-3 rounded-2xl bg-white p-6 shadow-2xl max-h-[90vh] overflow-y-auto' },
+			'close-button': { classes: 'absolute right-3 top-3 inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900' },
+			'close-icon': { classes: 'flex items-center' }
+		},
+		children: [],
+		group: ['layout']
+	},
+
+	{
+		type: "orderTracking",
+		label: "Order Tracking",
+		icon: null,
+		description: "Lets a shopper look up an order by its number and the phone or email they ordered with, and shows its status, progress, items and delivery updates.",
+		ai: {
+			purpose: "Let customers check where their order is without contacting the store.",
+			useFor: [
+				"Track order page",
+				"Order status lookup",
+				"Help or support page",
+				"Account area"
+			],
+			keywords: [
+				"track order",
+				"order tracking",
+				"order status",
+				"delivery status",
+				"where is my order",
+				"shipment",
+				"courier"
+			],
+			rules: [
+				"Place it on its own page, usually /track-order, with a short heading above it or its own title.",
+				"It needs nothing set: the shopper types the order number and the phone or email used at checkout.",
+				"Set title or subtitle to an empty string to hide them."
+			]
+		},
+		/*
+			Words and which parts of the result to show. stepLabels are the four
+			progress steps (placed, confirmed, shipped, delivered). previewResult
+			only affects the builder canvas. See OrderTrackingView.jsx.
+		*/
+		options: {
+			title: 'Track your order',
+			subtitle: 'Enter your order number and the phone number or email you ordered with.',
+			orderLabel: 'Order number',
+			orderPlaceholder: 'e.g. 1024',
+			contactLabel: 'Phone or email',
+			contactPlaceholder: '01XXXXXXXXX or you@example.com',
+			buttonText: 'Track order',
+			showProgress: true,
+			showItems: true,
+			showTimeline: true,
+			stepLabels: ['Placed', 'Confirmed', 'Shipped', 'Delivered'],
+			previewResult: true
+		},
+		/*
+			OrderTrackingView (through OrderTrackingHeader / Form / Result, which
+			the builder's OrderTracking.jsx also renders) reads these with
+			elementCssClasses. header > title, subtitle; form > fields > field >
+			field-label, field-input, then submit-button; error. result >
+			summary (order-number, order-meta, status-badge + status-badge-stopped),
+			notice (a canceled / failed / refunded / returned order), progress >
+			step (+ step-done, step-current) > step-dot (+ step-dot-done),
+			step-label (+ step-label-done); section > section-title, then items >
+			item > item-name, item-quantity, and delivery > delivery-header
+			(courier, tracking-code, tracking-link) and timeline > event (+
+			event-latest, event-attention) > event-status, event-notes,
+			event-date; empty when there is nothing yet.
+		*/
+		cssSelectors: {
+			'*': { classes: 'mx-auto flex w-full max-w-2xl flex-col gap-5' },
+			'header': { classes: 'flex flex-col gap-1' },
+			'title': { classes: 'flex items-center gap-2 text-xl font-semibold text-gray-900' },
+			'subtitle': { classes: 'text-sm text-gray-500' },
+			'form': { classes: 'flex flex-col gap-3 sm:flex-row sm:items-end' },
+			'fields': { classes: 'grid flex-1 gap-3 sm:grid-cols-2' },
+			'field': { classes: 'flex flex-col gap-1.5' },
+			'field-label': { classes: 'text-sm font-medium text-gray-700' },
+			'field-input': { classes: 'w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 outline-none transition-colors focus:border-[#1b0e9f] focus:ring-2 focus:ring-[#1b0e9f]/20' },
+			'submit-button': { classes: 'inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg bg-[#1b0e9f] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#150b7d] disabled:opacity-60' },
+			'error': { classes: 'flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700' },
+			'result': { classes: 'flex flex-col gap-5 rounded-2xl border border-gray-200 bg-white p-5' },
+			'summary': { classes: 'flex flex-wrap items-start justify-between gap-3' },
+			'order-number': { classes: 'text-lg font-semibold text-gray-900' },
+			'order-meta': { classes: 'text-sm text-gray-500' },
+			'status-badge': { classes: 'inline-flex items-center rounded-full bg-[#1b0e9f]/10 px-3 py-1 text-xs font-semibold text-[#1b0e9f]' },
+			'status-badge-stopped': { classes: '!bg-red-50 !text-red-700' },
+			'notice': { classes: 'flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm text-amber-800' },
+			'progress': { classes: 'grid grid-cols-4 gap-2' },
+			'step': { classes: 'flex flex-col items-center gap-1.5 text-center' },
+			'step-done': { classes: '' },
+			'step-current': { classes: '' },
+			'step-dot': { classes: 'flex h-7 w-7 items-center justify-center rounded-full border-2 border-gray-200 bg-white text-xs font-semibold text-gray-400' },
+			'step-dot-done': { classes: '!border-[#1b0e9f] !bg-[#1b0e9f] !text-white' },
+			'step-label': { classes: 'text-xs text-gray-500' },
+			'step-label-done': { classes: 'font-medium !text-gray-900' },
+			'section': { classes: 'flex flex-col gap-2' },
+			'section-title': { classes: 'text-sm font-semibold text-gray-900' },
+			'items': { classes: 'divide-y divide-gray-100 rounded-lg border border-gray-100' },
+			'item': { classes: 'flex items-center justify-between gap-3 px-3 py-2 text-sm' },
+			'item-name': { classes: 'text-gray-800' },
+			'item-quantity': { classes: 'tabular-nums text-gray-500' },
+			'empty': { classes: 'text-sm text-gray-500' },
+			'delivery': { classes: 'flex flex-col gap-3 rounded-lg border border-gray-100 p-3' },
+			'delivery-header': { classes: 'flex flex-wrap items-center justify-between gap-2' },
+			'courier': { classes: 'flex items-center gap-2 text-sm font-medium text-gray-900' },
+			'tracking-code': { classes: 'rounded bg-gray-100 px-1.5 py-0.5 font-mono text-xs text-gray-600' },
+			'tracking-link': { classes: 'inline-flex items-center gap-1 text-sm font-medium text-[#1b0e9f] hover:underline' },
+			'timeline': { classes: 'ml-1.5 flex flex-col gap-3 border-l-2 border-gray-200 pl-4' },
+			'event': { classes: 'relative flex flex-col gap-0.5 before:absolute before:-left-[23px] before:top-1.5 before:h-3 before:w-3 before:rounded-full before:border-2 before:border-white before:bg-gray-300' },
+			'event-latest': { classes: 'before:!bg-[#1b0e9f]' },
+			'event-attention': { classes: 'before:!bg-amber-500' },
+			'event-status': { classes: 'text-sm font-medium text-gray-900' },
+			'event-notes': { classes: 'text-sm text-gray-600' },
+			'event-date': { classes: 'text-xs text-gray-400' }
+		},
+		group: ['shop']
+	},
+
+	{
 		type: "productRatings",
 		label: "Product Ratings",
 		icon: null,
@@ -5943,64 +6462,8 @@ const elements = [
 	},
 
 	/* ====================================================================
-		RETIRED - no longer offered; kept for reference. BlockRender still
-		renders popup blocks already saved on pages.
+		RETIRED - no longer offered; kept for reference.
 	==================================================================== */
-
-	// {
-	// 	type: "popup",
-	// 	label: "Popup",
-	// 	icon: null,
-	// 	description: "Displays content in an overlay dialog that can appear based on configured triggers and can be dismissed by the user.",
-	// 	ai: {
-	// 		purpose: "Present important, contextual, promotional, or interactive content without navigating away from the current page.",
-	// 		useFor: [
-	// 			"Promotional offers",
-	// 			"Newsletter signup",
-	// 			"Login forms",
-	// 			"Product quick view",
-	// 			"Important announcements",
-	// 			"Discount offers",
-	// 			"Modal forms",
-	// 			"Additional information"
-	// 		],
-	// 		keywords: [
-	// 			"popup",
-	// 			"modal",
-	// 			"dialog",
-	// 			"overlay",
-	// 			"popup window",
-	// 			"modal dialog",
-	// 			"promotion popup"
-	// 		],
-	// 		rules: [
-	// 			"Use for content that should temporarily appear above the current page.",
-	// 			"Do not use popups for primary page content.",
-	// 			"Provide a clear way for users to close the popup."
-	// 		],
-	// 		canContain: [
-	// 			"heading",
-	// 			"text",
-	// 			"image",
-	// 			"button",
-	// 			"input",
-	// 			"form",
-	// 			"productContent"
-	// 		]
-	// 	},
-	// 	options: {
-	// 		editMode: true,
-	// 		visibleTriggers: {},
-	// 		closeTrigger: {}
-	// 	},
-	// 	cssSelectors: {
-	// 		"*": { "classes": "" },
-	// 		'closeButton': { classes: '' },
-	// 		'contentWrapper': { classes: '' }
-	// 	},
-	// 	children: [],
-	// 	group: ['layout']
-	// },
 
 	// {
 	// 	type: "requestForStock",

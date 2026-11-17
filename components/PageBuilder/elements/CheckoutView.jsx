@@ -20,7 +20,7 @@ import { useCounterStore } from '../../../store/useCounterStore'
 import { useUtilsStore } from '../../../store/useUtilsStore'
 import countries from '../../../lib/Countries'
 import states from '../../../lib/States'
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import UploadMedia from "../../../components/shop-elements/UploadMedia";
 import BkashCheckoutButton from "../../../components/shop-elements/BkashCheckoutButton";
 import NagadCheckoutButton from "../../../components/shop-elements/NagadCheckoutButton";
@@ -37,6 +37,8 @@ import { getNagadConfig } from "../../../lib/nagad";
 import { loadCheckoutDraft, saveCheckoutDraft, clearCheckoutDraft } from "../../../lib/checkoutDraft";
 import { trackMetaEvent } from "../../../lib/sendMetaEvent";
 import { withSetupFeeLines, isSubscriptionLine, subscriptionCycle, cartSetupFees } from "../../../lib/subscriptionCart";
+import { sortProviderEntries } from "../../../lib/sortProviders";
+import { withAffiliateRef } from "../../../lib/affiliateRef";
 
 /* Meta's "Subscribe" event: the order has at least one line bought with Subscribe. */
 const hasSubscriptionLine = (data) => (data?.cartItems ?? []).some(isSubscriptionLine);
@@ -197,13 +199,45 @@ const CheckoutView = (props) => {
 
 	// var cartItems = props?.cartItems
 	const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
-	const { appData, cartToggle, setcartToggle, currencySymbole, notifications, addNotification, cartItems, addCartItems, removeCartItems, resetCartItems, updateCartItems, userDataX, setUserDataX, currency, coupons, setCoupons, cartTotalPay, setcartTotalPay, cartTotal, setcartTotal, shippingCost, setshippingCost, paymentGatewaysArgs, cartDiscount } = useCounterStore()
+	const { appData, cartToggle, setcartToggle, currencySymbole, notifications, addNotification, cartItems, addCartItems, removeCartItems, resetCartItems, updateCartItems, userDataX, setUserDataX, currency, coupons, setCoupons, cartTotalPay, setcartTotalPay, cartTotal, setcartTotal, shippingCost, setshippingCost, paymentGateways, cartDiscount } = useCounterStore()
+	const setcheckoutShippingMethod = useCounterStore((s) => s.setcheckoutShippingMethod)
+	/* The signed-in customer's JWT - auth-context.js writes it here, not to useAuthStore. */
+	const customerToken = useCounterStore((s) => s.token)
+
+	/*
+		Headers for create_order. A signed-in customer's token goes with it so
+		the server knows who is ordering - the Fraud Checker's "Login required"
+		check reads the token, not the `userid` in the body, which anyone can set.
+	*/
+	const orderHeaders = () => (customerToken
+		? { 'Content-Type': 'application/json', 'Authorization': `Bearer ${customerToken}` }
+		: { 'Content-Type': 'application/json' });
+
+	/*
+		The Fraud Checker's "Login required" switch (`fraudCheck.loginRequired`
+		in the store settings). The server refuses a guest's order either way;
+		this only tells a guest up front instead of after they fill the form.
+		The config may be stored as a JSON string.
+	*/
+	const loginRequired = (() => {
+		var config = settings?.fraudCheck;
+		if (typeof config === 'string') {
+			try { config = JSON.parse(config); } catch { config = null; }
+		}
+		var enabled = config?.loginRequired?.enabled;
+		return enabled === true || ['1', 'true', 'on', 'yes'].includes(String(enabled ?? '').toLowerCase());
+	})();
+	const signInRequired = loginRequired && !customerToken;
+	const SIGN_IN_MESSAGE = 'Please sign in to place an order.';
+	/* Back to this page after signing in - a checkout page, or whatever page the cart drawer's checkout step is open on. The cart is kept. */
+	const pathname = usePathname();
+	const signInHref = `/login?redirect=${encodeURIComponent(pathname || '/checkout')}`;
 
 
 
 
-	const paymentGateways = settings?.paymentGateways;
-	const bankAccounts = paymentGateways?.bank_transfer?.accounts;
+	const paymentGatewaysSaved = settings?.paymentGateways;
+	const bankAccounts = paymentGatewaysSaved?.bank_transfer?.accounts;
 	const [loading, setloading] = useState(false);
 	/*
 		PayPal answers for itself. Its credentials are not in the settings blob -
@@ -244,6 +278,19 @@ const CheckoutView = (props) => {
 	var [payments, setpayments] = useState({ transactionId: '', paymentStatus: '', paymentMethod: '', });
 	var [shippingMethods, setshippingMethods] = useState([]);
 	var [currentshippingMethod, setcurrentshippingMethod] = useState(null);
+
+	/*
+		The chosen method, for cart rules that test it (Discount Rules'
+		"Shipping method"). It goes in its own store slot, not `shippingMethod`:
+		that one is the cart drawer's free / normal / express switch, and the
+		drawer recalculates shippingCost whenever it changes. Cleared when
+		checkout unmounts, so the drawer's own choice applies again.
+	*/
+	useEffect(() => {
+		setcheckoutShippingMethod(currentshippingMethod ? { id: currentshippingMethod?.id, name: currentshippingMethod?.name } : null);
+	}, [currentshippingMethod, setcheckoutShippingMethod]);
+
+	useEffect(() => () => setcheckoutShippingMethod(null), [setcheckoutShippingMethod]);
 
 	var [countriesList, setcountriesList] = useState({});
 	var [statesList, setstatesList] = useState([]);
@@ -820,7 +867,7 @@ const CheckoutView = (props) => {
 		though it were taka.
 	*/
 	const gatewayList = (() => {
-		const list = { ...(paymentGateways || {}) };
+		const list = { ...(paymentGatewaysSaved || {}) };
 
 		if (paypalConfig?.enabled) {
 			list.paypal = { ...(list.paypal || {}), enable: true, label: paypalConfig?.label || 'PayPal' };
@@ -879,6 +926,10 @@ const CheckoutView = (props) => {
 		const latestCheckout = checkoutDataRef.current ?? checkoutData;
 		const latestOrder = orderDataRef.current ?? orderData;
 
+		if (signInRequired) {
+			throw new Error(SIGN_IN_MESSAGE);
+		}
+
 		if (readyToSubmitOrder?.error) {
 			throw new Error(readyToSubmitOrder?.message || 'Please complete your details first.');
 		}
@@ -916,8 +967,8 @@ const CheckoutView = (props) => {
 
 		const response = await fetch(serverUrl + "wp-json/combo-store/v2/create_order", {
 			method: "POST",
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify(payload),
+			headers: orderHeaders(),
+			body: JSON.stringify(withAffiliateRef(payload)),
 		});
 
 		const created = await response.json();
@@ -969,6 +1020,11 @@ const CheckoutView = (props) => {
 	function submitOrder() {
 
 
+		if (signInRequired) {
+			addNotification({ type: 'error', title: SIGN_IN_MESSAGE, content: "" })
+			return;
+		}
+
 		if (readyToSubmitOrder?.error) {
 			addNotification({ type: 'error', title: readyToSubmitOrder?.message, content: "" })
 
@@ -982,7 +1038,7 @@ const CheckoutView = (props) => {
 
 		checkoutData.status = 'pending';
 
-		var postData = JSON.stringify(checkoutData);
+		var postData = JSON.stringify(withAffiliateRef(checkoutData));
 
 
 
@@ -991,10 +1047,7 @@ const CheckoutView = (props) => {
 		var url = serverUrl + "wp-json/combo-store/v2/create_order";
 
 
-		var headers = {
-			'Content-Type': 'application/json',
-
-		}
+		var headers = orderHeaders();
 
 
 		fetch(url, {
@@ -1015,6 +1068,9 @@ const CheckoutView = (props) => {
 						var order_hash = res?.order_hash;
 						var status = res?.status;
 						var message = res?.message;
+
+						console.log(res);
+
 
 						if (status == 'success') {
 							discardDraft();
@@ -1134,7 +1190,7 @@ const CheckoutView = (props) => {
 
 
 
-		var postData = JSON.stringify(checkoutData);
+		var postData = JSON.stringify(withAffiliateRef(checkoutData));
 
 
 
@@ -1142,10 +1198,7 @@ const CheckoutView = (props) => {
 		var url = serverUrl + "wp-json/combo-store/v2/create_order";
 
 
-		var headers = {
-			'Content-Type': 'application/json',
-
-		}
+		var headers = orderHeaders();
 
 
 		fetch(url, {
@@ -1325,8 +1378,8 @@ const CheckoutView = (props) => {
 	};
 
 
-	const enabledGateways = Object.entries(gatewayList || {}).filter(([, method]) => method?.enable ?? false);
-	const selectedGateway = paymentGateways?.[checkoutData.payment_method];
+	const enabledGateways = sortProviderEntries(Object.entries(gatewayList || {}), gatewayList).filter(([, method]) => method?.enable ?? false);
+	const selectedGateway = paymentGatewaysSaved?.[checkoutData.payment_method];
 	const walletName = personalWalletNames[checkoutData.payment_method];
 	const orderTotalLabel = wrapCurrency(cartTotalPay);
 	const sectionSteps = { billing: 1, shipping: 2, payment: cartOptions?.shippingMethods ? 3 : 2 };
@@ -1352,6 +1405,22 @@ const CheckoutView = (props) => {
 		<div className="overflow-y-auto bg-gray-50/60">
 
 			<div className="flex flex-col gap-4 p-4">
+
+				{/* ---------- Sign in (Fraud Checker: Login required) ---------- */}
+				{signInRequired && (
+					<Notice tone="warning">
+						<p className="font-medium">Sign in to place your order</p>
+						<p className="mt-0.5">This store only takes orders from signed-in customers. Your cart is kept while you sign in.</p>
+						<div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
+							<Link href={signInHref} className="font-semibold text-[#1b0e9f] underline underline-offset-2 hover:text-[#150b7d]">
+								Sign in
+							</Link>
+							<Link href={`/register?redirect=${encodeURIComponent(pathname || '/checkout')}`} className="font-medium underline underline-offset-2">
+								Create an account
+							</Link>
+						</div>
+					</Notice>
+				)}
 
 				{/* ---------- Billing details ---------- */}
 				<CheckoutSection
@@ -1608,8 +1677,11 @@ const CheckoutView = (props) => {
 				)}
 
 
+
 				{/* ---------- Payment ---------- */}
-				<CheckoutSection step={sectionSteps.payment} title="Payment">
+				<CheckoutSection step={sectionSteps.payment} title="Payment ">
+
+
 
 					{/* Until the settings arrive there is nothing to list yet, which
 						  is not the same as the store offering no way to pay. */}
@@ -1627,7 +1699,7 @@ const CheckoutView = (props) => {
 								}}>
 									{/* A gateway the store knows about but this list has no
 										  label for would otherwise render as a blank tile. */}
-									<span className="min-w-0 flex-1 truncate font-medium text-gray-900">{paymentGatewaysArgs[key]?.label ?? method?.label ?? key}</span>
+									<span className="min-w-0 flex-1 truncate font-medium text-gray-900">{paymentGateways[key]?.label ?? method?.label ?? key}</span>
 
 									{method?.logo?.src && (
 										<Image unoptimized src={method.logo.src} width={100} height={100} alt="" className="h-6 w-auto max-w-[72px] shrink-0 object-contain" />

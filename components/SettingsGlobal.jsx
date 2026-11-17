@@ -1,7 +1,7 @@
 "use client";
 import { storeUrl } from "@/lib/storeUrl";
 import { useState, useEffect, Component } from "react";
-import { IconChevronDown, IconChevronUp, IconPlug, IconTriangleSquareCircle, IconCreditCardPay, IconUserPentagon, IconMailSpark, IconBuildingStore, IconShip, IconStar, IconCashRegister, IconTrash, IconKey, IconTruckDelivery, IconSquareRoundedCheck, IconSquareRounded, IconDeviceFloppy, IconRestore, IconAlertTriangle } from "@tabler/icons-react";
+import { IconChevronDown, IconChevronUp, IconPlug, IconTriangleSquareCircle, IconCreditCardPay, IconUserPentagon, IconMailSpark, IconBuildingStore, IconShip, IconStar, IconCashRegister, IconTrash, IconKey, IconTruckDelivery, IconSquareRoundedCheck, IconSquareRounded, IconDeviceFloppy, IconRestore, IconAlertTriangle, IconUserDollar } from "@tabler/icons-react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -26,6 +26,7 @@ import { getEpsConfig } from "../lib/eps";
 import { getAamarPayConfig } from "../lib/aamarpay";
 import { getBkashConfig } from "../lib/bkash";
 import { getNagadConfig } from "../lib/nagad";
+import { sortProviderEntries, moveProvider } from "../lib/sortProviders";
 
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 const appUrl = process.env.NEXT_PUBLIC_STORE_URL;
@@ -930,7 +931,8 @@ const SettingsGlobal = (props) => {
       Whoever owns a key is the only thing that posts it. Another extension
       that stores settings this way needs the same line.
     */
-    var { fraudCheck, ...settingsOwnedHere } = settingsData;
+    /* discountRules / discountRuleOptions belong to the Discount Rules extension. */
+    var { fraudCheck, discountRules, discountRuleOptions, ...settingsOwnedHere } = settingsData;
 
     var postData = JSON.stringify(settingsOwnedHere);
 
@@ -1143,6 +1145,37 @@ const SettingsGlobal = (props) => {
     );
   }
 
+  /*
+    Up/down arrows on a gateway or courier row. `group` is the settingsData key
+    (paymentGateways or couriers) and `defs` the provider definitions the list
+    is built from; the new order is saved as a `sort` on each entry.
+  */
+  function SortButtons({ group, defs, index }) {
+    var count = Object.keys(defs || {}).length;
+
+    function move(ev, to) {
+      ev.preventDefault()
+      ev.stopPropagation()
+      setsettingsData(prev => ({
+        ...prev,
+        [group]: moveProvider(Object.entries(defs || {}), prev?.[group], index, to)
+      }));
+    }
+
+    var btn = "flex h-6 w-6 items-center justify-center rounded text-gray-500 hover:bg-gray-200 hover:text-gray-900 disabled:pointer-events-none disabled:opacity-30";
+
+    return (
+      <div className="flex items-center gap-0.5">
+        <button type="button" title="Move up" className={btn} disabled={index <= 0} onClick={ev => move(ev, index - 1)}>
+          <IconChevronUp size={16} />
+        </button>
+        <button type="button" title="Move down" className={btn} disabled={index >= count - 1} onClick={ev => move(ev, index + 1)}>
+          <IconChevronDown size={16} />
+        </button>
+      </div>
+    );
+  }
+
   function PaymentGatewaysItemTitle({ item, enable, index }) {
 
 
@@ -1160,50 +1193,53 @@ const SettingsGlobal = (props) => {
           )}
         </div>
 
-        {enable && (
-          <div className="" onClick={ev => {
+        <div className="flex items-center gap-2">
+          <SortButtons group="paymentGateways" defs={paymentGateways} index={index} />
+          {enable && (
+            <div className="" onClick={ev => {
 
-            ev.preventDefault()
-            ev.stopPropagation()
+              ev.preventDefault()
+              ev.stopPropagation()
 
 
-            setsettingsData(prev => ({
-              ...prev,
-              paymentGateways: {
-                ...prev.paymentGateways,
-                [item.id]: {
-                  ...prev.paymentGateways[item.id],
-                  ['enable']: !enable
+              setsettingsData(prev => ({
+                ...prev,
+                paymentGateways: {
+                  ...prev.paymentGateways,
+                  [item.id]: {
+                    ...prev.paymentGateways[item.id],
+                    ['enable']: !enable
+                  }
                 }
-              }
-            }));
+              }));
 
-          }}>
-            <IconSquareRoundedCheck size={20} />
-          </div>
-        )}
-        {!enable && (
-          <div className="" onClick={ev => {
+            }}>
+              <IconSquareRoundedCheck size={20} />
+            </div>
+          )}
+          {!enable && (
+            <div className="" onClick={ev => {
 
 
-            ev.preventDefault()
-            ev.stopPropagation()
+              ev.preventDefault()
+              ev.stopPropagation()
 
-            setsettingsData(prev => ({
-              ...prev,
-              paymentGateways: {
-                ...prev.paymentGateways,
-                [item.id]: {
-                  ...prev.paymentGateways[item.id],
-                  ['enable']: !enable
+              setsettingsData(prev => ({
+                ...prev,
+                paymentGateways: {
+                  ...prev.paymentGateways,
+                  [item.id]: {
+                    ...prev.paymentGateways[item.id],
+                    ['enable']: !enable
+                  }
                 }
-              }
-            }));
+              }));
 
-          }}>
-            <IconSquareRounded size={20} />
-          </div>
-        )}
+            }}>
+              <IconSquareRounded size={20} />
+            </div>
+          )}
+        </div>
 
 
       </div>
@@ -1409,50 +1445,53 @@ const SettingsGlobal = (props) => {
 
         </div>
 
-        {enable && (
-          <div className="" onClick={ev => {
+        <div className="flex items-center gap-2">
+          <SortButtons group="couriers" defs={couriersPrams} index={index} />
+          {enable && (
+            <div className="" onClick={ev => {
 
-            ev.preventDefault()
-            ev.stopPropagation()
+              ev.preventDefault()
+              ev.stopPropagation()
 
-            setsettingsData(prev => ({
-              ...prev,
-              couriers: {
-                ...prev.couriers,
-                [item.id]: {
-                  ...prev.couriers[item.id],
-                  ['enabled']: !enable
+              setsettingsData(prev => ({
+                ...prev,
+                couriers: {
+                  ...prev.couriers,
+                  [item.id]: {
+                    ...prev.couriers[item.id],
+                    ['enabled']: !enable
+                  }
                 }
-              }
-            }));
+              }));
 
-          }}>
-            <IconSquareRoundedCheck size={20} />
-          </div>
-        )}
-        {!enable && (
-          <div className="" onClick={ev => {
-            console.log('Helo 2');
-            console.log(enable);
+            }}>
+              <IconSquareRoundedCheck size={20} />
+            </div>
+          )}
+          {!enable && (
+            <div className="" onClick={ev => {
+              console.log('Helo 2');
+              console.log(enable);
 
-            ev.preventDefault()
-            ev.stopPropagation()
+              ev.preventDefault()
+              ev.stopPropagation()
 
-            setsettingsData(prev => ({
-              ...prev,
-              couriers: {
-                ...prev.couriers,
-                [item.id]: {
-                  ...prev.couriers[item.id],
-                  ['enabled']: !enable
+              setsettingsData(prev => ({
+                ...prev,
+                couriers: {
+                  ...prev.couriers,
+                  [item.id]: {
+                    ...prev.couriers[item.id],
+                    ['enabled']: !enable
+                  }
                 }
-              }
-            }));
+              }));
 
-          }}>
-            <IconSquareRounded size={20} />
-          </div>
-        )}
+            }}>
+              <IconSquareRounded size={20} />
+            </div>
+          )}
+        </div>
 
       </div>
 
@@ -1609,6 +1648,7 @@ const SettingsGlobal = (props) => {
         tabs={[
           { label: "Store", id: 'store', icon: <IconBuildingStore size={18} /> },
           { label: "Reviews", id: 'reviews', icon: <IconStar size={18} /> },
+          { label: "Affiliates", id: 'affiliates', icon: <IconUserDollar size={18} /> },
           // { label: "Checkout", id: 'checkout', icon: <IconCashRegister size={18} /> },
           // { label: "Emails", id: 'emails', icon: <IconMailSpark size={18} /> },
           // { label: "SMS", id: 'sms', icon: <IconMailSpark size={18} /> },
@@ -1960,51 +2000,6 @@ const SettingsGlobal = (props) => {
                   <label htmlFor="enable" className="cursor-pointer">{settingsData?.reviews?.enable ? "Enabled" : "Disabled"}</label>
                 </div>
               </div>
-              {/* <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
-                <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Site Description")}</div>
-                <div className="">
-                  <input type="text" className="lg:w-auto w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20" value={settingsData?.site_description} onChange={ev => {
-                    var value = ev.target.value;
-                    setsettingsData({ ...settingsData, site_description: value })
-                  }} />
-                </div>
-              </div>
-              <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
-                <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Site Logo")}</div>
-                <div className="">
-
-                  <div className="flex flex-col gap-3">
-                    {settingsData?.site_logo?.src && (
-                      <div className="border border-solid border-gray-400 rounded-sm overflow-hidden">
-                        <Image unoptimized src={settingsData?.site_logo?.src} width={100} height={100} alt={``} />
-                      </div>
-                    )}
-                    <GalleryPicker popupClass="right-full top-0" onPick={onPickFeaturedImage} />
-
-                  </div>
-                </div>
-              </div>
-              <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
-                <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Favicon")}</div>
-                <div className="">
-
-                  <div className="flex flex-col gap-3">
-                    {settingsData?.favicon?.src && (
-                      <div className="border border-solid border-gray-400 rounded-sm overflow-hidden">
-                        <Image unoptimized src={settingsData?.favicon?.src} width={100} height={100} alt={``} />
-                      </div>
-                    )}
-                    <GalleryPicker popupClass="right-full top-0" onPick={onPickFeaturedImage} />
-
-                  </div>
-                </div>
-              </div> */}
-
-
-
-
-
-
 
 
             </WidgetWrapper>
@@ -2014,45 +2009,87 @@ const SettingsGlobal = (props) => {
           </div>
 
         </Tab >
-        {/* <Tab index={2}>
 
-          <WidgetWrapper className={CARD_CLASSES} title="Checkout Settings">
+        <Tab index={1} id="affiliates">
 
+          <div className="flex flex-col gap-5">
 
-            <div className="flex flex-col gap-2">
+            <WidgetWrapper className={CARD_CLASSES} title="Affiliate referrals">
 
-              <ToggleContent key={'hello'} title={'Checkout Fields'}
-                contentClass="bg-gray-200 !text-gray-800 p-4"
-                headerClass=""
-                headerTitleClass=""
-                wrapperClass="w-full"
-              >
-                Hello
+              <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Cookie duration (days)")}</div>
+                <div className="flex flex-col gap-1.5">
+                  {/* Read by the server's track_affiliate_click, which tells the storefront how long to keep the referral. */}
+                  <input type="number" min="1" max="365" step="1" placeholder="30" className="lg:w-40 w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20" value={settingsData?.affiliates?.cookieDays ?? ""} onChange={ev => {
+                    var value = ev.target.value === "" ? "" : Math.min(365, Math.max(1, parseInt(ev.target.value) || 1));
+                    setsettingsData({ ...settingsData, affiliates: { ...settingsData?.affiliates, cookieDays: value } })
+                  }} />
+                  <p className="text-xs text-gray-500">{("How long after clicking an affiliate link an order still earns the affiliate commission. 1 to 365 days; empty uses 30. A newer affiliate link replaces an older one. Applies to clicks from now on.")}</p>
+                </div>
+              </div>
 
-              </ToggleContent>
+              <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Minimum payout amount")}</div>
+                <div className="flex flex-col gap-1.5">
+                  {/* Enforced by create/update_affiliate_payout; shown to affiliates on their dashboard. */}
+                  <input type="number" min="0" step="0.01" placeholder="0" className="lg:w-40 w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20" value={settingsData?.affiliates?.minPayout ?? ""} onChange={ev => {
+                    var value = ev.target.value === "" ? "" : Math.max(0, parseFloat(ev.target.value) || 0);
+                    setsettingsData({ ...settingsData, affiliates: { ...settingsData?.affiliates, minPayout: value } })
+                  }} />
+                  <p className="text-xs text-gray-500">{("Payouts below this amount can't be recorded, and affiliates see how far their balance is from it. Empty or 0 means no minimum.")}</p>
+                </div>
+              </div>
 
+              <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Payout request emails go to")}</div>
+                <div className="flex flex-col gap-1.5">
+                  {/* Read by the server when an affiliate requests a payout (payout_notify_recipients). */}
+                  <input type="text" placeholder={("WordPress admin email")} className="w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20" value={settingsData?.affiliates?.notifyEmails ?? ""} onChange={ev => {
+                    setsettingsData({ ...settingsData, affiliates: { ...settingsData?.affiliates, notifyEmails: ev.target.value } })
+                  }} />
+                  {(() => {
+                    var bad = String(settingsData?.affiliates?.notifyEmails ?? "").split(/[\s,;]+/).filter(e => e && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e));
+                    return bad.length > 0
+                      ? <p className="text-xs text-rose-600">{("Not an email address, will be skipped")}: {bad.join(", ")}</p>
+                      : <p className="text-xs text-gray-500">{("Separate several addresses with commas. Empty sends to the WordPress admin email.")}</p>;
+                  })()}
+                </div>
+              </div>
 
-              <ToggleContent key={'hello'} title={'Checkout Guards'}
-                contentClass="bg-gray-200 !text-gray-800 p-4"
-                headerClass=""
-                headerTitleClass=""
-                wrapperClass="w-full"
-              >
-                Hello
+              <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Email affiliates when paid")}</div>
+                <div className="flex flex-col gap-1.5">
+                  {/* On unless saved as false - the server reads it the same way (email_on_paid_enabled). */}
+                  <div className="flex gap-3">
+                    <input type="checkbox" id="affiliates-email-on-paid" checked={settingsData?.affiliates?.emailOnPaid !== false} className=" !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20" onChange={ev => {
+                      setsettingsData({ ...settingsData, affiliates: { ...settingsData?.affiliates, emailOnPaid: ev.target.checked } })
+                    }} />
+                    <label htmlFor="affiliates-email-on-paid" className="cursor-pointer">{settingsData?.affiliates?.emailOnPaid !== false ? "Enabled" : "Disabled"}</label>
+                  </div>
+                  <p className="text-xs text-gray-500">{("When a payout is marked paid, the affiliate gets an email with the amount, payment method and transaction ID. Replies go to the payout request address above.")}</p>
+                </div>
+              </div>
 
-              </ToggleContent>
+              <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Email affiliates when a request is cancelled")}</div>
+                <div className="flex flex-col gap-1.5">
+                  {/* On unless saved as false - the server reads it the same way (email_on_cancel_enabled). */}
+                  <div className="flex gap-3">
+                    <input type="checkbox" id="affiliates-email-on-cancel" checked={settingsData?.affiliates?.emailOnCancel !== false} className=" !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20" onChange={ev => {
+                      setsettingsData({ ...settingsData, affiliates: { ...settingsData?.affiliates, emailOnCancel: ev.target.checked } })
+                    }} />
+                    <label htmlFor="affiliates-email-on-cancel" className="cursor-pointer">{settingsData?.affiliates?.emailOnCancel !== false ? "Enabled" : "Disabled"}</label>
+                  </div>
+                  <p className="text-xs text-gray-500">{("When you cancel an affiliate's payout request, they get an email with your optional message. Not sent when affiliates cancel their own request.")}</p>
+                </div>
+              </div>
 
+            </WidgetWrapper>
 
-            </div>
+          </div>
 
+        </Tab>
 
-
-
-
-          </WidgetWrapper>
-
-
-        </Tab> */}
         <Tab index={2} id="emails">
 
           <WidgetWrapper className={CARD_CLASSES} title="Email Templates">
@@ -2305,114 +2342,7 @@ const SettingsGlobal = (props) => {
         </Tab>
 
 
-        {/* <Tab index={3} id="roles">
 
-
-          <WidgetWrapper className={CARD_CLASSES} title="Roles">
-
-
-            <div className="flex flex-col gap-2">
-
-
-              <div className="flex gap-3 flex-col">
-                {Object.entries(rolesPrams)?.map((args, index) => {
-
-                  var providerKey = args[0];
-                  var item = args[1];
-
-
-
-
-                  return (
-                    <div className="">
-
-                      <ToggleContent key={index} title={item?.label}
-                        contentClass="bg-gray-200 !text-gray-800 p-4"
-                        headerClass=""
-                        headerTitleClass=""
-                        wrapperClass="w-full"
-                      >
-
-                        <div className="flex flex-col gap-5">
-                          <div className="flex gap-2 flex-col">
-
-                            <label htmlFor="subject">Subject</label>
-
-                            <input
-                              type="text"
-                              name={'subject'}
-                              placeholder={'subject'}
-                              className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                              value={settingsData?.emailTemplates?.[providerKey]?.['subject']}
-                              onChange={(ev) => {
-                                const { name, value } = ev.target;
-                                setsettingsData(prev => ({
-                                  ...prev,
-                                  emailTemplates: {
-                                    ...prev.emailTemplates,
-                                    [providerKey]: {
-                                      ...prev.emailTemplates[providerKey],
-                                      [name]: value
-                                    }
-                                  }
-                                }));
-
-                              }}
-                            />
-
-
-                          </div>
-                          <div className="flex gap-2 flex-col">
-
-                            <label htmlFor="subject">Email Content</label>
-
-                            <input
-                              type="text"
-                              name={'body'}
-                              placeholder={'body'}
-                              className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                              value={settingsData?.emailTemplates?.[providerKey]?.['body']}
-                              onChange={(ev) => {
-                                const { name, value } = ev.target;
-                                setsettingsData(prev => ({
-                                  ...prev,
-                                  emailTemplates: {
-                                    ...prev.emailTemplates,
-                                    [providerKey]: {
-                                      ...prev.emailTemplates[providerKey],
-                                      [name]: value
-                                    }
-                                  }
-                                }));
-
-                              }}
-                            />
-
-
-                          </div>
-                        </div>
-
-                      </ToggleContent>
-
-                    </div>
-                  )
-                }
-                )}
-              </div>
-            </div>
-
-
-
-
-
-          </WidgetWrapper>
-
-
-
-
-
-
-        </Tab> */}
         <Tab index={3} id="payment-gateways">
 
 
@@ -2429,7 +2359,7 @@ const SettingsGlobal = (props) => {
 
 
               <div className="flex gap-2 flex-col">
-                {Object.entries(paymentGateways)?.map((args, index) => {
+                {sortProviderEntries(Object.entries(paymentGateways || {}), settingsData?.paymentGateways).map((args, index) => {
 
                   var providerKey = args[0];
                   var item = args[1];
@@ -2438,9 +2368,9 @@ const SettingsGlobal = (props) => {
 
 
                   return (
-                    <div className="" key={index}>
+                    <div className="" key={providerKey}>
 
-                      <ToggleContent key={index} title={<PaymentGatewaysItemTitle item={item} enable={settingsData?.paymentGateways?.[providerKey]?.['enable']} index={index} />}
+                      <ToggleContent title={<PaymentGatewaysItemTitle item={item} enable={settingsData?.paymentGateways?.[providerKey]?.['enable']} index={index} />}
                         contentClass="bg-gray-200 !text-gray-800 p-4"
                         headerClass=""
                         headerTitleClass="flex items-center gap-3 w-full justify-between"
@@ -5557,7 +5487,6 @@ const SettingsGlobal = (props) => {
         </Tab>
         <Tab index={5} id="discount">
 
-          {/* {JSON.stringify(settingsData)} */}
 
           <div className="flex flex-col gap-5">
 
@@ -5733,7 +5662,7 @@ const SettingsGlobal = (props) => {
 
 
                 <div className="flex gap-2 flex-col">
-                  {Object.entries(couriersPrams)?.map((args, index) => {
+                  {sortProviderEntries(Object.entries(couriersPrams || {}), settingsData?.couriers).map((args, index) => {
 
                     var providerKey = args[0];
                     var item = args[1];
@@ -5742,9 +5671,9 @@ const SettingsGlobal = (props) => {
 
 
                     return (
-                      <div className="">
+                      <div className="" key={providerKey}>
 
-                        <ToggleContent key={index} title={<CouriersItemTitle item={item} enable={settingsData?.couriers?.[providerKey]?.['enabled']} index={index} />}
+                        <ToggleContent title={<CouriersItemTitle item={item} enable={settingsData?.couriers?.[providerKey]?.['enabled']} index={index} />}
                           contentClass="bg-gray-200 !text-gray-800 p-4"
                           headerTitleClass="flex items-center gap-3 w-full justify-between"
                           headerLabelClass="flex items-center gap-3 w-full justify-between"

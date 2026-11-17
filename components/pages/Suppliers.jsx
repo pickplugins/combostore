@@ -11,8 +11,12 @@ const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 import PopoverButton from '../../components/PopoverButton';
 import SupplierEdit from '../../components/pages/SupplierEdit';
 import Image from "next/image";
+import { postApi } from "./affiliateUi";
+import { SupplierStateBadge, PAYMENT_TERMS } from "./SupplierEdit";
+import { parseDate, timeAgo } from "./deliveryUi";
+import { useUtilsStore } from "../../store/useUtilsStore";
 
-import { IconEyeShare, IconDotsVertical, IconTrash, IconUserPlus, IconMail, IconPhone, IconStarFilled } from "@tabler/icons-react";
+import { IconEyeShare, IconDotsVertical, IconTrash, IconUserPlus, IconMail, IconPhone, IconStarFilled, IconPackage, IconWallet, IconShoppingCartPlus } from "@tabler/icons-react";
 
 
 const ICON_BUTTON =
@@ -32,6 +36,9 @@ const FORM_LABEL = "mb-1 block text-xs font-medium text-gray-600";
 const EMPTY = <span className="text-sm text-gray-300">—</span>;
 
 const EMPTY_NEW_SUPPLIER = { role: "supplier", name: "", email: "", mobile: "", registerBy: "mobile" };
+
+/* Saved after the account is made, through update_supplier_details. */
+const EMPTY_NEW_DETAILS = { company: "", supplies: "", payment_terms: "" };
 
 /* Accounts registered by phone get a generated `<phone>@mo.lo` address. */
 const PHONE_EMAIL = /@mo\.lo$/i;
@@ -67,14 +74,27 @@ function initialsOf(name) {
 const Suppliers = () => {
 
 	const { token, addNotification } = useCounterStore()
+	const { wrapCurrency } = useUtilsStore()
 
 	var [suppliersData, setsuppliersData] = useState({ posts: [], total: 0, maxPages: 1 });
 	var [queryPrams, setqueryPrams] = useState({ role: "supplier", keyword: "", paged: 1, order: "DESC", per_page: 20, });
 	var [newSupplier, setnewSupplier] = useState(EMPTY_NEW_SUPPLIER);
+	var [newDetails, setnewDetails] = useState(EMPTY_NEW_DETAILS);
 
 	var [loading, setloading] = useState(false);
 	var [adding, setadding] = useState(false);
 	var [selectedRows, setselectedRows] = useState([]);
+
+	/* Company, terms, purchases and what is owed, by user id (get_suppliers_summary). */
+	var [supplierStats, setsupplierStats] = useState({});
+
+	function fetchSupplierStats(posts) {
+		var ids = posts.map(supplierId).filter(Boolean);
+		if (!ids.length) return;
+		postApi("get_suppliers_summary", token, { ids })
+			.then((res) => { if (res?.suppliers) setsupplierStats((prev) => ({ ...prev, ...res.suppliers })); })
+			.catch(() => { });
+	}
 
 	function onSelectRows(rows) {
 		setselectedRows(rows);
@@ -85,7 +105,9 @@ const Suppliers = () => {
 		check: { id: "check", label: ("Check"), },
 		id: { id: "id", label: ("Supplier"), callback: callbackSupplier, classes: "w-96 text-left text-gray-600" },
 		contact: { id: "contact", label: ("Contact"), callback: callbackContact, classes: "text-left text-gray-600" },
-		total_order: { id: "total_order", label: ("Inventory"), callback: callbackInventory, classes: "text-center text-gray-600" },
+		supplies: { id: "supplies", label: ("Supplies & terms"), callback: callbackSupplies, classes: "text-left text-gray-600 w-56" },
+		total_order: { id: "total_order", label: ("Purchases"), callback: callbackPurchases, classes: "text-left text-gray-600 w-48" },
+		due: { id: "due", label: ("To pay"), callback: callbackDue, classes: "text-right text-gray-600 w-32" },
 		actions: { label: ("Actions"), callback: callbackActions, classes: "text-right pr-2 text-gray-600" },
 	};
 
@@ -126,6 +148,7 @@ const Suppliers = () => {
 					/* With no matches the API sends only `noPosts`. */
 					setsuppliersData({ posts: res?.posts ?? [], total: res?.total ?? 0, maxPages: res?.max_pages ?? 1 })
 					setloading(false);
+					fetchSupplierStats(res?.posts ?? []);
 				});
 			})
 			.catch((_error) => {
@@ -208,9 +231,22 @@ const Suppliers = () => {
 					if (resObj?.error) {
 						addNotification({ type: 'error', title: 'Supplier not added', content: `Sorry, the supplier could not be added. ${JSON.stringify(resObj?.messages ?? "")}` })
 					} else {
-						addNotification({ type: 'success', title: 'Supplier added', content: "Supplier added successfully." })
-						setnewSupplier(EMPTY_NEW_SUPPLIER);
-						fetchPosts();
+						var newId = parseInt(resObj?.user_id, 10);
+						var hasDetails = Object.values(newDetails).some((v) => String(v).trim() !== "");
+						var saveDetails = newId > 0 && hasDetails
+							? postApi("update_supplier_details", token, { id: newId, ...newDetails }).then((r) => r?.status === "success").catch(() => false)
+							: Promise.resolve(true);
+
+						saveDetails.then((saved) => {
+							addNotification(saved
+								? { type: 'success', title: 'Supplier added', content: "Supplier added successfully." }
+								: { type: 'error', title: 'Supplier added', content: "The supplier was added, but their company and terms were not saved. Add them on the supplier's page." })
+							setnewSupplier(EMPTY_NEW_SUPPLIER);
+							setnewDetails(EMPTY_NEW_DETAILS);
+							setadding(false);
+							fetchPosts();
+						});
+						return;
 					}
 
 					setadding(false);
@@ -270,8 +306,9 @@ const Suppliers = () => {
 	function callbackSupplier(entry, columnIndex) {
 
 		var id = supplierId(entry);
-		var name = entry?.display_name || entry?.user_login || ("Unknown supplier");
-		var hasSeparateLogin = entry?.user_login && entry.user_login !== name;
+		var s = supplierStats[id];
+		var person = entry?.display_name || entry?.user_login || ("Unknown supplier");
+		var name = s?.company || person;
 
 		return (
 			<td data-label="Supplier" className="!px-5 py-3 text-left"
@@ -295,12 +332,13 @@ const Suppliers = () => {
 							<Link className="truncate text-left text-sm font-medium text-gray-900 transition-colors hover:text-blue-600 hover:underline" href={`/dashboard/suppliers/${id}`}>
 								{name}
 							</Link>
+							{s?.state === "inactive" && <SupplierStateBadge value="inactive" />}
 						</div>
 
 						<div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
 							<span className="font-mono text-[11px] text-gray-400">#{id}</span>
-							{hasSeparateLogin && (
-								<span className="font-mono text-[11px]">{entry.user_login}</span>
+							{s?.company && (
+								<span className="truncate">{s.contact_person || person}</span>
 							)}
 
 							<PopoverButton buttonLabel={"Edit"} buttonIcon={null} title={"Edit Supplier"} drawer={"right"} buttonClass={`inline-flex items-center rounded-md px-1.5 py-0.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-900 cursor-pointer`}>
@@ -349,23 +387,73 @@ const Suppliers = () => {
 	}
 
 
-	function callbackInventory(entry, columnIndex) {
+	function callbackSupplies(entry, columnIndex) {
 
-		var raw = entry?.total_order ?? entry?.total_inventory;
+		var s = supplierStats[supplierId(entry)];
+		var terms = s?.payment_terms ? (PAYMENT_TERMS[s.payment_terms]?.label ?? s.payment_terms) : "";
 
 		return (
-			<td data-label="Inventory" className="!px-5 py-3 text-center"
+			<td data-label="Supplies & terms" className="!px-5 py-3 text-left"
 				key={columnIndex}>
-				<div className="flex justify-center">
-					{raw === undefined || raw === null || raw === "" ? EMPTY : (
-						<span className={`inline-flex min-w-8 items-center justify-center rounded-full px-2.5 py-1 text-xs font-semibold tabular-nums ${Number(raw) > 0
-							? "bg-emerald-50 text-emerald-700"
-							: "bg-gray-100 text-gray-500"
-							}`}>
-							{Number(raw)}
+				{!s?.supplies && !terms ? EMPTY : (
+					<div className="flex min-w-0 flex-col gap-0.5 text-sm text-gray-700">
+						{s.supplies && (
+							<span className="inline-flex min-w-0 items-center gap-1.5"><IconPackage size={14} className="shrink-0 text-gray-400" /> <span className="truncate" title={s.supplies}>{s.supplies}</span></span>
+						)}
+						{terms && (
+							<span className="inline-flex items-center gap-1.5 text-xs text-gray-500"><IconWallet size={13} className="shrink-0 text-gray-400" /> {terms}</span>
+						)}
+					</div>
+				)}
+			</td>
+		);
+	}
+
+
+	/*
+		From get_suppliers_summary. This was an "Inventory" column reading
+		total_order, which is a customer's order count and never a supplier's.
+	*/
+	function callbackPurchases(entry, columnIndex) {
+
+		var s = supplierStats[supplierId(entry)];
+		var last = parseDate(s?.last_purchase);
+
+		return (
+			<td data-label="Purchases" className="!px-5 py-3 text-left"
+				key={columnIndex}>
+				{!s ? EMPTY : s.purchases === 0 ? (
+					<span className="text-xs text-gray-400">{("None yet")}</span>
+				) : (
+					<div className="flex flex-col gap-1">
+						<div className="flex flex-wrap items-center gap-1.5">
+							<span className="text-sm font-medium tabular-nums text-gray-900">{wrapCurrency(s.spent)}</span>
+							{s.open > 0 && (
+								<span className="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-semibold tabular-nums text-amber-700 ring-1 ring-inset ring-amber-200">{s.open} {("open")}</span>
+							)}
+						</div>
+						<span className="text-[11px] tabular-nums text-gray-400">
+							{s.purchases} {s.purchases === 1 ? ("purchase") : ("purchases")}{last ? ` · ${("last")} ${timeAgo(last)}` : ""}
 						</span>
-					)}
-				</div>
+					</div>
+				)}
+			</td>
+		);
+	}
+
+
+	function callbackDue(entry, columnIndex) {
+
+		var s = supplierStats[supplierId(entry)];
+
+		return (
+			<td data-label="To pay" className="!px-5 py-3 text-right"
+				key={columnIndex}>
+				{!s ? EMPTY : s.due > 0 ? (
+					<span className="text-sm font-semibold tabular-nums text-rose-700">{wrapCurrency(s.due)}</span>
+				) : (
+					<span className="text-xs text-gray-400">{s.purchases ? ("Settled") : "—"}</span>
+				)}
 			</td>
 		);
 	}
@@ -386,6 +474,9 @@ const Suppliers = () => {
 							<div className="flex flex-col gap-0.5">
 								<Link className={MENU_ITEM} href={`/dashboard/suppliers/${id}`}>
 									<IconEyeShare size={16} /> View
+								</Link>
+								<Link className={MENU_ITEM} href={`/dashboard/purchases?supplier_id=${id}&supplier_name=${encodeURIComponent(supplierStats[id]?.company || entry?.display_name || "")}`}>
+									<IconShoppingCartPlus size={16} /> Their purchases
 								</Link>
 								<div className={`${MENU_ITEM} !text-red-600 hover:!bg-red-50 hover:!text-red-700`} onClick={() => {
 									if (confirm("Please confirm?")) {
@@ -441,6 +532,17 @@ const Suppliers = () => {
 									onChange={(ev) => setnewSupplier({ ...newSupplier, name: ev.target.value })}
 								/>
 							</div>
+							<div className="sm:col-span-2">
+								<label htmlFor="new-supplier-company" className={FORM_LABEL}>Company <span className="font-normal text-gray-400">(optional)</span></label>
+								<input
+									id="new-supplier-company"
+									type="text"
+									placeholder="Business name"
+									className={FORM_INPUT}
+									value={newDetails.company}
+									onChange={(ev) => setnewDetails({ ...newDetails, company: ev.target.value })}
+								/>
+							</div>
 							<div>
 								<label htmlFor="new-supplier-email" className={FORM_LABEL}>Email</label>
 								<input
@@ -468,6 +570,25 @@ const Suppliers = () => {
 									onChange={(ev) => setnewSupplier({ ...newSupplier, registerBy: ev.target.value })}>
 									<option value={`mobile`}>Mobile</option>
 									<option value={`email`}>Email</option>
+								</select>
+							</div>
+							<div>
+								<label htmlFor="new-supplier-supplies" className={FORM_LABEL}>Supplies</label>
+								<input
+									id="new-supplier-supplies"
+									type="text"
+									placeholder="e.g. Baby diapers"
+									className={FORM_INPUT}
+									value={newDetails.supplies}
+									onChange={(ev) => setnewDetails({ ...newDetails, supplies: ev.target.value })}
+								/>
+							</div>
+							<div>
+								<label htmlFor="new-supplier-terms" className={FORM_LABEL}>Payment terms</label>
+								<select id="new-supplier-terms" className={FORM_INPUT} value={newDetails.payment_terms}
+									onChange={(ev) => setnewDetails({ ...newDetails, payment_terms: ev.target.value })}>
+									<option value="">Not set</option>
+									{Object.entries(PAYMENT_TERMS).map(([v, t]) => <option key={v} value={v}>{t.label}</option>)}
 								</select>
 							</div>
 

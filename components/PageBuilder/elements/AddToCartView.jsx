@@ -6,7 +6,7 @@ import { tablerIcon } from "@/components/icons/TablerIcon";
 
 import BlockRender from '../BlockRender';
 
-import { useCounterStore, cartLineKey } from '../../../store/useCounterStore';
+import { useCounterStore, cartLineKey, productMoq } from '../../../store/useCounterStore';
 import { productSubscription, subscriptionCycle, subscriptionPrice } from '@/lib/subscriptionCart';
 import { useUtilsStore } from '../../../store/useUtilsStore';
 import { usePost } from "../context/PostContext";
@@ -151,6 +151,13 @@ const AddToCart = (props) => {
 	var outOfStock = stockStatusFor(productData, stockVariation) === 'outofstock';
 	var maxQuantity = availableStock(productData, stockVariation);
 	var outOfStockText = options?.outOfStockText || "Out of stock";
+
+	/* Minimum order quantity (product editor): the fewest units one line may hold. */
+	var moq = productMoq(productData, stockVariation);
+
+	function notifyMoq() {
+		addNotification({ type: 'error', title: 'Minimum order quantity', content: `The minimum order for this item is ${moq}.` });
+	}
 
 	function notifyStock(left) {
 		addNotification({
@@ -315,7 +322,9 @@ const AddToCart = (props) => {
 			return;
 		}
 
-		quantity = (quantity == 0) ? 1 : quantity;
+		/* Nothing picked yet adds the MOQ; a typed quantity below it is raised to it. */
+		if (quantity > 0 && quantity < moq) notifyMoq();
+		quantity = Math.max(quantity, moq);
 
 		if (quantity > maxQuantity) {
 			notifyStock(maxQuantity);
@@ -331,6 +340,7 @@ const AddToCart = (props) => {
 			crosssells: cartProduct?.crosssells,
 			title: cartProduct?.title,
 			quantity: quantity,
+			moq: moq,
 			price: linePrice(cartProduct?.price),
 			/* "subscription" lines keep the cycle for the cart's badge and setup fee. */
 			purchase_type: subscribing ? "subscription" : "one_time",
@@ -343,6 +353,9 @@ const AddToCart = (props) => {
 			thumbnail: cartProduct?.thumbnail,
 			metaData: cartProduct?.metaData,
 			attributes: cartProduct?.attributes,
+			/* Term slugs, for cart rules that match on category or tag (the store keeps slugs only). */
+			categories: productData?.categories,
+			tags: productData?.tags,
 			/* For showing "includes a license" in the cart. The server issues the
 			   key from the product / variation's own license settings, not this. */
 			license: cartProduct?.license ?? null
@@ -604,7 +617,12 @@ const AddToCart = (props) => {
 										addNotification({ type: 'error', title: 'Cant add to cart', content: "Sorry this product doesn't have price." })
 										return;
 									}
-									var quantityX = quantity == 1 ? 1 : quantity - 1;
+									/* Not below the MOQ (1 when the product has none). */
+									if (quantity <= moq) {
+										if (quantity > 0 && moq > 1) notifyMoq();
+										return;
+									}
+									var quantityX = quantity - 1;
 
 
 									setquantity(quantityX)
@@ -623,6 +641,7 @@ const AddToCart = (props) => {
 
 										updateCartItems(currentLineKey, {
 											...lineFields,
+											moq: moq,
 											id: productId,
 											variation_id: activeVariation?.id,
 											title: `${productData?.title} - ${activeVariation?.title}`,
@@ -645,6 +664,7 @@ const AddToCart = (props) => {
 
 										updateCartItems(currentLineKey, {
 											...lineFields,
+											moq: moq,
 											id: productId,
 											title: productData?.title,
 											quantity: quantityX,
@@ -693,6 +713,13 @@ const AddToCart = (props) => {
 
 								}
 
+							}} onBlur={() => {
+								/* Typed below the MOQ: raise it on leaving the box (not while typing, so "12" can pass through "1"). */
+								if (quantity > 0 && quantity < moq) {
+									notifyMoq();
+									setquantity(moq);
+									if (onChangeCartBtn) onChangeCartBtn({ quantity: moq });
+								}
 							}} />
 							<button type="button" aria-label="Increase quantity" className={cls('quantity-increase')}
 
@@ -705,7 +732,8 @@ const AddToCart = (props) => {
 										return;
 									}
 
-									var quantityX = quantity + 1;
+									/* The first press puts in the MOQ, not 1. */
+									var quantityX = quantity < moq ? moq : quantity + 1;
 
 									if (outOfStock || quantityX > maxQuantity) {
 										notifyStock(outOfStock ? 0 : maxQuantity);
@@ -725,6 +753,7 @@ const AddToCart = (props) => {
 
 										updateCartItems(currentLineKey, {
 											...lineFields,
+											moq: moq,
 											id: productId,
 											variation_id: activeVariation?.id,
 											title: `${productData?.title} - ${activeVariation?.title}`,
@@ -747,6 +776,7 @@ const AddToCart = (props) => {
 
 										updateCartItems(currentLineKey, {
 											...lineFields,
+											moq: moq,
 											id: productId,
 											title: productData?.title,
 											quantity: quantityX,

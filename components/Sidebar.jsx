@@ -71,12 +71,12 @@ const NAVS = [
 	{ label: ("Bulk Submit Product"), value: "bulk-submit-product", icon: <IconCubeSend />, parent: "store", roles: ['administrator', 'store_manager'] },
 
 
-	{ label: ("Sell"), value: "sell", icon: <IconBasketCheck />, roles: ['administrator', 'store_manager', 'support_agent'] },
-	{ label: ("Orders"), value: "orders", icon: <IconBasketCheck />, parent: "sell", roles: ['administrator', 'store_manager', 'support_agent'] },
+	{ label: ("Sell"), value: "sell", icon: <IconBasketCheck />, roles: ['administrator', 'store_manager', 'support_agent',] },
+	{ label: ("Orders"), value: "orders", icon: <IconBasketCheck />, parent: "sell", roles: ['administrator', 'store_manager', 'support_agent', 'customer'] },
 	{ label: ("Incomplete"), value: "incomplete", icon: <IconClipboardX />, parent: "sell", roles: ['administrator', 'store_manager'] },
-	{ label: ("Refunds"), value: "refunds", icon: <IconReceiptRefund />, parent: "sell", roles: ['administrator', 'store_manager'] },
-	{ label: ("Subscriptions"), value: "subscriptions", icon: <IconRotateRectangle />, parent: "sell", roles: ['administrator', 'store_manager'] },
-	{ label: ("Licenses"), value: "licenses", icon: <IconRotateRectangle />, parent: "sell", roles: ['administrator', 'store_manager'] },
+	{ label: ("Refunds"), value: "refunds", icon: <IconReceiptRefund />, parent: "sell", roles: ['administrator', 'store_manager', 'customer'] },
+	{ label: ("Subscriptions"), value: "subscriptions", icon: <IconRotateRectangle />, parent: "sell", roles: ['administrator', 'store_manager', 'customer'] },
+	{ label: ("Licenses"), value: "licenses", icon: <IconRotateRectangle />, parent: "sell", roles: ['administrator', 'store_manager', 'customer'] },
 
 	// { label: ("Deliveries"), value: "deliveries", icon: <IconTruckDelivery />, roles: ['administrator', 'rider'] },
 
@@ -92,10 +92,10 @@ const NAVS = [
 
 
 
-	{ label: ("Appearance"), value: "appearance", icon: <IconWand />, roles: ['administrator'] },
-	{ label: ("Themes"), value: "themes", icon: <IconLayoutBoardSplit />, parent: "appearance", roles: ['administrator'] },
-	{ label: ("Header"), value: "header", icon: <IconLayoutNavbar />, parent: "appearance", roles: ['administrator'] },
-	{ label: ("Footer"), value: "footer", icon: <IconLayoutBottombar />, parent: "appearance", roles: ['administrator'] },
+	// { label: ("Appearance"), value: "appearance", icon: <IconWand />, roles: ['administrator'] },
+	// { label: ("Themes"), value: "themes", icon: <IconLayoutBoardSplit />, parent: "appearance", roles: ['administrator'] },
+	// { label: ("Header"), value: "header", icon: <IconLayoutNavbar />, parent: "appearance", roles: ['administrator'] },
+	// { label: ("Footer"), value: "footer", icon: <IconLayoutBottombar />, parent: "appearance", roles: ['administrator'] },
 	// { label: ("Builder"), value: "builder", icon: <IconDeviceIpadCog />, parent: "appearance", roles: ['administrator'] },
 
 	/* The group key must differ from the "All Users" child's key, or the
@@ -105,7 +105,7 @@ const NAVS = [
 	{ label: ("Customers"), value: "customers", icon: <IconUserDollar />, parent: "users-group", roles: ['administrator'] },
 	{ label: ("Store Managers"), value: "store-managers", icon: <IconTrolley />, parent: "users-group", roles: ['administrator'] },
 	{ label: ("Support Agents"), value: "support-agents", icon: <IconUserSquare />, parent: "users-group", roles: ['administrator'] },
-	// { label: ("Affiliates"), value: "affiliate", icon: <IconUserDollar />, parent: "users-group", roles: ['administrator'] },
+	{ label: ("Affiliates"), value: "affiliates", icon: <IconUserDollar />, parent: "users-group", roles: ['administrator'] },
 	{ label: ("Suppliers"), value: "suppliers", icon: <IconTrolley />, parent: "users-group", roles: ['administrator'] },
 	// { label: ("Sellers"), value: "sellers", icon: <IconUserPin />, parent: "users-group", roles: ['administrator'] },
 	{ label: ("Riders"), value: "riders", icon: <IconBike />, parent: "users-group", roles: ['administrator'] },
@@ -120,6 +120,17 @@ const NAVS = [
 	{ label: ("Top Selling Products"), value: "top-selling-products", icon: <IconUserDollar />, parent: "stats", roles: ['administrator', 'store_manager'] },
 
 	{ label: ("Support"), value: "support", icon: <IconUserDollar />, roles: ['administrator', 'support_agent'] },
+
+	/* A group with children is only a toggle, so the dashboard itself is the
+		 first child. The group key differs from it for the same reason as
+		 "users-group". Affiliates see the whole group, read-only and limited to
+		 their own rows (the server scopes it). */
+	{ label: ("Affiliates Dashboard"), value: "affiliates-group", icon: <IconDeviceDesktopAnalytics />, roles: ['administrator', 'store_manager', 'affiliate'] },
+	{ label: ("Overview"), value: "affiliates-dashboard", icon: <IconDeviceDesktopAnalytics />, parent: "affiliates-group", roles: ['administrator', 'store_manager', 'affiliate'] },
+	{ label: ("Affiliate sales"), value: "affiliate-sales", icon: <IconUserDollar />, parent: "affiliates-group", roles: ['administrator', 'store_manager', 'affiliate'] },
+	{ label: ("Affiliate clicks"), value: "affiliate-clicks", icon: <IconUserDollar />, parent: "affiliates-group", roles: ['administrator', 'store_manager', 'affiliate'] },
+	{ label: ("Affiliate payouts"), value: "affiliate-payouts", icon: <IconUserDollar />, parent: "affiliates-group", roles: ['administrator', 'store_manager', 'affiliate'] },
+
 
 	{ label: ("Tickets"), value: "tickets", icon: <IconMessageUser />, parent: "support", roles: ['administrator', 'support_agent'] },
 	{ label: ("Create Tickets"), value: "create-tickets", icon: <IconMessageUser />, parent: "support", roles: ['administrator', 'support_agent'] },

@@ -15,6 +15,8 @@ import LocationPicker from "../../../components/LocationPicker";
 import { IconSquareRoundedPlusFilled, IconSquareRoundedMinusFilled, IconStarFilled, IconStar, IconTrash, IconBasketCheck, IconChevronUp, IconChevronDown, IconCircleCheck, IconShoppingCartCancel, IconSquare, IconSquareCheck, IconCircleDashed } from "@tabler/icons-react";
 import countries from "../../../lib/Countries";
 import states from "../../../lib/States";
+import { sortProviderEntries } from "../../../lib/sortProviders";
+import { withAffiliateRef } from "../../../lib/affiliateRef";
 
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
@@ -58,7 +60,7 @@ const Checkout = (props) => {
 
 	const settings = useCounterStore((state) => state.settings);
 	const fetchSettings = useCounterStore((state) => state.fetchSettings);
-	const paymentGatewaysArgs = useCounterStore((state) => state.paymentGatewaysArgs);
+
 	var coupons = {}
 
 	useEffect(() => {
@@ -548,7 +550,7 @@ const Checkout = (props) => {
 
 		checkoutData.status = 'pending';
 
-		var postData = JSON.stringify(checkoutData);
+		var postData = JSON.stringify(withAffiliateRef(checkoutData));
 
 
 		// if (orderData?.order_id) {
@@ -695,7 +697,7 @@ const Checkout = (props) => {
 
 
 
-		var postData = JSON.stringify(checkoutData);
+		var postData = JSON.stringify(withAffiliateRef(checkoutData));
 
 
 
@@ -1352,7 +1354,7 @@ const Checkout = (props) => {
 						{paymentGateways && (
 
 							<>
-								{Object.entries(paymentGateways).map(([key, method]) => {
+								{sortProviderEntries(Object.entries(paymentGateways), paymentGateways).map(([key, method]) => {
 
 									var enable = method?.enable ?? false;
 
@@ -1376,7 +1378,7 @@ const Checkout = (props) => {
 													<IconCircleDashed size={16} />
 												)}
 
-												<div>{paymentGatewaysArgs[key]?.label ?? method?.label ?? key}</div>
+												<div>{paymentGateways[key]?.label ?? method?.label ?? key}</div>
 
 												{method?.logo?.src && (
 													<Image unoptimized src={method.logo.src} width={100} height={100} alt="" className="ml-auto h-6 w-auto max-w-[80px] object-contain" />

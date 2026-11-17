@@ -1,13 +1,13 @@
 "use client";
 
 import React, { use } from "react";
-import RiderEdit from "../../../../components/pages/RiderEdit";
+import StoreManagerEdit from "../../../../components/pages/StoreManagerEdit";
 
 const page = ({ params }) => {
 	const { id } = use(params);
 
 	return (
-		<RiderEdit id={id} role="store_manager" />
+		<StoreManagerEdit id={id} />
 	);
 };
 

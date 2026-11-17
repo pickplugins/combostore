@@ -92,10 +92,24 @@ when what you are looking at has not reached the store. It is never read on
 the storefront — a shopper's own browser must not be able to invent a
 discount.
 
-> **If rules save locally but never reach the store**, the WordPress side is
-> rejecting keys it does not recognise in `update_settings`. The banner on the
-> screen will say so. Allowing `discountRules` and `discountRuleOptions`
-> through is the fix; nothing in this extension needs to change.
+`update_settings` merges the two keys into the stored settings (other keys are
+kept) and accepts only `administrator` and `store_manager` tokens. Any other
+account gets a 403 and the banner says the rules were kept locally.
+
+The storefront prices the cart from the **published** rules only: the runtime
+reads `discountRules` out of the settings itself, never the editor's state or
+the local mirror. Unsaved edits on this screen do not reach a cart, not even
+the merchant's own.
+
+## What the storefront supplies
+
+The conditions read these from the live cart and user:
+
+| Condition | Source |
+| --- | --- |
+| Categories / tags in cart, category and tag targets | each cart line's `categories` and `tags` slugs, stored when the product is added (`addCartItems` keeps slugs only). Lines added before this was in place have none until re-added. Slugs match ignoring case. |
+| Customer's past orders | `orders_count` on `get_user`: the customer's orders, not counting incomplete, draft, failed, cancelled, refunded or trashed ones. Guests stay unknown, so the condition fails for them. |
+| Shipping method | the method picked at checkout (`checkoutShippingMethod`, matched on its id **or** its name), else the cart drawer's `free` / `normal` / `express`. |
 
 ## How it reaches the cart
 

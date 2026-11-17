@@ -6,8 +6,14 @@ import { useCounterStore } from '../store/useCounterStore'
 import Image from "next/image";
 import { IconLock, IconMail } from "@tabler/icons-react";
 import { ADORNMENT_CLASSES, FIELD_CLASSES, LABEL_CLASSES, SUBMIT_CLASSES } from "./AuthShell";
+import { useAuth } from "./auth-context";
+import { redirectFromLocation, withRedirect } from "@/lib/authRedirect";
+import Link from "next/link";
+import ResendVerificationButton from "./ResendVerificationButton";
 
 const Register = () => {
+
+	const { handleLogin, resendUrl } = useAuth();
 
 
 
@@ -19,6 +25,8 @@ const Register = () => {
 	const [messages, setMessages] = useState(null);
 	const [errors, seterrors] = useState(null);
 	const [logging, setlogging] = useState(false);
+	/* Shown after sign-up when signing straight in was refused (email verification). */
+	const [signInLink, setsignInLink] = useState(null);
 
 	const handleChange = (e) => {
 		setUser({ ...user, [e.target.name]: e.target.value });
@@ -29,13 +37,16 @@ const Register = () => {
 
 
 		e.preventDefault();
-		setlogging(true);
 
+		/* A message in the form rather than alert(), and the button is not
+		   left disabled - it returned before clearing `logging`. */
 		if (user.email.length == 0 || user.password.length == 0) {
-			alert("email or password should not empty");
+			seterrors(true);
+			setMessages(["Email and password are required."]);
 			return;
 		}
 
+		setlogging(true);
 		seterrors(false)
 
 
@@ -75,6 +86,26 @@ const Register = () => {
 
 						setlogging(false);
 
+						/*
+							Sent here with `?redirect=` (the checkout's sign-in notice):
+							try to sign the new account straight in and go back.
+							WordPress accepts the email as the login name. A store
+							that makes new accounts verify their email first refuses
+							that sign-in, so then the shopper is told to verify and
+							given a Sign in link that still returns to checkout.
+							Without a redirect the message stays as it was.
+						*/
+						var redirect = redirectFromLocation();
+						if (!error && redirect) {
+							setMessages(["Account created. Signing you in..."]);
+							handleLogin(user.email, user.password, redirect).then((signedIn) => {
+								if (!signedIn) {
+									setMessages(["Account created. If we sent you a verification email, confirm it first - then sign in to continue."]);
+									setsignInLink(withRedirect("/login", redirect));
+								}
+							});
+						}
+
 
 						setTimeout(() => {
 						}, 500);
@@ -113,9 +144,13 @@ const Register = () => {
 
 
 
+			{/*
+				onSubmit was commented out, so Register submitted the form natively:
+				the page reloaded with the email and password in the URL and no
+				account was created.
+			*/}
 			<form
-
-				// onSubmit={handleRegister}
+				onSubmit={handleRegister}
 				className="flex flex-col gap-4"
 			>
 
@@ -174,9 +209,10 @@ const Register = () => {
 				<div className="flex flex-col gap-1 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
 					{messages != null && (
 						<>
+							{/* message[1]: the entry is [index, text], and the whole pair printed as "0Text". */}
 							{Object.entries(messages).map(message => {
 								return (
-									<p key={message[0]}>{message}</p>
+									<p key={message[0]}>{message[1]}</p>
 								)
 							})}						</>
 					)}
@@ -193,6 +229,11 @@ const Register = () => {
 							})}
 						</>
 					)}
+					{signInLink && (
+						<Link href={signInLink} className="font-semibold underline underline-offset-2">Sign in</Link>
+					)}
+					{/* Only after this form's own sign-in was refused for an unverified email (signInLink is set then). */}
+					{signInLink && <ResendVerificationButton key={resendUrl} url={resendUrl} />}
 				</div>
 			)}
 

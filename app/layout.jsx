@@ -5,6 +5,8 @@ import FacebookPixel from '@/components/analytics/FacebookPixel';
 import FacebookUserMatching from '@/components/analytics/FacebookUserMatching';
 import { AuthProvider } from "../components/auth-context";
 import ExtensionsRuntime from "../components/ExtensionsRuntime";
+import AffiliateTracker from "../components/AffiliateTracker";
+import { Suspense } from "react";
 import NextTopLoader from 'nextjs-toploader';
 import Script from "next/script";
 import { getSettings } from "@/lib/getSettings";
@@ -199,6 +201,12 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 					{FacebookPixel_ID && (
 						<FacebookUserMatching pixelId={FacebookPixel_ID} />
 					)}
+
+					{/* Records ?ref= affiliate visits and remembers them for checkout.
+					    Renders nothing. Suspense because it reads the search params. */}
+					<Suspense fallback={null}>
+						<AffiliateTracker />
+					</Suspense>
 
 					<div>{children}</div>
 

@@ -10,8 +10,9 @@
  *
  * localStorage is a mirror, not the source. It keeps the dashboard list
  * usable while the settings round-trip is in flight or has failed, and it is
- * what the editor falls back to offline. It is never trusted on the
- * storefront: a shopper's own browser must not be able to invent a discount.
+ * what the editor falls back to offline. It is never read on the storefront
+ * (useCartDiscounts reads the settings directly): a shopper's own browser
+ * must not be able to invent a discount.
  */
 
 "use client";
@@ -143,11 +144,15 @@ export const useDiscountRulesStore = create((set, get) => ({
 		/*
 			Once, not on every settings change.
 
-			The editor and the runtime share this store, and `settings` gets a
-			new identity whenever anything else on the settings screen is
-			saved. Re-reading it then would throw away whatever rules the
-			merchant had in progress - a save elsewhere in the dashboard
-			silently discarding the rule being written.
+			This is the editor's copy, used by the Discount Rules screen only -
+			the storefront runtime (useCartDiscounts) reads the published rules
+			from the settings itself and never this state, so neither unsaved
+			edits nor the local mirror below can price a real cart.
+
+			`settings` gets a new identity whenever anything else on the
+			settings screen is saved. Re-reading it then would throw away
+			whatever rules the merchant had in progress - a save elsewhere in
+			the dashboard silently discarding the rule being written.
 		*/
 		if (get().source === "settings") return;
 

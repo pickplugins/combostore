@@ -14,7 +14,7 @@ import dynamic from "next/dynamic";
 const loadCheckoutView = () => import("./CheckoutView");
 const CheckoutView = dynamic(loadCheckoutView);
 import CartCrossSells, { defaultCartCrossSellsTitle, defaultCartCrossSellsLimit } from "./CartCrossSellsView";
-import { useCounterStore, cartLineKey } from '../../../store/useCounterStore'
+import { useCounterStore, cartLineKey, normalizeMoq } from '../../../store/useCounterStore'
 import { cartSetupFees, isSubscriptionLine, subscriptionCycle, subscriptionPrice } from '@/lib/subscriptionCart';
 import { useUtilsStore } from '../../../store/useUtilsStore'
 import { useAuthStore } from '../../../store/authStore';
@@ -170,7 +170,8 @@ const CartView = (props) => {
 	*/
 	function changeQuantity(item, quantity) {
 
-		if (quantity < 1) {
+		/* Not below the line's minimum order quantity (1 when it has none). */
+		if (quantity < normalizeMoq(item?.moq)) {
 			return;
 		}
 
@@ -565,7 +566,7 @@ export function CartMarkup(props) {
 
 														<div className={cls('item-bottom')}>
 															<div className={cls('stepper')}>
-																<button type="button" aria-label="Decrease quantity" disabled={item.quantity <= 1} className={cls('stepper-decrease')} onClick={() => onChangeQuantity(item, item.quantity - 1)}>
+																<button type="button" aria-label="Decrease quantity" disabled={item.quantity <= normalizeMoq(item?.moq)} title={normalizeMoq(item?.moq) > 1 ? `Minimum order: ${normalizeMoq(item?.moq)}` : undefined} className={cls('stepper-decrease')} onClick={() => onChangeQuantity(item, item.quantity - 1)}>
 																	<IconMinus size={14} />
 																</button>
 																<span className={cls('stepper-value')} aria-live="polite">{item.quantity}</span>

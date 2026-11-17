@@ -204,18 +204,17 @@ const FraudChecker = () => {
 			</div>
 
 			{/*
-				Every check ships as Coming Soon and nothing in the app reads
-				`settings.fraudCheck`. Saying so is the honest thing: a merchant
-				who switches these on and believes orders are being screened is
-				worse off than one who knows they are not.
+				Only the checks without a Coming Soon badge are enforced (by the
+				server's create_order). Saying so is the honest thing: a merchant
+				who switches the others on and believes orders are being screened
+				is worse off than one who knows they are not.
 			*/}
 			<div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-900">
 				<IconInfoCircle size={16} className="mt-px shrink-0" />
 				<p className="leading-relaxed">
-					These settings are recorded but not yet enforced - nothing in the storefront or
-					checkout reads them today. They are saved so the configuration is ready when
-					screening ships. Real screening has to run server-side: anything decided in the
-					browser is bypassed by posting an order straight to the API.
+					Login Required and Limit Phone Number are enforced by the server when an order is
+					placed. Checks marked Coming Soon are saved but not enforced yet. Staff placing
+					orders from the dashboard are never blocked.
 				</p>
 			</div>
 

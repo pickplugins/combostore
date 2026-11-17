@@ -5,6 +5,7 @@ import { useState } from "react";
 import { IconAlertCircle, IconEye, IconEyeOff, IconLock, IconUser, IconLogin2 } from "@tabler/icons-react";
 import Spinner from "../../../components/Spinner";
 import { useAuth } from "../../../components/auth-context";
+import ResendVerificationButton from "../../../components/ResendVerificationButton";
 
 import { elementCssClasses } from "../ElementsDefinition";
 
@@ -26,7 +27,7 @@ const LoginView = (props) => {
 	var type = props?.type;
 	var id = props?.id;
 
-	const { error, handleLogin, logging } = useAuth();
+	const { error, resendUrl, handleLogin, logging } = useAuth();
 
 	const [username, setUsername] = useState("");
 	const [password, setPassword] = useState("");
@@ -61,7 +62,11 @@ const LoginView = (props) => {
 				{(missing || error) && (
 					<p role="alert" className={cls('error')}>
 						<IconAlertCircle size={16} className="mt-0.5 shrink-0" />
-						<span>{missing ? "Please enter your username and password." : error}</span>
+						<span>
+							{missing ? "Please enter your username and password." : error}
+							{/* Keyed on the link, so a new failed sign-in resets the button. */}
+							{!missing && <ResendVerificationButton key={resendUrl} url={resendUrl} className="mt-1 block" />}
+						</span>
 					</p>
 				)}
 

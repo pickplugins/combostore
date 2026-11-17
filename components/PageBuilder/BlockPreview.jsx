@@ -85,6 +85,12 @@ import ProductCategories from './elements/ProductCategories';
 import ProductTags from './elements/ProductTags';
 import ProductBrands from './elements/ProductBrands';
 import ProductSku from './elements/ProductSku';
+import ProductMoq from './elements/ProductMoq';
+import OrderTracking from './elements/OrderTracking';
+import ProductDimensions from './elements/ProductDimensions';
+import ProductSizeGuide from './elements/ProductSizeGuide';
+import ProductFaq from './elements/ProductFaq';
+import CountdownTimer from './elements/CountdownTimer';
 import ProductUpsells from './elements/ProductUpsells';
 import ProductCrosssells from './elements/ProductCrosssells';
 import ProductGallery from './elements/ProductGallery';
@@ -245,6 +251,12 @@ const BlockPreview = (props) => {
 			productTags: ProductTags,
 			productBrands: ProductBrands,
 			productSku: ProductSku,
+			productMoq: ProductMoq,
+			orderTracking: OrderTracking,
+			productDimensions: ProductDimensions,
+			productSizeGuide: ProductSizeGuide,
+			productFaq: ProductFaq,
+			countdownTimer: CountdownTimer,
 			productUpsells: ProductUpsells,
 			productCrosssells: ProductCrosssells,
 			productGallery: ProductGallery,

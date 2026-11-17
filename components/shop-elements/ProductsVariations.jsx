@@ -41,6 +41,15 @@ const EMPTY_STATE = "flex flex-col items-center gap-1 rounded-xl border border-d
 const ROW_HEADER = "w-full flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-left transition-colors hover:border-gray-300 hover:bg-gray-50 cursor-pointer select-none";
 const ROW_BODY = "mt-1 rounded-xl border border-gray-200 bg-gray-50/60 p-4";
 
+const DIMENSION_FIELDS = [['weight', 'Weight'], ['length', 'Length'], ['width', 'Width'], ['height', 'Height']];
+
+/* A saved dimension for its input: the database's "0.00" (unset) shows empty, an old { value } object its value. */
+function dimensionInputValue(raw) {
+	var value = raw && typeof raw === 'object' ? raw.value : raw;
+	if (value === undefined || value === null || value === '') return '';
+	return parseFloat(value) === 0 ? '' : value;
+}
+
 const ProductsVariations = (props) => {
 
 
@@ -48,6 +57,12 @@ const ProductsVariations = (props) => {
 
 
 	var product = props.product;
+
+	/* The product's own value for a dimension ('' when unset): the variation fields' placeholder, as an empty one falls back to it. */
+	function productDimension(key) {
+		var value = dimensionInputValue(product?.[key]);
+		return value === '' ? '' : String(parseFloat(value));
+	}
 	// var onUpdateProduct = props.onUpdateProduct;
 	var onChangeVariations = props.onChangeVariations;
 	var onChangeAttributes = props.onChangeAttributes;
@@ -376,6 +391,7 @@ const ProductsVariations = (props) => {
 
 				stock_status: source?.stock_status ?? "instock",
 				stock_count: source?.stock_count ?? 0,
+				moq: source?.moq ?? 1,
 				backorders: source?.backorders ?? 0,
 
 				sku: source?.sku ?? '',
@@ -657,6 +673,10 @@ const ProductsVariations = (props) => {
 													<label htmlFor="bulk-stock-count" className={LABEL}>Stock count</label>
 													<input id="bulk-stock-count" type="number" min="0" className={FIELD} placeholder="Keep" value={bulkUpdatePrams.stock_count ?? ''} onChange={ev => setBulk('stock_count', ev.target.value)} />
 												</div>
+												<div className="flex flex-col gap-1.5">
+													<label htmlFor="bulk-moq" className={LABEL}>MOQ</label>
+													<input id="bulk-moq" type="number" min="1" step="1" className={FIELD} placeholder="Keep" value={bulkUpdatePrams.moq ?? ''} onChange={ev => setBulk('moq', ev.target.value)} />
+												</div>
 											</div>
 											<div className="flex flex-col gap-1.5">
 												<div className="flex items-center justify-between gap-3">
@@ -670,6 +690,18 @@ const ProductsVariations = (props) => {
 													<input id="bulk-sku" type="text" className={FIELD} placeholder="Keep" value={bulkUpdatePrams.sku ?? ''} onChange={ev => setBulk('sku', ev.target.value)} />
 													<button type="button" className={SECONDARY_BUTTON} onClick={() => setBulk('sku', generateSKU())}>Generate</button>
 												</div>
+											</div>
+										</div>
+
+										<div className="flex flex-col gap-2">
+											<span className={SECTION_TITLE}>Dimensions</span>
+											<div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+												{DIMENSION_FIELDS.map(([key, label]) => (
+													<div key={key} className="flex flex-col gap-1.5">
+														<label htmlFor={`bulk-${key}`} className={LABEL}>{label}</label>
+														<input id={`bulk-${key}`} type="number" min="0" step="any" className={FIELD} placeholder="Keep" value={bulkUpdatePrams[key] ?? ''} onChange={ev => setBulk(key, ev.target.value)} />
+													</div>
+												))}
 											</div>
 										</div>
 
@@ -784,6 +816,10 @@ const ProductsVariations = (props) => {
 													<input id={`var-stock-count-${index}`} type="number" min="0" className={FIELD} value={item?.stock_count ?? ''} onChange={ev => setVariationField(index, 'stock_count', ev.target.value)} />
 												</div>
 												<div className="flex flex-col gap-1.5">
+													<label htmlFor={`var-moq-${index}`} className={LABEL}>MOQ</label>
+													<input id={`var-moq-${index}`} type="number" min="1" step="1" placeholder="1" className={FIELD} value={item?.moq ?? ''} onChange={ev => setVariationField(index, 'moq', ev.target.value)} />
+												</div>
+												<div className="flex flex-col gap-1.5">
 													<label htmlFor={`var-sku-${index}`} className={LABEL}>SKU</label>
 													<div className="flex items-center gap-2">
 														<input id={`var-sku-${index}`} type="text" className={`${FIELD} font-mono`} value={item?.sku ?? ''} onChange={ev => setVariationField(index, 'sku', ev.target.value)} />
@@ -791,6 +827,20 @@ const ProductsVariations = (props) => {
 													</div>
 												</div>
 											</div>
+										</div>
+
+										{/* Plain numbers, as the product's (units are set on the Product Dimensions element). Empty or 0 uses the product's value. */}
+										<div className="flex flex-col gap-2">
+											<span className={SECTION_TITLE}>Dimensions</span>
+											<div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+												{DIMENSION_FIELDS.map(([key, label]) => (
+													<div key={key} className="flex flex-col gap-1.5">
+														<label htmlFor={`var-${key}-${index}`} className={LABEL}>{label}</label>
+														<input id={`var-${key}-${index}`} type="number" min="0" step="any" className={FIELD} placeholder={productDimension(key) || '0'} value={dimensionInputValue(item?.[key])} onChange={ev => setVariationField(index, key, ev.target.value)} />
+													</div>
+												))}
+											</div>
+											<p className="text-xs text-gray-500">Leave empty to use the product's value.</p>
 										</div>
 
 										<div className="flex flex-col gap-2">

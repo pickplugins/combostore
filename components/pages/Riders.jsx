@@ -12,7 +12,10 @@ import PopoverButton from '../../components/PopoverButton';
 import RiderEdit from '../../components/pages/RiderEdit';
 import Image from "next/image";
 
-import { IconEyeShare, IconDotsVertical, IconTrash, IconUserPlus, IconMail, IconPhone, IconStarFilled } from "@tabler/icons-react";
+import { IconEyeShare, IconDotsVertical, IconTrash, IconUserPlus, IconMail, IconPhone, IconStarFilled, IconBike, IconMapPin } from "@tabler/icons-react";
+import { AvailabilityBadge, AVAILABILITY, VEHICLES } from './RiderEdit';
+import { parseDate, timeAgo } from './deliveryUi';
+import { postApi } from './affiliateUi';
 
 
 const ICON_BUTTON =
@@ -91,6 +94,18 @@ const Riders = ({ role = "rider" }) => {
 	var [adding, setadding] = useState(false);
 	var [selectedRows, setselectedRows] = useState([]);
 
+	/* Riders only: availability, vehicle, zone and delivery counts, by user id. */
+	var isRiders = role === "rider";
+	var [riderStats, setriderStats] = useState({});
+
+	function fetchRiderStats(posts) {
+		var ids = posts.map(riderId).filter(Boolean);
+		if (!ids.length) return;
+		postApi("get_riders_summary", token, { ids })
+			.then((res) => { if (res?.riders) setriderStats((prev) => ({ ...prev, ...res.riders })); })
+			.catch(() => { });
+	}
+
 	function onSelectRows(rows) {
 		setselectedRows(rows);
 	}
@@ -100,7 +115,11 @@ const Riders = ({ role = "rider" }) => {
 		check: { id: "check", label: ("Check"), },
 		id: { id: "id", label: list.singular, callback: callbackRider, classes: "w-96 text-left text-gray-600" },
 		contact: { id: "contact", label: ("Contact"), callback: callbackContact, classes: "text-left text-gray-600" },
-		...(list.deliveries ? { total_order: { id: "total_order", label: ("Deliveries"), callback: callbackDeliveries, classes: "text-center text-gray-600" } } : {}),
+		...(isRiders ? {
+			vehicle: { id: "vehicle", label: ("Vehicle & zone"), callback: callbackVehicle, classes: "text-left text-gray-600 w-48" },
+			total_order: { id: "total_order", label: ("Deliveries"), callback: callbackDeliveries, classes: "text-left text-gray-600 w-52" },
+			last_active: { id: "last_active", label: ("Last active"), callback: callbackLastActive, classes: "text-left text-gray-600 w-32" },
+		} : {}),
 		actions: { label: ("Actions"), callback: callbackActions, classes: "text-right pr-2 text-gray-600" },
 	};
 
@@ -140,6 +159,7 @@ const Riders = ({ role = "rider" }) => {
 				response.json().then((res) => {
 					/* With no matches the API sends only `noPosts`. */
 					setridersData({ posts: res?.posts ?? [], total: res?.total ?? 0, maxPages: res?.max_pages ?? 1 })
+					if (isRiders) fetchRiderStats(res?.posts ?? []);
 					setloading(false);
 				});
 			})
@@ -300,6 +320,10 @@ const Riders = ({ role = "rider" }) => {
 						) : (
 							<span>{initialsOf(name) || "?"}</span>
 						)}
+						{isRiders && riderStats[id] && (
+							<span title={AVAILABILITY[riderStats[id].availability]?.label}
+								className={`absolute bottom-0 right-0 h-3 w-3 rounded-full ring-2 ring-white ${AVAILABILITY[riderStats[id].availability]?.dot ?? "bg-gray-300"}`} />
+						)}
 					</Link>
 
 					<div className="flex min-w-0 flex-1 flex-col gap-1 text-left">
@@ -310,6 +334,7 @@ const Riders = ({ role = "rider" }) => {
 							<Link className="truncate text-left text-sm font-medium text-gray-900 transition-colors hover:text-blue-600 hover:underline" href={`/dashboard/${list.path}/${id}`}>
 								{name}
 							</Link>
+							{isRiders && riderStats[id] && <AvailabilityBadge value={riderStats[id].availability} />}
 						</div>
 
 						<div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
@@ -364,23 +389,68 @@ const Riders = ({ role = "rider" }) => {
 	}
 
 
+	/*
+		From get_riders_summary. This read total_order / total_delivery, which
+		get_users never sends for riders, so the column was always empty.
+	*/
 	function callbackDeliveries(entry, columnIndex) {
 
-		var raw = entry?.total_order ?? entry?.total_delivery;
+		var s = riderStats[riderId(entry)];
 
 		return (
-			<td data-label="Deliveries" className="!px-5 py-3 text-center"
+			<td data-label="Deliveries" className="!px-5 py-3 text-left"
 				key={columnIndex}>
-				<div className="flex justify-center">
-					{raw === undefined || raw === null || raw === "" ? EMPTY : (
-						<span className={`inline-flex min-w-8 items-center justify-center rounded-full px-2.5 py-1 text-xs font-semibold tabular-nums ${Number(raw) > 0
-							? "bg-emerald-50 text-emerald-700"
-							: "bg-gray-100 text-gray-500"
-							}`}>
-							{Number(raw)}
+				{!s ? EMPTY : s.total === 0 ? (
+					<span className="text-xs text-gray-400">{("None yet")}</span>
+				) : (
+					<div className="flex flex-col gap-1">
+						<div className="flex flex-wrap items-center gap-1.5">
+							{s.active > 0 && (
+								<span className="inline-flex items-center rounded-full bg-indigo-50 px-2 py-0.5 text-[11px] font-semibold tabular-nums text-indigo-700 ring-1 ring-inset ring-indigo-200">{s.active} {("in progress")}</span>
+							)}
+							<span className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold tabular-nums text-emerald-700 ring-1 ring-inset ring-emerald-200">{s.done} {("delivered")}</span>
+						</div>
+						<span className="text-[11px] tabular-nums text-gray-400">
+							{s.total} {("total")}{s.failed > 0 ? ` · ${s.failed} ${("returned / cancelled")}` : ""}
 						</span>
-					)}
-				</div>
+					</div>
+				)}
+			</td>
+		);
+	}
+
+
+	function callbackVehicle(entry, columnIndex) {
+
+		var s = riderStats[riderId(entry)];
+		var vehicle = s?.vehicle ? (VEHICLES[s.vehicle] ?? s.vehicle) : "";
+
+		return (
+			<td data-label="Vehicle & zone" className="!px-5 py-3 text-left"
+				key={columnIndex}>
+				{!vehicle && !s?.zone ? EMPTY : (
+					<div className="flex min-w-0 flex-col gap-0.5 text-sm text-gray-700">
+						{vehicle && (
+							<span className="inline-flex items-center gap-1.5"><IconBike size={14} className="shrink-0 text-gray-400" /> {vehicle}{s.vehicle_no ? <span className="font-mono text-[11px] text-gray-500">{s.vehicle_no}</span> : null}</span>
+						)}
+						{s?.zone && (
+							<span className="inline-flex min-w-0 items-center gap-1.5 text-xs text-gray-500"><IconMapPin size={13} className="shrink-0 text-gray-400" /> <span className="truncate">{s.zone}</span></span>
+						)}
+					</div>
+				)}
+			</td>
+		);
+	}
+
+
+	function callbackLastActive(entry, columnIndex) {
+
+		var date = parseDate(riderStats[riderId(entry)]?.last_activity);
+
+		return (
+			<td data-label="Last active" className="!px-5 py-3 text-left"
+				key={columnIndex}>
+				{date ? <span className="text-xs text-gray-600" title={date.toLocaleString()}>{timeAgo(date)}</span> : EMPTY}
 			</td>
 		);
 	}

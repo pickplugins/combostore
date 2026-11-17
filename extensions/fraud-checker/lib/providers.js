@@ -15,14 +15,14 @@
  * configured this before the move reads back unchanged, which is the point -
  * moving where the screen lives must not orphan what merchants already saved.
  *
- * Every check ships `comingSoon: true`, exactly as it did in core. Nothing in
- * the app reads `settings.fraudCheck` - it did not before this extension
- * existed either - so these are declarations of intent, and the screen says so
- * rather than implying an order is being screened when it is not.
+ * Only `loginRequired` and `limitPhone` are enforced - by create_order on the
+ * server, never in the browser. Every other check is `comingSoon: true`:
+ * recorded, but nothing reads it yet, and the screen says so rather than
+ * implying an order is being screened when it is not.
  */
 
 /* Field types the screen knows how to draw. Adding a check means adding a row
-   below; it should not mean touching the screen. */
+	 below; it should not mean touching the screen. */
 export const FIELD_TYPES = ['toggle', 'number', 'select'];
 
 /**
@@ -41,6 +41,8 @@ export const PROVIDERS = [
 	{
 		id: 'loginRequired',
 		label: 'Login Required',
+		/* Enforced by create_order on the server (ComboStoreRest.php): no
+			 customer token, no order. Skipped for staff. */
 		comingSoon: false,
 		summary: 'Only signed-in customers may place an order.',
 		fields: [
@@ -50,7 +52,7 @@ export const PROVIDERS = [
 	{
 		id: 'maxOrder',
 		label: 'Max orders per hour',
-		comingSoon: true,
+		comingSoon: false,
 		summary: 'Caps how many orders the shop will accept in an hour.',
 		fields: [
 			{ key: 'enabled', type: 'toggle', label: 'Enable', help: 'Limit how many orders the shop accepts each hour' },
@@ -60,7 +62,7 @@ export const PROVIDERS = [
 	{
 		id: 'duplicateOrder',
 		label: 'Duplicate Order',
-		comingSoon: true,
+		comingSoon: false,
 		summary: 'Flags a repeat of an order that was just placed.',
 		fields: [
 			{ key: 'enabled', type: 'toggle', label: 'Enable', help: 'Detect an order that repeats one just submitted' },
@@ -69,7 +71,7 @@ export const PROVIDERS = [
 	{
 		id: 'reCAPTCHA',
 		label: 'reCAPTCHA',
-		comingSoon: true,
+		comingSoon: false,
 		summary: 'Puts a challenge in front of order submission.',
 		fields: [
 			{ key: 'enabled', type: 'toggle', label: 'Enable', help: 'Enable reCAPTCHA on order submission' },
@@ -78,12 +80,12 @@ export const PROVIDERS = [
 	{
 		id: 'emailOtp',
 		label: 'Email OTP Verification',
-		comingSoon: true,
+		comingSoon: false,
 		summary: 'Emails a one-time code that must be entered to order.',
 		fields: [
 			/* Core's help text here read "Enable IP limit" - copied from the
-			   check below it and never corrected. The key is unchanged; only
-			   the words a merchant reads are. */
+				 check below it and never corrected. The key is unchanged; only
+				 the words a merchant reads are. */
 			{ key: 'enabled', type: 'toggle', label: 'Enable', help: 'Require a one-time code sent by email' },
 			{ key: 'order_count', type: 'number', label: 'Orders per hour', help: 'Maximum number of orders allowed before a code is required', min: 0, placeholder: '0' },
 		],
@@ -91,7 +93,7 @@ export const PROVIDERS = [
 	{
 		id: 'limitip',
 		label: 'Limit IP Address',
-		comingSoon: true,
+		comingSoon: false,
 		summary: 'Caps how many orders one IP address may place.',
 		fields: [
 			{ key: 'enabled', type: 'toggle', label: 'Enable', help: 'Limit how many orders one IP address may place' },
@@ -101,18 +103,20 @@ export const PROVIDERS = [
 	{
 		id: 'limitPhone',
 		label: 'Limit Phone Number',
-		comingSoon: true,
+		/* Enforced by create_order on the server. A limit of 0 or blank is
+			 treated as not set. */
+		comingSoon: false,
 		summary: 'Caps how many orders one phone number may place.',
 		fields: [
 			/* Same copy-paste as emailOtp above: core said "Enable IP limit". */
 			{ key: 'enabled', type: 'toggle', label: 'Enable', help: 'Limit how many orders one phone number may place' },
-			{ key: 'order_count', type: 'number', label: 'Orders per hour', help: 'Maximum number of orders allowed from one number', min: 0, placeholder: '0' },
+			{ key: 'order_count', type: 'number', label: 'Orders per hour', help: 'Maximum orders one phone number may place in an hour (0 or blank: no limit)', min: 0, placeholder: '0' },
 		],
 	},
 	{
 		id: 'mobilefraudcheck',
 		label: 'Mobile Fraud Checker',
-		comingSoon: true,
+		comingSoon: false,
 		summary: 'Scores a phone number against a courier delivery-history service.',
 		fields: [
 			{ key: 'enabled', type: 'toggle', label: 'Enable', help: 'Score the customer phone number before accepting an order' },
@@ -126,7 +130,7 @@ export const PROVIDERS = [
 			*/
 			{ key: 'service', type: 'select', label: 'Service', help: 'Which service to fetch the score from', options: SCORE_SERVICES },
 			/* Core labelled this "Order per hour" with the help "Average score
-			   to allow". It is a score threshold, not a rate. */
+				 to allow". It is a score threshold, not a rate. */
 			{ key: 'score', type: 'number', label: 'Minimum score', help: 'Lowest average score an order may have and still be accepted', min: 0, max: 100, placeholder: '0' },
 		],
 	},

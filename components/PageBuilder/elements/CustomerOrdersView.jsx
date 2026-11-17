@@ -34,7 +34,7 @@ const CustomerOrdersView = (props) => {
 	/* Each part's classes; a key the block lacks falls back to the customerOrders defaults in ElementsDefinition.js. */
 	var cls = elementCssClasses('customerOrders', cssSelectors);
 
-	const { orderStatusArgs, paymentGatewaysArgs } = useCounterStore();
+	const { orderStatusArgs, paymentGateways } = useCounterStore();
 	const { wrapCurrency } = useUtilsStore();
 	const token = useSavedToken();
 
@@ -85,8 +85,8 @@ const CustomerOrdersView = (props) => {
 	var showLicenses = !props?.options?.hideLicenses;
 
 	/* License keys for the orders on this page, by order id. One request per
-	   page; get_licenses only returns the signed-in customer's own. A failure
-	   just leaves the cards without keys. */
+		 page; get_licenses only returns the signed-in customer's own. A failure
+		 just leaves the cards without keys. */
 	var [licensesByOrder, setlicensesByOrder] = useState({});
 	var orderIdsKey = orders.map(order => order.id).join(",");
 
@@ -121,7 +121,7 @@ const CustomerOrdersView = (props) => {
 
 
 	/* Files the orders on this page can download (only paid / completed
-	   orders have any), with signed links that last an hour. */
+		 orders have any), with signed links that last an hour. */
 	var showDownloads = !props?.options?.hideDownloads;
 	var [downloadsByOrder, setdownloadsByOrder] = useState({});
 
@@ -152,7 +152,7 @@ const CustomerOrdersView = (props) => {
 	}, [token, orderIdsKey, showDownloads]);
 
 	/* A link left open past its hour: fetch that order's links again and hand
-	   back the new one for this file. */
+		 back the new one for this file. */
 	function renewDownload(file) {
 		return fetchDownloads([file.order_id]).then((downloads) => {
 			var fresh = downloads?.[file.order_id];
@@ -168,7 +168,7 @@ const CustomerOrdersView = (props) => {
 	var closeInvoice = useCallback(() => setinvoiceOrder(null), []);
 
 	function paymentLabel(method) {
-		return paymentGatewaysArgs?.[method]?.label ?? method ?? "";
+		return paymentGateways?.[method]?.label ?? method ?? "";
 	}
 
 	return (

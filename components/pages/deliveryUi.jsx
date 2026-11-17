@@ -39,6 +39,38 @@ export const STATUS_BADGES = {
 };
 const FALLBACK_BADGE_CLASSES = "bg-gray-100 text-gray-600 ring-gray-200";
 
+/*
+	Delivery status groups - the same lists as ComboStoreRiders::DONE_STATUSES /
+	FAILED_STATUSES on the server, which get_deliveries' `status` filter uses.
+	Anything else counts as in progress.
+*/
+export const DONE_STATUSES = ["delivered", "partial_delivered", "delivered_approval_pending", "partial_delivered_approval_pending"];
+export const FAILED_STATUSES = ["returned", "cancelled", "canceled", "cancelled_approval_pending"];
+
+export const STATUS_GROUPS = [
+	{ value: "in_progress", label: "In progress" },
+	{ value: "done", label: "Delivered" },
+	{ value: "failed", label: "Returned / cancelled" },
+];
+
+/* The statuses a delivery can have, in workflow order (STATUS_BADGES also has page statuses). */
+export const DELIVERY_STATUSES = [
+	"pending", "started", "in_review", "hold", "paused", "resumed", "in_transit",
+	"delivered", "partial_delivered", "delivered_approval_pending", "partial_delivered_approval_pending",
+	"cancelled_approval_pending", "returned", "cancelled",
+];
+
+/* Per-group totals from get_deliveries' status_counts ({status: n}). */
+export function groupCounts(statusCounts) {
+	var out = { in_progress: 0, done: 0, failed: 0 };
+	for (var [status, n] of Object.entries(statusCounts ?? {})) {
+		if (DONE_STATUSES.includes(status)) out.done += n;
+		else if (FAILED_STATUSES.includes(status)) out.failed += n;
+		else out.in_progress += n;
+	}
+	return out;
+}
+
 export const titleCase = (value) => String(value || "").replace(/[_-]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 
 /* A status's badge; unknown statuses get a readable neutral one, empty gets null. */

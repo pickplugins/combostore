@@ -9,6 +9,7 @@ const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 import Login from '../../components/Login';
 
 import Register from '../../components/Register';
+import { redirectFromLocation, withRedirect } from '@/lib/authRedirect';
 
 
 
@@ -17,6 +18,10 @@ const page = () => {
 
 
 	const { token, appData, notifications, addNotification, userDataX, setUserDataX } = useCounterStore()
+
+	/* `?redirect=` carried onto the Login link, so switching pages keeps it. Read after mount so the server and first client render agree. */
+	const [redirect, setRedirect] = useState(undefined);
+	useEffect(() => { setRedirect(redirectFromLocation()); }, []);
 
 
 
@@ -42,7 +47,7 @@ const page = () => {
 					<Register />
 
 					<div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 border-t border-gray-100 pt-4 text-sm">
-						<Link href="/login" className="font-medium text-brand transition-colors hover:text-brand-600 hover:underline">
+						<Link href={withRedirect("/login", redirect)} className="font-medium text-brand transition-colors hover:text-brand-600 hover:underline">
 							Already have an account? Login
 						</Link>
 						<Link href="/" className="text-gray-500 transition-colors hover:text-gray-900 hover:underline">

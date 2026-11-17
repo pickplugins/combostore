@@ -3,6 +3,7 @@ import React from "react";
 import { tablerIcon } from "@/components/icons/TablerIcon";
 import Link from "next/link";
 import { elementCssClasses } from "../ElementsDefinition";
+import ButtonDiv from "./ButtonDiv";
 
 /*
 	The button's href, or null for a button that does not link anywhere.
@@ -25,8 +26,9 @@ export function buttonHref(options) {
 
 /*
 	The button's markup, shared with the builder preview (Button.jsx) so the
-	two cannot drift apart: a Next <Link> when it links somewhere, a <div>
-	otherwise, holding the optional icon and the label. Every class comes from
+	two cannot drift apart: a Next <Link> when it links somewhere, otherwise a
+	<div> with role="button" that Tab reaches and Enter / Space press
+	(ButtonDiv.jsx), holding the optional icon and the label. Every class comes from
 	`cls`. `rootProps` are spread onto the root, which is how the builder adds
 	its click and drag handlers. options.target '_blank' opens the link in a
 	new tab; it was saved by templates but never applied.
@@ -88,10 +90,11 @@ export function ButtonMarkup({ cls, id, type, options, rootClassName = '', rootP
 		);
 	}
 
+	/* No link: a <div> that keyboards can reach and press (ButtonDiv.jsx). */
 	return (
-		<div id={id} type={type} className={className} {...rootProps}>
+		<ButtonDiv id={id} type={type} className={className} aria-label={ariaLabel} {...rootProps}>
 			{content}
-		</div>
+		</ButtonDiv>
 	);
 }
 

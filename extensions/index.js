@@ -14,22 +14,14 @@
 
 import { createRegistry } from "./registry";
 
-import loyaltyPoints from "./loyalty-points/extension.config";
 import discountRules from "./discount-rules/extension.config";
-import requestQuote from "./request-quote/extension.config";
-import currencySwitcher from "./currency-switcher/extension.config";
-import countdownTimer from "./countdown-timer/extension.config";
 import fraudChecker from "./fraud-checker/extension.config";
 
 /* Declaration order decides precedence when two extensions want the same nav
-   value, route slug or element type: the first one keeps it and the clash is
-   reported. */
+	 value, route slug or element type: the first one keeps it and the clash is
+	 reported. */
 const MANIFESTS = [
-	loyaltyPoints,
 	discountRules,
-	requestQuote,
-	currencySwitcher,
-	countdownTimer,
 	fraudChecker,
 ];
 

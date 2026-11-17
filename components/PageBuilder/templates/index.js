@@ -22,7 +22,7 @@
 // import GhorerBazar from './GhorerBazar';
 import BikeParts from './BikeParts';
 // import OrganicFruits from './OrganicFruits';
-// import ComboStore from './ComboStore';
+import ComboStore from './ComboStore';
 // import AuraGem from './AuraGem';
 import WonderJoy from './WonderJoy';
 import Nexora from './Nexora';
@@ -57,6 +57,6 @@ import Handi from './Handi';
 // import EhansMart from './EhansMart';
 // import EhansMartV2 from './EhansMartV2';
 
-var templates = [...BikeParts, ...WonderJoy, ...Nexora, ...Noorani, ...Aanchal, ...Aurelle, ...Glowbie, ...Fashora, ...Voltix, ...Haatbox, ...Kaath, ...Oushodh, ...Pathok, ...Tuntuni, ...Kodom, ...Ghori, ...Sugondhi, ...Jhola, ...Muthofon, ...Upohar, ...Nolen, ...Dutipata, ...Adda, ...Pauruti, ...Ashbab, ...Posha, ...Khelaghor, ...Dolna, ...Juta, ...Handi, ...Angina];
+var templates = [...ComboStore, ...BikeParts, ...WonderJoy, ...Nexora, ...Noorani, ...Aanchal, ...Aurelle, ...Glowbie, ...Fashora, ...Voltix, ...Haatbox, ...Kaath, ...Oushodh, ...Pathok, ...Tuntuni, ...Kodom, ...Ghori, ...Sugondhi, ...Jhola, ...Muthofon, ...Upohar, ...Nolen, ...Dutipata, ...Adda, ...Pauruti, ...Ashbab, ...Posha, ...Khelaghor, ...Dolna, ...Juta, ...Handi, ...Angina];
 
 export default templates;

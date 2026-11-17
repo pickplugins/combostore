@@ -18,34 +18,41 @@
 import { useEffect, useMemo } from "react";
 
 import { useCounterStore } from "../../../store/useCounterStore";
-import { useDiscountRulesStore } from "./store";
+import { useDiscountRulesStore, parseRules, parseOptions, SETTINGS_KEY, SETTINGS_OPTIONS_KEY } from "./store";
 import { buildContext, evaluateRules, emptyResult } from "./engine";
 
 export function useCartDiscounts() {
 
 	const cartItems = useCounterStore((s) => s.cartItems);
 	const shippingCost = useCounterStore((s) => s.shippingCost);
-	const shippingMethod = useCounterStore((s) => s.shippingMethod);
+	const cartShippingMethod = useCounterStore((s) => s.shippingMethod);
+	const checkoutShippingMethod = useCounterStore((s) => s.checkoutShippingMethod);
 	const coupons = useCounterStore((s) => s.coupons);
 	const userDataX = useCounterStore((s) => s.userDataX);
 	const settings = useCounterStore((s) => s.settings);
 	const setcartDiscount = useCounterStore((s) => s.setcartDiscount);
 
-	const rules = useDiscountRulesStore((s) => s.rules);
-	const options = useDiscountRulesStore((s) => s.options);
-	const hydrated = useDiscountRulesStore((s) => s.hydrated);
-	const hydrateFromSettings = useDiscountRulesStore((s) => s.hydrateFromSettings);
+	/*
+		The published rules, read straight from the store settings - never from
+		the editor's state in useDiscountRulesStore, and never from the local
+		mirror. The editor shares that store, so reading it here priced the cart
+		with whatever was on the Discount Rules screen, unsaved edits included,
+		and with no `discountRules` key saved yet it fell back to localStorage -
+		rules a shopper could write into their own browser.
+
+		Settings arrive asynchronously. Until they do there are no rules and the
+		cart shows no discount, which is the right failing side.
+	*/
+	const hydrated = Boolean(settings);
+	const rules = useMemo(() => parseRules(settings?.[SETTINGS_KEY]), [settings]);
+	const options = useMemo(() => parseOptions(settings?.[SETTINGS_OPTIONS_KEY]), [settings]);
 
 	/*
-		Rules come from the settings blob, which arrives asynchronously. Until
-		it does there are no rules and the cart shows no discount, which is the
-		right failing side: inventing a discount from a stale local copy and
-		then withdrawing it once the server answers is worse than showing it a
-		moment late.
+		The method chosen at checkout once there is one, else the cart drawer's
+		own free / normal / express switch. A rule's methods match either the
+		checkout method's id or its name.
 	*/
-	useEffect(() => {
-		if (settings) hydrateFromSettings(settings);
-	}, [settings, hydrateFromSettings]);
+	const shippingMethod = checkoutShippingMethod ?? cartShippingMethod;
 
 	/*
 		`cartItems` is replaced on every change, so the memo re-runs when it

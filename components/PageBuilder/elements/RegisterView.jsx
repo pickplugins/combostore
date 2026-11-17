@@ -5,6 +5,8 @@ import { useState } from "react";
 import { IconAlertCircle, IconCircleCheck, IconEye, IconEyeOff, IconLock, IconMail, IconUser, IconUserPlus } from "@tabler/icons-react";
 import Spinner from "../../../components/Spinner";
 import { useAuth } from "../../../components/auth-context";
+import { redirectFromLocation } from "../../../lib/authRedirect";
+import ResendVerificationButton from "../../../components/ResendVerificationButton";
 import { elementCssClasses } from "../ElementsDefinition";
 
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
@@ -34,7 +36,7 @@ const RegisterView = (props) => {
 	var type = props?.type;
 	var id = props?.id;
 
-	const { handleLogin } = useAuth();
+	const { handleLogin, resendUrl } = useAuth();
 
 	const [form, setForm] = useState({ name: "", email: "", password: "" });
 	const [showPassword, setShowPassword] = useState(false);
@@ -80,7 +82,20 @@ const RegisterView = (props) => {
 				}
 
 				setResult({ error: false, messages: ["Your account is ready. Signing you in…"] });
-				handleLogin(form.email.trim(), form.password, null);
+
+				/*
+					Stays on this page unless it was opened with `?redirect=`
+					(lib/authRedirect.js, e.g. from the checkout's sign-in notice).
+					A store that makes new accounts verify their email refuses this
+					sign-in; it used to fail silently, leaving "Signing you in…" on
+					screen for good. Now the shopper is told what to do next.
+				*/
+				handleLogin(form.email.trim(), form.password, redirectFromLocation() ?? null).then((signedIn) => {
+					if (!signedIn) {
+						/* `resend`: show the resend button (auth-context's resendUrl, set when the refusal was an unverified email). */
+						setResult({ error: false, resend: true, messages: ["Your account is ready. If we sent you a verification email, confirm it first - then sign in."] });
+					}
+				});
 			})
 			.catch(() => {
 				setResult({ error: true, messages: ["We couldn't create your account just now. Please try again."] });
@@ -111,6 +126,7 @@ const RegisterView = (props) => {
 							{result.messages.map((message, index) => (
 								<span key={index} dangerouslySetInnerHTML={{ __html: message }} />
 							))}
+							{result.resend && <ResendVerificationButton key={resendUrl} url={resendUrl} />}
 						</div>
 					</div>
 				)}

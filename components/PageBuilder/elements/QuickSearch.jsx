@@ -578,7 +578,7 @@ const QuickSearch = (props) => {
 
 
 
-												addCartItems({ id: product?.id, title: product?.title, quantity: quantity, price: product?.price, regular_price: product?.regular_price, sale_price: product?.sale_price, priceHtml: product?.price_html, thumbnail: product?.post_thumbnail?.src })
+												addCartItems({ id: product?.id, title: product?.title, quantity: quantity, price: product?.price, regular_price: product?.regular_price, sale_price: product?.sale_price, priceHtml: product?.price_html, thumbnail: product?.post_thumbnail?.src, categories: product?.categories, tags: product?.tags })
 
 
 
@@ -592,7 +592,7 @@ const QuickSearch = (props) => {
 												var quantity = - 1;
 
 
-												addCartItems({ id: product?.id, title: product?.title, quantity: quantity, price: product?.price, regular_price: product?.regular_price, sale_price: product?.sale_price, priceHtml: product?.price_html, thumbnail: product?.post_thumbnail?.src })
+												addCartItems({ id: product?.id, title: product?.title, quantity: quantity, price: product?.price, regular_price: product?.regular_price, sale_price: product?.sale_price, priceHtml: product?.price_html, thumbnail: product?.post_thumbnail?.src, categories: product?.categories, tags: product?.tags })
 
 
 

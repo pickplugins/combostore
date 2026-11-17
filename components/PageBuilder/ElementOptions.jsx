@@ -59,6 +59,12 @@ import ProductCategoriesOptions from './elements/ProductCategoriesOptions';
 import ProductTagsOptions from './elements/ProductTagsOptions';
 import ProductBrandsOptions from './elements/ProductBrandsOptions';
 import ProductSkuOptions from './elements/ProductSkuOptions';
+import ProductMoqOptions from './elements/ProductMoqOptions';
+import OrderTrackingOptions from './elements/OrderTrackingOptions';
+import ProductDimensionsOptions from './elements/ProductDimensionsOptions';
+import ProductSizeGuideOptions from './elements/ProductSizeGuideOptions';
+import ProductFaqOptions from './elements/ProductFaqOptions';
+import CountdownTimerOptions from './elements/CountdownTimerOptions';
 import ProductUpsellsOptions from './elements/ProductUpsellsOptions';
 import ProductCrosssellsOptions from './elements/ProductCrosssellsOptions';
 import ProductGalleryOptions from './elements/ProductGalleryOptions';
@@ -231,6 +237,24 @@ const ElementOptions = (props) => {
 			)}
 			{selectedBlock?.type == 'productSku' && (
 				<ProductSkuOptions {...selectedBlock} updateBlock={updateBlock} />
+			)}
+			{selectedBlock?.type == 'productMoq' && (
+				<ProductMoqOptions {...selectedBlock} updateBlock={updateBlock} />
+			)}
+			{selectedBlock?.type == 'orderTracking' && (
+				<OrderTrackingOptions {...selectedBlock} updateBlock={updateBlock} />
+			)}
+			{selectedBlock?.type == 'productDimensions' && (
+				<ProductDimensionsOptions {...selectedBlock} updateBlock={updateBlock} />
+			)}
+			{selectedBlock?.type == 'productSizeGuide' && (
+				<ProductSizeGuideOptions {...selectedBlock} updateBlock={updateBlock} />
+			)}
+			{selectedBlock?.type == 'productFaq' && (
+				<ProductFaqOptions {...selectedBlock} updateBlock={updateBlock} />
+			)}
+			{selectedBlock?.type == 'countdownTimer' && (
+				<CountdownTimerOptions {...selectedBlock} updateBlock={updateBlock} />
 			)}
 			{selectedBlock?.type == 'productUpsells' && (
 				<ProductUpsellsOptions {...selectedBlock} updateBlock={updateBlock} />

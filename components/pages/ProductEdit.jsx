@@ -16,6 +16,7 @@ import ProductsVariations from "../../components/shop-elements/ProductsVariation
 import ProductsTemplatePicker from "../../components/shop-elements/ProductsTemplatePicker";
 import ProductsPicker from "../../components/shop-elements/ProductsPicker";
 import GalleryPicker from "../../components/shop-elements/GalleryPicker";
+import SizeGuideEditor from "../../components/shop-elements/SizeGuideEditor";
 import MediaThumb from "../../components/shop-elements/MediaThumb";
 import TermsPicker from "../../components/shop-elements/TermsPicker";
 import TagsPicker from "../../components/shop-elements/TagsPicker";
@@ -168,7 +169,17 @@ const ProductEdit = ({ id }) => {
 
 
 
-    var postData = JSON.stringify(currentObject);
+    /* MOQ: an emptied or invalid field is sent as 1 - the server's intval('') would store 0. */
+    var toMoq = (value) => {
+      var n = parseInt(value, 10);
+      return Number.isFinite(n) && n >= 1 ? n : 1;
+    };
+
+    var postData = JSON.stringify({
+      ...currentObject,
+      moq: toMoq(currentObject?.moq),
+      ...(Array.isArray(currentObject?.variations) ? { variations: currentObject.variations.map(v => ({ ...v, moq: toMoq(v?.moq) })) } : {}),
+    });
 
     console.log(postData);
 
@@ -264,41 +275,18 @@ const ProductEdit = ({ id }) => {
     // { label: "Compliance", value: 'compliance ' },
     // { label: "Warehouse", value: 'warehouse' },
     { label: "FAQ", value: 'faq' },
+    { label: "Size Guide", value: 'size_guide' },
     { label: "License", value: 'license' },
     { label: "Subscription", value: 'subscription' },
     // { label: "Unit & Quantity", value: 'unit_quantity' },
     { label: "Upsells & Cross-sells", value: 'upsellsCrosssells' },
     { label: "Related Products", value: 'related_products' },
     { label: "Product Templates", value: 'productTemplates' },
+    { label: "SEO Meta Data", value: 'seo' },
 
   ]
 
 
-  var weightUnits = [
-    { label: "Cooose", value: "" },
-
-    { label: "Gram (g)", value: "g" },
-    { label: "Kilogram (kg)", value: "kg" },
-    { label: "Milligram (mg)", value: "mg" },
-    { label: "Metric Ton (t)", value: "t" },
-    { label: "Pound (lb)", value: "lb" },
-    { label: "Ounce (oz)", value: "oz" },
-    { label: "Stone (st)", value: "st" },
-    { label: "Microgram (mcg)", value: "mcg" },
-    { label: "Carat (ct)", value: "ct" },
-    { label: "Grain (gr)", value: "gr" }
-  ]
-  var lengthUnits = [
-    { label: "Cooose", value: "" },
-    { label: "Millimeter (mm)", value: "mm" },
-    { label: "Centimeter (cm)", value: "cm" },
-    { label: "Meter (m)", value: "m" },
-    { label: "Kilometer (km)", value: "km" },
-    { label: "Inch (in)", value: "in" },
-    { label: "Foot (ft)", value: "ft" },
-    { label: "Yard (yd)", value: "yd" },
-    { label: "Mile (mi)", value: "mi" }
-  ]
 
   /* Card shell for the WidgetWrapper sections, matching the settings and
      editor screens. `form-card` also opts the fields inside into the shared
@@ -1339,6 +1327,143 @@ const ProductEdit = ({ id }) => {
                       </div>
                     )}
 
+                    <div className="flex flex-col gap-1.5">
+                      <label htmlFor="product-moq" className="block text-sm font-medium text-gray-700">
+                        {("Minimum Order Quantity (MOQ)")}
+                      </label>
+                      <input
+                        id="product-moq"
+                        type="number"
+                        min="1"
+                        step="1"
+                        placeholder="1"
+                        className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 w-full rounded-lg bg-white px-3 py-2 text-sm"
+                        value={currentObject?.moq ?? ''}
+                        onChange={(ev) => {
+                          setcurrentObject({ ...currentObject, moq: ev.target.value });
+                        }}
+                      />
+                      <p className="text-xs text-gray-500">The fewest units a customer can order. Leave empty for 1.</p>
+                    </div>
+
+
+
+
+                  </div>
+
+
+                </WidgetWrapper>
+
+              </>
+
+            )}
+            {currentObject?.addons?.includes('seo') && (
+              <>
+
+                <WidgetWrapper className={CARD_CLASSES} collapsible={true} title="License Management">
+                  <div className="p-4 flex flex-col gap-3 ">
+
+                    <div className="flex flex-col gap-1.5">
+
+
+                      <div className="flex gap-2 cursor-pointer items-center">
+
+                        <label htmlFor="stockStatusInstock" className="flex gap-2 cursor-pointer">
+
+                          <input
+                            id="stockStatusInstock"
+                            type="checkbox"
+                            className=""
+                            checked={currentObject?.seo?.enable ? true : false}
+                            onChange={(ev) => {
+
+                              var seo = currentObject?.seo ? currentObject.seo : {};
+                              seo.enable = !seo.enable
+
+                              setcurrentObject({ ...currentObject, seo: seo });
+
+
+                            }}
+                          />
+                          <span>Enable License</span>
+                        </label>
+
+                      </div>
+
+
+                    </div>
+
+                    {currentObject?.seo?.enable && (
+                      <>
+
+                        <div className="flex flex-col gap-1.5">
+                          <label htmlFor="" className="block text-sm font-medium text-gray-700">
+                            {("License Limit Count?")}
+                          </label>
+                          <input
+                            type="number"
+                            className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 w-full rounded-lg bg-white px-3 py-2 text-sm"
+                            value={currentObject?.seo?.limit}
+                            onChange={(ev) => {
+                              var value = ev.target.value;
+
+                              setcurrentObject({ ...currentObject, seo: { ...currentObject.seo, limit: value } });
+
+
+                            }}
+                          />
+                        </div>
+
+
+                        <div className="flex flex-col gap-1.5">
+                          <label htmlFor="" className="block text-sm font-medium text-gray-700">
+                            {("License Interval?")}
+                          </label>
+                          <select name="" id="" className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 w-full rounded-lg bg-white px-3 py-2 text-sm mb-5"
+                            value={currentObject?.seo?.interval}
+                            onChange={(ev) => {
+                              var value = ev.target.value;
+
+                              setcurrentObject({ ...currentObject, seo: { ...currentObject.seo, interval: value } });
+                            }}
+                          >
+                            <option value="day">Day</option>
+                            <option value="week">Week</option>
+                            <option value="month">Month</option>
+                            <option value="year">Year</option>
+                          </select>
+                        </div>
+
+                        <div className="flex flex-col gap-1.5">
+                          <label htmlFor="" className="block text-sm font-medium text-gray-700">
+                            {("License Interval Count?")}
+                          </label>
+                          <input
+                            type="number"
+                            className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 w-full rounded-lg bg-white px-3 py-2 text-sm"
+                            value={currentObject?.seo?.interval_count}
+                            onChange={(ev) => {
+                              var value = ev.target.value;
+
+                              setcurrentObject({ ...currentObject, seo: { ...currentObject.seo, interval_count: value } });
+
+
+                            }}
+                          />
+                        </div>
+
+
+
+
+
+
+
+
+
+
+                      </>
+                    )}
+
 
 
 
@@ -1788,212 +1913,43 @@ const ProductEdit = ({ id }) => {
 
               <WidgetWrapper className={CARD_CLASSES} collapsible={true} title="Dimensions">
 
-                {JSON.stringify(currentObject?.weight)} sdfsd
-
                 <div className="p-4 flex  items-center gap-4">
 
                   <div className="w-1/2">
-                    <div className="flex flex-col gap-1.5">
-
-                      <div className="flex flex-col gap-1.5">
-                        <label htmlFor="" className="block text-sm font-medium text-gray-700">
-                          {("Weight")}
-                        </label>
-                        <div className="flex items-center gap-2 ">
-
-                          <input
-                            type="number"
-                            className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 w-full rounded-lg bg-white px-3 py-2 text-sm"
-                            value={currentObject?.weight?.value}
-                            onChange={(ev) => {
-                              var value = parseInt(ev.target.value);
-
-
-                              var weight = currentObject?.weight ? currentObject?.weight : {};
-                              weight.value = value
-
-
-                              setcurrentObject({ ...currentObject, weight: weight });
-
-
-
-                              // setcurrentObject({ ...currentObject, weight: weight });
-
-
-                            }}
-                          />
-
-                          <select name="" id="" className="!shadow-none !border !border-gray-300"
-                            value={currentObject?.weight?.unit}
-
-                            onChange={(ev) => {
-                              var value = ev.target.value;
-
-                              var weight = currentObject?.weight ? currentObject?.weight : {};
-                              weight.unit = value
-
-
-                              setcurrentObject({ ...currentObject, weight: weight });
-
-
-                            }}>
-                            {weightUnits.map(item => {
-
-                              return (
-                                <option key={item.value} value={item.value}>{item.label}</option>
-                              )
-                            })}
-                          </select>
-
-                        </div>
-                      </div>
-                      <div className="flex flex-col gap-1.5">
-                        <label htmlFor="" className="block text-sm font-medium text-gray-700">
-                          {("Length")}
-                        </label>
-                        <div className="flex items-center gap-2 ">
-
-                          <input
-                            type="number"
-                            className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 w-full rounded-lg bg-white px-3 py-2 text-sm"
-                            value={currentObject?.length?.value}
-                            onChange={(ev) => {
-                              var value = ev.target.value;
-
-
-                              var length = currentObject?.length ? currentObject?.length : {};
-                              length.value = value
-
-                              setcurrentObject({ ...currentObject, length: length });
-
-                            }}
-                          />
-
-                          <select name="" id="" className="!shadow-none !border !border-gray-300"
-                            value={currentObject?.length?.unit}
-
-                            onChange={(ev) => {
-                              var value = ev.target.value;
-
-                              var length = currentObject?.length ? currentObject?.length : {};
-                              length.unit = value
-
-                              setcurrentObject({ ...currentObject, length: length });
-
-                            }}>
-                            {lengthUnits.map(item => {
-
-                              return (
-                                <option key={item.value} value={item.value}>{item.label}</option>
-                              )
-                            })}
-                          </select>
-
-                        </div>
-                      </div>
-                      <div className="flex flex-col gap-1.5">
-                        <label htmlFor="" className="block text-sm font-medium text-gray-700">
-                          {("Width")}
-                        </label>
-                        <div className="flex items-center gap-2 ">
-
-                          <input
-                            type="number"
-                            className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 w-full rounded-lg bg-white px-3 py-2 text-sm"
-                            value={currentObject?.width?.value}
-                            onChange={(ev) => {
-                              var value = ev.target.value;
-
-
-                              var width = currentObject?.width ? currentObject?.width : {};
-                              width.value = value
-
-                              setcurrentObject({ ...currentObject, width: width });
-
-
-                            }}
-                          />
-
-                          <select name="" id="" className="!shadow-none !border !border-gray-300"
-                            value={currentObject?.width?.unit}
-
-                            onChange={(ev) => {
-                              var value = ev.target.value;
-
-
-
-                              var width = currentObject?.width ? currentObject?.width : {};
-                              width.unit = value
-
-                              setcurrentObject({ ...currentObject, width: width });
-
-
-                            }}>
-                            {lengthUnits.map(item => {
-
-                              return (
-                                <option key={item.value} value={item.value}>{item.label}</option>
-                              )
-                            })}
-                          </select>
-
-                        </div>
-                      </div>
-                      <div className="flex flex-col gap-1.5">
-                        <label htmlFor="" className="block text-sm font-medium text-gray-700">
-                          {("Height")}
-                        </label>
-                        <div className="flex items-center gap-2 ">
-
-                          <input
-                            type="number"
-                            className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 w-full rounded-lg bg-white px-3 py-2 text-sm"
-                            value={currentObject?.height?.value}
-                            onChange={(ev) => {
-                              var value = ev.target.value;
-
-                              var height = currentObject?.height ? currentObject?.height : {};
-                              height.value = value
-
-                              setcurrentObject({ ...currentObject, height: height });
-
-                            }}
-                          />
-
-                          <select name="" id="" className="!shadow-none !border !border-gray-300"
-                            value={currentObject?.height?.unit}
-
-                            onChange={(ev) => {
-                              var value = ev.target.value;
-
-                              var height = currentObject?.height ? currentObject?.height : {};
-                              height.unit = value
-
-                              setcurrentObject({ ...currentObject, height: height });
-
-
-                            }}>
-                            {lengthUnits.map(item => {
-
-                              return (
-                                <option key={item.value} value={item.value}>{item.label}</option>
-                              )
-                            })}
-                          </select>
-
-                        </div>
-                      </div>
-
-
-
-
-
-
-
-
-
+                    <div className="flex flex-col gap-3">
+                      {/*
+                        Plain numbers, as the weight/length/width/height columns
+                        (decimal) hold. The fields used to save { value, unit }
+                        objects - the server's floatval() turned them into 1 and the
+                        unit was lost - and typing into a loaded product threw, as
+                        its weight is a string. Units are set on the Product
+                        Dimensions element.
+                      */}
+                      {[['weight', 'Weight'], ['length', 'Length'], ['width', 'Width'], ['height', 'Height']].map(([key, label]) => {
+                        var raw = currentObject?.[key];
+                        var value = raw && typeof raw === 'object' ? (raw.value ?? '') : (raw ?? '');
+                        return (
+                          <div key={key} className="flex flex-col gap-1.5">
+                            <label htmlFor={`product-${key}`} className="block text-sm font-medium text-gray-700">
+                              {label}
+                            </label>
+                            <input
+                              id={`product-${key}`}
+                              type="number"
+                              min="0"
+                              step="any"
+                              className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 w-full rounded-lg bg-white px-3 py-2 text-sm"
+                              value={parseFloat(value) === 0 ? '' : value}
+                              placeholder="0"
+                              onChange={(ev) => {
+                                setcurrentObject({ ...currentObject, [key]: ev.target.value });
+                              }}
+                            />
+                          </div>
+                        );
+                      })}
+                      <p className="text-xs text-gray-500">Units (e.g. kg, cm) are set on the Product Dimensions element in the page builder.</p>
                     </div>
-
                   </div>
                   <div className="w-1/2 text-center">
 
@@ -2266,6 +2222,19 @@ const ProductEdit = ({ id }) => {
 
 
 
+
+            )}
+
+
+
+            {currentObject?.addons?.includes('size_guide') && (
+
+              <WidgetWrapper className={CARD_CLASSES} collapsible={true} title="Size Guide">
+                <SizeGuideEditor
+                  value={currentObject?.size_guide}
+                  onChange={size_guide => setcurrentObject(prev => ({ ...prev, size_guide }))}
+                />
+              </WidgetWrapper>
 
             )}
 

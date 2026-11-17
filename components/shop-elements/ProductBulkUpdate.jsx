@@ -56,32 +56,6 @@ const addonsList = [
 	{ label: "Related Products", value: 'related_products' },
 ];
 
-const weightUnits = [
-	{ label: "Unit", value: "" },
-	{ label: "g", value: "g" },
-	{ label: "kg", value: "kg" },
-	{ label: "mg", value: "mg" },
-	{ label: "t", value: "t" },
-	{ label: "lb", value: "lb" },
-	{ label: "oz", value: "oz" },
-	{ label: "st", value: "st" },
-	{ label: "mcg", value: "mcg" },
-	{ label: "ct", value: "ct" },
-	{ label: "gr", value: "gr" }
-];
-
-const lengthUnits = [
-	{ label: "Unit", value: "" },
-	{ label: "mm", value: "mm" },
-	{ label: "cm", value: "cm" },
-	{ label: "m", value: "m" },
-	{ label: "km", value: "km" },
-	{ label: "in", value: "in" },
-	{ label: "ft", value: "ft" },
-	{ label: "yd", value: "yd" },
-	{ label: "mi", value: "mi" }
-];
-
 function toSlug(text) {
 	return text
 		.toLowerCase()
@@ -145,14 +119,10 @@ const PickedList = ({ items, onTitleChange, onRemove, emptyText }) => {
 	);
 };
 
-const DimensionInput = ({ label, value, unit, units, onValue, onUnit }) => (
+/* A plain number, as the dimension columns (decimal) hold; units are set on the Product Dimensions element. */
+const DimensionInput = ({ label, value, onValue }) => (
 	<Field label={label}>
-		<div className="flex items-stretch gap-2">
-			<input type="number" className={FIELD} value={value ?? ""} onChange={ev => onValue(ev.target.value)} />
-			<select className={`${FIELD} !w-24 shrink-0`} value={unit ?? ""} onChange={ev => onUnit(ev.target.value)}>
-				{units.map(u => <option key={u.value} value={u.value}>{u.label}</option>)}
-			</select>
-		</div>
+		<input type="number" min="0" step="any" className={FIELD} value={value && typeof value === "object" ? (value.value ?? "") : (value ?? "")} onChange={ev => onValue(ev.target.value)} />
 	</Field>
 );
 
@@ -220,11 +190,9 @@ const ProductBulkUpdate = (props) => {
 	const removeAt = (key, index) => updateList(key, list => list.filter((_, i) => i !== index));
 	const patchAt = (key, index, patch) => updateList(key, list => list.map((it, i) => (i === index ? { ...it, ...patch } : it)));
 
-	function setDimension(key, patch) {
-		setcurrentObject(prev => {
-			const current = prev?.[key] && typeof prev[key] === "object" ? prev[key] : {};
-			return { ...prev, [key]: { ...current, ...patch } };
-		});
+	/* Dimensions are plain numbers: { value, unit } objects were saved by the server's floatval() as 1. */
+	function setDimension(key, value) {
+		setcurrentObject(prev => ({ ...prev, [key]: value }));
 	}
 
 	function toggleAddon(value) {
@@ -437,22 +405,10 @@ const ProductBulkUpdate = (props) => {
 					{hasAddon('dimensions') && (
 						<Card title="Dimensions">
 							<div className="grid grid-cols-1 gap-4 @xl:grid-cols-2">
-								<DimensionInput label="Weight" units={weightUnits}
-									value={currentObject?.weight?.value} unit={currentObject?.weight?.unit}
-									onValue={v => setDimension('weight', { value: parseFloat(v) })}
-									onUnit={u => setDimension('weight', { unit: u })} />
-								<DimensionInput label="Length" units={lengthUnits}
-									value={currentObject?.length?.value} unit={currentObject?.length?.unit}
-									onValue={v => setDimension('length', { value: v })}
-									onUnit={u => setDimension('length', { unit: u })} />
-								<DimensionInput label="Width" units={lengthUnits}
-									value={currentObject?.width?.value} unit={currentObject?.width?.unit}
-									onValue={v => setDimension('width', { value: v })}
-									onUnit={u => setDimension('width', { unit: u })} />
-								<DimensionInput label="Height" units={lengthUnits}
-									value={currentObject?.height?.value} unit={currentObject?.height?.unit}
-									onValue={v => setDimension('height', { value: v })}
-									onUnit={u => setDimension('height', { unit: u })} />
+								<DimensionInput label="Weight" value={currentObject?.weight} onValue={v => setDimension('weight', v)} />
+								<DimensionInput label="Length" value={currentObject?.length} onValue={v => setDimension('length', v)} />
+								<DimensionInput label="Width" value={currentObject?.width} onValue={v => setDimension('width', v)} />
+								<DimensionInput label="Height" value={currentObject?.height} onValue={v => setDimension('height', v)} />
 							</div>
 						</Card>
 					)}
