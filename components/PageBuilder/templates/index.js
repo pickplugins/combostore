@@ -54,9 +54,10 @@ import Angina from './Angina';
 import Dolna from './Dolna';
 import Juta from './Juta';
 import Handi from './Handi';
+import Shonamoni from './Shonamoni';
 // import EhansMart from './EhansMart';
 // import EhansMartV2 from './EhansMartV2';
 
-var templates = [...ComboStore, ...BikeParts, ...WonderJoy, ...Nexora, ...Noorani, ...Aanchal, ...Aurelle, ...Glowbie, ...Fashora, ...Voltix, ...Haatbox, ...Kaath, ...Oushodh, ...Pathok, ...Tuntuni, ...Kodom, ...Ghori, ...Sugondhi, ...Jhola, ...Muthofon, ...Upohar, ...Nolen, ...Dutipata, ...Adda, ...Pauruti, ...Ashbab, ...Posha, ...Khelaghor, ...Dolna, ...Juta, ...Handi, ...Angina];
+var templates = [...ComboStore, ...BikeParts, ...WonderJoy, ...Nexora, ...Noorani, ...Aanchal, ...Aurelle, ...Glowbie, ...Fashora, ...Voltix, ...Haatbox, ...Kaath, ...Oushodh, ...Pathok, ...Tuntuni, ...Kodom, ...Ghori, ...Sugondhi, ...Jhola, ...Muthofon, ...Upohar, ...Nolen, ...Dutipata, ...Adda, ...Pauruti, ...Ashbab, ...Posha, ...Khelaghor, ...Dolna, ...Juta, ...Handi, ...Angina, ...Shonamoni];
 
 export default templates;
