@@ -52,6 +52,10 @@ const TermsSliderView = (props) => {
 
 	return (
 		<TermsSliderMarkup cls={cls} id={props?.id} index={index} type={props?.type} splideOptions={termsSliderSplideOptions(props?.options, cls)}>
+
+			{JSON.stringify(query)}
+
+
 			<TermsSliderProvider value={contextValue}>
 				{Array.isArray(children) && children.map((child, indexZ) => (
 					<BlockRender index={`${index}${indexZ}`} key={child.id} block={child} />

@@ -13,6 +13,15 @@ import TaxTermsQuery from '../../components/TaxTermsQuery';
 
 
 
+/* The orderby values WordPress get_terms accepts that are worth offering. */
+const termOrderby = [
+  { value: 'name', label: 'Name' },
+  { value: 'slug', label: 'Slug' },
+  { value: 'count', label: 'Product count' },
+  { value: 'term_id', label: 'Term ID' },
+  { value: 'parent', label: 'Parent' },
+];
+
 const TermsQueryPrams = (props) => {
 
   const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
@@ -196,14 +205,14 @@ const TermsQueryPrams = (props) => {
     },
 
     order: {
-      value: "",
+      value: "ASC",
       multiple: false,
       id: "order",
       label: "Order",
       description: "Post query order",
     },
     orderby: {
-      value: [],
+      value: "name",
       multiple: false,
       id: "orderby",
       label: "Orderby",
@@ -253,6 +262,14 @@ const TermsQueryPrams = (props) => {
       label: "Posts Per Page",
       description: "Number of post to show per page",
     },
+
+    paged: {
+      value: false,
+      multiple: false,
+      id: "paged",
+      label: "Paged",
+      description: "paged query?",
+    },
     hierarchical: {
       value: false,
       multiple: false,
@@ -281,7 +298,7 @@ const TermsQueryPrams = (props) => {
       <div className="flex justify-between items-center gap-2">
         <label htmlFor="" className="text-md font-medium text-gray-600">Query Prams</label>
         <div>
-          <DropDown allowReset={true} multiple={false} value={''} position="right" options={queryArgs} label={`Choose`} labelClass={'inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-2 py-1 text-xs font-medium text-gray-600 cursor-pointer transition-colors hover:border-brand/40 hover:bg-brand/5 hover:text-brand-700 w-fit'} onOptionsChoose={(args) => {
+          <DropDown allowReset={true} multiple={false} value={''} position="right" options={Object.fromEntries(Object.entries(queryArgs).filter(([argKey]) => !(argKey in queryPrams)))} label={`Choose`} labelClass={'inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-2 py-1 text-xs font-medium text-gray-600 cursor-pointer transition-colors hover:border-brand/40 hover:bg-brand/5 hover:text-brand-700 w-fit'} onOptionsChoose={(args) => {
             //setorderData({ ...orderData, payment_status: args?.value })
 
 
@@ -302,6 +319,7 @@ const TermsQueryPrams = (props) => {
 
 
 
+
       <div className="flex flex-col gap-4 text-xs my-5">
 
         {Object.entries(queryPrams)?.map((args, index) => {
@@ -310,8 +328,15 @@ const TermsQueryPrams = (props) => {
 
           const [key, value] = args;
 
+          /* Keys with no editor below (search, or one saved that this panel does not list) still show their name, so they can be removed. */
+          const hasEditor = ['number', 'paged', 'hide_empty', 'top_lavel', 'hierarchical', 'parent', 'slug', 'order', 'taxonomy', 'orderby'].includes(key);
 
-          return <div key={index} className="flex flex-col gap-2">
+
+          return <div key={key} className="flex items-start gap-2">
+
+            <div className="flex min-w-0 flex-1 flex-col gap-2">
+
+            {!hasEditor && <div>{queryArgs[key]?.label ?? key}</div>}
 
 
 
@@ -543,7 +568,7 @@ const TermsQueryPrams = (props) => {
               <div className="flex justify-between items-center">
                 <div>{queryArgs[key]?.label}</div>
 
-                <select name="" id="" className="bg-white" onChange={ev => {
+                <select name="" id="" className="bg-white" value={String(value ?? '')} onChange={ev => {
                   const { name, value } = ev.target;
 
 
@@ -558,6 +583,8 @@ const TermsQueryPrams = (props) => {
 
 
                 }}>
+                  {/* A saved value this list does not offer is shown as it is, rather than as ASC. */}
+                  {!['ASC', 'DESC'].includes(String(value ?? '')) && <option value={String(value ?? '')}>{String(value ?? '') || 'Default'}</option>}
                   <option value="ASC">ASC</option>
                   <option value="DESC">DESC</option>
                 </select>
@@ -628,7 +655,7 @@ const TermsQueryPrams = (props) => {
                 <div className="flex justify-between items-center">
                   <div>{queryArgs[key]?.label}</div>
 
-                  <select name="" id="" className="bg-white" onChange={ev => {
+                  <select name="" id="" className="bg-white" value={String(value ?? '')} onChange={ev => {
                     const { name, value } = ev.target;
 
 
@@ -643,8 +670,9 @@ const TermsQueryPrams = (props) => {
 
 
                   }}>
-                    <option value="date">Date</option>
-                    <option value="rand">Random</option>
+                    {/* Term orderings (get_terms), not post ones. A saved value not listed (e.g. an old "date") is shown as it is. */}
+                    {!termOrderby.some(o => o.value === String(value ?? '')) && <option value={String(value ?? '')}>{String(value ?? '') || 'Default'}</option>}
+                    {termOrderby.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                   </select>
 
 
@@ -652,10 +680,17 @@ const TermsQueryPrams = (props) => {
                 </div>
               )}
 
+            </div>
 
+            <button type="button" className="mt-0.5 cursor-pointer text-gray-400 hover:text-red-600" aria-label={`Remove ${queryArgs[key]?.label ?? key}`} onClick={() => {
 
+              var queryPramsX = { ...queryPrams }
 
+              delete queryPramsX[key]
 
+              setqueryPrams(queryPramsX)
+
+            }}><IconX size={14} /></button>
 
           </div>
 
