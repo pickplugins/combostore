@@ -29,6 +29,7 @@ import TermsGridPagination from './elements/TermsGridPagination';
 import TermsLoop from './elements/TermsLoop';
 import PostLoop from './elements/PostLoop';
 import PostGridPagination from './elements/PostGridPagination';
+import PostGridFilters from './elements/PostGridFilters';
 import PostSlider from './elements/PostSlider';
 
 import Image from './elements/Image';
@@ -87,11 +88,14 @@ import ProductTags from './elements/ProductTags';
 import ProductBrands from './elements/ProductBrands';
 import ProductSku from './elements/ProductSku';
 import ProductMoq from './elements/ProductMoq';
+import ProductDeal from './elements/ProductDeal';
 import OrderTracking from './elements/OrderTracking';
 import ProductDimensions from './elements/ProductDimensions';
 import ProductSizeGuide from './elements/ProductSizeGuide';
+import ProductWarranty from './elements/ProductWarranty';
 import ProductFaq from './elements/ProductFaq';
 import CountdownTimer from './elements/CountdownTimer';
+import NewsletterSignup from './elements/NewsletterSignup';
 import ProductUpsells from './elements/ProductUpsells';
 import ProductCrosssells from './elements/ProductCrosssells';
 import ProductGallery from './elements/ProductGallery';
@@ -184,6 +188,7 @@ const BlockPreview = (props) => {
 			postLoop: PostLoop,
 			termsLoop: TermsLoop,
 			postGridPagination: PostGridPagination,
+			postGridFilters: PostGridFilters,
 			postGrid: PostGrid,
 			termsGrid: TermsGrid,
 			termsGridPagination: TermsGridPagination,
@@ -254,11 +259,14 @@ const BlockPreview = (props) => {
 			productBrands: ProductBrands,
 			productSku: ProductSku,
 			productMoq: ProductMoq,
+			productDeal: ProductDeal,
 			orderTracking: OrderTracking,
 			productDimensions: ProductDimensions,
 			productSizeGuide: ProductSizeGuide,
+			productWarranty: ProductWarranty,
 			productFaq: ProductFaq,
 			countdownTimer: CountdownTimer,
+			newsletterSignup: NewsletterSignup,
 			productUpsells: ProductUpsells,
 			productCrosssells: ProductCrosssells,
 			productGallery: ProductGallery,

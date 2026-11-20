@@ -15,7 +15,7 @@
  * configured this before the move reads back unchanged, which is the point -
  * moving where the screen lives must not orphan what merchants already saved.
  *
- * Only `loginRequired` and `limitPhone` are enforced - by create_order on the
+ * Only `loginRequired`, `limitPhone` and `countryFilter` are enforced - by create_order on the
  * server, never in the browser. Every other check is `comingSoon: true`:
  * recorded, but nothing reads it yet, and the screen says so rather than
  * implying an order is being screened when it is not.
@@ -23,7 +23,7 @@
 
 /* Field types the screen knows how to draw. Adding a check means adding a row
 	 below; it should not mean touching the screen. */
-export const FIELD_TYPES = ['toggle', 'number', 'select'];
+export const FIELD_TYPES = ['toggle', 'number', 'select', 'countries'];
 
 /**
  * The services a mobile fraud score can be fetched from.
@@ -114,6 +114,23 @@ export const PROVIDERS = [
 		],
 	},
 	{
+		id: 'countryFilter',
+		label: 'Country filter',
+		/* Enforced by create_order on the server: the country comes from the
+			 ordering IP through geoPlugin (cached a day per IP). */
+		comingSoon: false,
+		summary: 'Accepts or refuses an order by the country of the IP address placing it.',
+		fields: [
+			{ key: 'enabled', type: 'toggle', label: 'Enable', help: 'Check the country of the IP address placing the order' },
+			{ key: 'allow_countries', type: 'countries', label: 'Allowed countries', help: 'Only accept orders from these countries. Leave empty to allow every country not blocked below.' },
+			{ key: 'block_countries', type: 'countries', label: 'Blocked countries', help: 'Refuse orders from these countries. A country in both lists is blocked.' },
+			{ key: 'unknown', type: 'select', label: 'Country unknown', help: 'When the country cannot be found (lookup failed, VPN or private address)', options: [
+				{ value: 'allow', label: 'Accept the order' },
+				{ value: 'block', label: 'Refuse the order' },
+			] },
+		],
+	},
+	{
 		id: 'mobilefraudcheck',
 		label: 'Mobile Fraud Checker',
 		comingSoon: false,
@@ -155,6 +172,7 @@ export function providerConfig(config, provider) {
 
 		if (field.type === 'toggle') return [field.key, Boolean(value)];
 		if (field.type === 'select') return [field.key, value ?? field.options?.[0]?.value ?? ''];
+		if (field.type === 'countries') return [field.key, Array.isArray(value) ? value : []];
 
 		return [field.key, value ?? ''];
 	}));

@@ -1433,6 +1433,18 @@ const Checkout = (props) => {
 								</div>
 							)}
 
+							{checkoutData.payment_method == "paddle" && (
+								<div className="flex flex-col gap-2">
+									{/* A still picture of PaddleCheckoutButton: the real one creates an order and leaves for Paddle. */}
+									<div className="w-full rounded-sm bg-[#2E3A59] px-4 py-3 text-center font-semibold text-white">
+										Pay {wrapCurrency(cartTotalPay)} with Paddle
+									</div>
+									<div className="text-xs text-gray-500">
+										You will be taken to Paddle&apos;s secure checkout to pay by card or PayPal, and brought back here afterwards.
+									</div>
+								</div>
+							)}
+
 							{checkoutData.payment_method == "aamarpay" && (
 								<div>
 

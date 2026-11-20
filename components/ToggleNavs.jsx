@@ -137,6 +137,12 @@ const ToggleNavs = (props) => {
                 {nav.label}
 
               </span>
+              {/* A count set by Sidebar (e.g. unread Messages conversations). */}
+              {nav.badge ? (
+                <span className="ml-auto inline-flex min-w-5 items-center justify-center rounded-full bg-rose-500 px-1.5 text-[11px] font-semibold leading-5 text-white" aria-label={`${nav.badge} unread`}>
+                  {nav.badge > 99 ? "99+" : nav.badge}
+                </span>
+              ) : null}
             </Link>
           );
         }

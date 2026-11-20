@@ -600,16 +600,21 @@ var layouts = [
                   "id": "ftr-news-cta-btn-col",
                   "type": "columnItem",
                   "options": {},
-                  "cssSelectors": { "*": { "classes": "" } },
+                  "cssSelectors": { "*": { "classes": "w-full sm:w-auto sm:min-w-[380px]" } },
                   "children": [
                     {
-                      "id": "ftr-news-cta-btn",
-                      "type": "button",
-                      "options": { "text": "Subscribe", "tag": "a", "url": "/newsletter", "icon": "IconMail", "iconSize": "18" },
+                      "id": "ftr-news-cta-form",
+                      "type": "newsletterSignup",
+                      "options": { "title": "", "subtitle": "", "buttonText": "Subscribe", "consentText": "", "tag": "footer" },
                       "cssSelectors": {
-                        "*": { "classes": "flex items-center gap-2 bg-amber-400 hover:bg-amber-300 text-neutral-900 font-semibold text-sm px-6 py-3 rounded-full cursor-pointer transition-colors" },
-                        "icon": { "classes": "" },
-                        "label": { "classes": "" }
+                        "*": { "classes": "flex w-full flex-col gap-2" },
+                        "form": { "classes": "flex flex-col gap-2 sm:flex-row" },
+                        "field-input": { "classes": "w-full min-w-0 flex-1 rounded-full border border-neutral-700 bg-neutral-800 px-5 py-3 text-sm text-white placeholder-neutral-400 outline-none focus:border-amber-400" },
+                        "submit-button": { "classes": "inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-full bg-amber-400 px-6 py-3 text-sm font-semibold text-neutral-900 transition-colors hover:bg-amber-300 disabled:opacity-60" },
+                        "error": { "classes": "text-sm text-red-300 flex items-start gap-2" },
+                        "success": { "classes": "flex items-center gap-3 text-amber-300" },
+                        "success-title": { "classes": "text-base font-semibold text-white" },
+                        "success-text": { "classes": "text-sm text-neutral-300" }
                       }
                     }
                   ]

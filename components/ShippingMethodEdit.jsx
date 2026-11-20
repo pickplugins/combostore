@@ -8,6 +8,8 @@ import { useCounterStore } from '../store/useCounterStore'
 import Spinner from '../components/Spinner';
 import WidgetWrapper from '../components/WidgetWrapper';
 import states from '../lib/States';
+import ShippingMethodClassCosts from '../components/ShippingMethodClassCosts';
+import { shippingClassRequest } from '../lib/shippingClasses';
 
 
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
@@ -73,6 +75,38 @@ const ShippingMethodEdit = (props) => {
 
   var [orderData, setorderData] = useState({ id: id, zone_id: zoneId, states: [], settings: {}, status: '' });
   var [statesList, setstatesList] = useState({});
+
+  /* Class costs (cstore_shipping_class_rates): { [class_id]: { cost, type } }, saved with the method. */
+  var [shippingClasses, setshippingClasses] = useState([]);
+  var [classRates, setclassRates] = useState({});
+  var [classRatesLoading, setclassRatesLoading] = useState(true);
+
+  useEffect(() => {
+    if (!token || !id) return;
+    setclassRatesLoading(true);
+    Promise.all([
+      shippingClassRequest('get_shipping_classes', token),
+      shippingClassRequest('get_shipping_class_rates', token, { method_id: id }),
+    ])
+      .then(([classesRes, ratesRes]) => {
+        setshippingClasses(classesRes.classes ?? []);
+        var map = {};
+        (ratesRes.rates ?? []).forEach(rate => { map[rate.class_id] = { cost: rate.cost, type: rate.type }; });
+        setclassRates(map);
+      })
+      .catch(error => addNotification({ type: 'error', title: 'Could not load class costs', content: error.message }))
+      .finally(() => setclassRatesLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token, id]);
+
+  function save_class_rates() {
+    if (classRatesLoading || !shippingClasses.length) return;
+    var rates = Object.entries(classRates)
+      .filter(([, rate]) => rate?.cost !== '' && rate?.cost != null)
+      .map(([class_id, rate]) => ({ class_id: Number(class_id), cost: rate.cost, type: rate.type || 'fixed' }));
+    shippingClassRequest('save_shipping_class_rates', token, { method_id: id, rates })
+      .catch(error => addNotification({ type: 'error', title: 'Could not save class costs', content: error.message }));
+  }
 
 
 
@@ -283,6 +317,8 @@ const ShippingMethodEdit = (props) => {
 
             onClick={ev => {
               update_shipping_method()
+              /* Their own route, so they save even when the method itself is unchanged. */
+              save_class_rates()
             }}
           >{("Update")}</div>
 
@@ -387,6 +423,17 @@ const ShippingMethodEdit = (props) => {
 
         </div>
 
+      </WidgetWrapper>
+
+
+      <WidgetWrapper title="Class costs">
+        <ShippingMethodClassCosts
+          classes={shippingClasses}
+          rates={classRates}
+          onChange={setclassRates}
+          methodType={orderData?.type}
+          loading={classRatesLoading}
+        />
       </WidgetWrapper>
 
 

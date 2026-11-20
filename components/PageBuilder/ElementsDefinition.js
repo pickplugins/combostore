@@ -2257,7 +2257,8 @@ const elements = [
 			],
 			canContain: [
 				"postLoop",
-				"postGridPagination"
+				"postGridPagination",
+				"postGridFilters"
 			]
 		},
 		/*
@@ -2376,6 +2377,86 @@ const elements = [
 			'ellipsis': { classes: 'px-1 text-gray-400' },
 			'current': { classes: 'w-16 rounded-md border border-gray-300 py-2 text-center' },
 			'total': { classes: 'text-sm text-gray-500' },
+		},
+		group: ['content'],
+		parent: ['postGrid'],
+	},
+
+	{
+		type: "postGridFilters",
+		label: "Post Grid Filters",
+		icon: null,
+		description: "Lets shoppers narrow the post grid it sits in by keyword, category and price range.",
+		ai: {
+			purpose: "Let shoppers filter a product or post grid by keyword, category and price.",
+			useFor: [
+				"Shop sidebar filters",
+				"Product search and filter bar",
+				"Category page filters",
+				"Blog search"
+			],
+			keywords: [
+				"filters",
+				"product filter",
+				"price filter",
+				"category filter",
+				"search filter",
+				"shop filters"
+			],
+			rules: [
+				"Place inside a postGrid, before or beside its postLoop.",
+				"Use one per grid.",
+				"The price field only shows for product grids."
+			],
+			parentRequired: "postGrid"
+		},
+		/*
+			fields: which filters, in order ('keyword', 'categories', 'price').
+			categoryDisplay 'checkbox' | 'chips' | 'select'; categoryParent lists
+			the categories under that slug ('' = all, or on a category page its
+			subcategories). applyOn 'change' | 'button'. syncUrl keeps them in the
+			page address (?q=, ?category=, ?min_price=, ?max_price=).
+			(filtersSettings in PostGridFiltersView.jsx fills what a block lacks.)
+		*/
+		options: {
+			fields: ['keyword', 'categories', 'price'],
+			keywordLabel: 'Search',
+			keywordPlaceholder: 'Search products…',
+			categoriesLabel: 'Categories',
+			categoryDisplay: 'checkbox',
+			categoryParent: '',
+			showSubcategories: true,
+			hideEmpty: true,
+			showCounts: true,
+			priceLabel: 'Price',
+			applyOn: 'change',
+			applyText: 'Apply',
+			resetText: 'Clear all',
+			syncUrl: true,
+		},
+		/* PostGridFiltersView (through its FiltersMarkup, which the builder's PostGridFilters.jsx also renders) reads these. */
+		cssSelectors: {
+			'*': { classes: 'flex flex-col gap-5 rounded-lg border border-gray-200 bg-white p-4 mb-6' },
+			'field': { classes: 'flex flex-col gap-2' },
+			'label': { classes: 'text-sm font-semibold text-gray-800' },
+			'keyword-wrap': { classes: 'relative' },
+			'keyword-icon': { classes: 'pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400' },
+			'keyword-input': { classes: 'w-full rounded-md border border-gray-300 py-2 pl-9 pr-3 text-sm focus:border-blue-600 focus:outline-none' },
+			'category-list': { classes: 'flex flex-col gap-1.5' },
+			'category-item': { classes: 'flex cursor-pointer items-center gap-2 text-sm text-gray-700' },
+			'category-checkbox': { classes: 'size-4 accent-blue-600' },
+			'category-count': { classes: 'ml-1 text-xs text-gray-400' },
+			'category-chips': { classes: 'flex flex-wrap gap-2' },
+			'category-chip': { classes: 'rounded-full border border-gray-300 bg-white px-3 py-1 text-sm text-gray-700 hover:border-blue-600' },
+			'category-chip-active': { classes: 'rounded-full border border-blue-600 bg-blue-600 px-3 py-1 text-sm text-white' },
+			'category-select': { classes: 'w-full rounded-md border border-gray-300 px-3 py-2 text-sm' },
+			'price-inputs': { classes: 'flex items-center gap-2' },
+			'price-input': { classes: 'w-full min-w-0 rounded-md border border-gray-300 px-3 py-2 text-sm' },
+			'price-separator': { classes: 'text-gray-400' },
+			'price-hint': { classes: 'text-xs text-gray-500' },
+			'actions': { classes: 'flex flex-wrap items-center gap-3' },
+			'apply-button': { classes: 'rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700' },
+			'reset-button': { classes: 'inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800' },
 		},
 		group: ['content'],
 		parent: ['postGrid'],
@@ -3267,6 +3348,9 @@ const elements = [
 			loadingLabel: 'Please wait.',
 			loginRequiredText: 'Please log in to leave a comment.',
 			successText: 'Thank you, your comment has been received.',
+			pendingText: 'Thank you! Your review will appear once it has been approved.',
+			closedText: 'Reviews are closed for this product.',
+			verifiedOnlyText: 'Only customers who bought this product can review it.',
 		},
 		/* CommentsFormView (through its CommentsFormMarkup, which the builder's CommentsForm.jsx also renders) reads these with elementCssClasses. */
 		cssSelectors: {
@@ -3281,6 +3365,7 @@ const elements = [
 			'textarea': { classes: 'w-full h-32 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 placeholder:text-gray-400 shadow-xs transition-colors hover:border-gray-400 focus:border-[#1b0e9f] focus:outline-none focus:ring-2 focus:ring-[#1b0e9f]/15' },
 			'submit': { classes: 'inline-flex items-center justify-center gap-2 self-start rounded-lg bg-[#1b0e9f] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#150b7d] cursor-pointer disabled:cursor-not-allowed disabled:opacity-60' },
 			'notice': { classes: 'flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700' },
+			'verified-note': { classes: 'text-xs text-gray-500' },
 			'errors': { classes: 'flex flex-col gap-1 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700' },
 			'error': { classes: 'flex items-center gap-2' },
 		},
@@ -3986,6 +4071,10 @@ const elements = [
 		*/
 		cssSelectors: {
 			'price-separator': { classes: '' },
+			/* A subscription product's cycle after its price: "every year". */
+			'price-suffix': { classes: 'text-sm text-gray-500' },
+			/* Its one-time setup fee after that: "+ ৳500 setup fee". */
+			'price-setup-fee': { classes: 'text-xs text-gray-500' },
 			/* Pay-what-you-want controls; these were hardcoded in ProductPriceView with these same classes. */
 			'pwyw': { classes: 'mb-4 flex gap-5 items-center' },
 			'pwyw-price': { classes: 'text-2xl text-[#1b0e9f]' },
@@ -4324,6 +4413,76 @@ const elements = [
 	},
 
 	{
+		type: "productDeal",
+		label: "Product Deal Waitlist",
+		icon: null,
+		description: "Shows the product's deal (upcoming, live or ended) with a countdown, the waitlist count and recent joiners, and lets shoppers join the waitlist.",
+		ai: {
+			purpose: "Build demand for an upcoming deal: shoppers join a waitlist and see how many others are waiting.",
+			useFor: [
+				"Upcoming deals and flash sales",
+				"Product launches and drops",
+				"Waitlists and pre-launch interest"
+			],
+			keywords: [
+				"deal",
+				"waitlist",
+				"wait list",
+				"flash sale",
+				"coming soon",
+				"launch",
+				"notify me"
+			],
+			rules: [
+				"Place in the buy column of product pages, near the price or add to cart.",
+				"It shows only on products whose Deals addon is on; anywhere else it renders nothing.",
+				"Dates, the waitlist switch and what guests are asked for are per product, not block options."
+			]
+		},
+		/* Wording only - the deal itself comes from the product (ComboStoreDeals on the server). */
+		options: {
+			title: '',
+			buttonText: 'Join the waitlist',
+			joinedText: "You're on the waitlist. We'll let you know when the deal starts.",
+			countText: '{count} people on the waitlist',
+			emptyText: 'Be the first to join the waitlist',
+			startsInText: 'Starts in',
+			endsInText: 'Ends in',
+			upcomingText: 'Coming soon',
+			liveText: 'Live now',
+			endedText: 'This deal has ended',
+			showCountdown: true,
+			hideWhenEnded: true
+		},
+		/*
+			ProductDealView (through its ProductDealMarkup, which the builder's
+			ProductDeal.jsx also renders) reads these with elementCssClasses.
+			`status` carries data-status="upcoming|live|ended" for styling.
+		*/
+		cssSelectors: {
+			'*': { classes: 'flex flex-col gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4' },
+			'header': { classes: 'flex flex-wrap items-center justify-between gap-2' },
+			'badge': { classes: 'inline-flex items-center rounded-full bg-amber-500 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white' },
+			'status': { classes: 'text-xs font-medium text-amber-800' },
+			'countdown': { classes: 'flex items-baseline gap-2' },
+			'countdownLabel': { classes: 'text-sm text-gray-600' },
+			'countdownValue': { classes: 'text-xl font-bold tabular-nums text-gray-900' },
+			'message': { classes: 'text-sm text-gray-700' },
+			'count': { classes: 'text-sm font-semibold text-gray-900' },
+			'joiners': { classes: 'flex items-center gap-2' },
+			'avatars': { classes: 'flex -space-x-2' },
+			'avatar': { classes: 'flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-amber-200 text-[10px] font-bold text-amber-900' },
+			'joinersText': { classes: 'text-xs text-gray-600' },
+			'form': { classes: 'flex flex-col gap-2 sm:flex-row sm:flex-wrap' },
+			'input': { classes: 'min-w-0 flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm' },
+			'button': { classes: 'rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-gray-800 disabled:opacity-60' },
+			'success': { classes: 'rounded-lg bg-green-50 px-3 py-2 text-sm font-medium text-green-700' },
+			'error': { classes: 'text-sm text-red-600' }
+		},
+		group: ['product']
+	},
+
+	{
 		type: "productDimensions",
 		label: "Product Dimensions",
 		icon: null,
@@ -4465,6 +4624,66 @@ const elements = [
 			'td-first': { classes: '!font-medium' },
 			'note': { classes: 'whitespace-pre-line text-sm text-gray-600' },
 			'image': { classes: 'max-w-full rounded-lg' }
+		},
+		group: ['product']
+	},
+
+	{
+		type: "productWarranty",
+		label: "Product Warranty",
+		icon: null,
+		description: "Shows the product's warranty (from its Warranty addon) as a short line like \"12 months brand warranty\", or with what is covered and how to claim.",
+		ai: {
+			purpose: "Tell shoppers how long the product is covered and by whom.",
+			useFor: [
+				"Warranty line in the buy column",
+				"Warranty badge",
+				"Warranty details",
+				"How to claim warranty"
+			],
+			keywords: [
+				"warranty",
+				"guarantee",
+				"service centre",
+				"coverage"
+			],
+			rules: [
+				"Use on product pages; display summary suits the buy column near addToCart, display full suits a tab or details area.",
+				"The warranty is the product's own; it shows nothing for products without one."
+			]
+		},
+		/* display "summary": the one line only; "full": the line plus each filled-in detail. */
+		options: {
+			display: 'summary',
+			icon: 'IconShieldCheck',
+			iconSize: 18,
+			showProvider: true,
+			providerPrefix: 'by',
+			showCoverage: true,
+			coverageLabel: 'What is covered',
+			showExclusions: true,
+			exclusionsLabel: 'Not covered',
+			showClaim: true,
+			claimLabel: 'How to claim',
+			showContact: true,
+			contactLabel: 'Claim contact'
+		},
+		/*
+			ProductWarrantyView (whose WarrantyContent the builder's
+			ProductWarranty.jsx also renders) reads these with elementCssClasses:
+			summary (icon, summary-text, provider), then in full display details >
+			section (section-title, section-text).
+		*/
+		cssSelectors: {
+			'*': { classes: 'flex flex-col gap-3' },
+			'summary': { classes: 'flex flex-wrap items-center gap-1.5 text-sm' },
+			'icon': { classes: 'flex items-center' },
+			'summary-text': { classes: 'font-medium first-letter:uppercase' },
+			'provider': { classes: 'text-gray-500' },
+			'details': { classes: 'grid gap-3 sm:grid-cols-2' },
+			'section': { classes: 'flex flex-col gap-1' },
+			'section-title': { classes: 'text-xs font-semibold uppercase tracking-wide text-gray-500' },
+			'section-text': { classes: 'whitespace-pre-line text-sm text-gray-700' }
 		},
 		group: ['product']
 	},
@@ -4641,7 +4860,8 @@ const elements = [
 				"image",
 				"button",
 				"container",
-				"countdownTimer"
+				"countdownTimer",
+				"newsletterSignup"
 			]
 		},
 		/*
@@ -4795,6 +5015,90 @@ const elements = [
 	},
 
 	{
+		type: "newsletterSignup",
+		label: "Newsletter Signup",
+		icon: null,
+		description: "A sign-up form that adds shoppers to the store's marketing contacts (email, phone or both), optionally to one list, and thanks them in place.",
+		ai: {
+			purpose: "Grow the email / SMS marketing audience from any page, the footer or a popup.",
+			useFor: [
+				"Footer newsletter",
+				"Homepage signup band",
+				"Signup popup",
+				"Blog sidebar",
+				"Coming soon page"
+			],
+			keywords: [
+				"newsletter",
+				"subscribe",
+				"signup",
+				"email list",
+				"sms list",
+				"mailing list",
+				"join"
+			],
+			rules: [
+				"It needs nothing set: by default it asks for an email and saves the contact.",
+				"collect is \"email\", \"phone\" or \"both\". Use phone for SMS-first stores.",
+				"Leave listId at 0 unless you know the id of a list that accepts storefront sign-ups.",
+				"Keep the title short; set title or subtitle to an empty string to hide them."
+			]
+		},
+		/*
+			collect: email | phone | both. listId: a Marketing list marked "Accept
+			storefront sign-ups" (0 = none). tag: added to every sign-up here.
+			confirmTitle / confirmText replace the thank-you when double opt-in
+			emailed them a link to click. previewState (form | success | confirm)
+			only affects the builder canvas. See NewsletterSignupView.jsx.
+		*/
+		options: {
+			title: 'Join our newsletter',
+			subtitle: 'New arrivals, offers and restocks, first.',
+			collect: 'email',
+			showName: false,
+			namePlaceholder: 'Your name',
+			emailPlaceholder: 'Email address',
+			phonePlaceholder: 'Phone number',
+			buttonText: 'Subscribe',
+			consentText: 'We only send news and offers. Unsubscribe any time.',
+			successTitle: "You're subscribed!",
+			successText: 'Thanks for joining. Look out for our next update.',
+			whatsappOptIn: false,
+			whatsappLabel: 'Also send me offers on WhatsApp',
+			confirmTitle: 'Check your inbox',
+			confirmText: "We've sent you an email. Click the link in it to confirm your subscription.",
+			listId: 0,
+			tag: '',
+			previewState: 'form'
+		},
+		/*
+			NewsletterSignupView (through NewsletterSignupMarkup, which the
+			builder's NewsletterSignup.jsx also renders) reads these with
+			elementCssClasses. header > title, subtitle; form > fields >
+			field-input (name / email / phone), then submit-button; error;
+			consent; and in place of all of it after signing up, success >
+			success-title, success-text.
+		*/
+		cssSelectors: {
+			'*': { classes: 'mx-auto flex w-full max-w-xl flex-col gap-4' },
+			'header': { classes: 'flex flex-col gap-1' },
+			'title': { classes: 'flex items-center gap-2 text-xl font-semibold text-gray-900' },
+			'subtitle': { classes: 'text-sm text-gray-500' },
+			'form': { classes: 'flex flex-col gap-2 sm:flex-row sm:flex-wrap' },
+			'fields': { classes: 'relative flex flex-1 flex-col gap-2 sm:flex-row' },
+			'field-input': { classes: 'w-full min-w-0 flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 outline-none transition-colors focus:border-[#1b0e9f] focus:ring-2 focus:ring-[#1b0e9f]/20' },
+			'submit-button': { classes: 'inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-lg bg-[#1b0e9f] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#150b7d] disabled:opacity-60' },
+			'consent': { classes: 'text-xs text-gray-500' },
+			'whatsapp-optin': { classes: 'flex items-center gap-2 text-sm text-gray-600 sm:basis-full sm:order-last' },
+			'error': { classes: 'flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700' },
+			'success': { classes: 'flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-700' },
+			'success-title': { classes: 'text-base font-semibold text-emerald-900' },
+			'success-text': { classes: 'text-sm text-emerald-800' }
+		},
+		group: ['blocks']
+	},
+
+	{
 		type: "productRatings",
 		label: "Product Ratings",
 		icon: null,
@@ -4827,9 +5131,17 @@ const elements = [
 				"conversion"
 			]
 		},
-		/* hideIfEmpty hides the block for a product with no reviews. (label and separator were never read.) */
+		/*
+			hideIfEmpty hides the block for a product with no reviews. layout is
+			'inline' (stars, average, count), 'summary' (score beside rating bars)
+			or 'bars'; barValue 'count' | 'percent' is shown beside each bar. The
+			bars use get_product's rating_stars, so a card in a product loop falls
+			back to inline. (label and separator were never read.)
+		*/
 		options: {
 			hideIfEmpty: false,
+			layout: 'inline',
+			barValue: 'count',
 		},
 		/*
 			ProductRatingsView (through its ProductRatingsMarkup, which the builder's
@@ -4845,6 +5157,16 @@ const elements = [
 			'icon': { classes: '' },
 			'avg-rating': { classes: '' },
 			'total-reviews': { classes: '' },
+			'summary': { classes: 'flex w-full flex-col gap-5 sm:flex-row sm:items-center sm:gap-8' },
+			'summary-score': { classes: 'flex shrink-0 flex-col items-start gap-1' },
+			'summary-average': { classes: 'text-4xl font-semibold leading-none text-gray-900' },
+			'bars': { classes: 'flex w-full flex-1 flex-col gap-1.5' },
+			'bar-row': { classes: 'flex items-center gap-2 text-sm text-gray-600' },
+			'bar-label': { classes: 'inline-flex w-8 shrink-0 items-center gap-0.5 text-gray-700' },
+			'bar-star': { classes: 'text-orange-400' },
+			'bar-track': { classes: 'h-2 flex-1 overflow-hidden rounded-full bg-gray-200' },
+			'bar-fill': { classes: 'h-full rounded-full bg-orange-400' },
+			'bar-count': { classes: 'w-10 shrink-0 text-right tabular-nums text-gray-500' },
 
 		},
 		group: ['product']
@@ -5510,6 +5832,9 @@ const elements = [
 			deliveryLocation: true,
 			shippingAddress: true,
 			shippingMethods: true,
+			/* A "send me updates on WhatsApp" box under the phone field: WhatsApp consent (Marketing). Off by default. */
+			whatsappOptIn: false,
+			whatsappOptInLabel: 'Send me order updates and offers on WhatsApp',
 			/* "Frequently bought together" under the items: the cart products' cross-sells (elements/CartCrossSellsView.jsx). */
 			crossSells: true,
 			crossSellsTitle: 'Frequently bought together',

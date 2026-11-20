@@ -1,10 +1,10 @@
 import React from "react";
 import { usePost } from "../context/PostContext";
-import { ProductRatingsMarkup, productRating } from "./ProductRatingsView";
+import { ProductRatingsMarkup, productRating, ratingsSettings } from "./ProductRatingsView";
 import { elementCssClasses } from "../ElementsDefinition";
 
 /* Shown outside a product loop, or for a product with no reviews yet, so every part can be styled. */
-const sampleRating = { average: 4.3, filled: 4, total: 120 };
+const sampleRating = { average: 4.3, filled: 4, total: 120, counts: { 5: 80, 4: 25, 3: 9, 2: 4, 1: 2 } };
 
 /*
 	Builder (canvas) preview of the rating: ProductRatingsView's own markup
@@ -36,6 +36,7 @@ const ProductRatings = (props) => {
 			type={props?.type}
 			rating={post && real.total > 0 ? real : sampleRating}
 			hideIfEmpty={false}
+			settings={ratingsSettings(props?.options)}
 			rootClassName={`hover:outline-orange-200 hover:outline-solid hover:outline-1 ${dragOverIndex != null && dragOverIndex == index ? 'border-b-5 border-solid border-orange-200 ' : ''} ${selectedId == id ? 'outline-1 outline-solid outline-orange-400 relative' : ''}`}
 			rootProps={{
 				draggable: true,

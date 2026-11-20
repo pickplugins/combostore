@@ -26,6 +26,7 @@ import { getEpsConfig } from "../lib/eps";
 import { getAamarPayConfig } from "../lib/aamarpay";
 import { getBkashConfig } from "../lib/bkash";
 import { getNagadConfig } from "../lib/nagad";
+import { getPaddleConfig } from "../lib/paddle";
 import { sortProviderEntries, moveProvider } from "../lib/sortProviders";
 
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
@@ -65,7 +66,7 @@ const SettingsGlobal = (props) => {
   // Reset clears every field, so it asks first instead of firing on one click.
   var [confirmReset, setconfirmReset] = useState(false);
 
-  var [settingsData, setsettingsData] = useState({ couriers: {}, apiKeys: {}, socialLinks: {}, emailTemplates: {}, smsTemplates: {}, productAttributes: [], shippingClasses: [], paymentGateways: { enable: false, accounts: [] } });
+  var [settingsData, setsettingsData] = useState({ couriers: {}, apiKeys: {}, socialLinks: {}, emailTemplates: {}, smsTemplates: {}, productAttributes: [], paymentGateways: { enable: false, accounts: [] } });
 
 
 
@@ -101,6 +102,17 @@ const SettingsGlobal = (props) => {
 
   /* And Nagad, whose keys only count here once the server can parse them. */
   var [nagadStatus, setnagadStatus] = useState(null);
+
+  /* Paddle (Classic): what the server has in force - vendor id, auth code, a usable public key. */
+  var [paddleStatus, setpaddleStatus] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    getPaddleConfig()
+      .then(config => { if (!cancelled) setpaddleStatus(config); })
+      .catch(() => { if (!cancelled) setpaddleStatus(null); });
+    return () => { cancelled = true; };
+  }, []);
 
   useEffect(() => {
 
@@ -989,6 +1001,7 @@ const SettingsGlobal = (props) => {
               getAamarPayConfig({ fresh: true }).then(setaamarpayStatus).catch(() => { })
               getBkashConfig({ fresh: true }).then(setbkashStatus).catch(() => { })
               getNagadConfig({ fresh: true }).then(setnagadStatus).catch(() => { })
+              getPaddleConfig({ fresh: true }).then(setpaddleStatus).catch(() => { })
             }
             if (status == 'failed') {
               addNotification({ type: 'error', title: 'Settings update failed', content: message })
@@ -1079,33 +1092,6 @@ const SettingsGlobal = (props) => {
     );
   }
 
-  function ShippingClassesItemTitle({ item, index }) {
-    return (
-
-      <div className="flex items-center justify-between w-full">
-        <div>{item?.name}</div>
-        <div onClick={ev => {
-          ev.stopPropagation();
-          ev.preventDefault();
-          setsettingsData(prev => {
-            const remainingShippingClasses = prev.shippingClasses.filter((_, i) => i !== index);
-            return {
-              ...prev,
-              shippingClasses: remainingShippingClasses
-            }
-          })
-
-
-        }}>
-          <div className="bg-red-400 hover:bg-red-500 text-white rounded-sm cursor-pointer p-2">
-            <IconTrash size={18} />
-          </div>
-
-        </div>
-      </div>
-
-    );
-  }
 
 
   /*
@@ -1596,7 +1582,7 @@ const SettingsGlobal = (props) => {
                 className={DANGER_BUTTON}
 
                 onClick={ev => {
-                  setsettingsData({ apiKeys: {}, socialLinks: {}, emailTemplates: {}, productAttributes: [], shippingClasses: [], paymentGateways: {} })
+                  setsettingsData({ apiKeys: {}, socialLinks: {}, emailTemplates: {}, productAttributes: [], paymentGateways: {} })
                   setconfirmReset(false)
                 }}
               >{("Yes, clear")}</button>
@@ -3564,6 +3550,138 @@ const SettingsGlobal = (props) => {
 
                             </>
                           )}
+                          {providerKey == 'paddle' && (() => {
+                            /* Paddle Classic: vendor id + auth code create the pay links; the public key verifies its webhooks (lib/paddle-server.js). */
+                            var paddle = settingsData?.paymentGateways?.paddle ?? {};
+                            var setPaddle = (name, value) => setsettingsData(prev => ({
+                              ...prev,
+                              paymentGateways: {
+                                ...prev.paymentGateways,
+                                paddle: { ...prev.paymentGateways?.paddle, [name]: value }
+                              }
+                            }));
+                            return (
+                              <>
+                                <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                  <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Enable?")}</div>
+                                  <div className="flex gap-3">
+                                    <input type="checkbox" id="enable-paddle" checked={!!paddle.enable} onChange={() => setPaddle('enable', !paddle.enable)} />
+                                    <label htmlFor="enable-paddle" className="cursor-pointer">{paddle.enable ? "Enabled" : "Disabled"}</label>
+                                  </div>
+                                </div>
+
+                                {paddle.enable && (
+                                  <div className="flex flex-col gap-5">
+                                    {gatewayLogoRow(providerKey)}
+
+                                    <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                      <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Account")}</div>
+                                      <div className="flex flex-col gap-1">
+                                        <div className="text-xs text-gray-600">
+                                          For a <span className="font-semibold">Paddle Classic</span> vendor account (vendors.paddle.com: Vendor ID and auth codes). Paddle Billing accounts use different credentials and will not work here.
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                      <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Sandbox")}</div>
+                                      <div className="flex flex-col gap-1">
+                                        <div className="flex gap-3">
+                                          <input type="checkbox" id="paddle-sandbox" checked={paddle.sandbox === true} onChange={() => setPaddle('sandbox', paddle.sandbox !== true)} />
+                                          <label htmlFor="paddle-sandbox" className="cursor-pointer">{paddle.sandbox === true ? "Sandbox (sandbox-vendors.paddle.com)" : "Live"}</label>
+                                        </div>
+                                        <div className="text-xs text-gray-600">Sandbox needs the credentials of your sandbox vendor account, not the live one.</div>
+                                      </div>
+                                    </div>
+
+                                    <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                      <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Vendor ID")}</div>
+                                      <div className="flex flex-col gap-1">
+                                        <input type="text" inputMode="numeric" name="paddle_vendor_id" autoComplete="off" data-1p-ignore="true" data-lpignore="true" placeholder="e.g. 123456" className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20" value={paddle.vendor_id ?? ''} onChange={ev => setPaddle('vendor_id', ev.target.value)} />
+                                        <div className="text-xs text-gray-600">Paddle &gt; Developer Tools &gt; Authentication.</div>
+                                      </div>
+                                    </div>
+
+                                    <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                      <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Auth code")}</div>
+                                      <div className="flex flex-col gap-1">
+                                        <input type="password" name="paddle_vendor_auth_code" autoComplete="new-password" data-1p-ignore="true" data-lpignore="true" placeholder="API auth code" className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20" value={paddle.vendor_auth_code ?? ''} onChange={ev => setPaddle('vendor_auth_code', ev.target.value)} />
+                                        {paddleStatus?.enabled && (
+                                          <div className="text-xs text-green-700">In use{paddleStatus?.sandbox ? " - sandbox, no real money" : " - live, real payments"}</div>
+                                        )}
+                                        {!paddleStatus?.enabled && (
+                                          <div className="text-xs text-red-600">
+                                            Not in use - Paddle will not appear at checkout until a vendor ID and auth code are saved.
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+
+                                    <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                      <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Public key")}</div>
+                                      <div className="flex flex-col gap-1">
+                                        <textarea rows={4} autoComplete="off" spellCheck={false} placeholder={"-----BEGIN PUBLIC KEY-----"} className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 font-mono text-xs" value={paddle.public_key ?? ''} onChange={ev => setPaddle('public_key', ev.target.value)} />
+                                        {paddleStatus?.public_key_configured && (
+                                          <div className="text-xs text-green-700">Public key in use - webhooks are verified.</div>
+                                        )}
+                                        {!paddleStatus?.public_key_configured && (
+                                          <div className="text-xs text-yellow-700">
+                                            No usable public key. Payments still work when buyers come back from Paddle, but an order stays unpaid if the buyer closes the tab first.
+                                          </div>
+                                        )}
+                                        {paddleStatus?.webhook_url && (
+                                          <div className="text-xs text-gray-600">
+                                            Paddle &gt; Developer Tools &gt; Public Key. Each payment tells Paddle to notify
+                                            <span className="font-mono select-all break-all"> {paddleStatus.webhook_url}</span>; it has to be reachable from the internet.
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+
+                                    <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                      <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Charge currency")}</div>
+                                      <div className="flex flex-col gap-1">
+                                        <input type="text" placeholder="USD" className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20" value={paddle.currency ?? ''} onChange={ev => setPaddle('currency', ev.target.value.toUpperCase())} />
+                                        <div className="text-xs text-gray-600">
+                                          In use: {paddleStatus?.currency || "USD"}. Paddle does not charge in BDT; use a currency enabled on your Paddle account.
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                      <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Exchange rate")}</div>
+                                      <div className="flex flex-col gap-1">
+                                        <input type="text" placeholder="e.g. 120" className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20" value={paddle.exchange_rate ?? ''} onChange={ev => setPaddle('exchange_rate', ev.target.value)} />
+                                        <div className="text-xs text-gray-600">
+                                          How many {currency || 'store currency'} make 1 {paddleStatus?.currency || 'USD'}. The order total is divided by it and rounded up.
+                                        </div>
+                                        {paddleStatus?.enabled && currency && paddleStatus?.currency !== currency && !(paddleStatus?.exchange_rate > 0) && (
+                                          <div className="text-xs text-red-600">
+                                            This store prices in {currency} and no rate is in use, so Paddle payments will be refused until one is saved.
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+
+                                    <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                      <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Description")}</div>
+                                      <div className="flex flex-col gap-1">
+                                        <input type="text" placeholder="Pay by card or PayPal through Paddle" className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20" value={paddle.description ?? ''} onChange={ev => setPaddle('description', ev.target.value)} />
+                                        <div className="text-xs text-gray-600">Shown under the Paddle button at checkout.</div>
+                                      </div>
+                                    </div>
+
+                                    <div className="flex flex-col gap-2 py-3.5">
+                                      <div className="text-xs text-gray-600">
+                                        Paddle is the merchant of record and only accepts what its policy allows (mainly software and digital products); check that your products qualify before turning it on. The auth code and public key are stored with the store settings and stripped from the copy the storefront receives.
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+                              </>
+                            );
+                          })()}
+
                           {providerKey == 'stripe' && (
 
                             <>
@@ -5482,161 +5600,6 @@ const SettingsGlobal = (props) => {
 
 
           </WidgetWrapper>
-
-
-        </Tab>
-        <Tab index={5} id="discount">
-
-
-          <div className="flex flex-col gap-5">
-
-
-
-
-            <WidgetWrapper className={CARD_CLASSES} title="Discount & Cash Back">
-
-
-
-
-
-              <div className="flex flex-col gap-5">
-
-                <div className={`${PRIMARY_BUTTON} w-fit`} onClick={ev => {
-
-                  setsettingsData(prev => ({
-                    ...prev,
-                    shippingClasses: [...prev.shippingClasses, {
-                      "name": "Custom Class",
-                      "cost": "",
-                      "type": "fixed",
-
-                    }]
-                  }));
-
-                }}>Add</div>
-
-
-                <div className="flex gap-3 flex-col">
-                  {settingsData?.shippingClasses && settingsData?.shippingClasses?.map((item, index) => {
-
-
-
-
-                    return (
-                      <div className="">
-
-                        <ToggleContent key={index} title={<ShippingClassesItemTitle item={item} index={index} />}
-                          contentClass="bg-gray-200 !text-gray-800 p-4"
-                          headerClass=""
-                          headerTitleClass=""
-                          wrapperClass="w-full"
-                        >
-
-                          <div className="flex flex-col gap-5">
-                            <div className="flex gap-2 items-center">
-                              <label htmlFor="label" className="lg:w-40">Name</label>
-                              <input
-                                type="text"
-                                name={'name'}
-                                placeholder={'name'}
-                                className=" px-2 py-1 flex-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                value={settingsData?.cashbackRules?.[index]?.['name']}
-                                onChange={(ev) => {
-                                  const { name, value } = ev.target;
-                                  setsettingsData(prev => {
-                                    const updatedAttributs = [...prev.cashbackRules];
-                                    updatedAttributs[index] = {
-                                      ...updatedAttributs[index],
-                                      [name]: value
-                                    };
-                                    return {
-                                      ...prev,
-                                      cashbackRules: updatedAttributs
-                                    };
-                                  });
-                                }}
-                              />
-                            </div>
-                            <div className="flex gap-2 items-center">
-                              <label htmlFor="cost" className="lg:w-40">Cost</label>
-                              <input
-                                type="text"
-                                name={'cost'}
-                                placeholder={'10'}
-                                className=" px-2 py-1 flex-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                value={settingsData?.cashbackRules?.[index]?.['cost']}
-                                onChange={(ev) => {
-                                  const { name, value } = ev.target;
-                                  setsettingsData(prev => {
-                                    const updatedAttributs = [...prev.cashbackRules];
-                                    updatedAttributs[index] = {
-                                      ...updatedAttributs[index],
-                                      [name]: value
-                                    };
-                                    return {
-                                      ...prev,
-                                      cashbackRules: updatedAttributs
-                                    };
-                                  });
-                                }}
-                              />
-                            </div>
-                            <div className="flex gap-2 items-center">
-                              <label htmlFor="type" className="lg:w-40">Type</label>
-
-
-                              <select name="type" className="rounded-sm px-2 py-1 !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-
-                                value={settingsData?.cashbackRules?.[index]?.['type']}
-                                onChange={(ev) => {
-                                  const { name, value } = ev.target;
-                                  setsettingsData(prev => {
-                                    const updatedAttributs = [...prev.cashbackRules];
-                                    updatedAttributs[index] = {
-                                      ...updatedAttributs[index],
-                                      [name]: value
-                                    };
-                                    return {
-                                      ...prev,
-                                      cashbackRules: updatedAttributs
-                                    };
-                                  });
-                                }}
-                              >
-                                <option value="">Choose</option>
-                                <option value="fixed">Fixed</option>
-                                <option value="percent">Percent</option>
-
-                              </select>
-
-
-                            </div>
-
-
-
-
-
-
-
-                          </div>
-
-                        </ToggleContent>
-
-                      </div>
-                    )
-                  }
-                  )}
-                </div>
-              </div>
-
-
-
-
-
-            </WidgetWrapper>
-
-          </div>
-
 
 
         </Tab>

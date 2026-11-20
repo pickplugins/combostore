@@ -9,11 +9,46 @@ import { useState, useEffect, useContext } from "react";
 import { useCounterStore } from '../../store/useCounterStore'
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
-import { IconSettings, IconCheckbox, IconSquare, IconFidgetSpinner, IconTrash, IconStarFilled, IconStar, IconExternalLink } from "@tabler/icons-react";
+import { IconSettings, IconCheckbox, IconSquare, IconFidgetSpinner, IconTrash, IconStarFilled, IconStar, IconExternalLink, IconPercentage, IconCash, IconTruckDelivery, IconX } from "@tabler/icons-react";
+import { useUtilsStore } from '../../store/useUtilsStore';
+import { couponTypes, couponAddons, couponAddonFields, customerRules, couponEffect, couponSummary, isOn } from '../../lib/coupon';
+import ProductsPicker from "../../components/shop-elements/ProductsPicker";
+import TermsPicker from "../../components/shop-elements/TermsPicker";
+import UsersPicker from "../../components/shop-elements/UsersPicker";
 import HtmlEditor from "../../components/HtmlEditor";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
+
+/* One addon's section in the main column. */
+const AddonCard = ({ title, hint, children }) => (
+  <div className="form-card rounded-xl border border-gray-200 bg-white shadow-sm">
+    <div className="border-b border-gray-200 px-5 py-4">
+      <div className="text-base font-semibold text-gray-900">{title}</div>
+      {hint && <div className="mt-0.5 text-xs text-gray-500">{hint}</div>}
+    </div>
+    <div className="flex flex-col gap-3 p-4">{children}</div>
+  </div>
+);
+
+/* Picked products / categories / users, each removable. */
+const ChipList = ({ items, label, empty, onRemove }) => {
+  if (!Array.isArray(items) || items.length === 0) {
+    return <div className="rounded-lg border border-dashed border-gray-300 px-3 py-4 text-center text-sm text-gray-400">{empty}</div>;
+  }
+  return (
+    <div className="flex flex-wrap gap-2">
+      {items.map((item, index) => (
+        <span key={index} className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-[#634FE5]/30 bg-[#634FE5]/10 py-1 pl-3 pr-1 text-sm text-[#634FE5]">
+          <span className="truncate">{label(item)}</span>
+          <button type="button" aria-label="Remove" className="rounded-full p-0.5 hover:bg-[#634FE5]/20" onClick={() => onRemove(item)}>
+            <IconX size={14} />
+          </button>
+        </span>
+      ))}
+    </div>
+  );
+};
 
 const CouponEdit = ({ id }) => {
 
@@ -25,6 +60,90 @@ const CouponEdit = ({ id }) => {
   var [currentObject, setcurrentObject] = useState(null);
 
   var [loading, setloading] = useState(false);
+
+  const { wrapCurrency } = useUtilsStore()
+
+  /* A coupon saved before types were required has none; it priced as percent. */
+  const couponType = currentObject?.couponType || 'percent';
+  const setField = (key, value) => setcurrentObject(previous => ({ ...previous, [key]: value }));
+  const num = (value) => { var n = parseFloat(value); return Number.isFinite(n) && n > 0 ? n : 0; };
+  const couponTypeIcons = { percent: IconPercentage, fixed: IconCash, free_shipping: IconTruckDelivery };
+  const inputClass = "!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 w-full rounded-lg bg-white px-3 py-2 text-sm";
+
+  /* ---------- Addons ---------- */
+
+  const hasAddon = (value) => Array.isArray(currentObject?.addons) && currentObject.addons.includes(value);
+
+  /* Switching an addon off clears what it set, so a hidden rule never keeps applying. */
+  function toggleAddon(value) {
+    setcurrentObject(previous => {
+      var addons = Array.isArray(previous?.addons) ? [...previous.addons] : [];
+      if (addons.includes(value)) {
+        return { ...previous, ...(couponAddonFields[value] ?? {}), addons: addons.filter(a => a !== value) };
+      }
+      var next = { ...previous, addons: [...addons, value] };
+      if (value === 'customer' && !next.customerRule) next.customerRule = 'logged_in';
+      return next;
+    });
+  }
+
+  /* Lists of picked things (products, categories, users), kept unique by `key`. */
+  function addToList(field, entry, key) {
+    if (entry?.[key] === undefined || entry?.[key] === null) return;
+    setcurrentObject(previous => {
+      var list = Array.isArray(previous?.[field]) ? previous[field] : [];
+      if (list.some(item => String(item?.[key]) === String(entry[key]))) return previous;
+      return { ...previous, [field]: [...list, entry] };
+    });
+  }
+  function removeFromList(field, entry, key) {
+    setcurrentObject(previous => ({ ...previous, [field]: (previous?.[field] ?? []).filter(item => String(item?.[key]) !== String(entry?.[key])) }));
+  }
+  function toggleInList(field, entry, key) {
+    var list = Array.isArray(currentObject?.[field]) ? currentObject[field] : [];
+    if (list.some(item => String(item?.[key]) === String(entry?.[key]))) removeFromList(field, entry, key);
+    else addToList(field, entry, key);
+  }
+
+  /* The offer's conditions, in words, for the summary box. */
+  function offerConditions() {
+    var lines = [];
+    var products = currentObject?.products ?? [];
+    var categories = currentObject?.categories ?? [];
+    var restricted = products.length > 0 || categories.length > 0;
+
+    if (restricted) {
+      var names = [...products.map(p => p?.title), ...categories.map(c => c?.name)].filter(Boolean);
+      lines.push(`Only on ${names.slice(0, 3).join(', ')}${names.length > 3 ? ` and ${names.length - 3} more` : ''}.`);
+    } else {
+      lines.push('On every product.');
+    }
+
+    var min = num(currentObject?.minSpend), max = num(currentObject?.maxSpend);
+    if (min && max) lines.push(`Carts from ${wrapCurrency(min)} to ${wrapCurrency(max)}.`);
+    else if (min) lines.push(`Carts of ${wrapCurrency(min)} or more.`);
+    else if (max) lines.push(`Carts up to ${wrapCurrency(max)}.`);
+
+    var when = (v) => new Date(v).toLocaleString();
+    if (currentObject?.startDate && currentObject?.endDate) lines.push(`From ${when(currentObject.startDate)} to ${when(currentObject.endDate)}.`);
+    else if (currentObject?.startDate) lines.push(`From ${when(currentObject.startDate)}.`);
+    else if (currentObject?.endDate) lines.push(`Until ${when(currentObject.endDate)}.`);
+
+    var rule = customerRules.find(r => r.value === currentObject?.customerRule);
+    if (rule) lines.push(`${rule.label} only.`);
+
+    var users = currentObject?.users ?? [];
+    if (users.length) lines.push(`Only ${users.length} chosen ${users.length === 1 ? 'person' : 'people'}.`);
+
+    if (num(currentObject?.limit)) lines.push(`Up to ${num(currentObject.limit)} uses.`);
+
+    if (couponType !== 'free_shipping') {
+      var sample = Math.max(min, 1000);
+      if (max) sample = Math.min(sample, max);
+      lines.push(`A ${wrapCurrency(sample)} cart${restricted ? ' of eligible items' : ''} saves ${wrapCurrency(couponEffect({ ...currentObject, couponType }, sample).amount)}.`);
+    }
+    return lines;
+  }
 
 
 
@@ -46,9 +165,10 @@ const CouponEdit = ({ id }) => {
       serverUrl + "wp-json/combo-store/v2/get_coupon",
       {
         method: "POST",
+        /* Signed in, so the server includes the coupon's chosen users (names and emails are staff-only). */
         headers: {
           "Content-Type": "application/json",
-          // Authorization: `Bearer ${token}`,
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: postData,
       }
@@ -71,7 +191,13 @@ const CouponEdit = ({ id }) => {
 
 
             setloading(false);
-            setcurrentObject(product)
+
+            /* Coupons saved before addons were stored: switch on the ones their saved fields already use. */
+            var addons = Array.isArray(product?.addons) ? [...product.addons] : [];
+            if ((product?.startDate || product?.endDate) && !addons.includes('expiry')) addons.push('expiry');
+            if ((num(product?.minSpend) || num(product?.maxSpend)) && !addons.includes('spend')) addons.push('spend');
+
+            setcurrentObject(product ? { ...product, addons } : product)
 
 
 
@@ -104,7 +230,7 @@ const CouponEdit = ({ id }) => {
 
 
 
-    var postData = JSON.stringify(currentObject);
+    var postData = JSON.stringify({ ...currentObject, couponType: currentObject?.couponType || 'percent', freeShipping: isOn(currentObject?.freeShipping) });
 
 
     setloading(true);
@@ -131,7 +257,11 @@ const CouponEdit = ({ id }) => {
 
 
             setloading(false);
-            //setcurrentObject(res)
+            if (errors) {
+              addNotification({ type: 'error', title: 'Coupon', content: res?.message || 'Could not save the coupon.' });
+            } else {
+              addNotification({ type: 'success', title: 'Coupon saved', content: 'Your changes are saved.' });
+            }
 
 
 
@@ -159,16 +289,6 @@ const CouponEdit = ({ id }) => {
   }, []);
 
 
-  var addonsList = [
-    { label: "Products ", value: 'products' },
-    { label: "Customer ", value: 'customer' },
-    { label: "Expiry ", value: 'expiry' },
-    { label: "Spend ", value: 'spend' },
-    { label: "Categories ", value: 'categories' },
-    { label: "User ", value: 'user' },
-
-
-  ]
 
 
 
@@ -289,173 +409,197 @@ const CouponEdit = ({ id }) => {
 
 
 
+                {/* ---------- Discount ---------- */}
                 <div className="flex flex-col gap-1.5">
-                  <label htmlFor="" className=" text-gray-500">
-                    {("Amount")}
-                  </label>
-                  <div className="flex gap-2 items-center">
+                  <span className="block text-sm font-medium text-gray-700">{("Coupon type")}</span>
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                    {couponTypes.map(type => {
+                      var TypeIcon = couponTypeIcons[type.value];
+                      var active = couponType === type.value;
+                      return (
+                        <button
+                          type="button"
+                          key={type.value}
+                          aria-pressed={active}
+                          className={`flex items-start gap-2.5 rounded-lg border p-3 text-left transition-colors ${active ? "border-[#634FE5] bg-[#634FE5]/10" : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50"}`}
+                          onClick={() => setField('couponType', type.value)}
+                        >
+                          <TypeIcon size={20} className={`mt-0.5 shrink-0 ${active ? "text-[#634FE5]" : "text-gray-400"}`} />
+                          <span className="min-w-0">
+                            <span className={`block text-sm font-medium ${active ? "text-[#634FE5]" : "text-gray-800"}`}>{type.label}</span>
+                            <span className="block text-xs text-gray-500">{type.hint}</span>
+                          </span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                {couponType !== 'free_shipping' && (
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div className="flex flex-col gap-1.5">
+                      <label htmlFor="coupon-amount" className="block text-sm font-medium text-gray-700">
+                        {couponType === 'percent' ? ("Discount (%)") : ("Discount amount")}
+                      </label>
+                      <input
+                        id="coupon-amount"
+                        type="number"
+                        min="0"
+                        max={couponType === 'percent' ? 100 : undefined}
+                        step="any"
+                        className={inputClass}
+                        value={currentObject?.amount ?? ""}
+                        onChange={(ev) => setField('amount', ev.target.value)}
+                      />
+                      {num(currentObject?.amount) <= 0 && !isOn(currentObject?.freeShipping) && (
+                        <span className="text-xs text-amber-700">{("Enter an amount - without one the coupon takes nothing off.")}</span>
+                      )}
+                    </div>
+
+                    {couponType === 'percent' && (
+                      <div className="flex flex-col gap-1.5">
+                        <label htmlFor="coupon-max" className="block text-sm font-medium text-gray-700">{("Maximum discount")}</label>
+                        <input
+                          id="coupon-max"
+                          type="number"
+                          min="0"
+                          step="any"
+                          placeholder={("No cap")}
+                          className={inputClass}
+                          value={currentObject?.maxDiscount ?? ""}
+                          onChange={(ev) => setField('maxDiscount', ev.target.value)}
+                        />
+                        <span className="text-xs text-gray-500">{("Caps the money off, e.g. 20% up to 500.")}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {couponType !== 'free_shipping' && (
+                  <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-gray-200 p-3 hover:bg-gray-50">
                     <input
-                      type="number"
-                      className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 w-full rounded-lg bg-white px-3 py-2 text-sm"
-                      value={currentObject?.amount}
-                      name="amount"
-                      onChange={(ev) => {
-                        var value = ev.target.value;
-                        setcurrentObject({ ...currentObject, amount: value });
-
-
-                      }}
+                      type="checkbox"
+                      className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer accent-[#634FE5] !shadow-none"
+                      checked={isOn(currentObject?.freeShipping)}
+                      onChange={(ev) => setField('freeShipping', ev.target.checked)}
                     />
-
-                    {currentObject?.couponType == 'percent' && (
-                      <span>%</span>
-                    )}
-                    {currentObject?.couponType == 'fixed' && (
-                      <span>$</span>
-                    )}
-
-
-                  </div>
-                </div>
-
-                <div className="flex gap-3">
-
-                  <div className="flex gap-2">
-                    <div>
-                      <input
-                        type="radio"
-                        id="couponType-percent"
-
-                        className="h-4 w-4 shrink-0 cursor-pointer accent-[#634FE5] !shadow-none"
-                        checked={currentObject?.couponType == 'percent' ? true : false}
-                        onChange={(ev) => {
-                          var value = ev.target.value;
-                          setcurrentObject({ ...currentObject, couponType: "percent" });
-
-
-                        }}
-                      />
-                    </div>
-                    <label htmlFor="couponType-percent" className="flex gap-2 cursor-pointer text-gray-500">
-
-
-                      {("Percentage discount")}
-
-
-                    </label>
-                  </div>
-
-                  <div className="flex gap-2">
-
-                    <div>
-                      <input
-                        id="couponType-fixed"
-                        type="radio"
-                        className="h-4 w-4 shrink-0 cursor-pointer accent-[#634FE5] !shadow-none"
-                        checked={currentObject?.couponType == 'fixed' ? true : false}
-                        onChange={(ev) => {
-                          var value = ev.target.value;
-                          setcurrentObject({ ...currentObject, couponType: 'fixed' });
-
-
-                        }}
-                      />
-                    </div>
-
-
-                    <label htmlFor="couponType-fixed" className="flex gap-2 cursor-pointer text-gray-500">
-
-
-
-                      {("Fixed amount discount")}
-
-
-
-                    </label>
-
-                  </div>
-
-
-
-                </div>
-
+                    <span>
+                      <span className="block text-sm font-medium text-gray-800">{("Also give free delivery")}</span>
+                      <span className="block text-xs text-gray-500">{("The delivery charge is waived as well as the discount.")}</span>
+                    </span>
+                  </label>
+                )}
 
                 <div className="flex flex-col gap-1.5">
-                  <label htmlFor="" className="block text-sm font-medium text-gray-700">
-                    {("limit")}
-                  </label>
+                  <label htmlFor="coupon-limit" className="block text-sm font-medium text-gray-700">{("Usage limit")}</label>
                   <input
+                    id="coupon-limit"
                     type="number"
-                    className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 w-full rounded-lg bg-white px-3 py-2 text-sm"
-                    value={currentObject?.limit}
-                    onChange={(ev) => {
-                      var value = ev.target.value;
-                      setcurrentObject({ ...currentObject, limit: value });
-
-
-                    }}
+                    min="0"
+                    step="1"
+                    placeholder={("Unlimited")}
+                    className={inputClass + " sm:max-w-[50%]"}
+                    value={currentObject?.limit ?? ""}
+                    onChange={(ev) => setField('limit', ev.target.value)}
                   />
                 </div>
 
-
-                <div className="flex gap-4">
-
-
-                  <div className="flex flex-col gap-1.5">
-                    <label htmlFor="" className="block text-sm font-medium text-gray-700">
-                      {("Start Date")}
-                    </label>
-
-                    <input
-                      type="datetime-local"
-                      className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 w-full rounded-lg bg-white px-3 py-2 text-sm"
-                      value={currentObject?.startDate}
-                      onChange={(ev) => {
-                        var value = ev.target.value;
-                        setcurrentObject({ ...currentObject, startDate: value });
-
-
-                      }}
-                    />
-
-
-
-
-
-
-
-                  </div>
-                  <div className="flex flex-col gap-1.5">
-                    <label htmlFor="" className="block text-sm font-medium text-gray-700">
-                      {("End Date")}
-                    </label>
-
-                    <input
-                      type="datetime-local"
-                      className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 w-full rounded-lg bg-white px-3 py-2 text-sm"
-                      value={currentObject?.endDate}
-                      onChange={(ev) => {
-                        var value = ev.target.value;
-                        setcurrentObject({ ...currentObject, endDate: value });
-
-
-                      }}
-                    />
-
-
-
-                  </div>
-
-
+                {/* What a shopper would get, so the numbers above read as an offer. */}
+                <div className="rounded-lg bg-gray-50 px-4 py-3 text-sm text-gray-600">
+                  <div className="font-medium text-gray-800">{couponSummary({ ...currentObject, couponType }, wrapCurrency) || ("Set a discount")}</div>
+                  <ul className="mt-1 flex flex-col gap-0.5 text-xs">
+                    {offerConditions().map((line, index) => <li key={index}>{line}</li>)}
+                  </ul>
                 </div>
-
-
-
-
-
 
               </div>
             </div>
+
+
+            {/* ---------- Addons: each one a restriction on who / what the coupon covers ---------- */}
+
+            {hasAddon('products') && (
+              <AddonCard title={("Products")} hint={("The discount only counts these products.")}>
+                <div className="flex justify-end">
+                  <ProductsPicker placeholder={("Search products")} onPick={(item) => addToList('products', { id: item?.id, title: item?.title }, 'id')} />
+                </div>
+                <ChipList items={currentObject?.products} label={(item) => item?.title || `#${item?.id}`} empty={("No products chosen yet.")} onRemove={(item) => removeFromList('products', item, 'id')} />
+              </AddonCard>
+            )}
+
+            {hasAddon('categories') && (
+              <AddonCard title={("Categories")} hint={("The discount only counts products in these categories.")}>
+                <ChipList items={currentObject?.categories} label={(item) => item?.name || item?.slug} empty={("No categories chosen yet.")} onRemove={(item) => removeFromList('categories', item, 'term_id')} />
+                <div className="max-h-72 overflow-y-auto rounded-lg border border-gray-200 p-2">
+                  <TermsPicker
+                    queryPrams={{ taxonomy: "product_cat", hierarchical: true, per_page: 999 }}
+                    selected={currentObject?.categories ?? []}
+                    onPick={(item) => toggleInList('categories', { term_id: item?.term_id, name: item?.name, slug: item?.slug }, 'term_id')}
+                  />
+                </div>
+              </AddonCard>
+            )}
+
+            {hasAddon('spend') && (
+              <AddonCard title={("Spend")} hint={("Measured on the cart subtotal, before delivery.")}>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div className="flex flex-col gap-1.5">
+                    <label htmlFor="coupon-min" className="block text-sm font-medium text-gray-700">{("Minimum spend")}</label>
+                    <input id="coupon-min" type="number" min="0" step="any" placeholder={("No minimum")} className={inputClass}
+                      value={currentObject?.minSpend ?? ""} onChange={(ev) => setField('minSpend', ev.target.value)} />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label htmlFor="coupon-max-spend" className="block text-sm font-medium text-gray-700">{("Maximum spend")}</label>
+                    <input id="coupon-max-spend" type="number" min="0" step="any" placeholder={("No maximum")} className={inputClass}
+                      value={currentObject?.maxSpend ?? ""} onChange={(ev) => setField('maxSpend', ev.target.value)} />
+                  </div>
+                </div>
+                {num(currentObject?.minSpend) > 0 && num(currentObject?.maxSpend) > 0 && num(currentObject?.maxSpend) < num(currentObject?.minSpend) && (
+                  <div className="text-xs text-red-600">{("Maximum spend is below the minimum, so no cart can use this coupon.")}</div>
+                )}
+              </AddonCard>
+            )}
+
+            {hasAddon('expiry') && (
+              <AddonCard title={("Expiry")} hint={("Leave a date empty for no limit on that side.")}>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div className="flex flex-col gap-1.5">
+                    <label htmlFor="coupon-start" className="block text-sm font-medium text-gray-700">{("Start date")}</label>
+                    <input id="coupon-start" type="datetime-local" className={inputClass}
+                      value={currentObject?.startDate ?? ""} onChange={(ev) => setField('startDate', ev.target.value)} />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label htmlFor="coupon-end" className="block text-sm font-medium text-gray-700">{("End date")}</label>
+                    <input id="coupon-end" type="datetime-local" className={inputClass}
+                      value={currentObject?.endDate ?? ""} onChange={(ev) => setField('endDate', ev.target.value)} />
+                  </div>
+                </div>
+              </AddonCard>
+            )}
+
+            {hasAddon('customer') && (
+              <AddonCard title={("Customer")} hint={("Shoppers have to be signed in for the store to know which they are.")}>
+                <div className="flex flex-col gap-2">
+                  {customerRules.map(rule => (
+                    <label key={rule.value} className="flex cursor-pointer items-center gap-3 rounded-lg border border-gray-200 px-3 py-2.5 text-sm hover:bg-gray-50">
+                      <input type="radio" name="coupon-customer-rule" className="h-4 w-4 shrink-0 cursor-pointer accent-[#634FE5] !shadow-none"
+                        checked={(currentObject?.customerRule || 'logged_in') === rule.value}
+                        onChange={() => setField('customerRule', rule.value)} />
+                      <span className="text-gray-800">{rule.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </AddonCard>
+            )}
+
+            {hasAddon('user') && (
+              <AddonCard title={("Users")} hint={("Only these people can use the code, once signed in.")}>
+                <div className="flex justify-end">
+                  <UsersPicker placeholder={("Search users")} onPick={(user) => addToList('users', { id: user?.id, name: user?.display_name || user?.name, email: user?.email || user?.user_email }, 'id')} />
+                </div>
+                <ChipList items={currentObject?.users} label={(item) => item?.name ? `${item.name}${item?.email ? ` (${item.email})` : ''}` : (item?.email || `#${item?.id}`)} empty={("No users chosen yet.")} onRemove={(item) => removeFromList('users', item, 'id')} />
+              </AddonCard>
+            )}
 
 
 
@@ -468,11 +612,11 @@ const CouponEdit = ({ id }) => {
 
           </div>
 
-          <div className="min-w-0 xl:sticky xl:top-[86px] xl:self-start">
+          <div className="min-w-0 xl:sticky  xl:self-start">
 
             <div className="flex flex-col gap-4">
 
-              <div className="form-card flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white px-5 py-3 shadow-sm">
+              <div className="form-card flex flex-wrap items-center justify-end gap-3 rounded-xl border border-gray-200 bg-white px-5 py-3 shadow-sm">
 
                 <div className="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-gray-800 cursor-pointer"
                   onClick={ev => {
@@ -498,22 +642,26 @@ const CouponEdit = ({ id }) => {
                       {("Status")}
                     </label>
 
-                    <select name="status" id="" className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 rounded-lg px-3 py-2 text-sm  bg-white " onChange={ev => {
+                    {/* Controlled by `value`. With `selected` on the options it showed
+                        "Publish" (the first option) before the coupon loaded and kept
+                        showing it, so a draft coupon looked live - and the cart only
+                        accepts published ones. */}
+                    <select name="status" id="status" className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 rounded-lg px-3 py-2 text-sm  bg-white "
+                      value={currentObject?.postStatus === 'publish' ? 'publish' : 'draft'}
+                      onChange={ev => setField('postStatus', ev.target.value)}>
 
-                      var value = ev.target.value;
-                      setcurrentObject({ ...currentObject, postStatus: value });
-
-
-                    }}>
-
-                      <option value="publish" selected={currentObject?.postStatus == 'publish' ? "selected" : ""}>Publish</option>
-                      <option value="draft" selected={currentObject?.postStatus == 'draft' ? "selected" : ""}>Draft</option>
-                      {/* <option value="subscription">Subscription</option>
-                  <option value="pwyw">Pay what you want</option> */}
+                      <option value="publish">Publish</option>
+                      <option value="draft">Draft</option>
 
                     </select>
 
                   </div>
+
+                  {currentObject && currentObject?.postStatus !== 'publish' && (
+                    <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                      {("This coupon is a draft, so shoppers can't use it yet. Set the status to Publish and click Update.")}
+                    </div>
+                  )}
 
 
 
@@ -540,49 +688,24 @@ const CouponEdit = ({ id }) => {
                 <div className="p-4 flex flex-col  gap-4">
 
 
+                  <p className="text-xs text-gray-500">{("Switch on the rules this coupon needs. Each one adds its own section.")}</p>
+
                   <div className="grid grid-cols-2 gap-3 ">
 
-                    {addonsList.map(item => {
-
+                    {couponAddons.map(item => {
+                      var active = hasAddon(item.value);
                       return (
-                        <div key={item.value} className={`flex gap-2 p-3 rounded-lg border transition-colors cursor-pointer ${currentObject?.addons?.includes(item?.value) ? "border-[#634FE5] bg-[#634FE5]/10 text-[#634FE5]" : "border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50"} ${item?.value == 'upsellsCrosssells' ? 'col-span-2' : ""} ${item?.value == 'related_products' ? 'col-span-2' : ""}`} onClick={ev => {
-
-
-                          var value = item.value
-
-                          var addons = currentObject?.addons ? currentObject?.addons : {};
-
-                          if (addons.includes(value)) {
-                            const index = addons.indexOf(value);
-                            if (index !== -1) {
-                              addons.splice(index, 1);
-                            }
-                          } else {
-                            addons.push(value)
-                          }
-
-                          setcurrentObject({ ...currentObject, addons: addons });
-
-
-                        }}>
-
-                          {currentObject?.addons?.includes(item.value) && (
-                            <IconCheckbox />
-                          )}
-                          {!currentObject?.addons?.includes(item.value) && (
-
-                            <IconSquare />
-                          )}
-
-
-
-
-                          <span>{item.label}</span>
-                        </div>
+                        <button type="button" key={item.value} aria-pressed={active}
+                          className={`flex gap-2 p-3 rounded-lg border text-left transition-colors cursor-pointer ${active ? "border-[#634FE5] bg-[#634FE5]/10 text-[#634FE5]" : "border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50"}`}
+                          onClick={() => toggleAddon(item.value)}>
+                          {active ? <IconCheckbox className="shrink-0" /> : <IconSquare className="shrink-0" />}
+                          <span className="min-w-0">
+                            <span className="block text-sm font-medium">{item.label}</span>
+                            <span className="block text-xs text-gray-500">{item.hint}</span>
+                          </span>
+                        </button>
                       )
-
                     })}
-
 
                   </div>
 

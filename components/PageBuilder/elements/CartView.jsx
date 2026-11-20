@@ -16,6 +16,7 @@ const CheckoutView = dynamic(loadCheckoutView);
 import CartCrossSells, { defaultCartCrossSellsTitle, defaultCartCrossSellsLimit } from "./CartCrossSellsView";
 import { useCounterStore, cartLineKey, normalizeMoq } from '../../../store/useCounterStore'
 import { cartSetupFees, isSubscriptionLine, subscriptionCycle, subscriptionPrice } from '@/lib/subscriptionCart';
+import { couponEffect, couponSummary, couponHoldMessage, couponIsRestricted } from '@/lib/coupon';
 import { useUtilsStore } from '../../../store/useUtilsStore'
 import { useAuthStore } from '../../../store/authStore';
 import Spinner from "../../../components/Spinner";
@@ -43,6 +44,9 @@ const CartView = (props) => {
 		deliveryLocation: true,
 		shippingAddress: true,
 		shippingMethods: true,
+		/* Off unless the block turns it on: a consent box must never appear unasked. */
+		whatsappOptIn: false,
+		whatsappOptInLabel: 'Send me order updates and offers on WhatsApp',
 	};
 	var tag = options?.tag ?? 'h1';
 	var iconTrigger = options?.triggerStyle === 'icon';
@@ -51,6 +55,8 @@ const CartView = (props) => {
 	// const trackPageVisit = useUtilsStore((state) => state.trackPageVisit);
 
 	const { cartToggle, setcartToggle, notifications, addNotification, cartStep, setcartStep, cartItems, addCartItems, removeCartItems, resetCartItems, updateCartItems, userDataX, setUserDataX, navToggle, setnavToggle, lang, coupons, setCoupons, cartTotalPay, setcartTotalPay, cartTotal, setcartTotal, shippingMethod, setshippingMethod, shippingCost, setshippingCost, cartDiscount } = useCounterStore()
+	/* The signed-in customer's JWT (auth-context.js writes it to this store). */
+	const customerToken = useCounterStore((s) => s.token)
 
 
 	const { wrapCurrency } = useUtilsStore()
@@ -94,7 +100,9 @@ const CartView = (props) => {
 			same arithmetic as before.
 		*/
 		var autoDiscount = cartDiscount?.amount ?? 0;
-		var payableShipping = cartDiscount?.freeShipping ? 0 : shippingCost;
+		/* A free-delivery coupon waives shipping the same way a discount rule does. */
+		var couponFreeShipping = coupons.applied && coupons.freeShipping === true;
+		var payableShipping = (cartDiscount?.freeShipping || couponFreeShipping) ? 0 : shippingCost;
 
 		var totalPay = total + payableShipping;
 		if (coupons.applied) {
@@ -143,23 +151,24 @@ const CartView = (props) => {
 
 
 
-	function calculateCoupon(amount, discountType) {
+	/*
+		An applied coupon follows the cart: a percent coupon re-prices as items
+		change, and one with a minimum spend stops (and starts again) as the
+		subtotal crosses it. Before, the discount was worked out once when the
+		code was applied and stayed put whatever the cart did afterwards.
+	*/
+	useEffect(() => {
 
-		var discountAmount = 0;
+		if (!coupons?.applied) return;
 
-		if (discountType == "percent") {
-			var discountAmount = (cartTotal * amount) / 100;
+		/* A product / category coupon prices only the lines it covers, so it follows the items too. */
+		var effect = couponEffect({ ...coupons, freeShipping: coupons.freeShippingOption }, cartTotal, cartItems);
 
-		}
-		if (discountType == "fixed") {
-			var discountAmount = amount;
+		if (coupons.discountAmount === effect.amount && coupons.freeShipping === effect.freeShipping && coupons.shortBy === effect.shortBy && coupons.reason === effect.reason) return;
 
-		}
+		setCoupons({ discountAmount: effect.amount, freeShipping: effect.freeShipping, shortBy: effect.shortBy, reason: effect.reason });
 
-
-
-		return discountAmount;
-	}
+	}, [cartTotal, cartItems, coupons?.applied, coupons?.couponType, coupons?.amount, coupons?.minSpend, coupons?.maxSpend, coupons?.maxDiscount, coupons?.freeShippingOption, coupons?.products, coupons?.categories]);
 
 
 
@@ -208,13 +217,29 @@ const CartView = (props) => {
 		couponsX.loading = true;
 		setCoupons(couponsX)
 
-		fetch(serverUrl + "wp-json/combo-store/v2/get_coupon_details", {
+		var body = JSON.stringify({
+			couponCode: couponsX.couponCode.trim(),
+			cartTotal: cartTotal,
+			cartItems: (cartItems ?? []).map(item => ({ product_id: item?.product_id ?? item?.id, price: item?.price, quantity: item?.quantity })),
+		});
+
+		/* The signed-in customer's token, for coupons limited to certain
+		   people or to new / returning customers. The server reads who it is
+		   from the token, never from the body. */
+		var checkCoupon = (withToken) => fetch(serverUrl + "wp-json/combo-store/v2/get_coupon_details", {
 			method: "POST",
-			headers: {
-				'Content-Type': 'application/json',
-			},
-			body: JSON.stringify({ couponCode: couponsX.couponCode }),
-		})
+			headers: withToken
+				? { 'Content-Type': 'application/json', 'Authorization': `Bearer ${customerToken}` }
+				: { 'Content-Type': 'application/json' },
+			body: body,
+		});
+
+		/* An expired or revoked saved token makes the JWT plugin refuse the whole
+		   request (403) before the coupon is even looked at, which read as
+		   "Could not check the coupon". Ask again as a guest: a coupon that needs
+		   a signed-in shopper then says so. */
+		checkCoupon(Boolean(customerToken))
+			.then((response) => (customerToken && (response.status === 401 || response.status === 403)) ? checkCoupon(false) : response)
 			.then((response) => {
 
 				if (!response.ok) {
@@ -234,10 +259,22 @@ const CartView = (props) => {
 
 					var couponRes = res.coupon;
 
+					var effect = couponEffect(couponRes, cartTotal, cartItems);
+
 					couponsX.applied = true;
-					couponsX.discountAmount = calculateCoupon(couponRes.amount, couponRes.couponType);
 					couponsX.couponType = couponRes?.couponType;
 					couponsX.amount = couponRes?.amount;
+					couponsX.minSpend = couponRes?.minSpend;
+					couponsX.maxSpend = couponRes?.maxSpend;
+					couponsX.maxDiscount = couponRes?.maxDiscount;
+					couponsX.products = couponRes?.products ?? [];
+					couponsX.categories = couponRes?.categories ?? [];
+					couponsX.reason = effect.reason;
+					/* The coupon's own "also free delivery" switch; freeShipping below is whether it applies right now. */
+					couponsX.freeShippingOption = couponRes?.freeShipping;
+					couponsX.discountAmount = effect.amount;
+					couponsX.freeShipping = effect.freeShipping;
+					couponsX.shortBy = effect.shortBy;
 					couponsX.loading = false;
 
 					setCoupons(couponsX)
@@ -256,7 +293,7 @@ const CartView = (props) => {
 
 
 	function removeCoupon() {
-		setCoupons({ ...coupons, applied: false, couponCode: "", discountAmount: 0 })
+		setCoupons({ ...coupons, applied: false, couponCode: "", discountAmount: 0, freeShipping: false, shortBy: 0, reason: "", products: [], categories: [] })
 	}
 
 
@@ -336,7 +373,8 @@ const CartView = (props) => {
 	const couponAmount = coupons?.applied ? (parseFloat(coupons?.discountAmount) || 0) : 0;
 	const discountLines = (cartDiscount?.lines ?? []).filter(line => (parseFloat(line?.amount) || 0) > 0);
 	const autoDiscount = parseFloat(cartDiscount?.amount) || 0;
-	const payableShipping = cartDiscount?.freeShipping ? 0 : (parseFloat(shippingCost) || 0);
+	const shippingWaived = Boolean(cartDiscount?.freeShipping) || (coupons?.applied === true && coupons?.freeShipping === true);
+	const payableShipping = shippingWaived ? 0 : (parseFloat(shippingCost) || 0);
 
 	return (
 		<CartMarkup
@@ -356,7 +394,7 @@ const CartView = (props) => {
 			discountLines={discountLines}
 			autoDiscount={autoDiscount}
 			payableShipping={payableShipping}
-			freeShipping={Boolean(cartDiscount?.freeShipping)}
+			freeShipping={shippingWaived}
 			onToggle={() => setcartToggle(!cartToggle)}
 			onClose={closeCart}
 			onBack={() => setcartStep(0)}
@@ -612,7 +650,8 @@ export function CartMarkup(props) {
 													<div className="min-w-0">
 														<div className={cls('coupon-applied-code')}>{coupons.couponCode}</div>
 														<div className={cls('coupon-applied-text')}>
-															{coupons.couponType == 'percent' ? `${coupons.amount}% off applied` : `${wrapCurrency(coupons.amount)} off applied`}
+															{couponHoldMessage(coupons, wrapCurrency)
+																|| `${couponSummary({ ...coupons, freeShipping: coupons.freeShippingOption }, wrapCurrency)} applied${couponIsRestricted(coupons) ? ' on eligible items' : ''}`}
 														</div>
 													</div>
 												</div>

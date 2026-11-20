@@ -9,6 +9,7 @@ import Image from "next/image";
 
 import ToggleContent from "../../components/ToggleContent";
 import { useCounterStore } from '../../store/useCounterStore'
+import DealEditor from "../../components/shop-elements/DealEditor";
 
 import WidgetWrapper from '../../components/WidgetWrapper';
 
@@ -17,6 +18,10 @@ import ProductsTemplatePicker from "../../components/shop-elements/ProductsTempl
 import ProductsPicker from "../../components/shop-elements/ProductsPicker";
 import GalleryPicker from "../../components/shop-elements/GalleryPicker";
 import SizeGuideEditor from "../../components/shop-elements/SizeGuideEditor";
+import WarrantyEditor from "../../components/shop-elements/WarrantyEditor";
+import ProductShippingEditor from "../../components/shop-elements/ProductShippingEditor";
+import ProductSeoEditor from "../../components/shop-elements/ProductSeoEditor";
+import ProductReviewsEditor from "../../components/shop-elements/ProductReviewsEditor";
 import MediaThumb from "../../components/shop-elements/MediaThumb";
 import TermsPicker from "../../components/shop-elements/TermsPicker";
 import TagsPicker from "../../components/shop-elements/TagsPicker";
@@ -269,13 +274,14 @@ const ProductEdit = ({ id }) => {
     { label: "Downloads", value: 'downloads' },
     // { label: "Tax", value: 'tax' },
     { label: "Gallery", value: 'gallery' },
-    // { label: "Warranty", value: 'warranty' },
+    { label: "Warranty", value: 'warranty' },
     // { label: "Bulk prices", value: 'bulk_prices' },
     // { label: "Expiry Date", value: 'expiryDate' },
     // { label: "Compliance", value: 'compliance ' },
     // { label: "Warehouse", value: 'warehouse' },
     { label: "FAQ", value: 'faq' },
     { label: "Size Guide", value: 'size_guide' },
+    { label: "Deals", value: 'deals' },
     { label: "License", value: 'license' },
     { label: "Subscription", value: 'subscription' },
     // { label: "Unit & Quantity", value: 'unit_quantity' },
@@ -1357,124 +1363,7 @@ const ProductEdit = ({ id }) => {
               </>
 
             )}
-            {currentObject?.addons?.includes('seo') && (
-              <>
 
-                <WidgetWrapper className={CARD_CLASSES} collapsible={true} title="License Management">
-                  <div className="p-4 flex flex-col gap-3 ">
-
-                    <div className="flex flex-col gap-1.5">
-
-
-                      <div className="flex gap-2 cursor-pointer items-center">
-
-                        <label htmlFor="stockStatusInstock" className="flex gap-2 cursor-pointer">
-
-                          <input
-                            id="stockStatusInstock"
-                            type="checkbox"
-                            className=""
-                            checked={currentObject?.seo?.enable ? true : false}
-                            onChange={(ev) => {
-
-                              var seo = currentObject?.seo ? currentObject.seo : {};
-                              seo.enable = !seo.enable
-
-                              setcurrentObject({ ...currentObject, seo: seo });
-
-
-                            }}
-                          />
-                          <span>Enable License</span>
-                        </label>
-
-                      </div>
-
-
-                    </div>
-
-                    {currentObject?.seo?.enable && (
-                      <>
-
-                        <div className="flex flex-col gap-1.5">
-                          <label htmlFor="" className="block text-sm font-medium text-gray-700">
-                            {("License Limit Count?")}
-                          </label>
-                          <input
-                            type="number"
-                            className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 w-full rounded-lg bg-white px-3 py-2 text-sm"
-                            value={currentObject?.seo?.limit}
-                            onChange={(ev) => {
-                              var value = ev.target.value;
-
-                              setcurrentObject({ ...currentObject, seo: { ...currentObject.seo, limit: value } });
-
-
-                            }}
-                          />
-                        </div>
-
-
-                        <div className="flex flex-col gap-1.5">
-                          <label htmlFor="" className="block text-sm font-medium text-gray-700">
-                            {("License Interval?")}
-                          </label>
-                          <select name="" id="" className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 w-full rounded-lg bg-white px-3 py-2 text-sm mb-5"
-                            value={currentObject?.seo?.interval}
-                            onChange={(ev) => {
-                              var value = ev.target.value;
-
-                              setcurrentObject({ ...currentObject, seo: { ...currentObject.seo, interval: value } });
-                            }}
-                          >
-                            <option value="day">Day</option>
-                            <option value="week">Week</option>
-                            <option value="month">Month</option>
-                            <option value="year">Year</option>
-                          </select>
-                        </div>
-
-                        <div className="flex flex-col gap-1.5">
-                          <label htmlFor="" className="block text-sm font-medium text-gray-700">
-                            {("License Interval Count?")}
-                          </label>
-                          <input
-                            type="number"
-                            className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 w-full rounded-lg bg-white px-3 py-2 text-sm"
-                            value={currentObject?.seo?.interval_count}
-                            onChange={(ev) => {
-                              var value = ev.target.value;
-
-                              setcurrentObject({ ...currentObject, seo: { ...currentObject.seo, interval_count: value } });
-
-
-                            }}
-                          />
-                        </div>
-
-
-
-
-
-
-
-
-
-
-                      </>
-                    )}
-
-
-
-
-                  </div>
-
-
-                </WidgetWrapper>
-
-              </>
-
-            )}
             {currentObject?.addons?.includes('license') && (
               <>
 
@@ -1604,10 +1493,10 @@ const ProductEdit = ({ id }) => {
 
                       <div className="flex gap-2 cursor-pointer items-center">
 
-                        <label htmlFor="stockStatusInstock" className="flex gap-2 cursor-pointer">
+                        <label htmlFor="subscription" className="flex gap-2 cursor-pointer">
 
                           <input
-                            id="stockStatusInstock"
+                            id="subscription"
                             type="checkbox"
                             className=""
                             checked={currentObject?.subscription?.enable ? true : false}
@@ -2239,6 +2128,47 @@ const ProductEdit = ({ id }) => {
             )}
 
 
+            {/* Deals: dates and waitlist settings, plus who has joined (ComboStoreDeals). */}
+            {currentObject?.addons?.includes('deals') && (
+
+              <WidgetWrapper className={CARD_CLASSES} collapsible={true} title="Deal & Waitlist">
+                <DealEditor
+                  productId={currentObject?.id ?? id}
+                  token={token}
+                  value={currentObject?.deal}
+                  onChange={deal => setcurrentObject(prev => ({ ...prev, deal }))}
+                />
+              </WidgetWrapper>
+
+            )}
+
+
+
+            {/* Shipping: the product's shipping class (Settings > Shipping Classes), charged at checkout. */}
+            {currentObject?.addons?.includes('shipping') && (
+
+              <WidgetWrapper className={CARD_CLASSES} collapsible={true} title="Shipping">
+                <ProductShippingEditor
+                  value={currentObject?.shipping_class}
+                  onChange={shipping_class => setcurrentObject(prev => ({ ...prev, shipping_class }))}
+                />
+              </WidgetWrapper>
+
+            )}
+
+
+            {/* Warranty: type, length and claim details (ComboStoreProduct::sanitize_warranty). */}
+            {currentObject?.addons?.includes('warranty') && (
+
+              <WidgetWrapper className={CARD_CLASSES} collapsible={true} title="Warranty">
+                <WarrantyEditor
+                  value={currentObject?.warranty}
+                  onChange={warranty => setcurrentObject(prev => ({ ...prev, warranty }))}
+                />
+              </WidgetWrapper>
+
+            )}
+
 
             {currentObject?.addons?.includes('unit_quantity') && (
 
@@ -2431,6 +2361,33 @@ const ProductEdit = ({ id }) => {
 
 
             )}
+
+            {/* Reviews: who may review and whether reviews need approval (ComboStoreProduct::sanitize_review_settings), the rating and the latest reviews. */}
+            {currentObject?.addons?.includes('reviews') && (
+
+              <WidgetWrapper className={CARD_CLASSES} collapsible={true} title="Reviews">
+                <ProductReviewsEditor
+                  value={currentObject?.review_settings}
+                  productId={currentObject?.id ?? id}
+                  onChange={review_settings => setcurrentObject(prev => ({ ...prev, review_settings }))}
+                />
+              </WidgetWrapper>
+
+            )}
+
+            {/* SEO Meta Data: the product page's title, description, share image, canonical and noindex (ComboStoreProduct::sanitize_seo). */}
+            {currentObject?.addons?.includes('seo') && (
+
+              <WidgetWrapper className={CARD_CLASSES} collapsible={true} title="SEO Meta Data">
+                <ProductSeoEditor
+                  value={currentObject?.seo}
+                  product={currentObject}
+                  onChange={seo => setcurrentObject(prev => ({ ...prev, seo }))}
+                />
+              </WidgetWrapper>
+
+            )}
+
 
             {currentObject?.addons?.includes('productTemplates') && (
               <>

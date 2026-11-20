@@ -1,6 +1,6 @@
 "use client"
 import React, { useState } from "react";
-import { IconExclamationCircle, IconStar, IconStarFilled, IconCircleCheck } from "@tabler/icons-react";
+import { IconExclamationCircle, IconStar, IconStarFilled, IconCircleCheck, IconLock } from "@tabler/icons-react";
 import { usePost } from "../context/PostContext";
 import { useComment } from "../context/CommentContext";
 import { useCommentsGrid } from "../context/CommentsGridContext";
@@ -29,7 +29,21 @@ export function commentsFormTexts(options) {
 		loadingLabel: options?.loadingLabel ?? 'Please wait.',
 		loginRequiredText: options?.loginRequiredText ?? 'Please log in to leave a comment.',
 		successText: options?.successText ?? 'Thank you, your comment has been received.',
+		pendingText: options?.pendingText ?? 'Thank you! Your review will appear once it has been approved.',
+		closedText: options?.closedText ?? 'Reviews are closed for this product.',
+		verifiedOnlyText: options?.verifiedOnlyText ?? 'Only customers who bought this product can review it.',
 	};
+}
+
+/*
+	A product's own review rules, while its "Reviews" addon is on
+	(cstore_products.review_settings, enforced by submit_comment):
+	{ enabled, verifiedOnly } - null for anything else.
+*/
+export function productReviewRules(post) {
+	if (!Array.isArray(post?.addons) || !post.addons.includes('reviews')) return null;
+	var s = post?.review_settings && typeof post.review_settings === 'object' ? post.review_settings : {};
+	return { enabled: s.enabled !== false, verifiedOnly: !!s.verified_only };
 }
 
 /*
@@ -54,6 +68,15 @@ export function CommentsFormMarkup({ cls, id, index, type, options, state, actio
 
 	var t = commentsFormTexts(options);
 	var shown = state.hoverRate ?? state.rate;
+
+	/* The product takes no new reviews: a notice in place of the form. */
+	if (state.rules && !state.rules.enabled) {
+		return (
+			<div id={id} index={index} type={type} className={`${cls('*')} ${rootClassName}`} {...rootProps}>
+				<div role="status" className={cls('notice')}><IconLock size={16} className="shrink-0" /> {t.closedText}</div>
+			</div>
+		);
+	}
 
 	return (
 		<div id={id} index={index} type={type} className={`${cls('*')} ${rootClassName}`} {...rootProps}>
@@ -81,12 +104,14 @@ export function CommentsFormMarkup({ cls, id, index, type, options, state, actio
 					<textarea id={`${id}-content`} className={cls('textarea')} placeholder={t.placeholder} value={state.content} onChange={ev => actions.setContent(ev.target.value)} />
 				</div>
 
+				{state.rules?.verifiedOnly && <p className={cls('verified-note')}>{t.verifiedOnlyText}</p>}
+
 				<button type="submit" disabled={state.loading} className={cls('submit')}>
 					{state.loading ? t.loadingLabel : t.submitLabel}
 				</button>
 
 				{state.success && (
-					<div role="status" className={cls('notice')}><IconCircleCheck size={16} className="shrink-0" /> {t.successText}</div>
+					<div role="status" className={cls('notice')}><IconCircleCheck size={16} className="shrink-0" /> {state.success === 'pending' ? t.pendingText : t.successText}</div>
 				)}
 				{state.errors?.length > 0 && (
 					<div role="alert" className={cls('errors')}>
@@ -158,10 +183,11 @@ export function useCommentsForm(options) {
 				}
 				if (res?.success) {
 					setErrors([]);
-					setSuccess(true);
+					/* Held for approval: say so instead of "received". */
+					setSuccess(res?.pending ? 'pending' : true);
 					setContentRaw('');
 					setRate(null);
-					addNotification?.({ type: 'success', title: 'Thank you for your comment', content: t.successText });
+					addNotification?.({ type: 'success', title: 'Thank you for your comment', content: res?.pending ? t.pendingText : t.successText });
 					grid?.onCommentSubmitted?.();
 					if (userDataX && setUserDataX) {
 						setUserDataX({ ...userDataX, total_credit: (parseInt(userDataX.total_credit) || 0) + 5 });
@@ -173,7 +199,11 @@ export function useCommentsForm(options) {
 			.finally(() => setLoading(false));
 	}
 
-	return { state: { content, rate, hoverRate, loading, success, errors }, actions: { setContent, setRate, setHoverRate, submit } };
+	/* Replies under a review aren't reviews: only the closed rule applies to them. */
+	var rules = productReviewRules(post);
+	if (rules && parentComment) rules = { ...rules, verifiedOnly: false };
+
+	return { state: { content, rate, hoverRate, loading, success, errors, rules }, actions: { setContent, setRate, setHoverRate, submit } };
 }
 
 /*

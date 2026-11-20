@@ -22,7 +22,7 @@ const metaUser = (order) => ({
 	gateway's checkout button and read back here; see the effect below for why
 	the cart is emptied on this page rather than at checkout.
 */
-const REDIRECT_PAYMENT_MARKERS = ['aamarpay:pending_order', 'stripe:pending_order', 'eps:pending_order', 'bkash:pending_order', 'nagad:pending_order'];
+const REDIRECT_PAYMENT_MARKERS = ['aamarpay:pending_order', 'stripe:pending_order', 'eps:pending_order', 'bkash:pending_order', 'nagad:pending_order', 'paddle:pending_order'];
 
 /*
 	The order on the thank-you page: its invoice, plus what the page does in

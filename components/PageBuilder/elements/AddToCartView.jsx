@@ -7,7 +7,7 @@ import { tablerIcon } from "@/components/icons/TablerIcon";
 import BlockRender from '../BlockRender';
 
 import { useCounterStore, cartLineKey, productMoq } from '../../../store/useCounterStore';
-import { productSubscription, subscriptionCycle, subscriptionPrice } from '@/lib/subscriptionCart';
+import { productSubscription, subscriptionPrice } from '@/lib/subscriptionCart';
 import { useUtilsStore } from '../../../store/useUtilsStore';
 import { usePost } from "../context/PostContext";
 import { useActiveVariation } from "../context/VariationScope";
@@ -172,14 +172,16 @@ const AddToCart = (props) => {
 	var onChangeCartBtn = props?.onChangeCartBtn
 
 	/*
-		Subscribe option. A product with subscription enabled (product editor)
-		offers "One-time purchase" or "Subscribe"; subscribing takes the
-		subscribe discount off the price and adds the setup fee once at
-		checkout. Variations use their product's option.
+		Subscription products. A product with subscription enabled (product
+		editor) is always bought as a subscription: there is no one-time
+		choice (the button used to carry a "One-time purchase / Subscribe"
+		radio). The line takes the subscribe discount off the price and the
+		setup fee is added once at checkout. The price block (ProductPriceView)
+		shows that price with its cycle, "every year". Variations use their
+		product's option.
 	*/
 	var subscription = productSubscription(productData);
-	var [purchaseType, setpurchaseType] = useState("one_time");
-	var subscribing = !!subscription && purchaseType === "subscription";
+	var subscribing = !!subscription;
 
 	/* The price a cart line is sold at, for how it is being bought. */
 	function linePrice(price) {
@@ -549,48 +551,6 @@ const AddToCart = (props) => {
 					</button>
 				</div>
 			)}
-
-			{/* One-time or subscribe, for products that offer a subscription. */}
-			{subscription && canAddToCart && !purchaseBlocked && !outOfStock && !hideButton && (() => {
-				var basePrice = addons?.includes('variations')
-					? (activeVariation?.sale_price || activeVariation?.regular_price)
-					: productData?.price;
-				var options = [
-					{ value: "one_time", title: "One-time purchase", price: basePrice, note: null },
-					{
-						value: "subscription",
-						title: `Subscribe — ${subscriptionCycle(subscription)}`,
-						price: subscriptionPrice(basePrice, subscription),
-						note: [
-							subscription.discount > 0 ? `Save ${subscription.discount}%` : null,
-							subscription.setup_fee > 0 ? `${wrapCurrency ? wrapCurrency(subscription.setup_fee) : subscription.setup_fee} setup fee on the first order` : null,
-							"Renews automatically; you pay each renewal order",
-						].filter(Boolean).join(" · "),
-					},
-				];
-				return (
-					<div role="radiogroup" aria-label="How would you like to buy?" className="mb-3 flex w-full flex-col gap-2">
-						{options.map(option => {
-							var selected = purchaseType === option.value;
-							return (
-								<label key={option.value}
-									className={`flex cursor-pointer items-start gap-3 rounded-lg border px-3 py-2.5 transition-colors ${selected ? "border-[#1b0e9f] bg-[#1b0e9f]/5 ring-1 ring-[#1b0e9f]" : "border-gray-200 bg-white hover:border-gray-300"}`}>
-									<input type="radio" name={`purchase-type-${productId}`} value={option.value} checked={selected}
-										onChange={() => setpurchaseType(option.value)}
-										className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer accent-[#1b0e9f]" />
-									<span className="flex min-w-0 flex-1 flex-col">
-										<span className="flex flex-wrap items-baseline justify-between gap-x-3">
-											<span className="text-sm font-medium text-gray-900">{option.title}</span>
-											{basePrice ? <span className="text-sm font-semibold text-gray-900">{wrapCurrency ? wrapCurrency(option.price) : option.price}</span> : null}
-										</span>
-										{option.note && <span className="text-xs text-gray-500">{option.note}</span>}
-									</span>
-								</label>
-							);
-						})}
-					</div>
-				);
-			})()}
 
 			{canAddToCart && !purchaseBlocked && !outOfStock && (
 

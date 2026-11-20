@@ -24,9 +24,12 @@ export async function generateMetadata({ params }) {
   const productResponse = await getProduct(slug);
   if (!productResponse) return { title: "Product Not Found" };
   const productData = productResponse?.product;
+  /* The product's own "SEO Meta Data" addon wins over the template's pattern. */
+  const hasSeo = Array.isArray(productData?.addons) && productData.addons.includes('seo');
   return templateMetadata('product', {
     single: true,
     item: { title: productData?.title, description: productData?.post_excerpt, image: productData?.post_thumbnail?.src },
+    itemSeo: hasSeo ? productData?.seo : null,
     path: `product/${slug}`,
   });
 }

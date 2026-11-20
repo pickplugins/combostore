@@ -49,12 +49,16 @@ const ProductQuickViewView = (props) => {
 
 	const options = props?.options || {};
 
+	var hasVariations = Array.isArray(productData?.addons) && productData.addons.includes('variations');
 
 
 	var buttonLabel = options?.buttonLabel ?? "Quick View";
 
+	if (hasVariations) {
+		buttonLabel = attributes?.length > 0 ? buttonLabel.replace('{attr}', attributes[0]?.title) : buttonLabel;
 
-	buttonLabel = attributes?.length > 0 ? buttonLabel.replace('{attr}', attributes[0]?.title) : buttonLabel;
+	}
+
 
 	const iconSize = options?.iconSize || 18;
 	const buttonIcon = options?.buttonIcon;
@@ -139,7 +143,7 @@ const ProductQuickViewView = (props) => {
 	const place = (node) => (isFixed && portalTarget ? createPortal(node, portalTarget) : node);
 
 	/* Adding to cart from in here opens the cart drawer, which sits under
-	   this panel (z-50 vs z-[999]): close the quick view so the cart shows. */
+		 this panel (z-50 vs z-[999]): close the quick view so the cart shows. */
 	const cartToggle = useCounterStore((state) => state.cartToggle);
 	useEffect(() => {
 		if (cartToggle && isOpen && !isClosing) {

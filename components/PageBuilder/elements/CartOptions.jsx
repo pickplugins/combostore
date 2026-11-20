@@ -17,6 +17,8 @@ const toggleDefaults = {
 	shippingMethods: true,
 	orderNotes: true,
 	countryCity: true,
+	/* Off by default, unlike the switches above. */
+	whatsappOptIn: false,
 };
 
 const toggles = [
@@ -26,6 +28,7 @@ const toggles = [
 	['shippingMethods', 'Enable Shipping Methods?'],
 	['orderNotes', 'Enable Order Notes?'],
 	['countryCity', 'Enable Country & City?'],
+	['whatsappOptIn', 'Ask for WhatsApp consent at checkout?'],
 ];
 
 /*
@@ -76,6 +79,14 @@ const CartOptions = (props) => {
 						</div>
 					</div>
 				))}
+
+				{isOn('whatsappOptIn') && (
+					<div className="flex flex-col gap-1.5">
+						<label htmlFor="" className="text-xs font-medium text-gray-600">WhatsApp checkbox text</label>
+						<input type="text" className={selectClass} value={options?.whatsappOptInLabel ?? 'Send me order updates and offers on WhatsApp'} onChange={ev => updateBlock('options', { ...options, whatsappOptInLabel: ev.target.value })} />
+						<p className="text-[11px] text-gray-500">Unticked by default. A tick subscribes their number to WhatsApp (Marketing › Contacts), which the WhatsApp abandoned-cart message and WhatsApp campaigns need.</p>
+					</div>
+				)}
 
 				{/* Frequently bought together: the cart products' cross-sells, under the items (CartCrossSellsView). */}
 				<div className="flex flex-col gap-2 border-t border-gray-200 pt-3">

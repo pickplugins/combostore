@@ -266,10 +266,21 @@ const Coupons = () => {
 		);
 	}
 
-	/* couponType is "percent" or "fixed"; the amount alone did not say which. */
+	/* couponType is "percent", "fixed" or "free_shipping"; the amount alone did not say which. */
 	function callbackAmount(entry, columnIndex) {
 		var amount = entry?.amount;
 		var hasAmount = amount !== undefined && amount !== null && amount !== "";
+
+		if (entry?.couponType === 'free_shipping') {
+			return (
+				<td data-label="Discount" className="!px-5 py-3 text-left text-sm" key={`amount-${entry?.id}`}>
+					<div className="flex flex-col">
+						<span className="whitespace-nowrap font-semibold text-gray-900">{("Free delivery")}</span>
+						<span className="text-xs text-gray-500">{("Shipping")}</span>
+					</div>
+				</td>
+			);
+		}
 
 		return (
 			<td data-label="Discount" className="!px-5 py-3 text-left text-sm" key={`amount-${entry?.id}`}>
@@ -278,7 +289,7 @@ const Coupons = () => {
 						<span className="whitespace-nowrap font-semibold tabular-nums text-gray-900">
 							{entry?.couponType === 'percent' ? `${amount}%` : wrapCurrency(amount)}
 						</span>
-						<span className="text-xs text-gray-500">{entry?.couponType === 'percent' ? ("Percentage") : entry?.couponType === 'fixed' ? ("Fixed amount") : ("Type not set")}</span>
+						<span className="text-xs text-gray-500">{entry?.couponType === 'percent' ? ("Percentage") : entry?.couponType === 'fixed' ? ("Flat amount") : ("Type not set")}{entry?.freeShipping ? (" + free delivery") : ""}</span>
 					</div>
 				) : <span className="text-gray-300">—</span>}
 			</td>

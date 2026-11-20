@@ -6,6 +6,7 @@ import { useUtilsStore } from '../../../store/useUtilsStore';
 import { useCounterStore } from '../../../store/useCounterStore';
 import { useActiveVariation } from "../context/VariationScope";
 import { elementCssClasses } from "../ElementsDefinition";
+import { productSubscription, subscriptionCycle, subscriptionPrice } from '@/lib/subscriptionCart';
 
 const toNumber = (value) => {
 	var n = parseFloat(value);
@@ -40,6 +41,28 @@ export const isVariationEnabled = (v) => {
 	you want products always showed as simple prices.
 */
 export function productPriceDisplay(product, activeVariation) {
+	var display = basePriceDisplay(product, activeVariation);
+
+	/*
+		A subscription product is always bought as a subscription (AddToCartView
+		has no one-time choice), so the price shown is the price charged: after
+		the subscribe discount, with the cycle as a suffix ("every year"). On a
+		discount the price before it is struck through, as a sale is.
+	*/
+	var subscription = productSubscription(product);
+	if (!subscription || display.mode === 'pwyw') return display;
+	var suffix = subscriptionCycle(subscription);
+	/* The one-time setup fee, charged on the first order only (withSetupFeeLines adds it at checkout). */
+	var setupFee = subscription.setup_fee > 0 ? subscription.setup_fee : 0;
+	if (display.mode === 'range') {
+		return { ...display, min: subscriptionPrice(display.min, subscription), max: subscriptionPrice(display.max, subscription), suffix, setupFee };
+	}
+	var price = subscriptionPrice(display.price, subscription);
+	var regular = display.regular ?? (price < display.price ? display.price : null);
+	return { ...display, price, regular, suffix, setupFee };
+}
+
+function basePriceDisplay(product, activeVariation) {
 	var hasVariations = Array.isArray(product?.addons) && product.addons.includes('variations');
 
 	if (hasVariations && !activeVariation) {
@@ -125,6 +148,8 @@ export function ProductPriceMarkup({ cls, id, index, type, display, wrapCurrency
 				<div className={cls('variable-price-min')}>{wrapCurrency(display.min)}</div>
 				<div className={cls('price-separator')}> - </div>
 				<div className={cls('variable-price-max')}>{wrapCurrency(display.max)}</div>
+				{display.suffix && <span className={cls('price-suffix')}>{display.suffix}</span>}
+				{display.setupFee > 0 && <span className={cls('price-setup-fee')}>+ {wrapCurrency(display.setupFee)} setup fee</span>}
 			</div>
 		);
 	}
@@ -142,6 +167,8 @@ export function ProductPriceMarkup({ cls, id, index, type, display, wrapCurrency
 					<span className={cls('simple-price-regular')}>{wrapCurrency(display.regular)}</span>
 				</>
 			)}
+			{display.price > 0 && display.suffix && <span className={cls('price-suffix')}>{display.suffix}</span>}
+			{display.price > 0 && display.setupFee > 0 && <span className={cls('price-setup-fee')}>+ {wrapCurrency(display.setupFee)} setup fee</span>}
 		</div>
 	);
 }

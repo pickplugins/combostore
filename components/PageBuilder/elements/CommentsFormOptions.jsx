@@ -13,6 +13,9 @@ const fields = [
 	['loadingLabel', 'Button text while sending'],
 	['successText', 'Message after posting'],
 	['loginRequiredText', 'Message when not logged in'],
+	['pendingText', 'Message when a review waits for approval'],
+	['closedText', 'Message when a product closes reviews'],
+	['verifiedOnlyText', 'Note when only buyers can review'],
 ];
 
 /*

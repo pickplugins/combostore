@@ -3,7 +3,7 @@ import Image from "next/image";
 
 import Link from 'next/link';
 import React from 'react'
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import ToggleNavs from "./ToggleNavs";
 import Accounts from "./Accounts";
@@ -32,6 +32,7 @@ import {
 	IconReceiptRefund,
 	IconUserDollar,
 	IconBox,
+	IconPackages,
 	IconNews,
 	IconMessage,
 	IconList,
@@ -42,9 +43,16 @@ import {
 	IconLibraryPhoto,
 	IconCubeSend,
 	IconPuzzle,
+	IconSpeakerphone,
+	IconMail,
+	IconAddressBook,
+	IconSettings,
+	IconPhoneCall,
+	IconMessages,
 } from "@tabler/icons-react";
 
 import { useCounterStore } from '../store/useCounterStore'
+import { postApi } from './pages/marketingUi'
 import { useExtensionsStore } from '../store/useExtensionsStore'
 import registry from '../extensions'
 
@@ -89,6 +97,7 @@ const NAVS = [
 	{ label: ("Delivery"), value: "delivery", icon: <IconTruckDelivery />, roles: ['administrator', 'store_manager'] },
 	{ label: ("Deliveries"), value: "deliveries", icon: <IconTruckDelivery />, roles: ['administrator', 'store_manager'], parent: "delivery", },
 	{ label: ("Shipping Zones"), value: "shipping-zones", icon: <IconTruckDelivery />, roles: ['administrator', 'store_manager'], parent: "delivery", },
+	{ label: ("Shipping Classes"), value: "shipping-classes", icon: <IconPackages />, roles: ['administrator', 'store_manager'], parent: "delivery", },
 
 
 
@@ -155,6 +164,18 @@ const NAVS = [
 	{ label: ("Tags"), value: "posts-tags", slug: "posts-tags", icon: <IconTags />, parent: "blogs", roles: ['administrator'] },
 	{ label: ("Bulk Submit Blog"), value: "bulk-submit-blog", icon: <IconPropeller />, parent: "blogs", roles: ['administrator'] },
 
+	/* Email and SMS marketing (ComboStoreMarketing.php). The group key is only a
+		 toggle, so the overview is its first child, as with "affiliates-group". */
+	{ label: ("Marketing"), value: "marketing", icon: <IconSpeakerphone />, roles: ['administrator'] },
+	{ label: ("Overview"), value: "marketing-overview", icon: <IconDeviceDesktopAnalytics />, parent: "marketing", roles: ['administrator'] },
+	{ label: ("Campaigns"), value: "marketing-campaigns", icon: <IconMail />, parent: "marketing", roles: ['administrator'] },
+	{ label: ("Contacts"), value: "marketing-contacts", icon: <IconAddressBook />, parent: "marketing", roles: ['administrator'] },
+	{ label: ("Lists"), value: "marketing-lists", icon: <IconList />, parent: "marketing", roles: ['administrator'] },
+	{ label: ("Settings"), value: "marketing-settings", icon: <IconSettings />, parent: "marketing", roles: ['administrator'] },
+	/* Agents work call lists here (ComboStoreMarketing's mkt_call_* routes). Top-level, so the slug carries dashboard/. */
+	{ label: ("Calls"), value: "calls", slug: "dashboard/calls", icon: <IconPhoneCall />, roles: ['administrator', 'store_manager', 'support_agent'] },
+	/* WhatsApp and Messenger conversations (ComboStoreInbox). Its unread badge is filled in by Sidebar below. */
+	{ label: ("Messages"), value: "messages", slug: "dashboard/messages", icon: <IconMessages />, roles: ['administrator', 'support_agent'] },
 
 
 	// { label: ("Credits"), value: "credits", icon: <IconCards />, roles: ['administrator'] },
@@ -312,9 +333,26 @@ const Sidebar = () => {
 
 	useEffect(() => { hydrateExtensions(); }, [hydrateExtensions]);
 
+	/*
+		Unread Messages conversations, for the badge. Only for the roles that see
+		Messages; every 30 seconds, and at once when the Messages page says it
+		changed something (the "cstore-inbox-changed" window event).
+	*/
+	const [inboxUnread, setinboxUnread] = useState(0);
+	const canSeeInbox = !!userDataX?.roles?.some((r) => r === 'administrator' || r === 'support_agent');
+	useEffect(() => {
+		if (!token || !canSeeInbox) return;
+		let stop = false;
+		const check = () => postApi("get_inbox_counts", token, {}).then((r) => { if (!stop) setinboxUnread(Number(r?.unread) || 0); }).catch(() => { });
+		check();
+		const timer = setInterval(check, 30000);
+		window.addEventListener('cstore-inbox-changed', check);
+		return () => { stop = true; clearInterval(timer); window.removeEventListener('cstore-inbox-changed', check); };
+	}, [token, canSeeInbox]);
+
 	const navs = useMemo(
-		() => mergeExtensionNavs(registry.navItems(activeExtensionIds)),
-		[activeExtensionIds]
+		() => mergeExtensionNavs(registry.navItems(activeExtensionIds)).map((n) => (n.value === 'messages' && inboxUnread ? { ...n, badge: inboxUnread } : n)),
+		[activeExtensionIds, inboxUnread]
 	);
 
 	const closeMobileNav = () => setmobileNav(false);

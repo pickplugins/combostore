@@ -237,6 +237,13 @@ export const useCounterStore = create((set) => ({
     //   "label": "Stripe (Card)",
     //   "value": "stripe",
     // },
+    /* Paddle Classic (vendor id + auth code): lib/paddle-server.js. */
+    "paddle": {
+      "id": 'paddle',
+      "enable": false,
+      "label": "Paddle",
+      "value": "paddle",
+    },
     "aamarpay": {
 
       "id": 'aamarpay',
@@ -376,6 +383,10 @@ export const useCounterStore = create((set) => ({
     "stripe": {
       "label": "Card",
       "value": "stripe",
+    },
+    "paddle": {
+      "label": "Paddle",
+      "value": "paddle",
     },
   },
   couriersPrams: {

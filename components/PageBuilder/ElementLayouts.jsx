@@ -28,11 +28,14 @@ import RelatedProducts from './element-layouts/RelatedProducts'
 import ProductVariations from './element-layouts/ProductVariations'
 import ProductSku from './element-layouts/ProductSku'
 import ProductMoq from './element-layouts/ProductMoq'
+import ProductDeal from './element-layouts/ProductDeal'
 import OrderTracking from './element-layouts/OrderTracking'
 import ProductDimensions from './element-layouts/ProductDimensions'
 import ProductSizeGuide from './element-layouts/ProductSizeGuide'
+import ProductWarranty from './element-layouts/ProductWarranty'
 import ProductFaq from './element-layouts/ProductFaq'
 import CountdownTimer from './element-layouts/CountdownTimer'
+import NewsletterSignup from './element-layouts/NewsletterSignup'
 import Popup from './element-layouts/Popup'
 import ProductPrice from './element-layouts/ProductPrice'
 import ProductDiscount from './element-layouts/ProductDiscount'
@@ -165,6 +168,9 @@ const Templates = (props) => {
 		else if (type == 'productMoq') {
 			setlayouts(ProductMoq)
 		}
+		else if (type == 'productDeal') {
+			setlayouts(ProductDeal)
+		}
 		else if (type == 'orderTracking') {
 			setlayouts(OrderTracking)
 		}
@@ -174,11 +180,17 @@ const Templates = (props) => {
 		else if (type == 'productSizeGuide') {
 			setlayouts(ProductSizeGuide)
 		}
+		else if (type == 'productWarranty') {
+			setlayouts(ProductWarranty)
+		}
 		else if (type == 'productFaq') {
 			setlayouts(ProductFaq)
 		}
 		else if (type == 'countdownTimer') {
 			setlayouts(CountdownTimer)
+		}
+		else if (type == 'newsletterSignup') {
+			setlayouts(NewsletterSignup)
 		}
 		else if (type == 'popup') {
 			setlayouts(Popup)
@@ -387,6 +399,14 @@ const Templates = (props) => {
 											if (selectedBlock?.options?.[key] !== undefined) kept[key] = selectedBlock.options[key];
 										});
 										content = { ...content, options: { ...content.options, ...kept } };
+									}
+									/* A newsletter form keeps the list it fills and its tag (where sign-ups go);
+									   the preset may still change what it asks for. */
+									if (content?.type === 'newsletterSignup' && selectedBlock?.type === 'newsletterSignup') {
+										var keptSignup = {};
+										if (Number(selectedBlock?.options?.listId) > 0) keptSignup.listId = selectedBlock.options.listId;
+										if (selectedBlock?.options?.tag) keptSignup.tag = selectedBlock.options.tag;
+										content = { ...content, options: { ...content.options, ...keptSignup } };
 									}
 									/* A lightbox gallery keeps its images: a preset carries only looks. */
 									if (content?.type === 'imageLightbox' && selectedBlock?.type === 'imageLightbox' && Array.isArray(selectedBlock?.options?.images)) {

@@ -29,6 +29,7 @@ mount.
 | `emailOtp` | Email OTP Verification | `enabled`, `order_count` |
 | `limitip` | Limit IP Address | `enabled`, `order_count` |
 | `limitPhone` | Limit Phone Number | `enabled`, `order_count` |
+| `countryFilter` | Country filter | `enabled`, `allow_countries` (codes), `block_countries` (codes), `unknown` (`allow`/`block`) |
 | `mobilefraudcheck` | Mobile Fraud Checker | `enabled`, `service`, `score` |
 
 `lib/providers.js` is the table. In core each of these was a hand-written
@@ -42,15 +43,16 @@ recorded in `NOT_YET_OFFERED` rather than dropped silently.
 
 ## What is enforced
 
-Two checks run on the server, in `create_order` (combostore-server,
+Three checks run on the server, in `create_order` (combostore-server,
 `ComboStoreRest.php`), before the order is written:
 
 | Check | Rule | Refusal |
 | --- | --- | --- |
 | `loginRequired` | The request must carry a valid customer token. The order is then placed as that customer: the body's `userid` is overwritten, because anyone can write any id into it. | `{ status: "failed", code: "login_required" }` |
+| `countryFilter` | The country of the request (see below) must not be in `block_countries`, and must be in `allow_countries` when that list is not empty. A country in both is blocked. When the country cannot be told, `unknown` decides (default allow, so a lookup outage does not stop sales). | `{ status: "failed", code: "country_blocked" }` |
 | `limitPhone` | At most `order_count` orders per phone number in the last hour. Billing and shipping phones are compared on their last 10 digits, so `+8801711…` and `01711…` are the same number. Incomplete, draft, trashed, failed and cancelled orders do not count. 0 or blank means no limit. | `{ status: "failed", code: "phone_limit" }` |
 
-Both are skipped for `incomplete` orders (the checkout's abandoned-cart
+All are skipped for `incomplete` orders (the checkout's abandoned-cart
 capture) and for `administrator` / `store_manager` tokens, the same as the MOQ
 check. The checkout sends the signed-in customer's token with every
 `create_order` call so the server can see who is ordering.
@@ -58,6 +60,17 @@ check. The checkout sends the signed-in customer's token with every
 Every other check is still **Coming Soon**: saved, but nothing reads it. When
 those ship they belong in the same place. Anything decided in the browser is
 bypassed by posting an order straight to the API.
+
+## Where the country comes from
+
+`ComboStoreGeoIp.php` (combostore-server):
+
+1. Cloudflare's `CF-IPCountry` header - trusted only when `REMOTE_ADDR` is in Cloudflare's published ranges, so a shopper cannot send the header themselves. Behind Cloudflare without the header, `CF-Connecting-IP` is looked up instead.
+2. IPinfo Lite (`https://api.ipinfo.io/lite/{ip}`), free, with the store's token; cached a day per IP (failures 10 minutes).
+
+geoPlugin, used for activity logging, stopped its free API (every lookup returns 403), so it is not used here.
+
+The IPinfo token is in its own option, `combo_store_geoip`, set from the Country filter panel through `get_geoip_settings` / `update_geoip_settings` / `geoip_test` (administrator, store_manager). It must never go into `fraudCheck`: `get_settings_public` hands the whole store settings blob to anyone.
 
 ## Storage
 

@@ -3,6 +3,7 @@ import { redactEpsSettings } from "@/lib/eps-server";
 import { redactAamarPaySettings } from "@/lib/aamarpay-server";
 import { redactBkashSettings } from "@/lib/bkash-server";
 import { redactNagadSettings } from "@/lib/nagad-server";
+import { redactPaddleSettings } from "@/lib/paddle-server";
 import { DEMO_MODE } from "@/lib/demo/config";
 import { settings as demoSettings } from "@/lib/demo/data";
 
@@ -53,7 +54,7 @@ export async function GET() {
 
   /* Some installs answer with the blob wrapped in `settings`, some bare. */
   const strip = (settings) =>
-    redactNagadSettings(redactBkashSettings(redactAamarPaySettings(redactEpsSettings(redactStripeSettings(settings)))));
+    redactPaddleSettings(redactNagadSettings(redactBkashSettings(redactAamarPaySettings(redactEpsSettings(redactStripeSettings(settings))))));
 
   const redacted = data?.settings
     ? { ...data, settings: strip(data.settings) }

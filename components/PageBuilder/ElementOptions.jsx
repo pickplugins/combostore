@@ -21,6 +21,7 @@ import CommentAvatarOptions from './elements/CommentAvatarOptions';
 import CommentsGridPaginationOptions from './elements/CommentsGridPaginationOptions';
 import CommentsGridOptions from './elements/CommentsGridOptions';
 import PostGridPaginationOptions from './elements/PostGridPaginationOptions';
+import PostGridFiltersOptions from './elements/PostGridFiltersOptions';
 import TermsSliderOptions from './elements/TermsSliderOptions';
 import TermTitleOptions from './elements/TermTitleOptions';
 import TermThumbnailOptions from './elements/TermThumbnailOptions';
@@ -61,11 +62,14 @@ import ProductTagsOptions from './elements/ProductTagsOptions';
 import ProductBrandsOptions from './elements/ProductBrandsOptions';
 import ProductSkuOptions from './elements/ProductSkuOptions';
 import ProductMoqOptions from './elements/ProductMoqOptions';
+import ProductDealOptions from './elements/ProductDealOptions';
 import OrderTrackingOptions from './elements/OrderTrackingOptions';
 import ProductDimensionsOptions from './elements/ProductDimensionsOptions';
 import ProductSizeGuideOptions from './elements/ProductSizeGuideOptions';
+import ProductWarrantyOptions from './elements/ProductWarrantyOptions';
 import ProductFaqOptions from './elements/ProductFaqOptions';
 import CountdownTimerOptions from './elements/CountdownTimerOptions';
+import NewsletterSignupOptions from './elements/NewsletterSignupOptions';
 import ProductUpsellsOptions from './elements/ProductUpsellsOptions';
 import ProductCrosssellsOptions from './elements/ProductCrosssellsOptions';
 import ProductGalleryOptions from './elements/ProductGalleryOptions';
@@ -242,6 +246,9 @@ const ElementOptions = (props) => {
 			{selectedBlock?.type == 'productMoq' && (
 				<ProductMoqOptions {...selectedBlock} updateBlock={updateBlock} />
 			)}
+			{selectedBlock?.type == 'productDeal' && (
+				<ProductDealOptions {...selectedBlock} updateBlock={updateBlock} />
+			)}
 			{selectedBlock?.type == 'orderTracking' && (
 				<OrderTrackingOptions {...selectedBlock} updateBlock={updateBlock} />
 			)}
@@ -251,8 +258,14 @@ const ElementOptions = (props) => {
 			{selectedBlock?.type == 'productSizeGuide' && (
 				<ProductSizeGuideOptions {...selectedBlock} updateBlock={updateBlock} />
 			)}
+			{selectedBlock?.type == 'productWarranty' && (
+				<ProductWarrantyOptions {...selectedBlock} updateBlock={updateBlock} />
+			)}
 			{selectedBlock?.type == 'productFaq' && (
 				<ProductFaqOptions {...selectedBlock} updateBlock={updateBlock} />
+			)}
+			{selectedBlock?.type == 'newsletterSignup' && (
+				<NewsletterSignupOptions {...selectedBlock} updateBlock={updateBlock} />
 			)}
 			{selectedBlock?.type == 'countdownTimer' && (
 				<CountdownTimerOptions {...selectedBlock} updateBlock={updateBlock} />
@@ -369,6 +382,9 @@ const ElementOptions = (props) => {
 			)}
 			{selectedBlock?.type == 'postGridPagination' && (
 				<PostGridPaginationOptions {...selectedBlock} updateBlock={updateBlock} />
+			)}
+			{selectedBlock?.type == 'postGridFilters' && (
+				<PostGridFiltersOptions {...selectedBlock} updateBlock={updateBlock} />
 			)}
 
 			{selectedBlock?.type == 'postSlider' && (

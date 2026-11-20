@@ -27,9 +27,11 @@ import NagadCheckoutButton from "../../../components/shop-elements/NagadCheckout
 import AamarPayCheckoutButton from "../../../components/shop-elements/AamarPayCheckoutButton";
 import PayPalCheckoutButton from "../../../components/shop-elements/PayPalCheckoutButton";
 import StripeCheckoutButton from "../../../components/shop-elements/StripeCheckoutButton";
+import PaddleCheckoutButton from "../../../components/shop-elements/PaddleCheckoutButton";
 import EpsCheckoutButton from "../../../components/shop-elements/EpsCheckoutButton";
 import { getPayPalConfig } from "../../../lib/paypal";
 import { getStripeConfig } from "../../../lib/stripe";
+import { getPaddleConfig } from "../../../lib/paddle";
 import { getEpsConfig } from "../../../lib/eps";
 import { getAamarPayConfig } from "../../../lib/aamarpay";
 import { getBkashConfig } from "../../../lib/bkash";
@@ -39,6 +41,7 @@ import { trackMetaEvent } from "../../../lib/sendMetaEvent";
 import { withSetupFeeLines, isSubscriptionLine, subscriptionCycle, cartSetupFees } from "../../../lib/subscriptionCart";
 import { sortProviderEntries } from "../../../lib/sortProviders";
 import { withAffiliateRef } from "../../../lib/affiliateRef";
+import { methodClassCharge, shippingClassCharge, shippingClassItems } from "../../../lib/shippingClasses";
 
 /* Meta's "Subscribe" event: the order has at least one line bought with Subscribe. */
 const hasSubscriptionLine = (data) => (data?.cartItems ?? []).some(isSubscriptionLine);
@@ -268,6 +271,8 @@ const CheckoutView = (props) => {
 	/* bKash and Nagad are the same case again. */
 	const [bkashConfig, setbkashConfig] = useState(null);
 	const [nagadConfig, setnagadConfig] = useState(null);
+	/* Paddle (Classic) too: offered only once the server has a vendor id and auth code. */
+	const [paddleConfig, setpaddleConfig] = useState(null);
 	const [readyToSubmitOrder, setreadyToSubmitOrder] = useState({ error: null, message: "" });
 	const [contactAdded, setcontactAdded] = useState({ error: null, message: "" });
 	const [orderData, setorderData] = useState({ order_id: null, status: null, });
@@ -406,6 +411,12 @@ const CheckoutView = (props) => {
 			 and every total built on it, into "NaN". */
 		var shippingPrice = parseFloat(currentshippingMethod?.amount) || 0
 
+		/* Shipping classes (the products' Shipping addon), as the server priced
+			 them for this method: the most expensive class in the cart, once per
+			 order. Worked out again here so a percent class follows the subtotal. */
+		var classCharge = methodClassCharge(currentshippingMethod, cartTotal)
+		shippingPrice = Math.round((shippingPrice + classCharge) * 100) / 100
+
 		/* Only the store's shipping cost changes here. The cart prices it into
 			 cartTotalPay, and the effect below copies the settled figures onto
 			 the order. Building the total here from cartTotalPay added shipping a
@@ -415,7 +426,29 @@ const CheckoutView = (props) => {
 		setshippingCost(shippingPrice)
 
 
-	}, [checkoutData?.shipping_method]);
+	}, [checkoutData?.shipping_method, currentshippingMethod, cartTotal]);
+
+
+	/*
+		The amount to pay, worked out here too: items, plus shipping unless a
+		coupon or discount rule made it free, less the coupon and automatic
+		discounts. It used to come only from the cart drawer's effect, so on a
+		checkout page without the drawer a coupon applied in the cart - or a
+		shipping method picked here - never reached the total. Same formula as
+		CartView, and it only writes when the figure differs, so the two agree.
+	*/
+	useEffect(() => {
+
+		var items = (cartItems ?? []).reduce((sum, item) => sum + (parseFloat(item?.price) || 0) * (parseInt(item?.quantity) || 0), 0) + cartSetupFees(cartItems);
+		var waived = cartDiscount?.freeShipping || (coupons?.applied && coupons?.freeShipping === true);
+		var shipping = waived ? 0 : (parseFloat(shippingCost) || 0);
+		var couponOff = coupons?.applied ? (parseFloat(coupons?.discountAmount) || 0) : 0;
+		var autoOff = parseFloat(cartDiscount?.amount) || 0;
+		var pay = Math.max(0, Math.round((items + shipping - couponOff - autoOff) * 100) / 100);
+
+		if ((parseFloat(cartTotalPay) || 0) !== pay) setcartTotalPay(pay);
+
+	}, [cartItems, shippingCost, coupons?.applied, coupons?.discountAmount, coupons?.freeShipping, cartDiscount?.amount, cartDiscount?.freeShipping, cartTotalPay]);
 
 
 	/*
@@ -425,7 +458,7 @@ const CheckoutView = (props) => {
 	useEffect(() => {
 
 		var subtotal = parseFloat(cartTotal) || 0;
-		var shipping = cartDiscount?.freeShipping ? 0 : (parseFloat(shippingCost) || 0);
+		var shipping = (cartDiscount?.freeShipping || (coupons?.applied && coupons?.freeShipping === true)) ? 0 : (parseFloat(shippingCost) || 0);
 		var total = parseFloat(cartTotalPay) || 0;
 
 		setcheckoutData((previous) => (
@@ -434,7 +467,7 @@ const CheckoutView = (props) => {
 				: { ...previous, subtotal_amount: subtotal, shipping_amount: shipping, total_amount: total }
 		));
 
-	}, [cartTotal, cartTotalPay, shippingCost, cartDiscount?.freeShipping]);
+	}, [cartTotal, cartTotalPay, shippingCost, cartDiscount?.freeShipping, coupons?.applied, coupons?.freeShipping]);
 
 
 	/*
@@ -534,6 +567,9 @@ const CheckoutView = (props) => {
 
 
 
+	/* The cart's lines for shipping-class pricing; the methods are asked for again only when these change. */
+	const classItems = shippingClassItems(cartItems);
+
 	useEffect(() => {
 
 		var prams = {}
@@ -550,13 +586,25 @@ const CheckoutView = (props) => {
 
 		prams.country = country
 		prams.city = city
+		/* The server reads each line's shipping class from the product itself and
+		   prices it per method (class_rates, class_charge, total). */
+		prams.items = classItems.items
+		prams.subtotal = parseFloat(cartTotal) || 0
 
 
 
 
 		find_shipping_methods(prams);
 
-	}, [checkoutData?.billing_country, checkoutData?.billing_city]);
+	}, [checkoutData?.billing_country, checkoutData?.billing_city, classItems.key]);
+
+	/* Fresh methods (new address or cart): the chosen one picks up its new class rates. */
+	useEffect(() => {
+		if (!currentshippingMethod || !Array.isArray(shippingMethods)) return;
+		var fresh = shippingMethods.find(method => method?.id == currentshippingMethod?.id);
+		if (fresh && fresh !== currentshippingMethod) setcurrentshippingMethod(fresh);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [shippingMethods]);
 
 
 
@@ -832,6 +880,19 @@ const CheckoutView = (props) => {
 				}
 			});
 
+		getPaddleConfig()
+			.then(config => {
+				if (!cancelled) {
+					setpaddleConfig(config);
+				}
+			})
+			.catch(() => {
+				/* Paddle simply does not appear; the rest still work. */
+				if (!cancelled) {
+					setpaddleConfig(null);
+				}
+			});
+
 		getNagadConfig()
 			.then(config => {
 				if (!cancelled) {
@@ -881,6 +942,13 @@ const CheckoutView = (props) => {
 
 		if (list.aamarpay && !aamarpayConfig?.enabled) {
 			delete list.aamarpay;
+		}
+
+		/* Paddle: dropped with no credentials, as Stripe is. A store in a
+		   currency Paddle does not take (BDT) needs the dashboard's exchange
+		   rate; the button says so if it is missing. */
+		if (list.paddle && !paddleConfig?.enabled) {
+			delete list.paddle;
 		}
 
 		/* Taka only, for the same reason as EPS below. */
@@ -1392,7 +1460,7 @@ const CheckoutView = (props) => {
 	*/
 	/* parseFloat (parseInt dropped paisa), plus subscribed lines' one-time setup fees. */
 	const summarySubtotal = (cartItems ?? []).reduce((sum, item) => sum + (parseFloat(item?.price) || 0) * (parseInt(item?.quantity) || 0), 0) + cartSetupFees(cartItems);
-	const summaryShippingFree = cartDiscount?.freeShipping === true;
+	const summaryShippingFree = cartDiscount?.freeShipping === true || (coupons?.applied === true && coupons?.freeShipping === true);
 	const summaryShipping = parseFloat(shippingCost) || 0;
 	const summaryCoupon = coupons?.applied ? (parseFloat(coupons?.discountAmount) || 0) : 0;
 	const summaryDiscountLines = (cartDiscount?.lines ?? []).filter(line => (parseFloat(line?.amount) || 0) > 0);
@@ -1447,6 +1515,17 @@ const CheckoutView = (props) => {
 							}} />
 						</Field>
 					</div>
+
+					{/* WhatsApp consent, when the Cart block asks for it. Sent as whatsapp_optin with the
+					   order (and with the saved incomplete one), recorded by the marketing module. */}
+					{cartOptions?.whatsappOptIn && (
+						<label className="flex cursor-pointer items-start gap-2 text-sm text-gray-700">
+							<input type="checkbox" className="mt-0.5 h-4 w-4 shrink-0" checked={!!checkoutData?.whatsapp_optin} onChange={ev => {
+								setcheckoutData({ ...checkoutData, whatsapp_optin: ev.target.checked })
+							}} />
+							<span>{cartOptions?.whatsappOptInLabel || 'Send me order updates and offers on WhatsApp'}</span>
+						</label>
+					)}
 
 					<Field label="Address" htmlFor="checkout-billing-address" required>
 						<textarea id="checkout-billing-address" rows={2} autoComplete="street-address" className={`${inputClass} resize-y`} value={checkoutData?.billing_address ?? ''} placeholder="House number and street name" onChange={ev => {
@@ -1572,7 +1651,8 @@ const CheckoutView = (props) => {
 							<div role="radiogroup" aria-label="Shipping method" className="flex flex-col gap-2">
 								{shippingMethods.map(method => {
 									var id = method?.id;
-									var amount = parseFloat(method?.amount);
+									var classCharge = methodClassCharge(method, cartTotal);
+									var amount = (parseFloat(method?.amount) || 0) + classCharge;
 
 									return (
 										<OptionTile key={id} selected={checkoutData.shipping_method == id} onSelect={() => {
@@ -1584,8 +1664,11 @@ const CheckoutView = (props) => {
 												{method.description && (
 													<div className="mt-0.5 text-xs text-gray-500">{method.description}</div>
 												)}
+												{classCharge > 0 && (
+													<div className="mt-0.5 text-xs text-gray-500">Includes {wrapCurrency(classCharge)} for {method.class_rates.find(rate => shippingClassCharge(rate, cartTotal) === classCharge)?.name || 'special items'}</div>
+												)}
 											</div>
-											<div className="shrink-0 font-semibold text-gray-900">{wrapCurrency(method?.amount)}</div>
+											<div className="shrink-0 font-semibold text-gray-900">{wrapCurrency(Math.round(amount * 100) / 100)}</div>
 										</OptionTile>
 									)
 								})}
@@ -1752,6 +1835,31 @@ const CheckoutView = (props) => {
 										ensureOrder={() => ensureOrderForPayment('stripe')}
 										onError={(message) => addNotification({ type: 'error', title: 'Stripe', content: message })}
 									/>
+								</>
+							)}
+
+							{checkoutData.payment_method == "paddle" && (
+								<>
+									{/* No Submit Order button here on purpose, as with Stripe:
+										  paying at Paddle is the submit. The order is created when
+										  the buyer clicks, and the callback route - or Paddle's
+										  signed webhook - marks it paid once Paddle confirms it. */}
+									<PaddleCheckoutButton
+										total={checkoutData?.total_amount}
+										currency={currencySymbole}
+										config={paddleConfig}
+										orderCurrency={checkoutData?.currency ?? currency}
+										ensureOrder={() => ensureOrderForPayment('paddle')}
+										onError={(message) => addNotification({ type: 'error', title: 'Paddle', content: message })}
+									/>
+
+									{paymentGateways?.paddle?.description && (
+										<p className="text-sm text-gray-600">{paymentGateways.paddle.description}</p>
+									)}
+
+									{paddleConfig?.sandbox && (
+										<Notice tone="warning">Paddle is in sandbox mode — no real money will move.</Notice>
+									)}
 								</>
 							)}
 

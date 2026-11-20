@@ -75,7 +75,7 @@ returns, support).`,
 		brief: `The single product page. A two-column top: productGallery on one side and
 the buy column on the other, holding productCategories, postTitle,
 productRatings, productPrice, productDiscount, productVariations,
-productStockStatus, productMoq, productSizeGuide (popup link), addToCart, a delivery list and productSku/productTags.
+productStockStatus, productMoq, productDeal (deal waitlist, shows only on deal products), productSizeGuide (popup link), productWarranty (warranty line or details card, shows only on products with a warranty), addToCart, a delivery list and productSku/productTags.
 Then a tabs block whose panels are postContent, a details list (with productDimensions), productFaq, a delivery list
 and a commentsGrid. Then a relatedProducts row.`,
 	},
