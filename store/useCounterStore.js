@@ -52,6 +52,23 @@ function notifyMoq(state, moq) {
 
 
 
+/*
+  The store currency saved in Settings > Store Details, as the fields the
+  rest of the app reads (`currency`, `currencySymbole`, `currencyPosition`).
+  The settings blob arrives bare or wrapped in `settings`; a field left
+  empty keeps whatever the store already had, so the BDT/Tk defaults stand
+  until a currency is saved.
+*/
+export const currencyFromSettings = (data) => {
+  const c = (data?.settings ?? data)?.currency;
+  if (!c || typeof c !== "object") return {};
+  const out = {};
+  if (c.code) out.currency = String(c.code).toUpperCase();
+  if (c.symbol) out.currencySymbole = String(c.symbol);
+  if (c.position === "before" || c.position === "after") out.currencyPosition = c.position;
+  return out;
+};
+
 export const useCounterStore = create((set) => ({
 
 
@@ -810,6 +827,7 @@ export const useCounterStore = create((set) => ({
       set({
         settings: data,
         settingsLoading: false,
+        ...currencyFromSettings(data),
       });
     } catch (error) {
       set({
@@ -824,6 +842,7 @@ export const useCounterStore = create((set) => ({
   setSettings: (newSettings) =>
     set((state) => ({
       settings: { ...state.settings, ...newSettings },
+      ...currencyFromSettings(newSettings),
     })),
 
 

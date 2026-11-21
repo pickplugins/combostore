@@ -54,6 +54,40 @@ const CANCEL_BUTTON =
 
 
 
+/*
+  Currencies offered in Store Details. Picking one fills in its usual symbol;
+  the symbol stays editable, so a store can print "Tk" or "৳" as it likes.
+  A code not listed here can still be typed through "Other".
+*/
+const STORE_CURRENCIES = [
+  { code: "BDT", label: "Bangladeshi Taka", symbol: "Tk" },
+  { code: "USD", label: "US Dollar", symbol: "$" },
+  { code: "EUR", label: "Euro", symbol: "€" },
+  { code: "GBP", label: "British Pound", symbol: "£" },
+  { code: "INR", label: "Indian Rupee", symbol: "₹" },
+  { code: "PKR", label: "Pakistani Rupee", symbol: "Rs" },
+  { code: "NPR", label: "Nepalese Rupee", symbol: "Rs" },
+  { code: "LKR", label: "Sri Lankan Rupee", symbol: "Rs" },
+  { code: "AED", label: "UAE Dirham", symbol: "AED" },
+  { code: "SAR", label: "Saudi Riyal", symbol: "SAR" },
+  { code: "QAR", label: "Qatari Riyal", symbol: "QAR" },
+  { code: "KWD", label: "Kuwaiti Dinar", symbol: "KD" },
+  { code: "MYR", label: "Malaysian Ringgit", symbol: "RM" },
+  { code: "SGD", label: "Singapore Dollar", symbol: "S$" },
+  { code: "IDR", label: "Indonesian Rupiah", symbol: "Rp" },
+  { code: "THB", label: "Thai Baht", symbol: "฿" },
+  { code: "PHP", label: "Philippine Peso", symbol: "₱" },
+  { code: "JPY", label: "Japanese Yen", symbol: "¥" },
+  { code: "CNY", label: "Chinese Yuan", symbol: "¥" },
+  { code: "AUD", label: "Australian Dollar", symbol: "A$" },
+  { code: "CAD", label: "Canadian Dollar", symbol: "C$" },
+  { code: "NGN", label: "Nigerian Naira", symbol: "₦" },
+  { code: "KES", label: "Kenyan Shilling", symbol: "KSh" },
+  { code: "ZAR", label: "South African Rand", symbol: "R" },
+  { code: "TRY", label: "Turkish Lira", symbol: "₺" },
+  { code: "EGP", label: "Egyptian Pound", symbol: "E£" },
+];
+
 const SettingsGlobal = (props) => {
   const { formatDate, wrapCurrency } = useUtilsStore()
 
@@ -1675,6 +1709,68 @@ const SettingsGlobal = (props) => {
                   }} />
                 </div>
               </div>
+              {(() => {
+                /* Saved as settings.currency { code, symbol, position }; the store
+                   applies it on load and on save (currencyFromSettings), so prices,
+                   charts, invoices and new orders all follow it. Unsaved, the
+                   BDT / Tk / after defaults are what is in use. */
+                const cur = settingsData?.currency ?? {};
+                const code = String(cur.code ?? "").toUpperCase();
+                const known = STORE_CURRENCIES.some((c) => c.code === code);
+                /* "Other" stays chosen while its code is still being typed. */
+                const other = cur.other === true || (code !== "" && !known);
+                const setCurrency = (patch) =>
+                  setsettingsData({ ...settingsData, currency: { ...cur, ...patch } });
+                const fieldClass = "lg:w-auto w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20";
+                const rowClass = "flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1";
+                const labelClass = "w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60";
+                return (
+                  <>
+                    <div className={rowClass}>
+                      <div className={labelClass}>{("Store Currency")}</div>
+                      <div className="flex flex-col gap-2">
+                        <select className={fieldClass} value={other ? "__other" : code} onChange={(ev) => {
+                          const value = ev.target.value;
+                          if (value === "__other") {
+                            setCurrency({ code: known ? "" : code, other: true });
+                            return;
+                          }
+                          const picked = STORE_CURRENCIES.find((c) => c.code === value);
+                          setCurrency({ code: value, symbol: picked ? picked.symbol : "", other: false });
+                        }}>
+                          <option value="">{("Default (BDT)")}</option>
+                          {STORE_CURRENCIES.map((c) => (
+                            <option key={c.code} value={c.code}>{`${c.code} - ${c.label} (${c.symbol})`}</option>
+                          ))}
+                          <option value="__other">{("Other...")}</option>
+                        </select>
+                        {other && (
+                          <input type="text" maxLength={3} placeholder={("ISO code, e.g. CHF")} className={fieldClass} value={code} onChange={(ev) => {
+                            setCurrency({ code: ev.target.value.replace(/[^a-z]/gi, "").toUpperCase() });
+                          }} />
+                        )}
+                        <p className="text-xs text-gray-500">{("Used for prices, orders and payments. Changing it does not convert existing prices or past orders.")}</p>
+                      </div>
+                    </div>
+                    <div className={rowClass}>
+                      <div className={labelClass}>{("Currency Symbol")}</div>
+                      <div className="">
+                        <input type="text" maxLength={8} placeholder="Tk" className={fieldClass} value={cur.symbol ?? ""} onChange={(ev) => setCurrency({ symbol: ev.target.value })} />
+                      </div>
+                    </div>
+                    <div className={rowClass}>
+                      <div className={labelClass}>{("Symbol Position")}</div>
+                      <div className="flex flex-col gap-1">
+                        <select className={fieldClass} value={cur.position ?? "after"} onChange={(ev) => setCurrency({ position: ev.target.value })}>
+                          <option value="before">{("Before amount")}</option>
+                          <option value="after">{("After amount")}</option>
+                        </select>
+                        <p className="text-xs text-gray-500">{("Preview: ")}{(cur.position ?? "after") === "before" ? `${cur.symbol || "Tk"}1,250` : `1,250${cur.symbol || "Tk"}`}</p>
+                      </div>
+                    </div>
+                  </>
+                );
+              })()}
               <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
                 <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Site Logo")}</div>
                 <div className="">

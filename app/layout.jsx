@@ -11,13 +11,12 @@ import NextTopLoader from 'nextjs-toploader';
 import Script from "next/script";
 import { getSettings } from "@/lib/getSettings";
 import TemplateThemeStyle from "@/components/TemplateThemeStyle";
+import StoreCurrencySync from "@/components/StoreCurrencySync";
 
 
 
 
 
-
-const settings = await getSettings();
 
 const geistSans = Geist({
 	variable: "--font-geist-sans",
@@ -63,7 +62,15 @@ export const metadata = {
 
 
 
-export default function RootLayout({ children }) {
+export default async function RootLayout({ children }) {
+
+	/*
+		Read per request. It used to be a top-level await, which ran once per
+		server process, so a currency or analytics ID saved in the dashboard
+		did not reach the storefront until the server restarted.
+	*/
+	const settings = await getSettings();
+	const storeCurrency = (settings?.settings ?? settings)?.currency ?? null;
 
 	/*
 		GA and Clarity used to load on every page even with no ID set, requesting
@@ -177,6 +184,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 						/>
 					</noscript>
 				)}
+				{/* The saved store currency, into the store before any price renders. Renders nothing. */}
+				<StoreCurrencySync currency={storeCurrency} />
 				<AuthProvider>
 					<NextTopLoader
 						color="#1b0e9f"

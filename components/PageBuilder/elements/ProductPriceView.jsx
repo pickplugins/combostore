@@ -178,6 +178,10 @@ const ProductPriceView = (props) => {
 	const { wrapCurrency } = useUtilsStore();
 	const addNotification = useCounterStore((state) => state.addNotification);
 	const purchaseGate = useCounterStore((state) => state.purchaseGate);
+	/* wrapCurrency reads these with getState(), which does not re-render; subscribing
+	   here does, so a currency saved in Store Details shows without a reload. */
+	useCounterStore((state) => state.currencySymbole);
+	useCounterStore((state) => state.currencyPosition);
 
 	/* A key the block lacks falls back to the productPrice defaults in ElementsDefinition.js. */
 	var cls = elementCssClasses('productPrice', props?.cssSelectors);
