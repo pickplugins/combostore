@@ -2449,6 +2449,8 @@ const ProductEdit = ({ id }) => {
 
                 <div className=" flex flex-col text-sm gap-4">
 
+
+
                   <div className="flex justify-between items-center gap-3">
                     <label htmlFor="" className="block text-sm font-medium text-gray-700">
                       {("Featured?")}
