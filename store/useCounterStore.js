@@ -430,7 +430,7 @@ export const useCounterStore = create((set) => ({
       "label": "CourrierFast",
       "id": 'courrierfast',
       "enable": false,
-      "comingSoon": true,
+      "comingSoon": false,
       args: {
         "token": "",
       }
@@ -439,7 +439,7 @@ export const useCounterStore = create((set) => ({
       "label": "Pathao",
       "id": 'pathao',
       "enable": false,
-      "comingSoon": true,
+      "comingSoon": false,
 
       args: {
         "key": "",
@@ -449,7 +449,7 @@ export const useCounterStore = create((set) => ({
       "label": "Redx",
       "id": 'redx',
       "enable": false,
-      "comingSoon": true,
+      "comingSoon": false,
 
       args: {
         "token": "",
@@ -459,7 +459,7 @@ export const useCounterStore = create((set) => ({
       "label": "Carry Bee",
       "id": 'carrybee',
       "enable": false,
-      "comingSoon": true,
+      "comingSoon": false,
 
       args: {
         "token": "",
@@ -469,7 +469,7 @@ export const useCounterStore = create((set) => ({
       "label": "Paperfly",
       "id": 'paperfly',
       "enable": false,
-      "comingSoon": true,
+      "comingSoon": false,
 
       args: {
         "token": "",

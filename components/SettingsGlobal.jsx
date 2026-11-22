@@ -6197,7 +6197,191 @@ const SettingsGlobal = (props) => {
                               </>
                             )}
 
+                            {providerKey == 'carrybee' && (
 
+                              <>
+
+                                <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                  <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Sandbox")}</div>
+                                  <div className="flex gap-3">
+                                    <input type="checkbox" name="sandbox" id={`sandbox-${providerKey}`}
+                                      checked={!!settingsData?.couriers?.[providerKey]?.['sandbox']}
+                                      className="lg:w-auto w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
+                                      onChange={() => {
+                                        setsettingsData(prev => ({
+                                          ...prev,
+                                          couriers: {
+                                            ...prev.couriers,
+                                            [providerKey]: {
+                                              ...prev.couriers[providerKey],
+                                              ['sandbox']: !prev.couriers[providerKey]?.['sandbox']
+                                            }
+                                          }
+                                        }));
+                                      }} />
+                                    <label htmlFor={`sandbox-${providerKey}`} className="cursor-pointer">{settingsData?.couriers?.[providerKey]?.['sandbox'] ? "Enabled" : "Disabled"}</label>
+                                  </div>
+                                </div>
+
+                                {[
+                                  { name: 'client_id', label: 'Client ID' },
+                                  { name: 'client_secret', label: 'Client Secret' },
+                                  { name: 'client_context', label: 'Client Context' },
+                                  { name: 'store_id', label: 'Store ID' },
+                                ].map(field => (
+                                  <div key={field.name} className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                    <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{field.label}</div>
+                                    <div className="flex gap-3">
+                                      <input
+                                        type="text"
+                                        name={field.name}
+                                        placeholder={field.name}
+                                        className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
+                                        value={settingsData?.couriers?.[providerKey]?.[field.name] || ''}
+                                        onChange={(ev) => {
+                                          const { name, value } = ev.target;
+                                          setsettingsData(prev => ({
+                                            ...prev,
+                                            couriers: {
+                                              ...prev.couriers,
+                                              [providerKey]: {
+                                                ...prev.couriers[providerKey],
+                                                [name]: value
+                                              }
+                                            }
+                                          }));
+                                        }}
+                                      />
+                                    </div>
+                                  </div>
+                                ))}
+                              </>
+                            )}
+
+                            {providerKey == 'paperfly' && (
+
+                              <>
+
+                                <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                  <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Sandbox")}</div>
+                                  <div className="flex gap-3">
+                                    <input type="checkbox" name="sandbox" id={`sandbox-${providerKey}`}
+                                      checked={!!settingsData?.couriers?.[providerKey]?.['sandbox']}
+                                      className="lg:w-auto w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
+                                      onChange={() => {
+                                        setsettingsData(prev => ({
+                                          ...prev,
+                                          couriers: {
+                                            ...prev.couriers,
+                                            [providerKey]: {
+                                              ...prev.couriers[providerKey],
+                                              ['sandbox']: !prev.couriers[providerKey]?.['sandbox']
+                                            }
+                                          }
+                                        }));
+                                      }} />
+                                    <label htmlFor={`sandbox-${providerKey}`} className="cursor-pointer">{settingsData?.couriers?.[providerKey]?.['sandbox'] ? "Enabled" : "Disabled"}</label>
+                                  </div>
+                                </div>
+
+                                {[
+                                  { name: 'username', label: 'Username' },
+                                  { name: 'password', label: 'Password' },
+                                  { name: 'paperfly_key', label: 'Paperfly Key' },
+                                  { name: 'merchant_code', label: 'Merchant Code' },
+                                  { name: 'store_name', label: 'Store Name' },
+                                  { name: 'pickup_name', label: 'Pickup Merchant Name' },
+                                  { name: 'pickup_address', label: 'Pickup Address' },
+                                  { name: 'pickup_thana', label: 'Pickup Thana' },
+                                  { name: 'pickup_district', label: 'Pickup District' },
+                                  { name: 'pickup_phone', label: 'Pickup Phone' },
+                                ].map(field => (
+                                  <div key={field.name} className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                    <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{field.label}</div>
+                                    <div className="flex gap-3">
+                                      <input
+                                        type="text"
+                                        name={field.name}
+                                        placeholder={field.name}
+                                        className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
+                                        value={settingsData?.couriers?.[providerKey]?.[field.name] || ''}
+                                        onChange={(ev) => {
+                                          const { name, value } = ev.target;
+                                          setsettingsData(prev => ({
+                                            ...prev,
+                                            couriers: {
+                                              ...prev.couriers,
+                                              [providerKey]: {
+                                                ...prev.couriers[providerKey],
+                                                [name]: value
+                                              }
+                                            }
+                                          }));
+                                        }}
+                                      />
+                                    </div>
+                                  </div>
+                                ))}
+                              </>
+                            )}
+
+                            {['pathao', 'redx', 'courrierfast', 'carrybee', 'paperfly'].includes(providerKey) && (() => {
+                              const token = settingsData?.couriers?.[providerKey]?.['webhook_auth_token'] || '';
+                              const base = (typeof window !== 'undefined' ? window.location.origin : '') + '/api/couriers-webhook';
+                              // Pathao and Carry Bee send the secret in a signature header;
+                              // the others need courier + token in the URL.
+                              const usesHeader = providerKey === 'pathao' || providerKey === 'carrybee';
+                              const webhookUrl = usesHeader
+                                ? base
+                                : `${base}?courier=${providerKey}&token=${encodeURIComponent(token || '<token>')}`;
+
+                              return (
+                                <>
+                                  <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                    <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Webhook Auth token")}</div>
+                                    <div className="flex gap-3">
+                                      <input
+                                        type="text"
+                                        name={'webhook_auth_token'}
+                                        placeholder={'Webhook auth token'}
+                                        className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
+                                        value={token}
+                                        onChange={(ev) => {
+                                          const { name, value } = ev.target;
+                                          setsettingsData(prev => ({
+                                            ...prev,
+                                            couriers: {
+                                              ...prev.couriers,
+                                              [providerKey]: {
+                                                ...prev.couriers[providerKey],
+                                                [name]: value
+                                              }
+                                            }
+                                          }));
+                                        }}
+                                      />
+                                    </div>
+                                  </div>
+                                  <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                    <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Webhook URL")}</div>
+                                    <div className="flex flex-col gap-1">
+                                      <input
+                                        type="text"
+                                        readOnly
+                                        className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none bg-gray-50 text-gray-600"
+                                        value={webhookUrl}
+                                        onFocus={(ev) => ev.target.select()}
+                                      />
+                                      <p className="text-xs text-gray-500">
+                                        {usesHeader
+                                          ? 'Paste this URL in the courier panel and use the token above as its webhook secret.'
+                                          : 'Paste this URL in the courier panel. It carries the token, so keep it private.'}
+                                      </p>
+                                    </div>
+                                  </div>
+                                </>
+                              );
+                            })()}
 
                           </div>
 

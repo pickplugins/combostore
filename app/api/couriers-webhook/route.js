@@ -20,7 +20,10 @@ const SKIP_HEADERS = new Set([
 ]);
 
 export async function POST(request) {
-  const endpoint = `${serverUrl}/wp-json/combo-store/v2/couriers_webhook`;
+  // Query string is kept: couriers without a signature header are identified
+  // and authorised by ?courier=<id>&token=<webhook_auth_token>.
+  const { search } = new URL(request.url);
+  const endpoint = `${serverUrl}/wp-json/combo-store/v2/couriers_webhook${search}`;
 
   try {
     // Raw text, not request.json(): keeps the exact bytes the courier signed,
@@ -46,12 +49,20 @@ export async function POST(request) {
 
     const text = await response.text();
 
+    // Pass back courier handshake headers (e.g. Pathao's integration secret).
+    const outHeaders = new Headers({
+      "content-type": response.headers.get("content-type") || "application/json",
+    });
+    for (const [key, value] of response.headers) {
+      const k = key.toLowerCase();
+      if (k.startsWith("x-") && !k.startsWith("x-wp-") && k !== "x-powered-by" && k !== "x-robots-tag") {
+        outHeaders.set(key, value);
+      }
+    }
+
     return new NextResponse(text, {
       status: response.status,
-      headers: {
-        "content-type":
-          response.headers.get("content-type") || "application/json",
-      },
+      headers: outHeaders,
     });
   } catch (error) {
     console.error("[couriers-webhook] forward failed:", error);
