@@ -32,6 +32,10 @@ export async function GET(request) {
         merchant_configured: config.has.merchantId && config.has.storeId,
         credentials_configured: config.has.username && config.has.password,
         hash_key_configured: config.has.hashKey,
+        /* Optional: the IPN falls back to the hash key without it. */
+        ipn_secret_configured: Boolean(config.ipnSecret),
+        /* Registered with EPS for the merchant account; shown in the dashboard. */
+        ipn_url: `${String(process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin).replace(/\/+$/, "")}/api/eps/ipn`,
         /* EPS takes no currency field; everything settles in taka. */
         currency: "BDT",
       },

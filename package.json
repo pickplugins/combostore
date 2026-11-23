@@ -3,17 +3,23 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "predev": "node scripts/build-tabler-icons.mjs",
+    "predev": "node scripts/build-tabler-icons.mjs && node scripts/build-tailwind-sources.mjs",
     "dev": "next dev",
-    "prebuild": "node scripts/build-tabler-icons.mjs",
+    "prebuild": "node scripts/build-tabler-icons.mjs && node scripts/build-tailwind-sources.mjs",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "cf:build": "node scripts/cloudflare.mjs build",
+    "cf:preview": "node scripts/cloudflare.mjs build && opennextjs-cloudflare preview",
+    "cf:deploy": "node scripts/cloudflare.mjs build && opennextjs-cloudflare deploy",
+    "cf:upload": "node scripts/cloudflare.mjs build && opennextjs-cloudflare upload",
+    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.96.0",
     "@dnd-kit/react": "^0.3.2",
     "@number-flow/react": "^0.5.14",
+    "@opennextjs/cloudflare": "^1.20.18",
     "@react-google-maps/api": "^2.20.8",
     "@ryzeup/richtexteditor": "^1.0.33",
     "@splidejs/react-splide": "^0.7.12",
@@ -44,6 +50,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.1.1",
     "postcss": "^8",
-    "tailwindcss": "^4.3.3"
+    "tailwindcss": "^4.3.3",
+    "wrangler": "^4.166.0"
   }
 }

@@ -1,6 +1,7 @@
 'use client'
 
 import PropTypes from "prop-types";
+import { useRecaptcha } from "@/lib/recaptcha";
 import React, { useEffect, useState } from "react";
 import { IconAlertCircle, IconAlertTriangle, IconCheck, IconExternalLink, IconPackage, IconSearch, IconTruckDelivery } from "@tabler/icons-react";
 import Spinner from "../../../components/Spinner";
@@ -150,7 +151,7 @@ export function OrderTrackingResult({ cls, options, data, wrapCurrency }) {
 	The lookup form. Controlled from outside so the builder can draw it
 	inert, with no submit.
 */
-export function OrderTrackingForm({ cls, id, options, orderId, contact, setOrderId, setContact, onSubmit, loading, signedIn }) {
+export function OrderTrackingForm({ cls, id, options, orderId, contact, setOrderId, setContact, onSubmit, loading, signedIn, captchaWidget = null }) {
 	return (
 		<form onSubmit={onSubmit} noValidate className={cls('form')}>
 			<div className={cls('fields')}>
@@ -165,6 +166,7 @@ export function OrderTrackingForm({ cls, id, options, orderId, contact, setOrder
 					<input id={`${id}-track-contact`} type="text" autoComplete="tel" placeholder={opt(options, 'contactPlaceholder')} value={contact} onChange={ev => setContact?.(ev.target.value)} className={cls('field-input')} />
 				</div>
 			</div>
+			{captchaWidget}
 			<button type="submit" disabled={loading} className={cls('submit-button')}>
 				{loading ? <Spinner /> : <IconSearch size={16} />}
 				{opt(options, 'buttonText')}
@@ -212,7 +214,10 @@ const OrderTrackingView = (props) => {
 	const [error, setError] = useState(null);
 	const [data, setData] = useState(null);
 
-	const track = (number, contactValue) => {
+	/* Signed-in customers are not challenged on this form (ComboStoreRecaptcha), so only guests see it. */
+	const captcha = useRecaptcha("track_order");
+
+	const track = async (number, contactValue) => {
 		if (!String(number).trim()) {
 			setError('Please enter your order number.');
 			return;
@@ -220,6 +225,16 @@ const OrderTrackingView = (props) => {
 		if (!token && !String(contactValue).trim()) {
 			setError('Please enter the phone number or email you ordered with.');
 			return;
+		}
+
+		var captchaFields = {};
+		if (!token) {
+			try {
+				captchaFields = await captcha.fields();
+			} catch (err) {
+				setError(err.message);
+				return;
+			}
 		}
 
 		setLoading(true);
@@ -230,7 +245,7 @@ const OrderTrackingView = (props) => {
 			headers: token
 				? { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }
 				: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ order_id: String(number).trim(), contact: String(contactValue).trim() }),
+			body: JSON.stringify({ order_id: String(number).trim(), contact: String(contactValue).trim(), ...captchaFields }),
 		})
 			.then((response) => response.json())
 			.then((res) => {
@@ -245,7 +260,7 @@ const OrderTrackingView = (props) => {
 				setData(null);
 				setError("We couldn't look up your order just now. Please try again.");
 			})
-			.finally(() => setLoading(false));
+			.finally(() => { captcha.reset(); setLoading(false); });
 	};
 
 	/* ?order= from the address; read after mount so server and first client render agree. */
@@ -269,7 +284,7 @@ const OrderTrackingView = (props) => {
 		<div id={id} type={props?.type} className={cls('*')}>
 			<OrderTrackingHeader cls={cls} options={options} />
 
-			<OrderTrackingForm cls={cls} id={id} options={options} orderId={orderId} contact={contact} setOrderId={setOrderId} setContact={setContact} onSubmit={onSubmit} loading={loading} signedIn={Boolean(token)} />
+			<OrderTrackingForm cls={cls} id={id} options={options} orderId={orderId} contact={contact} setOrderId={setOrderId} setContact={setContact} onSubmit={onSubmit} loading={loading} signedIn={Boolean(token)} captchaWidget={token ? null : captcha.widget} />
 
 			{error && (
 				<p role="alert" className={cls('error')}>

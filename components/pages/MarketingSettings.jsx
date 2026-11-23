@@ -50,10 +50,13 @@ const MarketingSettings = () => {
 	const [testTo, settestTo] = useState({ email: "", sms: "" });
 	const [testing, settesting] = useState("");
 
+	/* "SMTP server" with no host of its own already sends through the store's selected server; show it as such. */
+	const shown = (data) => (data?.mailer_in_use === "store" && data?.email?.mailer !== "store" ? { ...data, email: { ...data.email, mailer: "store" } } : data);
+
 	useEffect(() => {
 		if (!token) return;
 		postApi("get_marketing_settings", token, {})
-			.then(sets)
+			.then((data) => sets(shown(data)))
 			.catch((e) => addNotification({ type: "error", title: "Settings not loaded", content: e.message }));
 	}, [token]);
 
@@ -68,7 +71,7 @@ const MarketingSettings = () => {
 			/* The dashboard runs on the storefront's address, so an empty store address defaults to it. */
 			await postApi("update_marketing_settings", token, { ...s, email: { ...s.email, store_url: s.email.store_url || window.location.origin } });
 			var fresh = await postApi("get_marketing_settings", token, {});
-			sets(fresh);
+			sets(shown(fresh));
 			setdirty(false);
 			if (!quiet) addNotification({ type: "success", title: "Marketing settings saved", content: "" });
 			return true;
@@ -138,13 +141,17 @@ const MarketingSettings = () => {
 				<div className="mt-5 border-t border-gray-100 pt-5">
 					<label className={LABEL}>Send with</label>
 					<div className="flex flex-wrap gap-4 text-sm">
-						<label className="inline-flex items-center gap-2"><input type="radio" className="accent-[#634FE5]" checked={s.email.mailer !== "wordpress"} onChange={() => set("email", "mailer", "smtp")} /> SMTP server</label>
+						<label className="inline-flex items-center gap-2"><input type="radio" className="accent-[#634FE5]" checked={s.email.mailer === "store"} onChange={() => set("email", "mailer", "store")} /> Store SMTP (Settings › API Keys)</label>
+						<label className="inline-flex items-center gap-2"><input type="radio" className="accent-[#634FE5]" checked={s.email.mailer === "smtp"} onChange={() => set("email", "mailer", "smtp")} /> A separate SMTP server for marketing</label>
 						<label className="inline-flex items-center gap-2"><input type="radio" className="accent-[#634FE5]" checked={s.email.mailer === "wordpress"} onChange={() => set("email", "mailer", "wordpress")} /> WordPress mail (wp_mail)</label>
 					</div>
-					{s.email.mailer === "wordpress" && <p className={HINT}>Uses whatever the site's own mail setup is (an SMTP plugin, or PHP mail). Fine for testing; a dedicated SMTP service delivers bulk mail far better.</p>}
+					{s.email.mailer === "store" && (s.store_smtp
+						? <p className={HINT}>Sends through <strong>{s.store_smtp.label || s.store_smtp.host}</strong> ({s.store_smtp.host}:{s.store_smtp.port}), the server selected in <Link href="/settings" className="text-[#634FE5] underline">Settings › API Keys › SMTP</Link>.{s.store_smtp.from_email ? ` Emails go out from ${s.store_smtp.from_email}; the from address above becomes the reply-to.` : ""}</p>
+						: <p className="mt-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">No SMTP server is selected yet. Add one in <Link href="/settings" className="underline">Settings › API Keys › SMTP</Link> - marketing email cannot be sent until then.</p>)}
+					{s.email.mailer === "wordpress" && <p className={HINT}>Uses the site's own mail setup - the store SMTP server when it is switched on in API Keys, otherwise PHP mail. A dedicated SMTP service delivers bulk mail far better.</p>}
 				</div>
 
-				{s.email.mailer !== "wordpress" && (
+				{s.email.mailer === "smtp" && (
 					<div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-4">
 						<div className="md:col-span-4">
 							<label className={LABEL}>Provider</label>
@@ -338,7 +345,7 @@ const MarketingSettings = () => {
 						label="Ask new subscribers to confirm their email address"
 						hint="They are saved as “Unconfirmed” and get an email with a link; campaigns reach them only after they click it. This keeps mistyped and fake addresses off your list, and lets someone who unsubscribed come back. Phone numbers are subscribed straight away." />
 
-					{s.optin?.enabled && s.email.mailer !== "wordpress" && !s.smtp.host && (
+					{s.optin?.enabled && ((s.email.mailer === "smtp" && !s.smtp.host) || (s.email.mailer === "store" && !s.store_smtp)) && (
 						<p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">Set up SMTP above first. Until the confirmation email can be sent, the sign-up form will tell people to try again later.</p>
 					)}
 

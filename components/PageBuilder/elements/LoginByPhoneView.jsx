@@ -1,6 +1,7 @@
 'use client'
 
 import React from "react";
+import { useRecaptcha } from "@/lib/recaptcha";
 import { useState, useEffect } from "react";
 import { IconAlertCircle, IconDeviceMobile, IconPencil } from "@tabler/icons-react";
 import Spinner from "../../../components/Spinner";
@@ -89,6 +90,9 @@ const LoginByPhoneView = (props) => {
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState("");
 
+	/* Asking for a code costs an SMS, so that step is the one reCAPTCHA guards. */
+	const captcha = useRecaptcha("otp");
+
 	useEffect(() => {
 		if (timer <= 0) return;
 		const intervalId = setInterval(() => {
@@ -111,7 +115,13 @@ const LoginByPhoneView = (props) => {
 		if (typeof props?.onSendOtp === "function") {
 			await props.onSendOtp({ phone: normalizedPhone });
 		} else {
-			await postJson(endpointUrl(options?.sendOtpEndpoint || props?.sendOtpEndpoint || defaultSendEndpoint), { phone: normalizedPhone });
+			const captchaFields = await captcha.fields();
+			try {
+				await postJson(endpointUrl(options?.sendOtpEndpoint || props?.sendOtpEndpoint || defaultSendEndpoint), { phone: normalizedPhone, ...captchaFields });
+			} finally {
+				/* Single-use either way: a resend needs a fresh tick. */
+				captcha.reset();
+			}
 		}
 
 		setPhone(normalizedPhone);
@@ -209,6 +219,8 @@ const LoginByPhoneView = (props) => {
 						)}
 					</div>
 				</div>
+
+				{captcha.widget}
 
 				{step === 1 && (
 					<button type="submit" className={cls('submit-button')} disabled={loading || timer > 0}>

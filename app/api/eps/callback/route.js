@@ -1,11 +1,6 @@
 import { NextResponse } from "next/server";
 
-import {
-  getOrderByHash,
-  isPaymentSettled,
-  markOrderPaid,
-  verifyEpsPayment,
-} from "@/lib/eps-server";
+import { settleEpsPayment } from "@/lib/eps-server";
 
 /**
  * Where EPS sends the buyer back to.
@@ -21,10 +16,10 @@ import {
  * The order hash has a third way home - EPS echoes `valueA` back in the status
  * response - so a redirect that arrives stripped of everything still settles.
  *
- * There is no IPN here because EPS publishes none: an order whose buyer closed
- * the tab on the gateway's page stays pending until they return to this URL.
- * The amount is checked on the way in, so that costs a reconciliation in the
- * EPS portal rather than a wrong charge.
+ * The order and the transaction are tied together in settleEpsPayment - the
+ * transaction id names its order and EPS echoes valueA/valueB - because both
+ * arrive in a URL anyone can edit. EPS's IPN (../ipn) settles the same way for
+ * a buyer who closed the tab on the gateway's page.
  *
  * Success ends on the usual thank-you page; anything else on a short page
  * saying what happened, with the order left unpaid and still payable.
@@ -104,56 +99,25 @@ async function handle(request, fields) {
     return fail("unverified");
   }
 
-  /*
-    Asked before the order is read, because the answer is also where the order
-    hash comes from when the redirect arrived without one.
-  */
-  const verification = await verifyEpsPayment(transactionId);
+  const { outcome, orderHash: settledHash } = await settleEpsPayment(transactionId, { hintHash: orderHash });
+  const hashQuery = `hash=${encodeURIComponent(settledHash)}`;
 
-  orderHash = orderHash || String(verification?.ValueA || "");
-
-  const order = await getOrderByHash(orderHash);
-
-  if (!order?.id) {
-    return redirect("payment/eps/failed?reason=order", request);
+  switch (outcome) {
+    /* record_failed: the money is taken, so telling the buyer it failed would
+       invite a second payment. The mismatch is in the log for the store. */
+    case "paid":
+    case "already_paid":
+    case "record_failed":
+      return redirect(`thank-you/${settledHash}`, request);
+    case "pending":
+      return redirect(`payment/eps/pending?${hashQuery}`, request);
+    case "no_order":
+      return redirect("payment/eps/failed?reason=order", request);
+    case "unverified":
+      return redirect(`payment/eps/failed?${hashQuery}&reason=unverified`, request);
+    default:
+      return redirect(`payment/eps/failed?${hashQuery}`, request);
   }
-
-  /* A second visit to this URL - the first one already recorded it. */
-  if (String(order.payment_status).toLowerCase() === "paid") {
-    return redirect(`thank-you/${orderHash}`, request);
-  }
-
-  if (!isPaymentSettled(verification, order)) {
-    console.error("EPS reported success but verification did not agree", {
-      transactionId,
-      orderHash,
-      Status: verification?.Status,
-      ErrorCode: verification?.ErrorCode,
-      ErrorMessage: verification?.ErrorMessage,
-      TotalAmount: verification?.TotalAmount,
-      due: order?.total_amount,
-    });
-
-    return fail("unverified");
-  }
-
-  try {
-    await markOrderPaid(order, { transactionId, verification });
-  } catch (error) {
-    /*
-      The money is taken but the order still says unpaid. Telling the buyer it
-      failed would be wrong - and would invite a second payment - so they are
-      sent to the thank-you page and the mismatch is left in the log for the
-      store to settle.
-    */
-    console.error("EPS payment taken but the order was not updated", {
-      transactionId,
-      orderHash,
-      error: error?.message,
-    });
-  }
-
-  return redirect(`thank-you/${orderHash}`, request);
 }
 
 export async function POST(request) {

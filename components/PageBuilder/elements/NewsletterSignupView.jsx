@@ -1,6 +1,7 @@
 'use client'
 
 import PropTypes from "prop-types";
+import { useRecaptcha } from "@/lib/recaptcha";
 import React, { useState } from "react";
 import { IconAlertCircle, IconCircleCheck, IconMail, IconMailForward } from "@tabler/icons-react";
 import Spinner from "../../../components/Spinner";
@@ -47,7 +48,7 @@ export const newsletterOpt = (options, key) => (options?.[key] !== undefined ? o
 	fields; `done` swaps the form for a message: "subscribed", or "confirm"
 	when double opt-in sent them an email to click first.
 */
-export function NewsletterSignupMarkup({ cls, id, options, values, setValue, onSubmit, loading, error, done }) {
+export function NewsletterSignupMarkup({ cls, id, options, values, setValue, onSubmit, loading, error, done, captchaWidget = null }) {
 	const collect = newsletterOpt(options, 'collect');
 	const title = newsletterOpt(options, 'title');
 	const subtitle = newsletterOpt(options, 'subtitle');
@@ -106,6 +107,7 @@ export function NewsletterSignupMarkup({ cls, id, options, values, setValue, onS
 						<span>{newsletterOpt(options, 'whatsappLabel')}</span>
 					</label>
 				)}
+				{captchaWidget}
 				<button type="submit" className={cls('submit-button')} disabled={loading} id={id ? `${id}-submit` : undefined}>
 					{loading && <Spinner />}
 					{newsletterOpt(options, 'buttonText') || 'Subscribe'}
@@ -148,7 +150,9 @@ const NewsletterSignupView = (props) => {
 
 	const setValue = (key, value) => { setValues(v => ({ ...v, [key]: value })); if (error) setError(null); };
 
-	const onSubmit = (ev) => {
+	const captcha = useRecaptcha("newsletter");
+
+	const onSubmit = async (ev) => {
 		ev.preventDefault();
 		if (loading) return;
 
@@ -160,6 +164,14 @@ const NewsletterSignupView = (props) => {
 		if (collect === 'phone' && phone.replace(/\D+/g, '').length < 6) { setError('Please enter a valid phone number.'); return; }
 		if (collect === 'both' && !email && !phone) { setError('Please enter your email address or phone number.'); return; }
 
+		var captchaFields = {};
+		try {
+			captchaFields = await captcha.fields();
+		} catch (err) {
+			setError(err.message);
+			return;
+		}
+
 		setLoading(true);
 		setError(null);
 
@@ -167,6 +179,7 @@ const NewsletterSignupView = (props) => {
 			method: "POST",
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
+				...captchaFields,
 				name: values.name.trim(),
 				email: collect === 'phone' ? '' : email,
 				phone: collect === 'email' ? '' : phone,
@@ -189,12 +202,12 @@ const NewsletterSignupView = (props) => {
 				}
 			})
 			.catch(() => setError("We couldn't sign you up just now. Please try again."))
-			.finally(() => setLoading(false));
+			.finally(() => { captcha.reset(); setLoading(false); });
 	};
 
 	return (
 		<div id={id} type={props?.type} className={cls('*')}>
-			<NewsletterSignupMarkup cls={cls} id={id} options={options} values={values} setValue={setValue} onSubmit={onSubmit} loading={loading} error={error} done={done} />
+			<NewsletterSignupMarkup cls={cls} id={id} options={options} values={values} setValue={setValue} onSubmit={onSubmit} loading={loading} error={error} done={done} captchaWidget={captcha.widget} />
 		</div>
 	);
 };

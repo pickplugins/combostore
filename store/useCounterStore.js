@@ -72,24 +72,10 @@ export const currencyFromSettings = (data) => {
 export const useCounterStore = create((set) => ({
 
 
-  cartItems: [],
-  appData: {
-    serverUrl: serverUrl,
-    appUrl: appUrl,
-  },
-  // appData: {
-  //   serverUrl: "https://server.kidobazar.com/",
-  //   appUrl: "https://kidobazar.com/",
-  // },
   settings: null,
   settingsLoading: false,
   settingsError: null,
 
-  notifications: [],
-  userDataX: null,
-  currency: "BDT",
-  currencyPosition: "after",
-  currencySymbole: "Tk",
   coupons: {
     applied: false,
     couponCode: "",
@@ -265,7 +251,7 @@ export const useCounterStore = create((set) => ({
 
       "id": 'aamarpay',
       "enable": false,
-      "comingSoon": true,
+      "comingSoon": false,
       "label": "aamarPay",
       "value": "aamarpay",
     },
@@ -273,34 +259,32 @@ export const useCounterStore = create((set) => ({
 
       "id": 'eps',
       "enable": false,
-      "comingSoon": true,
+      "comingSoon": false,
 
       "label": "EPS",
       "value": "eps",
     },
-    // "bkash": {
+    "bkash": {
+      "id": 'bkash',
+      "enable": false,
+      "comingSoon": false,
+      "label": "bKash",
+      "value": "bkash",
+    },
+    "nagad": {
 
-    //   "id": 'bkash',
-    //   "enable": false,
-    //   "comingSoon": true,
+      "id": 'nagad',
+      "enable": false,
+      "comingSoon": false,
 
-    //   "label": "bKash",
-    //   "value": "bkash",
-    // },
-    // "nagad": {
-
-    //   "id": 'nagad',
-    //   "enable": false,
-    //   "comingSoon": true,
-
-    //   "label": "Nagad",
-    //   "value": "nagad",
-    // },
+      "label": "Nagad",
+      "value": "nagad",
+    },
     "sslcommerz": {
 
       "id": 'sslcommerz',
       "enable": false,
-      "comingSoon": true,
+      "comingSoon": false,
       "label": "SSLCOMMERZ",
       "value": "sslcommerz",
     },
@@ -308,7 +292,7 @@ export const useCounterStore = create((set) => ({
 
       "id": 'shurjopay',
       "enable": false,
-      "comingSoon": true,
+      "comingSoon": false,
       "label": "Shurjopay",
       "value": "shurjopay",
     },
@@ -316,16 +300,23 @@ export const useCounterStore = create((set) => ({
 
       "id": 'paystation',
       "enable": false,
-      "comingSoon": true,
-      "label": "Paystation",
+      "comingSoon": false,
+      "label": "PayStation",
       "value": "paystation",
     },
     "uddoktapay": {
       "id": 'uddoktapay',
       "enable": false,
-      "comingSoon": true,
+      "comingSoon": false,
       "label": "UddoktaPay",
       "value": "uddoktapay",
+    },
+    "portwallet": {
+      "id": 'portwallet',
+      "enable": false,
+      "comingSoon": false,
+      "label": "PortWallet",
+      "value": "portwallet",
     },
 
 
@@ -570,68 +561,6 @@ export const useCounterStore = create((set) => ({
     set((state) => ({
       mobileNav: typeof value === 'boolean' ? value : !state.mobileNav,
     })),
-  addNotification: (newNotification) =>
-    set((state) => ({
-      notifications: [...state.notifications, newNotification],
-    })),
-
-  removeNotification: (id) =>
-    set((state) => ({
-      notifications: state.notifications.filter((todo) => todo.id !== id),
-    })),
-  resetNotification: (id) =>
-    set((state) => ({
-      notifications: [],
-    })),
-  updateNotification: (id, updatedFields) => set((state) => ({
-    notifications: state.notifications.map((todo) =>
-      todo.id === id ? { ...todo, ...updatedFields } : todo
-    ),
-  })),
-
-  //cartItems
-  // addCartItems: (newCartItems) =>
-  //   set((state) => ({
-  //     cartItems: [...state.cartItems, newCartItems],
-  //   })),
-  addCartItems: (newCartItem) =>
-    set((state) => {
-      const existingItem = state.cartItems.find(
-        (item) => item.id === newCartItem.id
-      );
-
-      if (existingItem) {
-        // update quantity of existing product
-        return {
-          cartItems: state.cartItems.map((item) =>
-            item.id === newCartItem.id
-              ? { ...item, quantity: item.quantity + newCartItem.quantity }
-              : item
-          ),
-        };
-      } else {
-        // add new product to cart
-        return {
-          cartItems: [...state.cartItems, newCartItem],
-        };
-      }
-    }),
-  removeCartItems: (id) =>
-    set((state) => ({
-      cartItems: state.cartItems.filter((todo) => todo.id !== id),
-    })),
-  resetCartItems: (id) =>
-    set((state) => ({
-      cartItems: [],
-    })),
-  updateCartItems: (id, updatedFields) => set((state) => ({
-    cartItems: state.cartItems.map((todo) =>
-      todo.id === id ? { ...todo, ...updatedFields } : todo
-    ),
-  })),
-
-
-
   addPropertyDeep: (obj, path, value) => {
     const [head, ...rest] = path;
     return {
@@ -873,12 +802,6 @@ export const useCounterStore = create((set) => ({
 
   cartTotalPay: 0,
   setcartTotalPay: (amount) => set({ cartTotalPay: amount }),
-
-  navToggle: true,
-  setnavToggle: () =>
-    set((state) => ({
-      navToggle: !state.navToggle,
-    })),
 
   cartToggle: false,
   setcartToggle: (value) =>

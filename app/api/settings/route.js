@@ -4,6 +4,11 @@ import { redactAamarPaySettings } from "@/lib/aamarpay-server";
 import { redactBkashSettings } from "@/lib/bkash-server";
 import { redactNagadSettings } from "@/lib/nagad-server";
 import { redactPaddleSettings } from "@/lib/paddle-server";
+import { redactShurjoPaySettings } from "@/lib/shurjopay-server";
+import { redactSslcommerzSettings } from "@/lib/sslcommerz-server";
+import { redactPaystationSettings } from "@/lib/paystation-server";
+import { redactUddoktaPaySettings } from "@/lib/uddoktapay-server";
+import { redactPortWalletSettings } from "@/lib/portwallet-server";
 import { DEMO_MODE } from "@/lib/demo/config";
 import { settings as demoSettings } from "@/lib/demo/data";
 
@@ -22,6 +27,51 @@ import { settings as demoSettings } from "@/lib/demo/data";
  * Each gateway redacts its own fields and passes the rest of the blob through,
  * so they chain: a gateway added later adds a call here and nothing else.
  */
+/**
+ * API Keys with the server-only secrets taken out.
+ *
+ * - apiToken is the key WordPress's API-key routes accept (get_settings_public,
+ *   record_gateway_payment, get_order_by_hash...). Anyone holding it could read
+ *   every saved secret and mark any order paid, and this response is open.
+ * - The Meta and TikTok access tokens are only used by the server-side event
+ *   routes, which read their own copy through lib/getSettings.
+ *
+ * What the browser does need stays: pixel ids, Google Maps key and map id,
+ * analytics/tag ids.
+ */
+const SERVER_ONLY_API_KEYS = {
+  apiToken: null,
+  facebookPixel: ["access_token"],
+  tikTokPixel: ["access_token"],
+  tiktokPixel: ["access_token"],
+};
+
+function redactApiKeys(settings) {
+  const apiKeys = settings?.apiKeys;
+
+  if (!apiKeys || typeof apiKeys !== "object") {
+    return settings;
+  }
+
+  const safe = { ...apiKeys };
+
+  for (const [section, fields] of Object.entries(SERVER_ONLY_API_KEYS)) {
+    if (!(section in safe)) continue;
+
+    if (fields === null) {
+      delete safe[section];
+      continue;
+    }
+
+    if (safe[section] && typeof safe[section] === "object") {
+      safe[section] = { ...safe[section] };
+      for (const field of fields) delete safe[section][field];
+    }
+  }
+
+  return { ...settings, apiKeys: safe };
+}
+
 export async function GET() {
 
   const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
@@ -54,7 +104,7 @@ export async function GET() {
 
   /* Some installs answer with the blob wrapped in `settings`, some bare. */
   const strip = (settings) =>
-    redactPaddleSettings(redactNagadSettings(redactBkashSettings(redactAamarPaySettings(redactEpsSettings(redactStripeSettings(settings))))));
+    redactApiKeys(redactPortWalletSettings(redactUddoktaPaySettings(redactPaystationSettings(redactSslcommerzSettings(redactShurjoPaySettings(redactPaddleSettings(redactNagadSettings(redactBkashSettings(redactAamarPaySettings(redactEpsSettings(redactStripeSettings(settings))))))))))));
 
   const redacted = data?.settings
     ? { ...data, settings: strip(data.settings) }

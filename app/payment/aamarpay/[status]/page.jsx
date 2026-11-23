@@ -22,6 +22,10 @@ const OUTCOMES = {
     title: "Payment received",
     body: "This payment has already been handled. You can find it with your orders.",
   },
+  review: {
+    title: "Payment under review",
+    body: "aamarPay has taken your payment but is holding it for a routine check. Your order is saved and will be confirmed once the check is done. Please do not pay again.",
+  },
 };
 
 const REASONS = {

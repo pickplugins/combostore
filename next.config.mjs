@@ -3,6 +3,13 @@ import { storeImageHost } from './lib/imageOptimization.mjs';
 /* The store's WordPress server, whose images next/image now resizes (lib/imageOptimization.mjs). */
 const storeHost = storeImageHost();
 
+/*
+  Set by scripts/cloudflare.mjs (npm run cf:build / cf:preview / cf:deploy)
+  for a Cloudflare Workers build through @opennextjs/cloudflare. A Vercel build
+  never sets it, so everything below that depends on it leaves Vercel as it was.
+*/
+const forCloudflare = process.env.COMBOSTORE_TARGET === 'cloudflare';
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   /* A second instance (e.g. a demo store beside the dev server) needs its own build folder. */
@@ -24,8 +31,17 @@ const nextConfig = {
 
     Leaving both packages external makes the route require them from
     node_modules at runtime instead, which is how native addons have to load.
+
+    A Cloudflare Worker cannot load native addons at all, and has no
+    node_modules to require from. There @tailwindcss/node is swapped for
+    lib/tailwindPortable.js - the same compiler from the plain-JS `tailwindcss`
+    package, without the lightningcss pass - and nothing is left external.
   */
-  serverExternalPackages: ['@tailwindcss/node', 'lightningcss'],
+  serverExternalPackages: forCloudflare ? [] : ['@tailwindcss/node', 'lightningcss'],
+
+  ...(forCloudflare
+    ? { turbopack: { resolveAlias: { '@tailwindcss/node': './lib/tailwindPortable.js' } } }
+    : {}),
 
   /*
     The compile resolves `@import "tailwindcss/theme.css"` at runtime, from a

@@ -1,5 +1,7 @@
 "use client";
 import { storeUrl } from "@/lib/storeUrl";
+import RecaptchaPanel from "./RecaptchaPanel";
+import SmtpServersPanel from "./SmtpServersPanel";
 import { useState, useEffect, Component } from "react";
 import { IconChevronDown, IconChevronUp, IconPlug, IconTriangleSquareCircle, IconCreditCardPay, IconUserPentagon, IconMailSpark, IconBuildingStore, IconShip, IconStar, IconCashRegister, IconTrash, IconKey, IconTruckDelivery, IconSquareRoundedCheck, IconSquareRounded, IconDeviceFloppy, IconRestore, IconAlertTriangle, IconUserDollar } from "@tabler/icons-react";
 import Image from "next/image";
@@ -24,6 +26,11 @@ import GalleryPicker from "../components/shop-elements/GalleryPicker";
 import { getStripeConfig } from "../lib/stripe";
 import { getEpsConfig } from "../lib/eps";
 import { getAamarPayConfig } from "../lib/aamarpay";
+import { getShurjoPayConfig } from "../lib/shurjopay";
+import { getSslcommerzConfig } from "../lib/sslcommerz";
+import { getPaystationConfig } from "../lib/paystation";
+import { getUddoktaPayConfig } from "../lib/uddoktapay";
+import { getPortWalletConfig } from "../lib/portwallet";
 import { getBkashConfig } from "../lib/bkash";
 import { getNagadConfig } from "../lib/nagad";
 import { getPaddleConfig } from "../lib/paddle";
@@ -139,6 +146,61 @@ const SettingsGlobal = (props) => {
 
   /* Paddle (Classic): what the server has in force - vendor id, auth code, a usable public key. */
   var [paddleStatus, setpaddleStatus] = useState(null);
+
+  /* shurjoPay: whether the server has a username and password in force (lib/shurjopay-server.js). */
+  var [shurjopayStatus, setshurjopayStatus] = useState(null);
+
+  /* SSLCOMMERZ: whether the server has a store id and password in force (lib/sslcommerz-server.js). */
+  var [sslcommerzStatus, setsslcommerzStatus] = useState(null);
+
+  /* PayStation: whether the server has a merchant id and password in force (lib/paystation-server.js). */
+  var [paystationStatus, setpaystationStatus] = useState(null);
+
+  /* UddoktaPay: whether the server has a panel and API key in force (lib/uddoktapay-server.js). */
+  var [uddoktapayStatus, setuddoktapayStatus] = useState(null);
+
+  /* PortWallet: whether the server has an app key and secret in force (lib/portwallet-server.js). */
+  var [portwalletStatus, setportwalletStatus] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    getPortWalletConfig()
+      .then(config => { if (!cancelled) setportwalletStatus(config); })
+      .catch(() => { if (!cancelled) setportwalletStatus(null); });
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    getUddoktaPayConfig()
+      .then(config => { if (!cancelled) setuddoktapayStatus(config); })
+      .catch(() => { if (!cancelled) setuddoktapayStatus(null); });
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    getPaystationConfig()
+      .then(config => { if (!cancelled) setpaystationStatus(config); })
+      .catch(() => { if (!cancelled) setpaystationStatus(null); });
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    getSslcommerzConfig()
+      .then(config => { if (!cancelled) setsslcommerzStatus(config); })
+      .catch(() => { if (!cancelled) setsslcommerzStatus(null); });
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    getShurjoPayConfig()
+      .then(config => { if (!cancelled) setshurjopayStatus(config); })
+      .catch(() => { if (!cancelled) setshurjopayStatus(null); });
+    return () => { cancelled = true; };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -335,30 +397,22 @@ const SettingsGlobal = (props) => {
         "project_id": "",
       }
     },
-    "smtp ": {
+    /* Its servers are saved by SmtpServersPanel to their own option, not here. */
+    "smtp": {
       "id": 'smtp',
       "enable": false,
       "label": "SMTP",
-      "comingSoon": true,
-      args: {
-        "username": "",
-        "password": "",
-        "host": "",
-        "port": "",
-        "ssl": "",
-      }
+      args: {}
     },
 
 
 
-    "reCAPTCHA ": {
+    /* Saved by RecaptchaPanel to its own option, not here. */
+    "reCAPTCHA": {
       "id": 'reCAPTCHA',
       "enable": false,
-      "label": "reCAPTCHA ",
-      "comingSoon": true,
-      args: {
-        "sitekey": "",
-      }
+      "label": "reCAPTCHA",
+      args: {}
     },
     // "googleLogin": {
     //         "id": 'loginRequired',
@@ -1036,6 +1090,11 @@ const SettingsGlobal = (props) => {
               getBkashConfig({ fresh: true }).then(setbkashStatus).catch(() => { })
               getNagadConfig({ fresh: true }).then(setnagadStatus).catch(() => { })
               getPaddleConfig({ fresh: true }).then(setpaddleStatus).catch(() => { })
+              getShurjoPayConfig({ fresh: true }).then(setshurjopayStatus).catch(() => { })
+              getSslcommerzConfig({ fresh: true }).then(setsslcommerzStatus).catch(() => { })
+              getPaystationConfig({ fresh: true }).then(setpaystationStatus).catch(() => { })
+              getUddoktaPayConfig({ fresh: true }).then(setuddoktapayStatus).catch(() => { })
+              getPortWalletConfig({ fresh: true }).then(setportwalletStatus).catch(() => { })
             }
             if (status == 'failed') {
               addNotification({ type: 'error', title: 'Settings update failed', content: message })
@@ -3482,129 +3541,362 @@ const SettingsGlobal = (props) => {
 
 
 
-                          {providerKey == 'sslcommerz' && (
-
-                            <>
-
-                              <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
-                                <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Enable?")}</div>
-                                <div className="flex gap-3">
-                                  <input type="checkbox" name="enable" id={`enable-${providerKey}`}
-                                    checked={settingsData?.paymentGateways?.[providerKey]?.['enable']}
-                                    className=" !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-
-                                    value={settingsData?.paymentGateways?.[providerKey]?.['enable']}
-                                    onChange={(ev) => {
-                                      const value = ev.target.value;
-
-
-                                      setsettingsData(prev => ({
-                                        ...prev,
-                                        paymentGateways: {
-                                          ...prev.paymentGateways,
-                                          [providerKey]: {
-                                            ...prev.paymentGateways[providerKey],
-                                            ['enable']: !prev.paymentGateways[providerKey]?.['enable']
-                                          }
-                                        }
-                                      }));
-
-                                    }} />
-                                  <label htmlFor={`enable-${providerKey}`} className="cursor-pointer">{settingsData?.paymentGateways?.[providerKey]?.['enable'] ? "Enabled" : "Disabled"}</label>
-                                </div>
-                              </div>
-
-                              {settingsData?.paymentGateways?.[providerKey]?.['enable'] && (
-                                <div className="flex flex-col gap-5">
-                                  {gatewayLogoRow(providerKey)}
-
-
-                                  <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
-                                    <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Sandbox")}</div>
-                                    <div className="flex gap-3">
-                                      <input type="checkbox" name="sandbox" id={`sandbox-${providerKey}`}
-                                        checked={settingsData?.paymentGateways?.[providerKey]?.['sandbox']}
-                                        className="lg:w-auto w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-
-                                        value={settingsData?.paymentGateways?.[providerKey]?.['sandbox']}
-                                        onChange={(ev) => {
-                                          const value = ev.target.value;
-
-                                          setsettingsData(prev => ({
-                                            ...prev,
-                                            paymentGateways: {
-                                              ...prev.paymentGateways,
-                                              [providerKey]: {
-                                                ...prev.paymentGateways[providerKey],
-                                                ['sandbox']: !prev.paymentGateways[providerKey]?.['sandbox']
-                                              }
-                                            }
-                                          }));
-
-                                        }} />
-                                      <label htmlFor={`sandbox-${providerKey}`} className="cursor-pointer">{settingsData?.paymentGateways?.[providerKey]?.['sandbox'] ? "Enabled" : "Disabled"}</label>
-                                    </div>
-                                  </div>
-
-                                  <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
-                                    <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Store ID")}</div>
-                                    <div className="flex gap-3">
-                                      <input
-                                        type="text"
-                                        name={'store_id'}
-                                        placeholder={'store_id'}
-                                        className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                        value={settingsData?.paymentGateways?.[providerKey]?.['store_id']}
-                                        onChange={(ev) => {
-                                          const { name, value } = ev.target;
-                                          setsettingsData(prev => ({
-                                            ...prev,
-                                            paymentGateways: {
-                                              ...prev.paymentGateways,
-                                              [providerKey]: {
-                                                ...prev.paymentGateways[providerKey],
-                                                [name]: value
-                                              }
-                                            }
-                                          }));
-
-                                        }}
-                                      />
-                                    </div>
-                                  </div>
-
-
-                                  <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
-                                    <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("token")}</div>
-                                    <div className="flex gap-3">
-                                      <input
-                                        type="text"
-                                        name={'token'}
-                                        placeholder={'token'}
-                                        className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                        value={settingsData?.paymentGateways?.[providerKey]?.['token']}
-                                        onChange={(ev) => {
-                                          const { name, value } = ev.target;
-                                          setsettingsData(prev => ({
-                                            ...prev,
-                                            paymentGateways: {
-                                              ...prev.paymentGateways,
-                                              [providerKey]: {
-                                                ...prev.paymentGateways[providerKey],
-                                                [name]: value
-                                              }
-                                            }
-                                          }));
-
-                                        }}
-                                      />
-                                    </div>
+                          {providerKey == 'portwallet' && (() => {
+                            /* PortWallet (PortPos): app key + secret key (lib/portwallet-server.js). */
+                            var pw = settingsData?.paymentGateways?.portwallet ?? {};
+                            var setPw = (name, value) => setsettingsData(prev => ({
+                              ...prev,
+                              paymentGateways: {
+                                ...prev.paymentGateways,
+                                portwallet: { ...prev.paymentGateways?.portwallet, [name]: value }
+                              }
+                            }));
+                            return (
+                              <>
+                                <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                  <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Enable?")}</div>
+                                  <div className="flex gap-3">
+                                    <input type="checkbox" id="enable-portwallet" checked={!!pw.enable} onChange={() => setPw('enable', !pw.enable)} />
+                                    <label htmlFor="enable-portwallet" className="cursor-pointer">{pw.enable ? "Enabled" : "Disabled"}</label>
                                   </div>
                                 </div>
-                              )}
 
-                            </>
-                          )}
+                                {pw.enable && (
+                                  <div className="flex flex-col gap-5">
+                                    {gatewayLogoRow(providerKey)}
+
+                                    <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                      <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Sandbox")}</div>
+                                      <div className="flex flex-col gap-1">
+                                        <div className="flex gap-3">
+                                          <input type="checkbox" id="portwallet-sandbox" checked={pw.sandbox === true} onChange={() => setPw('sandbox', pw.sandbox !== true)} />
+                                          <label htmlFor="portwallet-sandbox" className="cursor-pointer">{pw.sandbox === true ? "Sandbox (api-sandbox.portpos.com)" : "Live"}</label>
+                                        </div>
+                                        <div className="text-xs text-gray-600">Sandbox keys come from merchant-sandbox.portpos.com (Applications → Add Application); live keys will not work there.</div>
+                                      </div>
+                                    </div>
+
+                                    <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                      <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("App key")}</div>
+                                      <div className="flex flex-col gap-1">
+                                        <input type="text" name="portwallet_app_key" autoComplete="off" data-1p-ignore="true" data-lpignore="true" placeholder="App key" className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20" value={pw.app_key ?? ''} onChange={ev => setPw('app_key', ev.target.value)} />
+                                      </div>
+                                    </div>
+
+                                    <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                      <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Secret key")}</div>
+                                      <div className="flex flex-col gap-1">
+                                        <input type="password" name="portwallet_secret_key" autoComplete="new-password" data-1p-ignore="true" data-lpignore="true" placeholder="Secret key" className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20" value={pw.secret_key ?? ''} onChange={ev => setPw('secret_key', ev.target.value)} />
+                                        {portwalletStatus?.enabled && (
+                                          <div className="text-xs text-green-700">In use{portwalletStatus?.sandbox ? " - sandbox, no real money" : " - live, real payments"}</div>
+                                        )}
+                                        {!portwalletStatus?.enabled && (
+                                          <div className="text-xs text-red-600">
+                                            Not in use - PortWallet will not appear at checkout until an app key and secret key are saved.
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+
+                                    <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                      <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Description")}</div>
+                                      <div className="flex flex-col gap-1">
+                                        <input type="text" placeholder="Pay by card, bKash, Nagad and more" className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20" value={pw.description ?? ''} onChange={ev => setPw('description', ev.target.value)} />
+                                        <div className="text-xs text-gray-600">Shown under the PortWallet button at checkout.</div>
+                                      </div>
+                                    </div>
+
+                                    <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                      <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("IPN URL")}</div>
+                                      <div className="flex flex-col gap-1">
+                                        <div className="font-mono text-xs select-all break-all">{portwalletStatus?.ipn_url || "/api/portwallet/ipn"}</div>
+                                        <div className="text-xs text-gray-600">
+                                          Sent with every payment, so there is nothing to set in the PortWallet panel. It settles orders whose buyer closed the tab before coming back, and has to be reachable from the internet.
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    <div className="flex flex-col gap-2 py-3.5">
+                                      <div className="text-xs text-gray-600">
+                                        PortWallet takes BDT, USD, GBP and EUR; it is hidden at checkout for orders in another currency. Every payment is checked with PortWallet's invoice API before the order is marked paid. The secret key is stored with the store settings and stripped from the copy the storefront receives.
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+                              </>
+                            );
+                          })()}
+
+                          {providerKey == 'uddoktapay' && (() => {
+                            /* UddoktaPay: panel URL + API key (lib/uddoktapay-server.js). */
+                            var up = settingsData?.paymentGateways?.uddoktapay ?? {};
+                            var setUp = (name, value) => setsettingsData(prev => ({
+                              ...prev,
+                              paymentGateways: {
+                                ...prev.paymentGateways,
+                                uddoktapay: { ...prev.paymentGateways?.uddoktapay, [name]: value }
+                              }
+                            }));
+                            return (
+                              <>
+                                <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                  <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Enable?")}</div>
+                                  <div className="flex gap-3">
+                                    <input type="checkbox" id="enable-uddoktapay" checked={!!up.enable} onChange={() => setUp('enable', !up.enable)} />
+                                    <label htmlFor="enable-uddoktapay" className="cursor-pointer">{up.enable ? "Enabled" : "Disabled"}</label>
+                                  </div>
+                                </div>
+
+                                {up.enable && (
+                                  <div className="flex flex-col gap-5">
+                                    {gatewayLogoRow(providerKey)}
+
+                                    <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                      <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Sandbox")}</div>
+                                      <div className="flex flex-col gap-1">
+                                        <div className="flex gap-3">
+                                          <input type="checkbox" id="uddoktapay-sandbox" checked={up.sandbox === true} onChange={() => setUp('sandbox', up.sandbox !== true)} />
+                                          <label htmlFor="uddoktapay-sandbox" className="cursor-pointer">{up.sandbox === true ? "Sandbox (sandbox.uddoktapay.com)" : "Live"}</label>
+                                        </div>
+                                        <div className="text-xs text-gray-600">Sandbox uses UddoktaPay's public test panel and, if no API key is saved, its public test key. On its payment page pick any method, enter any unused transaction ID and choose "Completed".</div>
+                                      </div>
+                                    </div>
+
+                                    <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                      <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Panel URL")}</div>
+                                      <div className="flex flex-col gap-1">
+                                        <input type="url" name="uddoktapay_base_url" autoComplete="off" placeholder="https://pay.yourdomain.com" className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20" value={up.base_url ?? ''} onChange={ev => setUp('base_url', ev.target.value)} />
+                                        <div className="text-xs text-gray-600">Your UddoktaPay panel's address (the API base URL ending in /api also works). Not used in sandbox.</div>
+                                      </div>
+                                    </div>
+
+                                    <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                      <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("API key")}</div>
+                                      <div className="flex flex-col gap-1">
+                                        <input type="password" name="uddoktapay_api_key" autoComplete="new-password" data-1p-ignore="true" data-lpignore="true" placeholder="From Brand Settings → API key in your panel" className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20" value={up.api_key ?? ''} onChange={ev => setUp('api_key', ev.target.value)} />
+                                        {uddoktapayStatus?.enabled && (
+                                          <div className="text-xs text-green-700">In use{uddoktapayStatus?.sandbox ? (uddoktapayStatus?.using_sandbox_key ? " - sandbox with the public test key, no real money" : " - sandbox, no real money") : " - live, real payments"}</div>
+                                        )}
+                                        {!uddoktapayStatus?.enabled && (
+                                          <div className="text-xs text-red-600">
+                                            Not in use - UddoktaPay will not appear at checkout until a panel URL and API key are saved.
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+
+                                    <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                      <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Description")}</div>
+                                      <div className="flex flex-col gap-1">
+                                        <input type="text" placeholder="Pay with bKash, Nagad, Rocket or Upay" className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20" value={up.description ?? ''} onChange={ev => setUp('description', ev.target.value)} />
+                                        <div className="text-xs text-gray-600">Shown under the UddoktaPay button at checkout.</div>
+                                      </div>
+                                    </div>
+
+                                    <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                      <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Webhook URL")}</div>
+                                      <div className="flex flex-col gap-1">
+                                        <div className="font-mono text-xs select-all break-all">{uddoktapayStatus?.ipn_url || "/api/uddoktapay/ipn"}</div>
+                                        <div className="text-xs text-gray-600">
+                                          Sent with every payment, so there is nothing to set in the panel. It settles orders whose buyer closed the tab, and pending payments you approve later; it has to be reachable from the internet.
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    <div className="flex flex-col gap-2 py-3.5">
+                                      <div className="text-xs text-gray-600">
+                                        UddoktaPay charges in BDT only, so it is hidden at checkout for orders in another currency. Every payment is checked with your panel's verify-payment API before the order is marked paid; a payment left pending waits for you to approve it in the panel. The API key is stored with the store settings and stripped from the copy the storefront receives.
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+                              </>
+                            );
+                          })()}
+
+                          {providerKey == 'paystation' && (() => {
+                            /* PayStation: merchant id + password (lib/paystation-server.js). */
+                            var ps = settingsData?.paymentGateways?.paystation ?? {};
+                            var setPs = (name, value) => setsettingsData(prev => ({
+                              ...prev,
+                              paymentGateways: {
+                                ...prev.paymentGateways,
+                                paystation: { ...prev.paymentGateways?.paystation, [name]: value }
+                              }
+                            }));
+                            return (
+                              <>
+                                <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                  <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Enable?")}</div>
+                                  <div className="flex gap-3">
+                                    <input type="checkbox" id="enable-paystation" checked={!!ps.enable} onChange={() => setPs('enable', !ps.enable)} />
+                                    <label htmlFor="enable-paystation" className="cursor-pointer">{ps.enable ? "Enabled" : "Disabled"}</label>
+                                  </div>
+                                </div>
+
+                                {ps.enable && (
+                                  <div className="flex flex-col gap-5">
+                                    {gatewayLogoRow(providerKey)}
+
+                                    <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                      <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Sandbox")}</div>
+                                      <div className="flex flex-col gap-1">
+                                        <div className="flex gap-3">
+                                          <input type="checkbox" id="paystation-sandbox" checked={ps.sandbox === true} onChange={() => setPs('sandbox', ps.sandbox !== true)} />
+                                          <label htmlFor="paystation-sandbox" className="cursor-pointer">{ps.sandbox === true ? "Sandbox (sandbox.paystation.com.bd)" : "Live"}</label>
+                                        </div>
+                                        <div className="text-xs text-gray-600">Sandbox needs the sandbox merchant ID and password PayStation gives you; live credentials will not work there.</div>
+                                      </div>
+                                    </div>
+
+                                    <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                      <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Merchant ID")}</div>
+                                      <div className="flex flex-col gap-1">
+                                        <input type="text" name="paystation_merchant_id" autoComplete="off" data-1p-ignore="true" data-lpignore="true" placeholder="e.g. 204-16537301811" className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20" value={ps.merchant_id ?? ''} onChange={ev => setPs('merchant_id', ev.target.value)} />
+                                      </div>
+                                    </div>
+
+                                    <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                      <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Password")}</div>
+                                      <div className="flex flex-col gap-1">
+                                        <input type="password" name="paystation_password" autoComplete="new-password" data-1p-ignore="true" data-lpignore="true" placeholder="Merchant password" className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20" value={ps.password ?? ''} onChange={ev => setPs('password', ev.target.value)} />
+                                        {paystationStatus?.enabled && (
+                                          <div className="text-xs text-green-700">In use{paystationStatus?.sandbox ? " - sandbox, no real money" : " - live, real payments"}</div>
+                                        )}
+                                        {!paystationStatus?.enabled && (
+                                          <div className="text-xs text-red-600">
+                                            Not in use - PayStation will not appear at checkout until a merchant ID and password are saved.
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+
+                                    <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                      <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Buyer pays the charge")}</div>
+                                      <div className="flex flex-col gap-1">
+                                        <div className="flex gap-3">
+                                          <input type="checkbox" id="paystation-charge" checked={ps.pay_with_charge === true} onChange={() => setPs('pay_with_charge', ps.pay_with_charge !== true)} />
+                                          <label htmlFor="paystation-charge" className="cursor-pointer">{ps.pay_with_charge === true ? "Buyer pays PayStation's charge" : "Store pays PayStation's charge"}</label>
+                                        </div>
+                                        <div className="text-xs text-gray-600">When on, PayStation adds its processing charge on top of the order total at its payment page.</div>
+                                      </div>
+                                    </div>
+
+                                    <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                      <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Description")}</div>
+                                      <div className="flex flex-col gap-1">
+                                        <input type="text" placeholder="Pay by card, bKash, Nagad, Rocket or Upay" className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20" value={ps.description ?? ''} onChange={ev => setPs('description', ev.target.value)} />
+                                        <div className="text-xs text-gray-600">Shown under the PayStation button at checkout.</div>
+                                      </div>
+                                    </div>
+
+                                    <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                      <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("IPN URL")}</div>
+                                      <div className="flex flex-col gap-1">
+                                        <div className="font-mono text-xs select-all break-all">{paystationStatus?.ipn_url || "/api/paystation/ipn"}</div>
+                                        <div className="text-xs text-gray-600">
+                                          Ask PayStation to send IPNs for your merchant account here. It settles orders whose buyer closed the tab before coming back, and has to be reachable from the internet.
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    <div className="flex flex-col gap-2 py-3.5">
+                                      <div className="text-xs text-gray-600">
+                                        PayStation charges in BDT only, so it is hidden at checkout for orders in another currency. Every payment is checked with PayStation's transaction-status API before the order is marked paid. The password is stored with the store settings and stripped from the copy the storefront receives.
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+                              </>
+                            );
+                          })()}
+
+                          {providerKey == 'sslcommerz' && (() => {
+                            /* SSLCOMMERZ API v4: store id + store password (lib/sslcommerz-server.js). `token` is where the old panel kept the password; still read. */
+                            var ssl = settingsData?.paymentGateways?.sslcommerz ?? {};
+                            var setSsl = (name, value) => setsettingsData(prev => ({
+                              ...prev,
+                              paymentGateways: {
+                                ...prev.paymentGateways,
+                                sslcommerz: { ...prev.paymentGateways?.sslcommerz, [name]: value }
+                              }
+                            }));
+                            return (
+                              <>
+                                <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                  <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Enable?")}</div>
+                                  <div className="flex gap-3">
+                                    <input type="checkbox" id="enable-sslcommerz" checked={!!ssl.enable} onChange={() => setSsl('enable', !ssl.enable)} />
+                                    <label htmlFor="enable-sslcommerz" className="cursor-pointer">{ssl.enable ? "Enabled" : "Disabled"}</label>
+                                  </div>
+                                </div>
+
+                                {ssl.enable && (
+                                  <div className="flex flex-col gap-5">
+                                    {gatewayLogoRow(providerKey)}
+
+                                    <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                      <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Sandbox")}</div>
+                                      <div className="flex flex-col gap-1">
+                                        <div className="flex gap-3">
+                                          <input type="checkbox" id="sslcommerz-sandbox" checked={ssl.sandbox === true} onChange={() => setSsl('sandbox', ssl.sandbox !== true)} />
+                                          <label htmlFor="sslcommerz-sandbox" className="cursor-pointer">{ssl.sandbox === true ? "Sandbox (sandbox.sslcommerz.com)" : "Live"}</label>
+                                        </div>
+                                        <div className="text-xs text-gray-600">Sandbox needs a sandbox store from developer.sslcommerz.com (the public demo store is <span className="font-mono select-all">testbox</span> / <span className="font-mono select-all">qwerty</span>).</div>
+                                      </div>
+                                    </div>
+
+                                    <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                      <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Store ID")}</div>
+                                      <div className="flex flex-col gap-1">
+                                        <input type="text" name="sslcommerz_store_id" autoComplete="off" data-1p-ignore="true" data-lpignore="true" placeholder="Store ID" className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20" value={ssl.store_id ?? ''} onChange={ev => setSsl('store_id', ev.target.value)} />
+                                      </div>
+                                    </div>
+
+                                    <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                      <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Store password")}</div>
+                                      <div className="flex flex-col gap-1">
+                                        <input type="password" name="sslcommerz_store_passwd" autoComplete="new-password" data-1p-ignore="true" data-lpignore="true" placeholder="Store password (API/secret key)" className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20" value={ssl.store_passwd ?? ssl.token ?? ''} onChange={ev => setSsl('store_passwd', ev.target.value)} />
+                                        {sslcommerzStatus?.enabled && (
+                                          <div className="text-xs text-green-700">In use{sslcommerzStatus?.sandbox ? " - sandbox, no real money" : " - live, real payments"}</div>
+                                        )}
+                                        {!sslcommerzStatus?.enabled && (
+                                          <div className="text-xs text-red-600">
+                                            Not in use - SSLCOMMERZ will not appear at checkout until a store ID and password are saved.
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+
+                                    <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                      <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Description")}</div>
+                                      <div className="flex flex-col gap-1">
+                                        <input type="text" placeholder="Pay by card, mobile banking or internet banking" className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20" value={ssl.description ?? ''} onChange={ev => setSsl('description', ev.target.value)} />
+                                        <div className="text-xs text-gray-600">Shown under the SSLCOMMERZ button at checkout.</div>
+                                      </div>
+                                    </div>
+
+                                    <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                      <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("IPN URL")}</div>
+                                      <div className="flex flex-col gap-1">
+                                        <div className="font-mono text-xs select-all break-all">{sslcommerzStatus?.ipn_url || "/api/sslcommerz/ipn"}</div>
+                                        <div className="text-xs text-gray-600">
+                                          Sent with every payment, so nothing has to be set in the merchant panel (you can also save it there). It settles orders whose buyer closed the tab, and has to be reachable from the internet.
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    <div className="flex flex-col gap-2 py-3.5">
+                                      <div className="text-xs text-gray-600">
+                                        Offered at checkout for orders in {(sslcommerzStatus?.currencies || ['BDT']).join(', ')}. Every payment is checked with SSLCOMMERZ's validation API before the order is marked paid; payments SSLCOMMERZ flags as risky are left unpaid for you to review. The store password is stored with the store settings and stripped from the copy the storefront receives.
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+                              </>
+                            );
+                          })()}
+
                           {providerKey == 'cod' && (
 
                             <>
@@ -4149,11 +4441,120 @@ const SettingsGlobal = (props) => {
                                       />
                                     </div>
                                   </div>
+
+                                  {providerKey == 'aamarpay' && (
+                                    <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                      <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("IPN URL")}</div>
+                                      <div className="flex flex-col gap-1">
+                                        <div className="font-mono text-xs select-all break-all">{aamarpayStatus?.ipn_url || "/api/aamarpay/ipn"}</div>
+                                        <div className="text-xs text-gray-600">
+                                          Sent with every payment as the IPN address. aamarPay's API documentation does not describe IPNs and its sandbox did not send one in testing, so do not count on it: orders are settled when the buyer returns to the store. If aamarPay support turns on IPN for your account, give them this URL - it has to be reachable from the internet.
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
                                 </div>
                               )}
 
                             </>
                           )}
+                          {providerKey == 'shurjopay' && (() => {
+                            /* shurjoPay API v2: merchant username + password get a token; prefix tags its order ids (lib/shurjopay-server.js). */
+                            var shurjopay = settingsData?.paymentGateways?.shurjopay ?? {};
+                            var setShurjoPay = (name, value) => setsettingsData(prev => ({
+                              ...prev,
+                              paymentGateways: {
+                                ...prev.paymentGateways,
+                                shurjopay: { ...prev.paymentGateways?.shurjopay, [name]: value }
+                              }
+                            }));
+                            return (
+                              <>
+                                <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                  <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Enable?")}</div>
+                                  <div className="flex gap-3">
+                                    <input type="checkbox" id="enable-shurjopay" checked={!!shurjopay.enable} onChange={() => setShurjoPay('enable', !shurjopay.enable)} />
+                                    <label htmlFor="enable-shurjopay" className="cursor-pointer">{shurjopay.enable ? "Enabled" : "Disabled"}</label>
+                                  </div>
+                                </div>
+
+                                {shurjopay.enable && (
+                                  <div className="flex flex-col gap-5">
+                                    {gatewayLogoRow(providerKey)}
+
+                                    <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                      <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Sandbox")}</div>
+                                      <div className="flex flex-col gap-1">
+                                        <div className="flex gap-3">
+                                          <input type="checkbox" id="shurjopay-sandbox" checked={shurjopay.sandbox === true} onChange={() => setShurjoPay('sandbox', shurjopay.sandbox !== true)} />
+                                          <label htmlFor="shurjopay-sandbox" className="cursor-pointer">{shurjopay.sandbox === true ? "Sandbox (sandbox.shurjopayment.com)" : "Live"}</label>
+                                        </div>
+                                        <div className="text-xs text-gray-600">shurjoPay's public sandbox account is username <span className="font-mono select-all">sp_sandbox</span>, password <span className="font-mono select-all">pyyk97hu&amp;6u6</span>, prefix <span className="font-mono select-all">NOK</span>.</div>
+                                      </div>
+                                    </div>
+
+                                    <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                      <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Username")}</div>
+                                      <div className="flex flex-col gap-1">
+                                        <input type="text" name="shurjopay_username" autoComplete="off" data-1p-ignore="true" data-lpignore="true" placeholder="Merchant username" className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20" value={shurjopay.username ?? ''} onChange={ev => setShurjoPay('username', ev.target.value)} />
+                                        <div className="text-xs text-gray-600">The API username shurjoPay sent with your merchant account.</div>
+                                      </div>
+                                    </div>
+
+                                    <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                      <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Password")}</div>
+                                      <div className="flex flex-col gap-1">
+                                        <input type="password" name="shurjopay_password" autoComplete="new-password" data-1p-ignore="true" data-lpignore="true" placeholder="Merchant password" className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20" value={shurjopay.password ?? ''} onChange={ev => setShurjoPay('password', ev.target.value)} />
+                                        {shurjopayStatus?.enabled && (
+                                          <div className="text-xs text-green-700">In use{shurjopayStatus?.sandbox ? " - sandbox, no real money" : " - live, real payments"}</div>
+                                        )}
+                                        {!shurjopayStatus?.enabled && (
+                                          <div className="text-xs text-red-600">
+                                            Not in use - shurjoPay will not appear at checkout until a username and password are saved.
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+
+                                    <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                      <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Transaction prefix")}</div>
+                                      <div className="flex flex-col gap-1">
+                                        <input type="text" maxLength={5} placeholder="e.g. NOK" className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20" value={shurjopay.prefix ?? ''} onChange={ev => setShurjoPay('prefix', ev.target.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase())} />
+                                        <div className="text-xs text-gray-600">
+                                          The prefix shurjoPay assigned to your store (up to 5 letters/digits). In use: {shurjopayStatus?.prefix || "NOK"}.
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                      <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Description")}</div>
+                                      <div className="flex flex-col gap-1">
+                                        <input type="text" placeholder="Pay by card, bKash, Nagad, Rocket or internet banking" className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20" value={shurjopay.description ?? ''} onChange={ev => setShurjoPay('description', ev.target.value)} />
+                                        <div className="text-xs text-gray-600">Shown under the shurjoPay button at checkout.</div>
+                                      </div>
+                                    </div>
+
+                                    <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                      <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("IPN URL")}</div>
+                                      <div className="flex flex-col gap-1">
+                                        <div className="font-mono text-xs select-all break-all">{shurjopayStatus?.ipn_url || "/api/shurjopay/ipn"}</div>
+                                        <div className="text-xs text-gray-600">
+                                          Ask shurjoPay (or set it in the merchant panel) to send IPNs here. It settles orders whose buyer closed the tab before coming back. It has to be reachable from the internet; each notification is checked with shurjoPay's verification API before an order is marked paid.
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    <div className="flex flex-col gap-2 py-3.5">
+                                      <div className="text-xs text-gray-600">
+                                        shurjoPay charges in BDT only, so it is hidden at checkout for orders in another currency. Buyers are sent back to <span className="font-mono">/api/shurjopay/callback</span>, where the payment is checked with shurjoPay before the order is marked paid. The username and password are stored with the store settings and stripped from the copy the storefront receives.
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+                              </>
+                            );
+                          })()}
+
                           {providerKey == 'eps' && (
 
                             <>
@@ -4372,6 +4773,46 @@ const SettingsGlobal = (props) => {
 
                                         }}
                                       />
+                                    </div>
+                                  </div>
+
+                                  <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                    <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("IPN secret key")}</div>
+                                    <div className="flex flex-col gap-1">
+                                      <input
+                                        type="password"
+                                        autoComplete="new-password"
+                                        data-1p-ignore="true"
+                                        data-lpignore="true"
+                                        name={'ipn_secret'}
+                                        placeholder={'Optional - the hash key is used when empty'}
+                                        className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
+                                        value={settingsData?.paymentGateways?.[providerKey]?.['ipn_secret'] ?? ''}
+                                        onChange={(ev) => {
+                                          const { name, value } = ev.target;
+                                          setsettingsData(prev => ({
+                                            ...prev,
+                                            paymentGateways: {
+                                              ...prev.paymentGateways,
+                                              [providerKey]: {
+                                                ...prev.paymentGateways[providerKey],
+                                                [name]: value
+                                              }
+                                            }
+                                          }));
+                                        }}
+                                      />
+                                      <div className="text-xs text-gray-600">The Secret Key EPS encrypts IPNs with, if EPS gave you one separate from the hash key.</div>
+                                    </div>
+                                  </div>
+
+                                  <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                    <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("IPN URL")}</div>
+                                    <div className="flex flex-col gap-1">
+                                      <div className="font-mono text-xs select-all break-all">{epsStatus?.ipn_url || "/api/eps/ipn"}</div>
+                                      <div className="text-xs text-gray-600">
+                                        Give this URL to EPS (merchant panel or support) as your IPN endpoint. It settles orders whose buyer closed the tab before coming back, and has to be reachable from the internet. Every IPN is checked with EPS's status API before the order is marked paid.
+                                      </div>
                                     </div>
                                   </div>
 
@@ -4869,9 +5310,9 @@ const SettingsGlobal = (props) => {
 
 
                   return (
-                    <div className="">
+                    <div className="" key={providerKey}>
 
-                      <ToggleContent key={index} title={<APIKeyItemTitle item={item} enable={settingsData?.apiKeys?.[providerKey]?.['enabled']} index={index} />}
+                      <ToggleContent key={index} title={<APIKeyItemTitle item={item} enable={providerKey == 'smtp' || providerKey == 'reCAPTCHA' ? undefined : settingsData?.apiKeys?.[providerKey]?.['enabled']} index={index} />}
                         contentClass="bg-gray-200 !text-gray-800 p-4"
                         headerTitleClass="flex items-center gap-3 w-full justify-between"
                         headerLabelClass="flex items-center gap-3 w-full justify-between"
@@ -5314,6 +5755,10 @@ const SettingsGlobal = (props) => {
 
                             </>
                           )}
+                          {providerKey == 'smtp' && <SmtpServersPanel />}
+
+                          {providerKey == 'reCAPTCHA' && <RecaptchaPanel />}
+
                           {providerKey == 'microsoftClarity' && (
 
                             <>

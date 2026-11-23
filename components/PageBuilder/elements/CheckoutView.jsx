@@ -1,5 +1,6 @@
 "use client"
 import React from "react";
+import { useRecaptcha } from "@/lib/recaptcha";
 import { tablerIcon } from "@/components/icons/TablerIcon";
 import Link from "next/link";
 
@@ -25,6 +26,11 @@ import UploadMedia from "../../../components/shop-elements/UploadMedia";
 import BkashCheckoutButton from "../../../components/shop-elements/BkashCheckoutButton";
 import NagadCheckoutButton from "../../../components/shop-elements/NagadCheckoutButton";
 import AamarPayCheckoutButton from "../../../components/shop-elements/AamarPayCheckoutButton";
+import ShurjoPayCheckoutButton from "../../../components/shop-elements/ShurjoPayCheckoutButton";
+import SslcommerzCheckoutButton from "../../../components/shop-elements/SslcommerzCheckoutButton";
+import PaystationCheckoutButton from "../../../components/shop-elements/PaystationCheckoutButton";
+import UddoktaPayCheckoutButton from "../../../components/shop-elements/UddoktaPayCheckoutButton";
+import PortWalletCheckoutButton from "../../../components/shop-elements/PortWalletCheckoutButton";
 import PayPalCheckoutButton from "../../../components/shop-elements/PayPalCheckoutButton";
 import StripeCheckoutButton from "../../../components/shop-elements/StripeCheckoutButton";
 import PaddleCheckoutButton from "../../../components/shop-elements/PaddleCheckoutButton";
@@ -34,6 +40,11 @@ import { getStripeConfig } from "../../../lib/stripe";
 import { getPaddleConfig } from "../../../lib/paddle";
 import { getEpsConfig } from "../../../lib/eps";
 import { getAamarPayConfig } from "../../../lib/aamarpay";
+import { getShurjoPayConfig } from "../../../lib/shurjopay";
+import { getSslcommerzConfig } from "../../../lib/sslcommerz";
+import { getPaystationConfig } from "../../../lib/paystation";
+import { getUddoktaPayConfig } from "../../../lib/uddoktapay";
+import { getPortWalletConfig } from "../../../lib/portwallet";
 import { getBkashConfig } from "../../../lib/bkash";
 import { getNagadConfig } from "../../../lib/nagad";
 import { loadCheckoutDraft, saveCheckoutDraft, clearCheckoutDraft } from "../../../lib/checkoutDraft";
@@ -217,6 +228,13 @@ const CheckoutView = (props) => {
 		: { 'Content-Type': 'application/json' });
 
 	/*
+		reCAPTCHA on placing an order (ComboStoreRecaptcha). The abandoned-cart
+		"incomplete" save as the tab is hidden is not challenged - there is no
+		time to get a token then - so create_order(...) below sends none.
+	*/
+	const captcha = useRecaptcha("checkout");
+
+	/*
 		The Fraud Checker's "Login required" switch (`fraudCheck.loginRequired`
 		in the store settings). The server refuses a guest's order either way;
 		this only tells a guest up front instead of after they fill the form.
@@ -268,6 +286,16 @@ const CheckoutView = (props) => {
 		settings blob but the browser is not shown the signature key behind it.
 	*/
 	const [aamarpayConfig, setaamarpayConfig] = useState(null);
+	/* shurjoPay: the same again - offered only once the server has its username and password. */
+	const [shurjopayConfig, setshurjopayConfig] = useState(null);
+	/* SSLCOMMERZ: offered once the server has a store id and password, for the currencies it takes. */
+	const [sslcommerzConfig, setsslcommerzConfig] = useState(null);
+	/* PayStation: offered once the server has a merchant id and password; taka only. */
+	const [paystationConfig, setpaystationConfig] = useState(null);
+	/* UddoktaPay: offered once the server has an API key and panel URL (or sandbox); taka only. */
+	const [uddoktapayConfig, setuddoktapayConfig] = useState(null);
+	/* PortWallet: offered once the server has an app key and secret, in the currencies it takes. */
+	const [portwalletConfig, setportwalletConfig] = useState(null);
 	/* bKash and Nagad are the same case again. */
 	const [bkashConfig, setbkashConfig] = useState(null);
 	const [nagadConfig, setnagadConfig] = useState(null);
@@ -867,6 +895,71 @@ const CheckoutView = (props) => {
 				}
 			});
 
+		getPortWalletConfig()
+			.then(config => {
+				if (!cancelled) {
+					setportwalletConfig(config);
+				}
+			})
+			.catch(() => {
+				/* PortWallet simply does not appear; the rest still work. */
+				if (!cancelled) {
+					setportwalletConfig(null);
+				}
+			});
+
+		getUddoktaPayConfig()
+			.then(config => {
+				if (!cancelled) {
+					setuddoktapayConfig(config);
+				}
+			})
+			.catch(() => {
+				/* UddoktaPay simply does not appear; the rest still work. */
+				if (!cancelled) {
+					setuddoktapayConfig(null);
+				}
+			});
+
+		getPaystationConfig()
+			.then(config => {
+				if (!cancelled) {
+					setpaystationConfig(config);
+				}
+			})
+			.catch(() => {
+				/* PayStation simply does not appear; the rest still work. */
+				if (!cancelled) {
+					setpaystationConfig(null);
+				}
+			});
+
+		getSslcommerzConfig()
+			.then(config => {
+				if (!cancelled) {
+					setsslcommerzConfig(config);
+				}
+			})
+			.catch(() => {
+				/* SSLCOMMERZ simply does not appear; the rest still work. */
+				if (!cancelled) {
+					setsslcommerzConfig(null);
+				}
+			});
+
+		getShurjoPayConfig()
+			.then(config => {
+				if (!cancelled) {
+					setshurjopayConfig(config);
+				}
+			})
+			.catch(() => {
+				/* shurjoPay simply does not appear; the rest still work. */
+				if (!cancelled) {
+					setshurjopayConfig(null);
+				}
+			});
+
 		getBkashConfig()
 			.then(config => {
 				if (!cancelled) {
@@ -936,19 +1029,37 @@ const CheckoutView = (props) => {
 			delete list.paypal;
 		}
 
-		if (list.stripe && !stripeConfig?.enabled) {
-			delete list.stripe;
+		if (list.stripe) {
+			/* Charged in Stripe's currency: an order in another one needs a rate to convert it. */
+			const orderCurrency = String(checkoutData?.currency ?? currency ?? 'BDT').toUpperCase();
+			const chargeCurrency = String(stripeConfig?.currency || '').toUpperCase();
+			const convertible = !chargeCurrency || orderCurrency === chargeCurrency || Number(stripeConfig?.exchange_rate) > 0;
+
+			if (!stripeConfig?.enabled || !convertible) {
+				delete list.stripe;
+			}
 		}
 
-		if (list.aamarpay && !aamarpayConfig?.enabled) {
-			delete list.aamarpay;
+		if (list.aamarpay) {
+			const orderCurrency = String(checkoutData?.currency ?? currency ?? 'BDT').toUpperCase();
+
+			if (!aamarpayConfig?.enabled || !(aamarpayConfig?.currencies || ['BDT', 'USD']).includes(orderCurrency)) {
+				delete list.aamarpay;
+			}
 		}
 
 		/* Paddle: dropped with no credentials, as Stripe is. A store in a
 		   currency Paddle does not take (BDT) needs the dashboard's exchange
 		   rate; the button says so if it is missing. */
-		if (list.paddle && !paddleConfig?.enabled) {
-			delete list.paddle;
+		if (list.paddle) {
+			/* Charged in Paddle's currency: an order in another one needs a rate to convert it. */
+			const orderCurrency = String(checkoutData?.currency ?? currency ?? 'BDT').toUpperCase();
+			const chargeCurrency = String(paddleConfig?.currency || '').toUpperCase();
+			const convertible = !chargeCurrency || orderCurrency === chargeCurrency || Number(paddleConfig?.exchange_rate) > 0;
+
+			if (!paddleConfig?.enabled || !convertible) {
+				delete list.paddle;
+			}
 		}
 
 		/* Taka only, for the same reason as EPS below. */
@@ -960,6 +1071,34 @@ const CheckoutView = (props) => {
 
 		if (list.nagad && (!nagadConfig?.enabled || !inTaka)) {
 			delete list.nagad;
+		}
+
+		if (list.shurjopay && (!shurjopayConfig?.enabled || !inTaka)) {
+			delete list.shurjopay;
+		}
+
+		if (list.paystation && (!paystationConfig?.enabled || !inTaka)) {
+			delete list.paystation;
+		}
+
+		if (list.uddoktapay && (!uddoktapayConfig?.enabled || !inTaka)) {
+			delete list.uddoktapay;
+		}
+
+		if (list.portwallet) {
+			const orderCurrency = String(checkoutData?.currency ?? currency ?? 'BDT').toUpperCase();
+
+			if (!portwalletConfig?.enabled || !(portwalletConfig?.currencies || ['BDT']).includes(orderCurrency)) {
+				delete list.portwallet;
+			}
+		}
+
+		if (list.sslcommerz) {
+			const orderCurrency = String(checkoutData?.currency ?? currency ?? 'BDT').toUpperCase();
+
+			if (!sslcommerzConfig?.enabled || !(sslcommerzConfig?.currencies || ['BDT']).includes(orderCurrency)) {
+				delete list.sslcommerz;
+			}
 		}
 
 		if (list.eps) {
@@ -1033,15 +1172,18 @@ const CheckoutView = (props) => {
 			payment_status: 'pending',
 		};
 
+		const captchaFields = await captcha.fields();
+
 		const response = await fetch(serverUrl + "wp-json/combo-store/v2/create_order", {
 			method: "POST",
 			headers: orderHeaders(),
-			body: JSON.stringify(withAffiliateRef(payload)),
+			body: JSON.stringify({ ...withAffiliateRef(payload), ...captchaFields }),
 		});
 
-		const created = await response.json();
+		const created = await response.json().catch(() => null);
 
 		if (created?.status !== 'success' || !created?.order_hash) {
+			captcha.reset();
 			throw new Error(created?.message || 'The order could not be created.');
 		}
 
@@ -1085,7 +1227,7 @@ const CheckoutView = (props) => {
 	}
 
 
-	function submitOrder() {
+	async function submitOrder() {
 
 
 		if (signInRequired) {
@@ -1102,11 +1244,19 @@ const CheckoutView = (props) => {
 
 
 
+		var captchaFields = {};
+		try {
+			captchaFields = await captcha.fields();
+		} catch (err) {
+			addNotification({ type: 'error', title: err.message, content: "" });
+			return;
+		}
+
 		setloading(true);
 
 		checkoutData.status = 'pending';
 
-		var postData = JSON.stringify(withAffiliateRef(checkoutData));
+		var postData = JSON.stringify({ ...withAffiliateRef(checkoutData), ...captchaFields });
 
 
 
@@ -1125,8 +1275,11 @@ const CheckoutView = (props) => {
 		})
 			.then((response) => {
 
+				/* A refusal with a reason (reCAPTCHA, a blocked country...) is shown as given. */
 				if (!response.ok) {
-					throw new Error('Token validation failed');
+					return response.json().catch(() => null).then((body) => {
+						throw new Error(body?.message || 'Creating order failed');
+					});
 				}
 
 				if (response.ok && response.status < 400) {
@@ -1157,6 +1310,7 @@ const CheckoutView = (props) => {
 
 
 						} else {
+							captcha.reset();
 							addNotification({ type: 'error', title: 'Creating order failed', content: message })
 						}
 
@@ -1167,9 +1321,11 @@ const CheckoutView = (props) => {
 					});
 				}
 			})
-			.catch((_error) => {
-				//this.saveAsStatus = 'error';
-				// handle the error
+			.catch((error) => {
+				/* This used to leave the button spinning with no message. */
+				captcha.reset();
+				addNotification({ type: 'error', title: error?.message || 'Creating order failed', content: "" });
+				setloading(false);
 			});
 
 	}
@@ -1793,6 +1949,8 @@ const CheckoutView = (props) => {
 					)}
 
 
+					{captcha.widget}
+
 					{readyToSubmitOrder?.error === true && (
 						<Notice tone="warning">
 							{readyToSubmitOrder?.message || contactAdded?.message || 'Please complete your details to continue.'}
@@ -1882,6 +2040,28 @@ const CheckoutView = (props) => {
 
 									{aamarpayConfig?.sandbox && (
 										<Notice tone="warning">aamarPay is in sandbox mode — no real money will move.</Notice>
+									)}
+								</>
+							)}
+
+							{checkoutData.payment_method == "shurjopay" && (
+								<>
+									{/* As with aamarPay: paying at shurjoPay is the submit. The
+										  callback route marks the order paid once shurjoPay's
+										  verification API confirms it. */}
+									<ShurjoPayCheckoutButton
+										total={checkoutData?.total_amount}
+										currency={currencySymbole}
+										ensureOrder={() => ensureOrderForPayment('shurjopay')}
+										onError={(message) => addNotification({ type: 'error', title: 'shurjoPay', content: message })}
+									/>
+
+									{paymentGateways?.shurjopay?.description && (
+										<p className="text-sm text-gray-600">{paymentGateways.shurjopay.description}</p>
+									)}
+
+									{shurjopayConfig?.sandbox && (
+										<Notice tone="warning">shurjoPay is in sandbox mode — no real money will move.</Notice>
 									)}
 								</>
 							)}
@@ -2036,7 +2216,99 @@ const CheckoutView = (props) => {
 								</>
 							)}
 
-							{(checkoutData.payment_method == "roket" || checkoutData.payment_method == "sslcommerz") && (
+							{checkoutData.payment_method == "sslcommerz" && (
+								<>
+									{/* As with aamarPay: paying at SSLCOMMERZ is the submit. The
+										  callback route and the IPN mark the order paid once
+										  SSLCOMMERZ's validation API confirms it. */}
+									<SslcommerzCheckoutButton
+										total={checkoutData?.total_amount}
+										currency={currencySymbole}
+										ensureOrder={() => ensureOrderForPayment('sslcommerz')}
+										onError={(message) => addNotification({ type: 'error', title: 'SSLCOMMERZ', content: message })}
+									/>
+
+									{paymentGateways?.sslcommerz?.description && (
+										<p className="text-sm text-gray-600">{paymentGateways.sslcommerz.description}</p>
+									)}
+
+									{sslcommerzConfig?.sandbox && (
+										<Notice tone="warning">SSLCOMMERZ is in sandbox mode — no real money will move.</Notice>
+									)}
+								</>
+							)}
+
+							{checkoutData.payment_method == "paystation" && (
+								<>
+									{/* As with aamarPay: paying at PayStation is the submit. The
+										  callback route and the IPN mark the order paid once
+										  PayStation's transaction-status API confirms it. */}
+									<PaystationCheckoutButton
+										total={checkoutData?.total_amount}
+										currency={currencySymbole}
+										ensureOrder={() => ensureOrderForPayment('paystation')}
+										onError={(message) => addNotification({ type: 'error', title: 'PayStation', content: message })}
+									/>
+
+									{paymentGateways?.paystation?.description && (
+										<p className="text-sm text-gray-600">{paymentGateways.paystation.description}</p>
+									)}
+
+									{paystationConfig?.pay_with_charge && (
+										<p className="text-xs text-gray-500">PayStation adds its processing charge to the amount you pay.</p>
+									)}
+
+									{paystationConfig?.sandbox && (
+										<Notice tone="warning">PayStation is in sandbox mode — no real money will move.</Notice>
+									)}
+								</>
+							)}
+
+							{checkoutData.payment_method == "uddoktapay" && (
+								<>
+									{/* As with aamarPay: paying at UddoktaPay is the submit. The
+										  callback route and the webhook mark the order paid once
+										  UddoktaPay's verify-payment API confirms it. */}
+									<UddoktaPayCheckoutButton
+										total={checkoutData?.total_amount}
+										currency={currencySymbole}
+										ensureOrder={() => ensureOrderForPayment('uddoktapay')}
+										onError={(message) => addNotification({ type: 'error', title: 'UddoktaPay', content: message })}
+									/>
+
+									{paymentGateways?.uddoktapay?.description && (
+										<p className="text-sm text-gray-600">{paymentGateways.uddoktapay.description}</p>
+									)}
+
+									{uddoktapayConfig?.sandbox && (
+										<Notice tone="warning">UddoktaPay is in sandbox mode — no real money will move.</Notice>
+									)}
+								</>
+							)}
+
+							{checkoutData.payment_method == "portwallet" && (
+								<>
+									{/* As with aamarPay: paying at PortWallet is the submit. The
+										  callback route and the IPN mark the order paid once
+										  PortWallet's invoice API confirms it. */}
+									<PortWalletCheckoutButton
+										total={checkoutData?.total_amount}
+										currency={currencySymbole}
+										ensureOrder={() => ensureOrderForPayment('portwallet')}
+										onError={(message) => addNotification({ type: 'error', title: 'PortWallet', content: message })}
+									/>
+
+									{paymentGateways?.portwallet?.description && (
+										<p className="text-sm text-gray-600">{paymentGateways.portwallet.description}</p>
+									)}
+
+									{portwalletConfig?.sandbox && (
+										<Notice tone="warning">PortWallet is in sandbox mode — no real money will move.</Notice>
+									)}
+								</>
+							)}
+
+							{checkoutData.payment_method == "roket" && (
 								<Notice tone="muted">This payment method isn't available yet. Please choose another one.</Notice>
 							)}
 

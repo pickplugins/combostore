@@ -1,5 +1,6 @@
 "use client"
 import React, { useState } from "react";
+import { useRecaptcha } from "@/lib/recaptcha";
 import { IconExclamationCircle, IconStar, IconStarFilled, IconCircleCheck, IconLock } from "@tabler/icons-react";
 import { usePost } from "../context/PostContext";
 import { useComment } from "../context/CommentContext";
@@ -106,6 +107,8 @@ export function CommentsFormMarkup({ cls, id, index, type, options, state, actio
 
 				{state.rules?.verifiedOnly && <p className={cls('verified-note')}>{t.verifiedOnlyText}</p>}
 
+				{state.captchaWidget}
+
 				<button type="submit" disabled={state.loading} className={cls('submit')}>
 					{state.loading ? t.loadingLabel : t.submitLabel}
 				</button>
@@ -150,7 +153,9 @@ export function useCommentsForm(options) {
 
 	var setContent = (value) => { setContentRaw(value); if (success) setSuccess(false); if (errors.length) setErrors([]); };
 
-	function submit() {
+	const captcha = useRecaptcha("comment");
+
+	async function submit() {
 		/* A second click while the first is still sending posted the comment twice. */
 		if (loading) return;
 		if (!token) {
@@ -168,13 +173,21 @@ export function useCommentsForm(options) {
 			return;
 		}
 
+		var captchaFields = {};
+		try {
+			captchaFields = await captcha.fields();
+		} catch (err) {
+			setErrors([err.message]);
+			return;
+		}
+
 		setLoading(true);
 		fetch(serverUrl + "wp-json/combo-store/v2/submit_comment", {
 			method: "POST",
 			headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-			body: JSON.stringify({ content, rate, postId, postType: post?.post_type ?? null, parentId: parentComment?.comment_ID ?? null }),
+			body: JSON.stringify({ content, rate, postId, postType: post?.post_type ?? null, parentId: parentComment?.comment_ID ?? null, ...captchaFields }),
 		})
-			.then(response => response.ok ? response.json() : Promise.reject(response.status))
+			.then(response => response.ok ? response.json() : response.json().catch(() => null).then(body => Promise.reject(body?.message || response.status)))
 			.then(res => {
 				if (res?.errors) {
 					setErrors(Array.isArray(res.errors) ? res.errors : [res?.message || 'There is an error.']);
@@ -195,15 +208,15 @@ export function useCommentsForm(options) {
 				}
 			})
 			/* This used to stop the spinner and say nothing. */
-			.catch(() => setErrors(["Your comment couldn't be sent. Please try again."]))
-			.finally(() => setLoading(false));
+			.catch((reason) => setErrors([typeof reason === 'string' ? reason : "Your comment couldn't be sent. Please try again."]))
+			.finally(() => { captcha.reset(); setLoading(false); });
 	}
 
 	/* Replies under a review aren't reviews: only the closed rule applies to them. */
 	var rules = productReviewRules(post);
 	if (rules && parentComment) rules = { ...rules, verifiedOnly: false };
 
-	return { state: { content, rate, hoverRate, loading, success, errors, rules }, actions: { setContent, setRate, setHoverRate, submit } };
+	return { state: { content, rate, hoverRate, loading, success, errors, rules, captchaWidget: captcha.widget }, actions: { setContent, setRate, setHoverRate, submit } };
 }
 
 /*

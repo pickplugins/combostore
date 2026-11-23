@@ -1,5 +1,6 @@
 "use client";
 import Image from "next/image";
+import { useRecaptcha } from "@/lib/recaptcha";
 
 import { useState } from "react";
 import { useAuth } from "./auth-context";
@@ -41,9 +42,23 @@ export default function Login() {
 		follows a path on this site. Without it, the default destination (the
 		dashboard) is unchanged.
 	*/
-	const onSubmit = (e) => {
+	const captcha = useRecaptcha("login");
+	const [captchaError, setcaptchaError] = useState("");
+
+	const onSubmit = async (e) => {
 		e.preventDefault();
-		const success = handleLogin(username, password, redirectFromLocation());
+		setcaptchaError("");
+
+		var headers = {};
+		try {
+			headers = await captcha.fields();
+		} catch (err) {
+			setcaptchaError(err.message);
+			return;
+		}
+
+		const success = await handleLogin(username, password, redirectFromLocation(), headers);
+		if (!success) captcha.reset();
 
 		// if (success) {
 		// 	router.push("/"); // redirect after login
@@ -152,6 +167,9 @@ export default function Login() {
 					</button>
 				</div>
 			</div>
+
+			{captcha.widget}
+			{captchaError && <p role="alert" className="text-sm text-red-600">{captchaError}</p>}
 
 			<button
 				type="submit"

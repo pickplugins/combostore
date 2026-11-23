@@ -22,6 +22,10 @@ const OUTCOMES = {
     title: "Payment received",
     body: "This payment has already been handled. You can find it with your orders.",
   },
+  pending: {
+    title: "Payment processing",
+    body: "EPS has not finished processing this payment yet. Your order is saved and will be marked paid as soon as EPS confirms it. Please do not pay again.",
+  },
 };
 
 const REASONS = {

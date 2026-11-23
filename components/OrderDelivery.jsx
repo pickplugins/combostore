@@ -585,7 +585,7 @@ const OrderDelivery = (props) => {
 
                 {deliveryData?.tracking_code && (
                   <a className="inline-flex w-fit items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
-                    href={`https://steadfast.com.bd/t/${deliveryData?.tracking_code}`} target="_blank" rel="noopener noreferrer">
+                    href={`https://steadfast.com.bd/tl/${deliveryData?.tracking_code}`} target="_blank" rel="noopener noreferrer">
                     {("Track on Steadfast")} <IconExternalLink size={16} />
                   </a>
                 )}

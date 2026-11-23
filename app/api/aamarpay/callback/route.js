@@ -1,22 +1,21 @@
 import { NextResponse } from "next/server";
 
-import {
-  getOrderByHash,
-  isPaymentSettled,
-  markOrderPaid,
-  verifyAamarPayPayment,
-} from "@/lib/aamarpay-server";
+import { settleAamarPayPayment } from "@/lib/aamarpay-server";
 
 /**
  * Where aamarPay sends the buyer back to.
  *
  * It arrives as a form POST from the gateway's own page, which is why this is
  * a route handler and not a page - and why the body it carries is read only
- * for the transaction id. Whether the money was taken is settled by asking
- * aamarPay directly, since anyone can post to this URL.
+ * for the transaction id. Whether the money was taken, and which order it
+ * was for, is settled by asking aamarPay directly (settleAamarPayPayment),
+ * since anyone can post to this URL or edit its query string.
  *
  * Success ends on the usual thank-you page; anything else on a short page
  * saying what happened, with the order left unpaid and still payable.
+ *
+ * Payments started before ../ipn existed were given this URL with &ipn=1 as
+ * their IPN; those calls get a JSON answer instead of a redirect.
  */
 
 const RESULTS = ["success", "failed", "cancelled"];
@@ -42,71 +41,48 @@ async function handle(request, fields) {
     ? query.get("result")
     : "failed";
 
-  /*
-    aamarPay's own server calling in, not the buyer's browser. The work is
-    identical - the order is settled from the verification either way - but
-    there is nobody to send anywhere, so it gets a plain answer.
-  */
   const isIpn = query.get("ipn") === "1";
-
-  const done = (path) =>
-    isIpn ? NextResponse.json({ received: true }) : redirect(path, request);
 
   /*
     The query string is the first source because this route wrote it, but a
-    gateway redirect does not always keep it - so opt_a and mer_txnid from the
-    posted body stand in for it.
+    gateway redirect does not always keep it - so mer_txnid and opt_a from the
+    posted body stand in for it. Neither is trusted: the transaction id is
+    only used to ask aamarPay, and the order comes from aamarPay's answer.
   */
-  const orderHash = query.get("hash") || fields?.opt_a || "";
   const transactionId = query.get("tran_id") || fields?.mer_txnid || "";
+  const hintHash = query.get("hash") || fields?.opt_a || "";
 
-  if (result !== "success") {
-    return done(`payment/aamarpay/${result}?hash=${encodeURIComponent(orderHash)}`);
+  if (result !== "success" && !isIpn) {
+    return redirect(`payment/aamarpay/${result}?hash=${encodeURIComponent(hintHash)}`, request);
   }
 
-  const order = await getOrderByHash(orderHash);
+  const { outcome, orderHash } = await settleAamarPayPayment(transactionId);
 
-  if (!order?.id) {
-    return done("payment/aamarpay/failed?reason=order");
+  if (isIpn) {
+    return NextResponse.json(
+      { received: true, settled: outcome === "paid" || outcome === "already_paid", outcome },
+      { status: outcome === "record_failed" ? 500 : 200 }
+    );
   }
 
-  /* A second visit to this URL - the first one already recorded it. */
-  if (String(order.payment_status).toLowerCase() === "paid") {
-    return done(`thank-you/${orderHash}`);
+  const hashQuery = `hash=${encodeURIComponent(orderHash)}`;
+
+  switch (outcome) {
+    /* record_failed: the money is taken, so telling the buyer it failed would
+       invite a second payment. The mismatch is in the log for the store. */
+    case "paid":
+    case "already_paid":
+    case "record_failed":
+      return redirect(`thank-you/${orderHash}`, request);
+    case "held":
+      return redirect(`payment/aamarpay/review?${hashQuery}`, request);
+    case "unverified":
+      return redirect(`payment/aamarpay/failed?${hashQuery}&reason=unverified`, request);
+    case "no_order":
+      return redirect("payment/aamarpay/failed?reason=order", request);
+    default:
+      return redirect(`payment/aamarpay/failed?${hashQuery}`, request);
   }
-
-  const verification = await verifyAamarPayPayment(transactionId);
-
-  if (!isPaymentSettled(verification, order)) {
-    console.error("aamarPay reported success but verification did not agree", {
-      transactionId,
-      orderHash,
-      pay_status: verification?.pay_status,
-      status_code: verification?.status_code,
-      amount: verification?.amount,
-      due: order?.total_amount,
-    });
-
-    return done(`payment/aamarpay/failed?hash=${encodeURIComponent(orderHash)}&reason=unverified`);
-  }
-
-  try {
-    await markOrderPaid(order, { transactionId, verification });
-  } catch (error) {
-    /*
-      The money is taken but the order still says unpaid. Telling the buyer it
-      failed would be wrong - and would invite a second payment - so they are
-      sent to the thank-you page and the mismatch is left in the log for the
-      store to settle.
-    */
-    console.error("aamarPay payment taken but the order was not updated", {
-      transactionId,
-      orderHash,
-      error: error?.message,
-    });
-  }
-
-  return done(`thank-you/${orderHash}`);
 }
 
 export async function POST(request) {

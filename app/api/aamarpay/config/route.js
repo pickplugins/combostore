@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { resolveAamarPayConfig } from "@/lib/aamarpay-server";
+import { AAMARPAY_CURRENCIES, resolveAamarPayConfig } from "@/lib/aamarpay-server";
 
 /**
  * What the browser may know about aamarPay.
@@ -26,9 +26,13 @@ export async function GET(request) {
         enabled: config.configured,
         label: "aamarPay",
         sandbox: config.sandbox,
+        /* An order in any other currency cannot be paid here. */
+        currencies: AAMARPAY_CURRENCIES,
         /* Which credentials exist, and nothing of what they are. */
         store_configured: config.has.storeId,
         signature_key_configured: config.has.signatureKey,
+        /* Sent with every payment as ipn_url; shown in the dashboard. */
+        ipn_url: `${String(process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin).replace(/\/+$/, "")}/api/aamarpay/ipn`,
       },
     },
     /* Settings are already cached for a minute inside resolveAamarPayConfig;

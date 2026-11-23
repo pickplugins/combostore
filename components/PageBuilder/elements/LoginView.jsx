@@ -1,6 +1,7 @@
 'use client'
 
 import React from "react";
+import { useRecaptcha } from "@/lib/recaptcha";
 import { useState } from "react";
 import { IconAlertCircle, IconEye, IconEyeOff, IconLock, IconUser, IconLogin2 } from "@tabler/icons-react";
 import Spinner from "../../../components/Spinner";
@@ -34,7 +35,10 @@ const LoginView = (props) => {
 	const [showPassword, setShowPassword] = useState(false);
 	const [missing, setMissing] = useState(false);
 
-	const onSubmit = (ev) => {
+	const captcha = useRecaptcha("login");
+	const [captchaError, setcaptchaError] = useState("");
+
+	const onSubmit = async (ev) => {
 		ev.preventDefault();
 
 		if (!username.trim() || !password) {
@@ -43,7 +47,18 @@ const LoginView = (props) => {
 		}
 
 		setMissing(false);
-		handleLogin(username.trim(), password, null);
+		setcaptchaError("");
+
+		var headers = {};
+		try {
+			headers = await captcha.fields();
+		} catch (err) {
+			setcaptchaError(err.message);
+			return;
+		}
+
+		const signedIn = await handleLogin(username.trim(), password, null, headers);
+		if (!signedIn) captcha.reset();
 	};
 
 	return (
@@ -57,6 +72,10 @@ const LoginView = (props) => {
 						<h3 className={cls('title')}>Sign in</h3>
 						<p className={cls('subtitle')}>Welcome back! Sign in to see your orders and saved details.</p>
 					</div>
+				)}
+
+				{captchaError && !missing && (
+					<p role="alert" className={cls('error')}>{captchaError}</p>
 				)}
 
 				{(missing || error) && (
@@ -112,6 +131,8 @@ const LoginView = (props) => {
 						</button>
 					</div>
 				</div>
+
+				{captcha.widget}
 
 				<button type="submit" disabled={logging} className={cls('submit-button')}>
 					{logging ? <Spinner /> : <IconLogin2 size={16} />}

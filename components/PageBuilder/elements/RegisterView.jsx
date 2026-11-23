@@ -1,6 +1,7 @@
 'use client'
 
 import React from "react";
+import { useRecaptcha } from "@/lib/recaptcha";
 import { useState } from "react";
 import { IconAlertCircle, IconCircleCheck, IconEye, IconEyeOff, IconLock, IconMail, IconUser, IconUserPlus } from "@tabler/icons-react";
 import Spinner from "../../../components/Spinner";
@@ -47,7 +48,9 @@ const RegisterView = (props) => {
 		setForm({ ...form, [ev.target.name]: ev.target.value });
 	};
 
-	function handleRegister(ev) {
+	const captcha = useRecaptcha("register");
+
+	async function handleRegister(ev) {
 		ev.preventDefault();
 
 		var problems = [];
@@ -59,6 +62,14 @@ const RegisterView = (props) => {
 			return;
 		}
 
+		var captchaFields = {};
+		try {
+			captchaFields = await captcha.fields();
+		} catch (err) {
+			setResult({ error: true, messages: [err.message] });
+			return;
+		}
+
 		setSubmitting(true);
 		setResult(null);
 
@@ -66,10 +77,15 @@ const RegisterView = (props) => {
 			method: "POST",
 			headers: { 'Content-Type': 'application/json' },
 			/* Sign-ups from the shop are always customer accounts. */
-			body: JSON.stringify({ name: form.name.trim(), email: form.email.trim(), password: form.password, registerBy: 'email', role: 'customer' }),
+			body: JSON.stringify({ name: form.name.trim(), email: form.email.trim(), password: form.password, registerBy: 'email', role: 'customer', ...captchaFields }),
 		})
 			.then((response) => {
-				if (!response.ok) throw new Error('request failed');
+				/* A refusal with a reason (reCAPTCHA, validation) is shown as given. */
+				if (!response.ok) {
+					return response.json().catch(() => null).then((body) => {
+						throw new Error(body?.message || 'request failed');
+					});
+				}
 				return response.json();
 			})
 			.then((res) => {
@@ -77,6 +93,7 @@ const RegisterView = (props) => {
 				var parsed = typeof res === 'string' ? JSON.parse(res) : res;
 
 				if (parsed?.error) {
+					captcha.reset();
 					setResult({ error: true, messages: messageList(parsed?.messages) });
 					return;
 				}
@@ -97,8 +114,10 @@ const RegisterView = (props) => {
 					}
 				});
 			})
-			.catch(() => {
-				setResult({ error: true, messages: ["We couldn't create your account just now. Please try again."] });
+			.catch((err) => {
+				captcha.reset();
+				var reason = err?.message && err.message !== 'request failed' ? err.message : "We couldn't create your account just now. Please try again.";
+				setResult({ error: true, messages: [reason] });
 			})
 			.finally(() => setSubmitting(false));
 	}
@@ -177,6 +196,8 @@ const RegisterView = (props) => {
 					</div>
 
 				</div>
+
+				{captcha.widget}
 
 				<button type="submit" disabled={submitting} className={cls('submit-button')}>
 					{submitting ? <Spinner /> : <IconUserPlus size={16} />}

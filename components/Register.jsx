@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useContext, useState } from "react";
+import { useRecaptcha } from "@/lib/recaptcha";
 import Spinner from "./Spinner";
 import { useCounterStore } from '../store/useCounterStore'
 import Image from "next/image";
@@ -33,7 +34,9 @@ const Register = () => {
 	};
 
 
-	function handleRegister(e) {
+	const captcha = useRecaptcha("register");
+
+	async function handleRegister(e) {
 
 
 		e.preventDefault();
@@ -46,12 +49,21 @@ const Register = () => {
 			return;
 		}
 
+		var captchaFields = {};
+		try {
+			captchaFields = await captcha.fields();
+		} catch (err) {
+			seterrors(true);
+			setMessages([err.message]);
+			return;
+		}
+
 		setlogging(true);
 		seterrors(false)
 
 
 
-		var postData = JSON.stringify(user);
+		var postData = JSON.stringify({ ...user, ...captchaFields });
 
 		fetch(serverUrl + "wp-json/combo-store/v2/register_user", {
 			method: "POST",
@@ -63,7 +75,10 @@ const Register = () => {
 			.then((response) => {
 
 				if (!response.ok) {
-					throw new Error('Token validation failed');
+					/* A refusal with a reason (reCAPTCHA) is shown as given. */
+					return response.json().catch(() => null).then((body) => {
+						throw new Error(body?.message || 'Registration failed');
+					});
 				}
 
 				if (response.ok && response.status < 400) {
@@ -112,9 +127,10 @@ const Register = () => {
 					});
 				}
 			})
-			.catch((_error) => {
-				//this.saveAsStatus = 'error';
-				// handle the error
+			.catch((error) => {
+				captcha.reset();
+				seterrors(true);
+				setMessages([error?.message && error.message !== 'Registration failed' ? error.message : "We couldn't create your account just now. Please try again."]);
 				setlogging(false);
 			});
 
@@ -198,6 +214,7 @@ const Register = () => {
 							/>
 						</div>
 					</div>
+					{captcha.widget}
 					<button
 						className={SUBMIT_CLASSES}
 						disabled={logging}
