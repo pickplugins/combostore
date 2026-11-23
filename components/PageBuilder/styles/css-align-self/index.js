@@ -21,8 +21,6 @@ function Html(props) {
 		unset: { label: "unset", value: "unset" },
 		inherit: { label: "inherit", value: "inherit" },
 		initial: { label: "initial", value: "initial" },
-		revert: { label: "revert", value: "revert" },
-		unset: { label: "unset", value: "unset" },
 	};
 	const [valArgs, setValArgs] = useState(props.val.split(" "));
 	const [align, setalign] = useState(valArgs[0]);

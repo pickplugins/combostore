@@ -7,7 +7,15 @@ import { useDraggable } from '@dnd-kit/react';
 import PopoverButton from '../../components/PopoverButton';
 import Spinner from '../../components/Spinner';
 import Link from 'next/link';
-import TemplatesLibrary from './TemplatesLibrary';
+import dynamic from 'next/dynamic';
+/*
+	Browser only: the library holds every template's pages (~20 MB of block
+	data, components/PageBuilder/templates). Rendered on the server it put all
+	of that into the server bundle, which is what kept the Cloudflare Worker
+	over its size limit. It is an interactive picker, so nothing is lost by
+	not rendering it into the HTML.
+*/
+const TemplatesLibrary = dynamic(() => import('./TemplatesLibrary'), { ssr: false });
 import AIThemeBuilder from './AIThemeBuilder';
 import TemplateSettings from './TemplateSettings';
 import { refreshTemplateTheme } from './templateThemeLive';

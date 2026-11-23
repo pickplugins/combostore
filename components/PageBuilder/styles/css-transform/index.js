@@ -138,7 +138,7 @@ function Html(props) {
 												type="number"
 												onChange={(newVal) => {
 													//var argVal = arg.val != undefined ? arg.val.match(/-?\d+/g)[0] : 1;
-													if (parseInt(newVal) == NaN) {
+													if (Number.isNaN(parseInt(newVal))) {
 														return;
 													}
 													var str = "";
@@ -245,7 +245,7 @@ function Html(props) {
 													type="number"
 													onChange={(newVal) => {
 														//var argVal = arg.val != undefined ? arg.val.match(/-?\d+/g)[0] : 1;
-														if (parseInt(newVal) == NaN) {
+														if (Number.isNaN(parseInt(newVal))) {
 															return;
 														}
 														var valPartsX =
@@ -382,7 +382,7 @@ function Html(props) {
 													}
 													type="number"
 													onChange={(newVal) => {
-														if (parseInt(newVal) == NaN) {
+														if (Number.isNaN(parseInt(newVal))) {
 															return;
 														}
 														var valPartsX =
@@ -531,7 +531,7 @@ function Html(props) {
 												onChange={(newVal) => {
 													//var argVal = arg.val != undefined ? arg.val.match(/-?\d+/g)[0] : 1;
 													//var argUnit = arg.val != undefined ? arg.val.match(/[a-zA-Z]+/g)[0] : '';
-													if (parseInt(newVal) == NaN) {
+													if (Number.isNaN(parseInt(newVal))) {
 														return;
 													}
 													// var valPartsX = arg.val.split(",")[0].match(/-?\d+/g)[0];
@@ -719,7 +719,7 @@ function Html(props) {
 												}
 												type="number"
 												onChange={(newVal) => {
-													if (parseInt(newVal) == NaN) {
+													if (Number.isNaN(parseInt(newVal))) {
 														return;
 													}
 													var valPartsX =
@@ -896,7 +896,7 @@ function Html(props) {
 												}
 												type="number"
 												onChange={(newVal) => {
-													if (parseInt(newVal) == NaN) {
+													if (Number.isNaN(parseInt(newVal))) {
 														return;
 													}
 													// var valPartsX = arg.val.split(",")[0].match(/-?\d+/g)[0];
@@ -1089,7 +1089,7 @@ function Html(props) {
 													}
 													type="number"
 													onChange={(newVal) => {
-														if (parseInt(newVal) == NaN) {
+														if (Number.isNaN(parseInt(newVal))) {
 															return;
 														}
 														var valPartsX =

@@ -136,7 +136,6 @@ const ThemeEdit = ({ id }) => {
       discount: expenseData?.discount_amount,
       shipping: expenseData?.shipping_amount,
       subtotal: expenseData?.subtotal_amount,
-      taxPercent: 10,
       invoiceNumber: expenseData?.id,
       date: expenseData?.created_at,
     }

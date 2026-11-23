@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { IconSquareRoundedPlusFilled, IconSquareRoundedMinusFilled } from "@tabler/icons-react";
-import * as TablerIcons from '@tabler/icons-react';
+import { tablerIcon } from "@/components/icons/TablerIcon";
 import { elementCssClasses } from "../ElementsDefinition";
 import { withLegacyStepperKeys } from "./AddToCartView";
 import BlockPreview from '../BlockPreview';
@@ -52,7 +52,7 @@ const AddToCart = (props) => {
 
 	var [quantity, setquantity] = useState(1);
 
-	const IconX = TablerIcons[icon];
+	const IconX = tablerIcon(icon);
 
 	var productData = usePost();
 

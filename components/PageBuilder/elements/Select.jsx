@@ -3,7 +3,7 @@ import PropTypes from "prop-types";
 import React from "react";
 import { useState, useEffect } from "react";
 
-import * as TablerIcons from '@tabler/icons-react';
+
 import Link from "next/link";
 
 

@@ -11,7 +11,7 @@ import Image from "next/image";
 import Spinner from "../../../components/Spinner";
 import { useUtilsStore } from '../../../store/useUtilsStore'
 import { useCounterStore } from '../../../store/useCounterStore';
-import * as TablerIcons from '@tabler/icons-react';
+import { tablerIcon } from "@/components/icons/TablerIcon";
 
 import { elementCssClasses } from "../ElementsDefinition";
 const QuickSearch = (props) => {
@@ -42,7 +42,7 @@ const QuickSearch = (props) => {
 	var icon = options?.icon;
 	var iconSize = options?.iconSize;
 
-	const IconX = TablerIcons[icon];
+	const IconX = tablerIcon(icon);
 
 
 	const Tag = tag;

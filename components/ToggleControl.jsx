@@ -53,11 +53,8 @@ const ToggleControl = (props) => {
         {(!multiple && value) && (
           <div className="flex gap-2">
 
-            {typeof options == 'object' && (
-              <>{options[value]?.label}</>
-            )}
-            {typeof options == 'array' && (
-              <>{options[options.find(b => b.value === value)?.value]?.label}</>
+            {options && typeof options == 'object' && (
+              <>{Array.isArray(options) ? options.find(b => b.value === value)?.label : options[value]?.label}</>
             )}
 
 
@@ -114,33 +111,6 @@ const ToggleControl = (props) => {
             </>
           )}
 
-          {typeof options == 'array' && (
-
-            <>
-              {options.map(item => {
-
-                return (
-                  <div className="hover:bg-gray-200 p-1 cursor-pointer rounded-sm" key={item.value} onClick={() => {
-
-                    if (multiple) {
-                      var newValues = [...value]
-                      if (newValues.includes(item.value)) {
-                        newValues = newValues.filter(v => v !== item.value)
-                      } else {
-                        newValues.push(item.value)
-                      }
-                      onOptionsChoose(newValues)
-                    } else {
-                      onOptionsChoose(item.value)
-
-                    }
-
-                  }}>{item.label}</div>
-                )
-
-              })}
-            </>
-          )}
 
 
         </div>

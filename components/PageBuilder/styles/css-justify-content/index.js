@@ -19,7 +19,6 @@ function Html(props) {
 		"space-around": { label: "space around", value: "space-around" },
 		"space-evenly": { label: "space evenly", value: "space-evenly" },
 		normal: { label: "normal", value: "normal" },
-		start: { label: "start", value: "start" },
 		baseline: { label: "baseline", value: "baseline" },
 		revert: { label: "revert", value: "revert" },
 		unset: { label: "unset", value: "unset" },

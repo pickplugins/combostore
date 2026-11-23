@@ -38,7 +38,6 @@ function Html(props) {
 		"table-column": { label: "table-column", value: "table-column" },
 		"table-row": { label: "table-row", value: "table-row" },
 		"flow-root": { label: "flow-root", value: "flow-root" },
-		"inline-grid": { label: "inline-grid", value: "inline-grid" },
 		initial: { label: "initial", value: "initial" },
 		inherit: { label: "inherit", value: "inherit" },
 		revert: { label: "revert", value: "revert" },

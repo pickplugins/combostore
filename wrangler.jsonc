@@ -3,14 +3,14 @@
 	(npm run cf:build / cf:preview / cf:deploy). Vercel ignores this file.
 
 	Before the first deploy, create the cache bucket once:
-	  npx wrangler r2 bucket create combostore-cache
+	  npx wrangler r2 bucket create kidobazar-cache
 
 	If you rename the Worker, change "name" and the WORKER_SELF_REFERENCE
 	service together - they must match.
 */
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "combostore",
+	"name": "kidobazar",
 	"main": ".open-next/worker.js",
 	"compatibility_date": "2026-11-01",
 	"compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
@@ -25,13 +25,13 @@
 	"keep_vars": true,
 
 	"services": [
-		{ "binding": "WORKER_SELF_REFERENCE", "service": "combostore" }
+		{ "binding": "WORKER_SELF_REFERENCE", "service": "kidobazar" }
 	],
 
 	/* Next's data cache: fetch(..., { next: { revalidate } }) results and
 	   rendered pages (open-next.config.ts). */
 	"r2_buckets": [
-		{ "binding": "NEXT_INC_CACHE_R2_BUCKET", "bucket_name": "combostore-cache" }
+		{ "binding": "NEXT_INC_CACHE_R2_BUCKET", "bucket_name": "kidobazar-cache" }
 	],
 
 	/* NEXT_CACHE_DO_QUEUE refreshes stale entries in the background;

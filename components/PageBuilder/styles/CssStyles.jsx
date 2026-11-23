@@ -302,11 +302,6 @@ const CssStyles = (props) => {
       value: "hover:first-line",
       isPro: true,
     },
-    "hover:first-line": {
-      label: "hover:first-line",
-      value: "hover:first-line",
-      isPro: true,
-    },
     "hover:nth-child(odd)": {
       label: "hover:nth-child(odd)",
       value: "hover:nth-child(odd)",

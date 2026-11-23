@@ -6,7 +6,7 @@ import BlockPreview from '../BlockPreview';
 import 'animate.css';
 import { usePost } from "../context/PostContext";
 
-import * as TablerIcons from '@tabler/icons-react';
+import { tablerIcon } from "@/components/icons/TablerIcon";
 
 
 import { elementCssClasses } from "../ElementsDefinition";
@@ -52,7 +52,7 @@ const ProductQuickView = (props) => {
 	var isModal = position == 'fixedMiddle';
 	var animateIn = `animate__${options?.slideIn || (isModal ? 'zoomIn' : 'fadeIn')}`;
 
-	const IconCustom = buttonIcon ? TablerIcons[buttonIcon] : null;
+	const IconCustom = buttonIcon ? tablerIcon(buttonIcon) : null;
 
 	const [isOpen, setIsOpen] = useState(false);
 

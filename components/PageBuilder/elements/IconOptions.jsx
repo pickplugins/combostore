@@ -1,5 +1,5 @@
 import React from "react";
-import * as TablerIcons from '@tabler/icons-react';
+import { tablerIcon } from "@/components/icons/TablerIcon";
 import IconPicker from "../../../components/IconPicker";
 import CssSelectors from "../CssSelectors";
 import { withElementCssDefaults } from "../ElementsDefinition";
@@ -19,7 +19,7 @@ const IconOptions = (props) => {
 	var cssSelectors = withElementCssDefaults('icon', props?.cssSelectors);
 
 	const setOption = (key, value) => updateBlock('options', { ...options, [key]: value });
-	var Current = TablerIcons[options?.iconName];
+	var Current = tablerIcon(options?.iconName);
 
 	return (
 		<div className="px-3" >

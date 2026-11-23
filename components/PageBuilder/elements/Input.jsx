@@ -1,6 +1,6 @@
 import PropTypes from "prop-types";
 import React from "react";
-import * as TablerIcons from '@tabler/icons-react';
+import { tablerIcon } from "@/components/icons/TablerIcon";
 import Link from "next/link";
 
 
@@ -36,7 +36,7 @@ const Input = (props) => {
 
 
 
-	const IconX = TablerIcons[icon];
+	const IconX = tablerIcon(icon);
 
 
 

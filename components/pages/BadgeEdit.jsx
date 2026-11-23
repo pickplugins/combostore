@@ -288,7 +288,7 @@ const BadgeEdit = ({ id }) => {
                       var value = ev.target.value;
                       var slug = toSlug(value);
 
-                      setcurrentObject({ ...currentObject, slug: value, slug: slug });
+                      setcurrentObject({ ...currentObject, slug: slug });
                     }}
                   />
                 </div>

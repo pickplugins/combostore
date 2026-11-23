@@ -21,7 +21,6 @@ function Html(props) {
 		start: { label: "start", value: "start" },
 		end: { label: "end", value: "end" },
 		normal: { label: "normal", value: "normal" },
-		start: { label: "start", value: "start" },
 		baseline: { label: "baseline", value: "baseline" },
 		revert: { label: "revert", value: "revert" },
 		unset: { label: "unset", value: "unset" },
