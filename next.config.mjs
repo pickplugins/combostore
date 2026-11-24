@@ -17,6 +17,17 @@ const nextConfig = {
 
   // basePath: '/dashboard',
 
+  /*
+    Always baked in, "" when unset. Next only inlines NEXT_PUBLIC_ variables
+    that exist, so with demo mode off the check in lib/demo/templates.js stayed
+    a runtime lookup and the bundler had to keep every template (~14 MB of
+    server code). Defined, the check is a constant and the list is dropped.
+    Code only ever compares it with 'true', so unset and "" behave the same.
+  */
+  env: {
+    NEXT_PUBLIC_DEMO_MODE: process.env.NEXT_PUBLIC_DEMO_MODE ?? '',
+  },
+
   publicRuntimeConfig: {
     APP_VERSION: process.env.npm_package_version,
   },
