@@ -2,8 +2,9 @@
 import { storeUrl } from "@/lib/storeUrl";
 import RecaptchaPanel from "./RecaptchaPanel";
 import SmtpServersPanel from "./SmtpServersPanel";
+import RolePermissionsPanel from "./RolePermissionsPanel";
 import { useState, useEffect, Component } from "react";
-import { IconChevronDown, IconChevronUp, IconPlug, IconTriangleSquareCircle, IconCreditCardPay, IconUserPentagon, IconMailSpark, IconBuildingStore, IconShip, IconStar, IconCashRegister, IconTrash, IconKey, IconTruckDelivery, IconSquareRoundedCheck, IconSquareRounded, IconDeviceFloppy, IconRestore, IconAlertTriangle, IconUserDollar } from "@tabler/icons-react";
+import { IconChevronDown, IconChevronUp, IconPlug, IconTriangleSquareCircle, IconCreditCardPay, IconUserPentagon, IconMailSpark, IconBuildingStore, IconShip, IconStar, IconCashRegister, IconTrash, IconKey, IconTruckDelivery, IconSquareRoundedCheck, IconSquareRounded, IconDeviceFloppy, IconRestore, IconAlertTriangle, IconUserDollar, IconBike } from "@tabler/icons-react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -112,9 +113,13 @@ const SettingsGlobal = (props) => {
 
 
 
+  /* Waits for the login token: it is restored from storage after the first
+     render, and asking before then sent "Bearer null", got a 403 and left the
+     page loading with Save disabled. */
   useEffect(() => {
+    if (!token) return;
     get_settings();
-  }, []);
+  }, [token]);
 
 
   /*
@@ -455,10 +460,12 @@ const SettingsGlobal = (props) => {
         "model": ""
       }
     },
+    /* Keys for the Fraud Checker's mobile score (Store -> Fraud Checker ->
+       Mobile Fraud Checker -> Service). Both are read on the server by
+       check_mobile_fraud and the checkout score check. */
     "bdcourier": {
       "id": 'bdcourier',
       "enable": false,
-      "comingSoon": true,
 
       "label": "BD Courier(bdcourier.com)",
       args: {
@@ -469,7 +476,6 @@ const SettingsGlobal = (props) => {
       "id": 'fraudchecker',
       "enable": false,
       "label": "Fraud Checker(fraudchecker.link)",
-      "comingSoon": true,
       args: {
         "key": "",
       }
@@ -1007,6 +1013,7 @@ const SettingsGlobal = (props) => {
         }
       })
       .catch((_error) => {
+        setloading(false);
         //this.saveAsStatus = 'error';
         // handle the error
       });
@@ -1728,10 +1735,11 @@ const SettingsGlobal = (props) => {
           { label: "Store", id: 'store', icon: <IconBuildingStore size={18} /> },
           { label: "Reviews", id: 'reviews', icon: <IconStar size={18} /> },
           { label: "Affiliates", id: 'affiliates', icon: <IconUserDollar size={18} /> },
+          { label: "Riders", id: 'riders', icon: <IconBike size={18} /> },
           // { label: "Checkout", id: 'checkout', icon: <IconCashRegister size={18} /> },
           // { label: "Emails", id: 'emails', icon: <IconMailSpark size={18} /> },
           // { label: "SMS", id: 'sms', icon: <IconMailSpark size={18} /> },
-          // { label: "Roles", id: 'roles', icon: <IconUserPentagon size={18} /> },
+          { label: "Roles & Permissions", id: 'roles', icon: <IconUserPentagon size={18} /> },
           { label: "Payment Gateways", id: 'payment-gateways', icon: <IconCreditCardPay size={18} /> },
           { label: "Product Attributes", id: 'product-attributes', icon: <IconTriangleSquareCircle size={18} /> },
           { label: "API Keys", id: 'api-keys', icon: <IconPlug size={18} /> },
@@ -1753,7 +1761,7 @@ const SettingsGlobal = (props) => {
               <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
                 <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Site Title")}</div>
                 <div className="">
-                  <input type="text" className="lg:w-auto w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20" value={settingsData?.site_title} onChange={ev => {
+                  <input type="text" className="lg:w-auto w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20" value={settingsData?.site_title ?? ''} onChange={ev => {
                     var value = ev.target.value;
                     setsettingsData({ ...settingsData, site_title: value })
                   }} />
@@ -1762,7 +1770,7 @@ const SettingsGlobal = (props) => {
               <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
                 <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Site Description")}</div>
                 <div className="">
-                  <input type="text" className="lg:w-auto w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20" value={settingsData?.site_description} onChange={ev => {
+                  <input type="text" className="lg:w-auto w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20" value={settingsData?.site_description ?? ''} onChange={ev => {
                     var value = ev.target.value;
                     setsettingsData({ ...settingsData, site_description: value })
                   }} />
@@ -1804,7 +1812,7 @@ const SettingsGlobal = (props) => {
                           <option value="__other">{("Other...")}</option>
                         </select>
                         {other && (
-                          <input type="text" maxLength={3} placeholder={("ISO code, e.g. CHF")} className={fieldClass} value={code} onChange={(ev) => {
+                          <input type="text" maxLength={3} placeholder={("ISO code, e.g. CHF")} className={fieldClass} value={code ?? ''} onChange={(ev) => {
                             setCurrency({ code: ev.target.value.replace(/[^a-z]/gi, "").toUpperCase() });
                           }} />
                         )}
@@ -1872,7 +1880,7 @@ const SettingsGlobal = (props) => {
 
 
 
-                <select name="status" className="!border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20" value={settingsData?.site_title} id="" onChange={ev => {
+                <select name="status" className="!border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20" value={settingsData?.site_title ?? ''} id="" onChange={ev => {
                   var value = ev.target.value;
                   setsettingsData({ ...settingsData, site_title: value })
                 }}>
@@ -1895,7 +1903,7 @@ const SettingsGlobal = (props) => {
                 <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{('Payment Method')}</div>
 
 
-                <select name="payment_method" className="lg:w-auto w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20" value={settingsData?.payment_method} id="" onChange={ev => {
+                <select name="payment_method" className="lg:w-auto w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20" value={settingsData?.payment_method ?? ''} id="" onChange={ev => {
                   var value = ev.target.value;
                   setsettingsData({ ...settingsData, payment_method: value })
                 }}>
@@ -1917,7 +1925,7 @@ const SettingsGlobal = (props) => {
                 <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{('Payment status')}</div>
 
 
-                <select name="payment_status" className="lg:w-auto w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20" value={settingsData?.payment_status} id="" onChange={ev => {
+                <select name="payment_status" className="lg:w-auto w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20" value={settingsData?.payment_status ?? ''} id="" onChange={ev => {
                   var value = ev.target.value;
                   setsettingsData({ ...settingsData, payment_status: value })
                 }}>
@@ -1948,7 +1956,7 @@ const SettingsGlobal = (props) => {
               <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
                 <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Address")}</div>
                 <div className="">
-                  <input type="text" className="lg:w-auto w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20" value={settingsData?.address} onChange={ev => {
+                  <input type="text" className="lg:w-auto w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20" value={settingsData?.address ?? ''} onChange={ev => {
                     var value = ev.target.value;
                     setsettingsData({ ...settingsData, address: value })
                   }} />
@@ -1957,7 +1965,7 @@ const SettingsGlobal = (props) => {
               <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
                 <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Email")}</div>
                 <div className="">
-                  <input type="text" className="lg:w-auto w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20" value={settingsData?.email} onChange={ev => {
+                  <input type="text" className="lg:w-auto w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20" value={settingsData?.email ?? ''} onChange={ev => {
                     var value = ev.target.value;
                     setsettingsData({ ...settingsData, email: value })
                   }} />
@@ -1966,7 +1974,7 @@ const SettingsGlobal = (props) => {
               <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
                 <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Phone")}</div>
                 <div className="">
-                  <input type="text" className="lg:w-auto w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20" value={settingsData?.phone} onChange={ev => {
+                  <input type="text" className="lg:w-auto w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20" value={settingsData?.phone ?? ''} onChange={ev => {
                     var value = ev.target.value;
                     setsettingsData({ ...settingsData, phone: value })
                   }} />
@@ -1975,7 +1983,7 @@ const SettingsGlobal = (props) => {
               <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
                 <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("WhatsApp")}</div>
                 <div className="">
-                  <input type="text" className="lg:w-auto w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20" value={settingsData?.whatsapp} onChange={ev => {
+                  <input type="text" className="lg:w-auto w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20" value={settingsData?.whatsapp ?? ''} onChange={ev => {
                     var value = ev.target.value;
                     setsettingsData({ ...settingsData, whatsapp: value })
                   }} />
@@ -1987,7 +1995,7 @@ const SettingsGlobal = (props) => {
               <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
                 <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Mobile Banking")}</div>
                 <div className="">
-                  <input type="text" className="lg:w-auto w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20" value={settingsData?.mobilebanking} onChange={ev => {
+                  <input type="text" className="lg:w-auto w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20" value={settingsData?.mobilebanking ?? ''} onChange={ev => {
                     var value = ev.target.value;
                     setsettingsData({ ...settingsData, mobilebanking: value })
                   }} />
@@ -2056,7 +2064,7 @@ const SettingsGlobal = (props) => {
                                     name={fieldName}
                                     placeholder={providerKey + " " + fieldName}
                                     className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                    value={item[fieldName]}
+                                    value={item[fieldName] ?? ''}
                                     onChange={(ev) => {
                                       const { name, value } = ev.target;
                                       setsettingsData(prev => ({
@@ -2134,7 +2142,7 @@ const SettingsGlobal = (props) => {
               <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
                 <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Enable Reviews")}</div>
                 <div className="flex gap-3">
-                  <input type="checkbox" name="enable" id="enable" checked={settingsData?.reviews?.enable} className=" !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20" value={settingsData?.reviews?.enable} onChange={ev => {
+                  <input type="checkbox" name="enable" id="enable" checked={!!(settingsData?.reviews?.enable)} className=" !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20" value={settingsData?.reviews?.enable} onChange={ev => {
                     var value = ev.target.value;
                     setsettingsData({ ...settingsData, reviews: { ...settingsData?.reviews, enable: !settingsData?.reviews?.enable } })
                   }} />
@@ -2151,11 +2159,130 @@ const SettingsGlobal = (props) => {
 
         </Tab >
 
+        <Tab index={1} id="riders">
+
+          <div className="flex flex-col gap-5">
+
+            <WidgetWrapper className={CARD_CLASSES} title="Rider sign-up">
+
+              <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Rider sign-up")}</div>
+                <div className="flex flex-col gap-1.5">
+                  {/* Off unless saved as true - ComboStoreRiderApplications::signup_refusal reads it the same way. */}
+                  <div className="flex gap-3">
+                    <input type="checkbox" id="riders-allow-signup" checked={settingsData?.riders?.allowSignup === true} className=" !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20" onChange={ev => {
+                      setsettingsData({ ...settingsData, riders: { ...settingsData?.riders, allowSignup: ev.target.checked } })
+                    }} />
+                    <label htmlFor="riders-allow-signup" className="cursor-pointer">{settingsData?.riders?.allowSignup === true ? "Enabled" : "Disabled"}</label>
+                  </div>
+                  <p className="text-xs text-gray-500">{("Lets visitors apply to become riders from a storefront Register block set to Rider. Every application waits under Riders > Applications until you approve it - riders can see every order, so there is no way to skip the review. Until then applicants have an ordinary customer account.")}</p>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Reapply after (days)")}</div>
+                <div className="flex flex-col gap-1.5">
+                  {/* Read by ComboStoreRiderApplications::reapply_days (empty = 30, 0-365). */}
+                  <input type="number" min="0" max="365" step="1" placeholder="30" className="lg:w-40 w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20" value={settingsData?.riders?.reapplyDays ?? ""} onChange={ev => {
+                    var value = ev.target.value === "" ? "" : Math.min(365, Math.max(0, parseInt(ev.target.value) || 0));
+                    setsettingsData({ ...settingsData, riders: { ...settingsData?.riders, reapplyDays: value } })
+                  }} />
+                  <p className="text-xs text-gray-500">{("How long someone whose rider application you rejected waits before they can apply again from their account. Counted from the rejection. 0 lets them apply again at once; empty uses 30. Their new application waits for your approval like the first. You can still approve a rejected application yourself at any time.")}</p>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Rider application emails go to")}</div>
+                <div className="flex flex-col gap-1.5">
+                  {/* Read by ComboStoreRiderApplications::notify_recipients. */}
+                  <input type="text" placeholder={("WordPress admin email")} className="w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20" value={settingsData?.riders?.notifyEmails ?? ""} onChange={ev => {
+                    setsettingsData({ ...settingsData, riders: { ...settingsData?.riders, notifyEmails: ev.target.value } })
+                  }} />
+                  {(() => {
+                    var bad = String(settingsData?.riders?.notifyEmails ?? "").split(/[\s,;]+/).filter(e => e && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e));
+                    return bad.length > 0
+                      ? <p className="text-xs text-rose-600">{("Not an email address, will be skipped")}: {bad.join(", ")}</p>
+                      : <p className="text-xs text-gray-500">{("Who hears about each new rider application. Separate several addresses with commas. Empty sends to the WordPress admin email. Applicants get emails when they apply and when you decide (switches below).")}</p>;
+                  })()}
+                </div>
+              </div>
+
+              {/*
+                Each on unless saved as false - ComboStoreRiderApplications::email_enabled
+                reads them the same way (riders.emailStoreOnApplication / emailOnReceived /
+                emailOnApproved / emailOnRejected).
+              */}
+              {[
+                ["emailStoreOnApplication", "Email the store about new applications", "Sends each new rider application, and each reapplication, to the address above."],
+                ["emailOnReceived", "Email applicants when an application is received", "The applicant gets an email confirming their application arrived and that you'll review it."],
+                ["emailOnApproved", "Email applicants when approved", "The applicant hears they're now a rider and where to find their deliveries."],
+                ["emailOnRejected", "Email applicants when rejected", "The applicant gets your optional message and the date they can apply again. They also see this in their account either way."],
+              ].map(([key, label, help]) => (
+                <div key={key} className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                  <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{label}</div>
+                  <div className="flex flex-col gap-1.5">
+                    <div className="flex gap-3">
+                      <input type="checkbox" id={`riders-${key}`} checked={settingsData?.riders?.[key] !== false} className=" !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20" onChange={ev => {
+                        setsettingsData({ ...settingsData, riders: { ...settingsData?.riders, [key]: ev.target.checked } })
+                      }} />
+                      <label htmlFor={`riders-${key}`} className="cursor-pointer">{settingsData?.riders?.[key] !== false ? "Enabled" : "Disabled"}</label>
+                    </div>
+                    <p className="text-xs text-gray-500">{help}</p>
+                  </div>
+                </div>
+              ))}
+
+            </WidgetWrapper>
+
+          </div>
+
+        </Tab >
+
         <Tab index={1} id="affiliates">
 
           <div className="flex flex-col gap-5">
 
             <WidgetWrapper className={CARD_CLASSES} title="Affiliate referrals">
+
+              <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Affiliate sign-up")}</div>
+                <div className="flex flex-col gap-1.5">
+                  {/* Off unless saved as true - register_user's public_signup_refusal reads it the same way. */}
+                  <div className="flex gap-3">
+                    <input type="checkbox" id="affiliates-allow-signup" checked={settingsData?.affiliates?.allowSignup === true} className=" !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20" onChange={ev => {
+                      setsettingsData({ ...settingsData, affiliates: { ...settingsData?.affiliates, allowSignup: ev.target.checked } })
+                    }} />
+                    <label htmlFor="affiliates-allow-signup" className="cursor-pointer">{settingsData?.affiliates?.allowSignup === true ? "Enabled" : "Disabled"}</label>
+                  </div>
+                  <p className="text-xs text-gray-500">{("Lets visitors create their own affiliate account from a storefront Register block that offers the Affiliate role. When off, only administrators can add affiliates.")}</p>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Approve new affiliate sign-ups")}</div>
+                <div className="flex flex-col gap-1.5">
+                  {/* On unless saved as false - the server reads it the same way (ComboStoreAffiliates::signup_needs_approval). */}
+                  <div className="flex gap-3">
+                    <input type="checkbox" id="affiliates-signup-approval" checked={settingsData?.affiliates?.signupApproval !== false} className=" !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20" onChange={ev => {
+                      setsettingsData({ ...settingsData, affiliates: { ...settingsData?.affiliates, signupApproval: ev.target.checked } })
+                    }} />
+                    <label htmlFor="affiliates-signup-approval" className="cursor-pointer">{settingsData?.affiliates?.signupApproval !== false ? "Enabled" : "Disabled"}</label>
+                  </div>
+                  <p className="text-xs text-gray-500">{("New affiliate sign-ups start as customer accounts and wait under Affiliates > Applications until you approve them; they earn no commission until then. The payout request address below hears about each application, and applicants get an email when you decide.")}</p>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Reapply after (days)")}</div>
+                <div className="flex flex-col gap-1.5">
+                  {/* Read by the server's ComboStoreAffiliates::reapply_days (empty = 30, 0-365). */}
+                  <input type="number" min="0" max="365" step="1" placeholder="30" className="lg:w-40 w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20" value={settingsData?.affiliates?.reapplyDays ?? ""} onChange={ev => {
+                    var value = ev.target.value === "" ? "" : Math.min(365, Math.max(0, parseInt(ev.target.value) || 0));
+                    setsettingsData({ ...settingsData, affiliates: { ...settingsData?.affiliates, reapplyDays: value } })
+                  }} />
+                  <p className="text-xs text-gray-500">{("How long a customer whose affiliate application you rejected waits before they can apply again from their account. Counted from the rejection. 0 lets them apply again at once; empty uses 30. You can still approve a rejected application yourself at any time.")}</p>
+                </div>
+              </div>
 
               <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
                 <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Cookie duration (days)")}</div>
@@ -2225,6 +2352,52 @@ const SettingsGlobal = (props) => {
                 </div>
               </div>
 
+              {/* On unless saved as false - ComboStoreAffiliates::application_email_enabled reads it the same way. */}
+              <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Email the store about new applications")}</div>
+                <div className="flex flex-col gap-1.5">
+                  <div className="flex gap-3">
+                    <input type="checkbox" id="affiliates-email-store-on-application" checked={settingsData?.affiliates?.emailStoreOnApplication !== false} className=" !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20" onChange={ev => {
+                      setsettingsData({ ...settingsData, affiliates: { ...settingsData?.affiliates, emailStoreOnApplication: ev.target.checked } })
+                    }} />
+                    <label htmlFor="affiliates-email-store-on-application" className="cursor-pointer">{settingsData?.affiliates?.emailStoreOnApplication !== false ? "Enabled" : "Disabled"}</label>
+                  </div>
+                  <p className="text-xs text-gray-500">{("Sends each new affiliate application, and each reapplication, to the payout request address above.")}</p>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Email applicants when an application is received")}</div>
+                <div className="flex flex-col gap-1.5">
+                  {/* On unless saved as false - the server reads it the same way (email_on_received_enabled). */}
+                  <div className="flex gap-3">
+                    <input type="checkbox" id="affiliates-email-on-received" checked={settingsData?.affiliates?.emailOnReceived !== false} className=" !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20" onChange={ev => {
+                      setsettingsData({ ...settingsData, affiliates: { ...settingsData?.affiliates, emailOnReceived: ev.target.checked } })
+                    }} />
+                    <label htmlFor="affiliates-email-on-received" className="cursor-pointer">{settingsData?.affiliates?.emailOnReceived !== false ? "Enabled" : "Disabled"}</label>
+                  </div>
+                  <p className="text-xs text-gray-500">{("When someone applies to become an affiliate (at sign-up or from their account) and the application waits for your approval, they get an email confirming it arrived. Replies go to the payout request address above.")}</p>
+                </div>
+              </div>
+
+              {[
+                ["emailOnApproved", "Email applicants when approved", "The applicant hears they're now an affiliate and where to find their affiliate link."],
+                ["emailOnRejected", "Email applicants when rejected", "The applicant gets your optional message and the date they can apply again. They also see this in their account either way."],
+              ].map(([key, label, help]) => (
+                <div key={key} className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                  <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{label}</div>
+                  <div className="flex flex-col gap-1.5">
+                    <div className="flex gap-3">
+                      <input type="checkbox" id={`affiliates-${key}`} checked={settingsData?.affiliates?.[key] !== false} className=" !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20" onChange={ev => {
+                        setsettingsData({ ...settingsData, affiliates: { ...settingsData?.affiliates, [key]: ev.target.checked } })
+                      }} />
+                      <label htmlFor={`affiliates-${key}`} className="cursor-pointer">{settingsData?.affiliates?.[key] !== false ? "Enabled" : "Disabled"}</label>
+                    </div>
+                    <p className="text-xs text-gray-500">{help}</p>
+                  </div>
+                </div>
+              ))}
+
             </WidgetWrapper>
 
           </div>
@@ -2268,7 +2441,7 @@ const SettingsGlobal = (props) => {
                               name={'subject'}
                               placeholder={'subject'}
                               className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                              value={settingsData?.emailTemplates?.[providerKey]?.['subject']}
+                              value={settingsData?.emailTemplates?.[providerKey]?.['subject'] ?? ''}
                               onChange={(ev) => {
                                 const { name, value } = ev.target;
                                 setsettingsData(prev => ({
@@ -2295,7 +2468,7 @@ const SettingsGlobal = (props) => {
                               name={'body'}
                               placeholder={'body'}
                               className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                              value={settingsData?.emailTemplates?.[providerKey]?.['body']}
+                              value={settingsData?.emailTemplates?.[providerKey]?.['body'] ?? ''}
                               onChange={(ev) => {
                                 const { name, value } = ev.target;
                                 setsettingsData(prev => ({
@@ -2373,7 +2546,7 @@ const SettingsGlobal = (props) => {
                               <input
                                 type="checkbox"
                                 name={'enabled'}
-                                checked={settingsData?.smsTemplates?.[providerKey]?.['enabled']}
+                                checked={!!(settingsData?.smsTemplates?.[providerKey]?.['enabled'])}
                                 onChange={(ev) => {
                                   const { name, checked } = ev.target;
                                   setsettingsData(prev => ({
@@ -2531,7 +2704,7 @@ const SettingsGlobal = (props) => {
                                 <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Enable?")}</div>
                                 <div className="flex gap-3">
                                   <input type="checkbox" name="enable" id={`enable-${providerKey}`}
-                                    checked={settingsData?.paymentGateways?.[providerKey]?.['enable']}
+                                    checked={!!(settingsData?.paymentGateways?.[providerKey]?.['enable'])}
                                     className=" !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
 
                                     value={settingsData?.paymentGateways?.[providerKey]?.['enable']}
@@ -2631,7 +2804,7 @@ const SettingsGlobal = (props) => {
                                                       name={'bankName'}
                                                       placeholder={'Bank Name'}
                                                       className=" px-2 py-1 lg:flex-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                                      value={settingsData?.paymentGateways[providerKey]?.accounts?.[index]?.bankName}
+                                                      value={settingsData?.paymentGateways[providerKey]?.accounts?.[index]?.bankName ?? ''}
                                                       onChange={(ev) => {
                                                         const { name, value } = ev.target;
 
@@ -2670,7 +2843,7 @@ const SettingsGlobal = (props) => {
                                                       name={'accountNumber'}
                                                       placeholder={'Account Number'}
                                                       className=" px-2 py-1 lg:flex-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                                      value={settingsData?.paymentGateways[providerKey]?.accounts?.[index]?.['accountNumber']}
+                                                      value={settingsData?.paymentGateways[providerKey]?.accounts?.[index]?.['accountNumber'] ?? ''}
                                                       onChange={(ev) => {
                                                         const { name, value } = ev.target;
                                                         var field = 'accountNumber';
@@ -2706,7 +2879,7 @@ const SettingsGlobal = (props) => {
                                                       name={'accountType'}
                                                       placeholder={'Account Type'}
                                                       className=" px-2 py-1 lg:flex-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                                      value={settingsData?.paymentGateways[providerKey]?.accounts?.[index]?.['accountType']}
+                                                      value={settingsData?.paymentGateways[providerKey]?.accounts?.[index]?.['accountType'] ?? ''}
                                                       onChange={(ev) => {
                                                         const { name, value } = ev.target;
                                                         var field = 'accountType';
@@ -2742,7 +2915,7 @@ const SettingsGlobal = (props) => {
                                                       name={'branch'}
                                                       placeholder={'Branch'}
                                                       className=" px-2 py-1 lg:flex-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                                      value={settingsData?.paymentGateways[providerKey]?.accounts?.[index]?.['branch']}
+                                                      value={settingsData?.paymentGateways[providerKey]?.accounts?.[index]?.['branch'] ?? ''}
                                                       onChange={(ev) => {
                                                         const { name, value } = ev.target;
                                                         var field = 'branch';
@@ -2778,7 +2951,7 @@ const SettingsGlobal = (props) => {
                                                       name={'swiftCode'}
                                                       placeholder={'Swift Code'}
                                                       className=" px-2 py-1 lg:flex-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                                      value={settingsData?.paymentGateways[providerKey]?.accounts?.[index]?.['swiftCode']}
+                                                      value={settingsData?.paymentGateways[providerKey]?.accounts?.[index]?.['swiftCode'] ?? ''}
                                                       onChange={(ev) => {
                                                         const { name, value } = ev.target;
                                                         var field = 'swiftCode';
@@ -2814,7 +2987,7 @@ const SettingsGlobal = (props) => {
                                                       name={'routingNumber'}
                                                       placeholder={'Routing Number'}
                                                       className=" px-2 py-1 lg:flex-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                                      value={settingsData?.paymentGateways[providerKey]?.accounts?.[index]?.['routingNumber']}
+                                                      value={settingsData?.paymentGateways[providerKey]?.accounts?.[index]?.['routingNumber'] ?? ''}
                                                       onChange={(ev) => {
                                                         const { name, value } = ev.target;
                                                         var field = 'routingNumber';
@@ -2871,7 +3044,7 @@ const SettingsGlobal = (props) => {
                                         name={'description'}
                                         placeholder={'description'}
                                         className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                        value={settingsData?.paymentGateways?.[providerKey]?.['description']}
+                                        value={settingsData?.paymentGateways?.[providerKey]?.['description'] ?? ''}
                                         onChange={(ev) => {
                                           const { name, value } = ev.target;
                                           setsettingsData(prev => ({
@@ -2902,7 +3075,7 @@ const SettingsGlobal = (props) => {
                                 <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Enable?")}</div>
                                 <div className="flex gap-3">
                                   <input type="checkbox" name="enable" id={`enable-${providerKey}`}
-                                    checked={settingsData?.paymentGateways?.[providerKey]?.['enable']}
+                                    checked={!!(settingsData?.paymentGateways?.[providerKey]?.['enable'])}
                                     className=" !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
 
                                     value={settingsData?.paymentGateways?.[providerKey]?.['enable']}
@@ -2935,7 +3108,7 @@ const SettingsGlobal = (props) => {
                                     <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Sandbox")}</div>
                                     <div className="flex gap-3">
                                       <input type="checkbox" name="sandbox" id={`sandbox-${providerKey}`}
-                                        checked={settingsData?.paymentGateways?.[providerKey]?.['sandbox']}
+                                        checked={!!(settingsData?.paymentGateways?.[providerKey]?.['sandbox'])}
                                         className="lg:w-auto w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
 
                                         value={settingsData?.paymentGateways?.[providerKey]?.['sandbox']}
@@ -2989,7 +3162,7 @@ const SettingsGlobal = (props) => {
                                         name={'store_id'}
                                         placeholder={'store_id'}
                                         className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                        value={settingsData?.paymentGateways?.[providerKey]?.['store_id']}
+                                        value={settingsData?.paymentGateways?.[providerKey]?.['store_id'] ?? ''}
                                         onChange={(ev) => {
                                           const { name, value } = ev.target;
                                           setsettingsData(prev => ({
@@ -3015,7 +3188,7 @@ const SettingsGlobal = (props) => {
                                         name={'client_id'}
                                         placeholder={'client_id'}
                                         className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                        value={settingsData?.paymentGateways?.[providerKey]?.['client_id']}
+                                        value={settingsData?.paymentGateways?.[providerKey]?.['client_id'] ?? ''}
                                         onChange={(ev) => {
                                           const { name, value } = ev.target;
                                           setsettingsData(prev => ({
@@ -3042,7 +3215,7 @@ const SettingsGlobal = (props) => {
                                         name={'client_secret'}
                                         placeholder={'client_secret'}
                                         className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                        value={settingsData?.paymentGateways?.[providerKey]?.['client_secret']}
+                                        value={settingsData?.paymentGateways?.[providerKey]?.['client_secret'] ?? ''}
                                         onChange={(ev) => {
                                           const { name, value } = ev.target;
                                           setsettingsData(prev => ({
@@ -3068,7 +3241,7 @@ const SettingsGlobal = (props) => {
                                         name={'username'}
                                         placeholder={'username'}
                                         className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                        value={settingsData?.paymentGateways?.[providerKey]?.['username']}
+                                        value={settingsData?.paymentGateways?.[providerKey]?.['username'] ?? ''}
                                         onChange={(ev) => {
                                           const { name, value } = ev.target;
                                           setsettingsData(prev => ({
@@ -3094,7 +3267,7 @@ const SettingsGlobal = (props) => {
                                         name={'password'}
                                         placeholder={'password'}
                                         className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                        value={settingsData?.paymentGateways?.[providerKey]?.['password']}
+                                        value={settingsData?.paymentGateways?.[providerKey]?.['password'] ?? ''}
                                         onChange={(ev) => {
                                           const { name, value } = ev.target;
                                           setsettingsData(prev => ({
@@ -3126,7 +3299,7 @@ const SettingsGlobal = (props) => {
                                 <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Enable?")}</div>
                                 <div className="flex gap-3">
                                   <input type="checkbox" name="enable" id={`enable-${providerKey}`}
-                                    checked={settingsData?.paymentGateways?.[providerKey]?.['enable']}
+                                    checked={!!(settingsData?.paymentGateways?.[providerKey]?.['enable'])}
                                     className=" !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
 
                                     value={settingsData?.paymentGateways?.[providerKey]?.['enable']}
@@ -3163,7 +3336,7 @@ const SettingsGlobal = (props) => {
                                         name={'phone_number'}
                                         placeholder={'phone_number'}
                                         className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                        value={settingsData?.paymentGateways?.[providerKey]?.['phone_number']}
+                                        value={settingsData?.paymentGateways?.[providerKey]?.['phone_number'] ?? ''}
                                         onChange={(ev) => {
                                           const { name, value } = ev.target;
                                           setsettingsData(prev => ({
@@ -3190,7 +3363,7 @@ const SettingsGlobal = (props) => {
                                         name={'description'}
                                         placeholder={'description'}
                                         className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                        value={settingsData?.paymentGateways?.[providerKey]?.['description']}
+                                        value={settingsData?.paymentGateways?.[providerKey]?.['description'] ?? ''}
                                         onChange={(ev) => {
                                           const { name, value } = ev.target;
                                           setsettingsData(prev => ({
@@ -3222,7 +3395,7 @@ const SettingsGlobal = (props) => {
                                 <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Enable?")}</div>
                                 <div className="flex gap-3">
                                   <input type="checkbox" name="enable" id={`enable-${providerKey}`}
-                                    checked={settingsData?.paymentGateways?.[providerKey]?.['enable']}
+                                    checked={!!(settingsData?.paymentGateways?.[providerKey]?.['enable'])}
                                     className=" !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
 
                                     value={settingsData?.paymentGateways?.[providerKey]?.['enable']}
@@ -3255,7 +3428,7 @@ const SettingsGlobal = (props) => {
                                     <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Sandbox")}</div>
                                     <div className="flex gap-3">
                                       <input type="checkbox" name="sandbox" id={`sandbox-${providerKey}`}
-                                        checked={settingsData?.paymentGateways?.[providerKey]?.['sandbox']}
+                                        checked={!!(settingsData?.paymentGateways?.[providerKey]?.['sandbox'])}
                                         className="lg:w-auto w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
 
                                         value={settingsData?.paymentGateways?.[providerKey]?.['sandbox']}
@@ -3423,7 +3596,7 @@ const SettingsGlobal = (props) => {
                                 <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Enable?")}</div>
                                 <div className="flex gap-3">
                                   <input type="checkbox" name="enable" id={`enable-${providerKey}`}
-                                    checked={settingsData?.paymentGateways?.[providerKey]?.['enable']}
+                                    checked={!!(settingsData?.paymentGateways?.[providerKey]?.['enable'])}
                                     className=" !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
 
                                     value={settingsData?.paymentGateways?.[providerKey]?.['enable']}
@@ -3456,7 +3629,7 @@ const SettingsGlobal = (props) => {
                                     <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Sandbox")}</div>
                                     <div className="flex gap-3">
                                       <input type="checkbox" name="sandbox" id={`sandbox-${providerKey}`}
-                                        checked={settingsData?.paymentGateways?.[providerKey]?.['sandbox']}
+                                        checked={!!(settingsData?.paymentGateways?.[providerKey]?.['sandbox'])}
                                         className="lg:w-auto w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
 
                                         value={settingsData?.paymentGateways?.[providerKey]?.['sandbox']}
@@ -3487,7 +3660,7 @@ const SettingsGlobal = (props) => {
                                         name={'store_id'}
                                         placeholder={'store_id'}
                                         className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                        value={settingsData?.paymentGateways?.[providerKey]?.['store_id']}
+                                        value={settingsData?.paymentGateways?.[providerKey]?.['store_id'] ?? ''}
                                         onChange={(ev) => {
                                           const { name, value } = ev.target;
                                           setsettingsData(prev => ({
@@ -3515,7 +3688,7 @@ const SettingsGlobal = (props) => {
                                         name={'token'}
                                         placeholder={'token'}
                                         className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                        value={settingsData?.paymentGateways?.[providerKey]?.['token']}
+                                        value={settingsData?.paymentGateways?.[providerKey]?.['token'] ?? ''}
                                         onChange={(ev) => {
                                           const { name, value } = ev.target;
                                           setsettingsData(prev => ({
@@ -3907,7 +4080,7 @@ const SettingsGlobal = (props) => {
                                 <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Enable?")}</div>
                                 <div className="flex gap-3">
                                   <input type="checkbox" name="enable" id={`enable-${providerKey}`}
-                                    checked={settingsData?.paymentGateways?.[providerKey]?.['enable']}
+                                    checked={!!(settingsData?.paymentGateways?.[providerKey]?.['enable'])}
                                     className=" !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
 
                                     value={settingsData?.paymentGateways?.[providerKey]?.['enable']}
@@ -4078,7 +4251,7 @@ const SettingsGlobal = (props) => {
                                 <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Enable?")}</div>
                                 <div className="flex gap-3">
                                   <input type="checkbox" name="enable" id={`enable-${providerKey}`}
-                                    checked={settingsData?.paymentGateways?.[providerKey]?.['enable']}
+                                    checked={!!(settingsData?.paymentGateways?.[providerKey]?.['enable'])}
                                     className=" !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
 
                                     value={settingsData?.paymentGateways?.[providerKey]?.['enable']}
@@ -4331,7 +4504,7 @@ const SettingsGlobal = (props) => {
                                 <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Enable?")}</div>
                                 <div className="flex gap-3">
                                   <input type="checkbox" name="enable" id={`enable-${providerKey}`}
-                                    checked={settingsData?.paymentGateways?.[providerKey]?.['enable']}
+                                    checked={!!(settingsData?.paymentGateways?.[providerKey]?.['enable'])}
                                     className=" !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
 
                                     value={settingsData?.paymentGateways?.[providerKey]?.['enable']}
@@ -4364,7 +4537,7 @@ const SettingsGlobal = (props) => {
                                     <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Sandbox")}</div>
                                     <div className="flex gap-3">
                                       <input type="checkbox" name="sandbox" id={`sandbox-${providerKey}`}
-                                        checked={settingsData?.paymentGateways?.[providerKey]?.['sandbox']}
+                                        checked={!!(settingsData?.paymentGateways?.[providerKey]?.['sandbox'])}
                                         className="lg:w-auto w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
 
                                         value={settingsData?.paymentGateways?.[providerKey]?.['sandbox']}
@@ -4395,7 +4568,7 @@ const SettingsGlobal = (props) => {
                                         name={'store_id'}
                                         placeholder={'store_id'}
                                         className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                        value={settingsData?.paymentGateways?.[providerKey]?.['store_id']}
+                                        value={settingsData?.paymentGateways?.[providerKey]?.['store_id'] ?? ''}
                                         onChange={(ev) => {
                                           const { name, value } = ev.target;
                                           setsettingsData(prev => ({
@@ -4423,7 +4596,7 @@ const SettingsGlobal = (props) => {
                                         name={'token'}
                                         placeholder={'token'}
                                         className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                        value={settingsData?.paymentGateways?.[providerKey]?.['token']}
+                                        value={settingsData?.paymentGateways?.[providerKey]?.['token'] ?? ''}
                                         onChange={(ev) => {
                                           const { name, value } = ev.target;
                                           setsettingsData(prev => ({
@@ -4875,7 +5048,7 @@ const SettingsGlobal = (props) => {
                                 <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Enable?")}</div>
                                 <div className="flex gap-3">
                                   <input type="checkbox" name="enable" id={`enable-${providerKey}`}
-                                    checked={settingsData?.paymentGateways?.[providerKey]?.['enable']}
+                                    checked={!!(settingsData?.paymentGateways?.[providerKey]?.['enable'])}
                                     className=" !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
 
                                     value={settingsData?.paymentGateways?.[providerKey]?.['enable']}
@@ -4908,7 +5081,7 @@ const SettingsGlobal = (props) => {
                                     <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Sandbox")}</div>
                                     <div className="flex gap-3">
                                       <input type="checkbox" name="sandbox" id={`sandbox-${providerKey}`}
-                                        checked={settingsData?.paymentGateways?.[providerKey]?.['sandbox']}
+                                        checked={!!(settingsData?.paymentGateways?.[providerKey]?.['sandbox'])}
                                         className="lg:w-auto w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
 
                                         value={settingsData?.paymentGateways?.[providerKey]?.['sandbox']}
@@ -4939,7 +5112,7 @@ const SettingsGlobal = (props) => {
                                         name={'store_id'}
                                         placeholder={'store_id'}
                                         className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                        value={settingsData?.paymentGateways?.[providerKey]?.['store_id']}
+                                        value={settingsData?.paymentGateways?.[providerKey]?.['store_id'] ?? ''}
                                         onChange={(ev) => {
                                           const { name, value } = ev.target;
                                           setsettingsData(prev => ({
@@ -4967,7 +5140,7 @@ const SettingsGlobal = (props) => {
                                         name={'token'}
                                         placeholder={'token'}
                                         className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                        value={settingsData?.paymentGateways?.[providerKey]?.['token']}
+                                        value={settingsData?.paymentGateways?.[providerKey]?.['token'] ?? ''}
                                         onChange={(ev) => {
                                           const { name, value } = ev.target;
                                           setsettingsData(prev => ({
@@ -5139,7 +5312,7 @@ const SettingsGlobal = (props) => {
                                 name={'public'}
                                 placeholder={'public'}
                                 className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                checked={settingsData?.productAttributes?.[index]?.args?.['public']}
+                                checked={!!(settingsData?.productAttributes?.[index]?.args?.['public'])}
                                 onChange={(ev) => {
                                   const { name, checked } = ev.target;
 
@@ -5173,7 +5346,7 @@ const SettingsGlobal = (props) => {
                                 name={'publicly_queryable'}
                                 placeholder={'publicly_queryable'}
                                 className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                checked={settingsData?.productAttributes?.[index]?.args?.['publicly_queryable']}
+                                checked={!!(settingsData?.productAttributes?.[index]?.args?.['publicly_queryable'])}
                                 onChange={(ev) => {
                                   const { name, checked } = ev.target;
                                   setsettingsData(prev => {
@@ -5202,7 +5375,7 @@ const SettingsGlobal = (props) => {
                                 name={'hierarchical'}
                                 placeholder={'hierarchical'}
                                 className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                checked={settingsData?.productAttributes?.[index]?.args?.['hierarchical']}
+                                checked={!!(settingsData?.productAttributes?.[index]?.args?.['hierarchical'])}
                                 onChange={(ev) => {
                                   const { name, checked } = ev.target;
                                   setsettingsData(prev => {
@@ -5231,7 +5404,7 @@ const SettingsGlobal = (props) => {
                                 name={'show_in_rest'}
                                 placeholder={'show_in_rest'}
                                 className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                checked={settingsData?.productAttributes?.[index]?.args?.['show_in_rest']}
+                                checked={!!(settingsData?.productAttributes?.[index]?.args?.['show_in_rest'])}
                                 onChange={(ev) => {
                                   const { name, checked } = ev.target;
                                   setsettingsData(prev => {
@@ -5336,7 +5509,7 @@ const SettingsGlobal = (props) => {
                                     name={'key'}
                                     placeholder={'key'}
                                     className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                    value={settingsData?.apiKeys?.[providerKey]?.['key']}
+                                    value={settingsData?.apiKeys?.[providerKey]?.['key'] ?? ''}
                                     onChange={(ev) => {
                                       const { name, value } = ev.target;
                                       setsettingsData(prev => ({
@@ -5363,7 +5536,7 @@ const SettingsGlobal = (props) => {
                                     name={'map_id'}
                                     placeholder={'map_id'}
                                     className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                    value={settingsData?.apiKeys?.['googleMap']?.['map_id']}
+                                    value={settingsData?.apiKeys?.['googleMap']?.['map_id'] ?? ''}
                                     onChange={(ev) => {
                                       const { name, value } = ev.target;
                                       setsettingsData(prev => ({
@@ -5400,7 +5573,7 @@ const SettingsGlobal = (props) => {
                                     name={'key'}
                                     placeholder={'key'}
                                     className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                    value={settingsData?.apiKeys?.[providerKey]?.['key']}
+                                    value={settingsData?.apiKeys?.[providerKey]?.['key'] ?? ''}
                                     onChange={(ev) => {
                                       const { name, value } = ev.target;
                                       setsettingsData(prev => ({
@@ -5448,7 +5621,7 @@ const SettingsGlobal = (props) => {
                                     name={'pixel_id'}
                                     placeholder={'1384955718349155'}
                                     className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                    value={settingsData?.apiKeys?.[providerKey]?.['pixel_id']}
+                                    value={settingsData?.apiKeys?.[providerKey]?.['pixel_id'] ?? ''}
                                     onChange={(ev) => {
                                       const { name, value } = ev.target;
                                       setsettingsData(prev => ({
@@ -5474,7 +5647,7 @@ const SettingsGlobal = (props) => {
                                     name={'access_token'}
                                     placeholder={'EAAGm0PX4ZCpsBAKZCZBZAUZAOZCERZA9ZBvZCZCZA9ZBZA1ZBZCZAOZCZA9ZBZAOZCZA9ZBZD'}
                                     className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                    value={settingsData?.apiKeys?.[providerKey]?.['access_token']}
+                                    value={settingsData?.apiKeys?.[providerKey]?.['access_token'] ?? ''}
                                     onChange={(ev) => {
                                       const { name, value } = ev.target;
                                       setsettingsData(prev => ({
@@ -5500,7 +5673,7 @@ const SettingsGlobal = (props) => {
                                     name={'test_event_code'}
                                     placeholder={'TEST1276'}
                                     className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                    value={settingsData?.apiKeys?.[providerKey]?.['test_event_code']}
+                                    value={settingsData?.apiKeys?.[providerKey]?.['test_event_code'] ?? ''}
                                     onChange={(ev) => {
                                       const { name, value } = ev.target;
                                       setsettingsData(prev => ({
@@ -5539,7 +5712,7 @@ const SettingsGlobal = (props) => {
                                     name={'pixel_id'}
                                     placeholder={'1384955718349155'}
                                     className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                    value={settingsData?.apiKeys?.[providerKey]?.['pixel_id']}
+                                    value={settingsData?.apiKeys?.[providerKey]?.['pixel_id'] ?? ''}
                                     onChange={(ev) => {
                                       const { name, value } = ev.target;
                                       setsettingsData(prev => ({
@@ -5565,7 +5738,7 @@ const SettingsGlobal = (props) => {
                                     name={'access_token'}
                                     placeholder={'EAAGm0PX4ZCpsBAKZCZBZAUZAOZCERZA9ZBvZCZCZsdA9ZBZA1ZBZCZAOZCZA9ZBZAOZCZA9ZBZD'}
                                     className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                    value={settingsData?.apiKeys?.[providerKey]?.['access_token']}
+                                    value={settingsData?.apiKeys?.[providerKey]?.['access_token'] ?? ''}
                                     onChange={(ev) => {
                                       const { name, value } = ev.target;
                                       setsettingsData(prev => ({
@@ -5624,7 +5797,7 @@ const SettingsGlobal = (props) => {
                                     name={'test_event_code'}
                                     placeholder={'TEST1276'}
                                     className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                    value={settingsData?.apiKeys?.[providerKey]?.['test_event_code']}
+                                    value={settingsData?.apiKeys?.[providerKey]?.['test_event_code'] ?? ''}
                                     onChange={(ev) => {
                                       const { name, value } = ev.target;
                                       setsettingsData(prev => ({
@@ -5653,7 +5826,7 @@ const SettingsGlobal = (props) => {
                                     name={'test_event_code'}
                                     placeholder={''}
                                     className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                    value={storeUrl("facebook-product-feed")}
+                                    value={storeUrl("facebook-product-feed") ?? ''}
 
 
 
@@ -5694,7 +5867,7 @@ const SettingsGlobal = (props) => {
                                     name={'id'}
                                     placeholder={'G-X11VE2QSYZ'}
                                     className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                    value={settingsData?.apiKeys?.[providerKey]?.['id']}
+                                    value={settingsData?.apiKeys?.[providerKey]?.['id'] ?? ''}
                                     onChange={(ev) => {
                                       const { name, value } = ev.target;
                                       setsettingsData(prev => ({
@@ -5771,7 +5944,7 @@ const SettingsGlobal = (props) => {
                                     name={'id'}
                                     placeholder={'tyum5f3iiu'}
                                     className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                    value={settingsData?.apiKeys?.[providerKey]?.['id']}
+                                    value={settingsData?.apiKeys?.[providerKey]?.['id'] ?? ''}
                                     onChange={(ev) => {
                                       const { name, value } = ev.target;
                                       setsettingsData(prev => ({
@@ -5805,7 +5978,7 @@ const SettingsGlobal = (props) => {
                                     name={'id'}
                                     placeholder={'50859545951-q060shj5lcssd1tu3i2v1optuggr.apps.googleusercontent.com'}
                                     className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                    value={settingsData?.apiKeys?.[providerKey]?.['id']}
+                                    value={settingsData?.apiKeys?.[providerKey]?.['id'] ?? ''}
                                     onChange={(ev) => {
                                       const { name, value } = ev.target;
                                       setsettingsData(prev => ({
@@ -5840,7 +6013,7 @@ const SettingsGlobal = (props) => {
                                     name={'key'}
                                     placeholder={'key'}
                                     className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                    value={settingsData?.apiKeys?.[providerKey]?.['key']}
+                                    value={settingsData?.apiKeys?.[providerKey]?.['key'] ?? ''}
                                     onChange={(ev) => {
                                       const { name, value } = ev.target;
                                       setsettingsData(prev => ({
@@ -5864,7 +6037,7 @@ const SettingsGlobal = (props) => {
 
                                   <select name="model" className="rounded-sm px-2 py-1 !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
 
-                                    value={settingsData?.apiKeys?.[providerKey]?.['model']}
+                                    value={settingsData?.apiKeys?.[providerKey]?.['model'] ?? ''}
                                     onChange={(ev) => {
                                       const { name, value } = ev.target;
                                       setsettingsData(prev => ({
@@ -5909,7 +6082,7 @@ const SettingsGlobal = (props) => {
                                     name={'key'}
                                     placeholder={'key'}
                                     className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                    value={settingsData?.apiKeys?.[providerKey]?.['key']}
+                                    value={settingsData?.apiKeys?.[providerKey]?.['key'] ?? ''}
                                     onChange={(ev) => {
                                       const { name, value } = ev.target;
                                       setsettingsData(prev => ({
@@ -5933,7 +6106,7 @@ const SettingsGlobal = (props) => {
 
                                   <select name="model" className="rounded-sm px-2 py-1 !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
 
-                                    value={settingsData?.apiKeys?.[providerKey]?.['model']}
+                                    value={settingsData?.apiKeys?.[providerKey]?.['model'] ?? ''}
                                     onChange={(ev) => {
                                       const { name, value } = ev.target;
                                       setsettingsData(prev => ({
@@ -5983,7 +6156,7 @@ const SettingsGlobal = (props) => {
                                     name={'key'}
                                     placeholder={'key'}
                                     className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                    value={settingsData?.apiKeys?.[providerKey]?.['key']}
+                                    value={settingsData?.apiKeys?.[providerKey]?.['key'] ?? ''}
                                     onChange={(ev) => {
                                       const { name, value } = ev.target;
                                       setsettingsData(prev => ({
@@ -6007,7 +6180,7 @@ const SettingsGlobal = (props) => {
 
                                   <select name="model" className="rounded-sm px-2 py-1 !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
 
-                                    value={settingsData?.apiKeys?.[providerKey]?.['model']}
+                                    value={settingsData?.apiKeys?.[providerKey]?.['model'] ?? ''}
                                     onChange={(ev) => {
                                       const { name, value } = ev.target;
                                       setsettingsData(prev => ({
@@ -6042,6 +6215,37 @@ const SettingsGlobal = (props) => {
 
                             </>
                           )}
+                          {(providerKey == 'bdcourier' || providerKey == 'fraudchecker') && (
+                            <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                              <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("API Key")}</div>
+                              <div className="flex flex-col gap-1.5">
+                                <input
+                                  type="text"
+                                  name={'key'}
+                                  placeholder={providerKey == 'bdcourier' ? 'bdcourier.com API key' : 'fraudchecker.link API key'}
+                                  autoComplete="off"
+                                  className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
+                                  value={settingsData?.apiKeys?.[providerKey]?.['key'] ?? ''}
+                                  onChange={(ev) => {
+                                    const { name, value } = ev.target;
+                                    setsettingsData(prev => ({
+                                      ...prev,
+                                      apiKeys: {
+                                        ...prev.apiKeys,
+                                        [providerKey]: {
+                                          ...prev.apiKeys?.[providerKey],
+                                          [name]: value
+                                        }
+                                      }
+                                    }));
+                                  }}
+                                />
+                                <div className="text-xs text-gray-500">
+                                  {("Used by the phone fraud check. Pick the service on Store → Fraud Checker → Mobile Fraud Checker.")}
+                                </div>
+                              </div>
+                            </div>
+                          )}
                           {providerKey == 'bulksmsbd' && (
 
                             <>
@@ -6058,7 +6262,7 @@ const SettingsGlobal = (props) => {
                                     name={'key'}
                                     placeholder={'key'}
                                     className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                    value={settingsData?.apiKeys?.[providerKey]?.['key']}
+                                    value={settingsData?.apiKeys?.[providerKey]?.['key'] ?? ''}
                                     onChange={(ev) => {
                                       const { name, value } = ev.target;
                                       setsettingsData(prev => ({
@@ -6084,7 +6288,7 @@ const SettingsGlobal = (props) => {
                                     name={'senderid'}
                                     placeholder={'senderid'}
                                     className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                    value={settingsData?.apiKeys?.[providerKey]?.['senderid']}
+                                    value={settingsData?.apiKeys?.[providerKey]?.['senderid'] ?? ''}
                                     onChange={(ev) => {
                                       const { name, value } = ev.target;
                                       setsettingsData(prev => ({
@@ -6196,7 +6400,7 @@ const SettingsGlobal = (props) => {
                                   <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Sandbox")}</div>
                                   <div className="flex gap-3">
                                     <input type="checkbox" name="sandbox" id={`sandbox-${providerKey}`}
-                                      checked={settingsData?.couriers?.[providerKey]?.['sandbox']}
+                                      checked={!!(settingsData?.couriers?.[providerKey]?.['sandbox'])}
                                       className="lg:w-auto w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
 
                                       value={settingsData?.couriers?.[providerKey]?.['sandbox']}
@@ -6228,7 +6432,7 @@ const SettingsGlobal = (props) => {
                                       name={'store_id'}
                                       placeholder={'store_id'}
                                       className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                      value={settingsData?.couriers?.[providerKey]?.['store_id']}
+                                      value={settingsData?.couriers?.[providerKey]?.['store_id'] ?? ''}
                                       onChange={(ev) => {
                                         const { name, value } = ev.target;
                                         setsettingsData(prev => ({
@@ -6254,7 +6458,7 @@ const SettingsGlobal = (props) => {
                                       name={'client_id'}
                                       placeholder={'client_id'}
                                       className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                      value={settingsData?.couriers?.[providerKey]?.['client_id']}
+                                      value={settingsData?.couriers?.[providerKey]?.['client_id'] ?? ''}
                                       onChange={(ev) => {
                                         const { name, value } = ev.target;
                                         setsettingsData(prev => ({
@@ -6281,7 +6485,7 @@ const SettingsGlobal = (props) => {
                                       name={'client_secret'}
                                       placeholder={'client_secret'}
                                       className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                      value={settingsData?.couriers?.[providerKey]?.['client_secret']}
+                                      value={settingsData?.couriers?.[providerKey]?.['client_secret'] ?? ''}
                                       onChange={(ev) => {
                                         const { name, value } = ev.target;
                                         setsettingsData(prev => ({
@@ -6307,7 +6511,7 @@ const SettingsGlobal = (props) => {
                                       name={'username'}
                                       placeholder={'username'}
                                       className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                      value={settingsData?.couriers?.[providerKey]?.['username']}
+                                      value={settingsData?.couriers?.[providerKey]?.['username'] ?? ''}
                                       onChange={(ev) => {
                                         const { name, value } = ev.target;
                                         setsettingsData(prev => ({
@@ -6333,7 +6537,7 @@ const SettingsGlobal = (props) => {
                                       name={'password'}
                                       placeholder={'password'}
                                       className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                      value={settingsData?.couriers?.[providerKey]?.['password']}
+                                      value={settingsData?.couriers?.[providerKey]?.['password'] ?? ''}
                                       onChange={(ev) => {
                                         const { name, value } = ev.target;
                                         setsettingsData(prev => ({
@@ -6368,7 +6572,7 @@ const SettingsGlobal = (props) => {
                                       name={'api_key'}
                                       placeholder={'api_key'}
                                       className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                      value={settingsData?.couriers?.[providerKey]?.['api_key']}
+                                      value={settingsData?.couriers?.[providerKey]?.['api_key'] ?? ''}
                                       onChange={(ev) => {
                                         const { name, value } = ev.target;
                                         setsettingsData(prev => ({
@@ -6395,7 +6599,7 @@ const SettingsGlobal = (props) => {
                                       name={'secret_key'}
                                       placeholder={'secret_key'}
                                       className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                      value={settingsData?.couriers?.[providerKey]?.['secret_key']}
+                                      value={settingsData?.couriers?.[providerKey]?.['secret_key'] ?? ''}
                                       onChange={(ev) => {
                                         const { name, value } = ev.target;
                                         setsettingsData(prev => ({
@@ -6413,6 +6617,39 @@ const SettingsGlobal = (props) => {
                                     />
                                   </div>
                                 </div>
+                                {/* Optional: the fraud check falls back to the merchant
+                                    panel when Steadfast's API answers with no counts. */}
+                                {[
+                                  { key: 'panel_email', label: 'Fraud check: panel email', type: 'email', hint: 'steadfast.com.bd login email' },
+                                  { key: 'panel_password', label: 'Fraud check: panel password', type: 'password', hint: 'steadfast.com.bd login password' },
+                                ].map((field) => (
+                                  <div key={field.key} className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                    <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{field.label}</div>
+                                    <div className="flex gap-3">
+                                      <input
+                                        type={field.type}
+                                        name={field.key}
+                                        placeholder={field.hint}
+                                        autoComplete={field.type === 'password' ? 'new-password' : 'off'}
+                                        className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
+                                        value={settingsData?.couriers?.[providerKey]?.[field.key] ?? ''}
+                                        onChange={(ev) => {
+                                          const { name, value } = ev.target;
+                                          setsettingsData(prev => ({
+                                            ...prev,
+                                            couriers: {
+                                              ...prev.couriers,
+                                              [providerKey]: {
+                                                ...prev.couriers[providerKey],
+                                                [name]: value
+                                              }
+                                            }
+                                          }));
+                                        }}
+                                      />
+                                    </div>
+                                  </div>
+                                ))}
                                 <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
                                   <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Webhook Auth token")}</div>
                                   <div className="flex gap-3">
@@ -6421,7 +6658,7 @@ const SettingsGlobal = (props) => {
                                       name={'webhook_auth_token'}
                                       placeholder={'Webhook auth token'}
                                       className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                      value={settingsData?.couriers?.[providerKey]?.['webhook_auth_token']}
+                                      value={settingsData?.couriers?.[providerKey]?.['webhook_auth_token'] ?? ''}
                                       onChange={(ev) => {
                                         const { name, value } = ev.target;
                                         setsettingsData(prev => ({
@@ -6453,7 +6690,7 @@ const SettingsGlobal = (props) => {
                                       name={'store_id'}
                                       placeholder={'store_id'}
                                       className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                      value={settingsData?.couriers?.[providerKey]?.['store_id']}
+                                      value={settingsData?.couriers?.[providerKey]?.['store_id'] ?? ''}
                                       onChange={(ev) => {
                                         const { name, value } = ev.target;
                                         setsettingsData(prev => ({
@@ -6480,7 +6717,7 @@ const SettingsGlobal = (props) => {
                                       name={'api_key'}
                                       placeholder={'api_key'}
                                       className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                      value={settingsData?.couriers?.[providerKey]?.['api_key']}
+                                      value={settingsData?.couriers?.[providerKey]?.['api_key'] ?? ''}
                                       onChange={(ev) => {
                                         const { name, value } = ev.target;
                                         setsettingsData(prev => ({
@@ -6507,7 +6744,7 @@ const SettingsGlobal = (props) => {
                                       name={'secret_key'}
                                       placeholder={'secret_key'}
                                       className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                      value={settingsData?.couriers?.[providerKey]?.['secret_key']}
+                                      value={settingsData?.couriers?.[providerKey]?.['secret_key'] ?? ''}
                                       onChange={(ev) => {
                                         const { name, value } = ev.target;
                                         setsettingsData(prev => ({
@@ -6533,7 +6770,7 @@ const SettingsGlobal = (props) => {
                                       name={'webhook_secret'}
                                       placeholder={'Webhook secret'}
                                       className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                      value={settingsData?.couriers?.[providerKey]?.['webhook_secret']}
+                                      value={settingsData?.couriers?.[providerKey]?.['webhook_secret'] ?? ''}
                                       onChange={(ev) => {
                                         const { name, value } = ev.target;
                                         setsettingsData(prev => ({
@@ -6562,7 +6799,7 @@ const SettingsGlobal = (props) => {
                                   <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("Sandbox")}</div>
                                   <div className="flex gap-3">
                                     <input type="checkbox" name="sandbox" id={`sandbox-${providerKey}`}
-                                      checked={settingsData?.couriers?.[providerKey]?.['sandbox']}
+                                      checked={!!(settingsData?.couriers?.[providerKey]?.['sandbox'])}
                                       className="lg:w-auto w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
 
                                       value={settingsData?.couriers?.[providerKey]?.['sandbox']}
@@ -6593,7 +6830,7 @@ const SettingsGlobal = (props) => {
                                       name={'store_id'}
                                       placeholder={'store_id'}
                                       className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                      value={settingsData?.couriers?.[providerKey]?.['store_id']}
+                                      value={settingsData?.couriers?.[providerKey]?.['store_id'] ?? ''}
                                       onChange={(ev) => {
                                         const { name, value } = ev.target;
                                         setsettingsData(prev => ({
@@ -6621,7 +6858,7 @@ const SettingsGlobal = (props) => {
                                       name={'token'}
                                       placeholder={'token'}
                                       className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                      value={settingsData?.couriers?.[providerKey]?.['token']}
+                                      value={settingsData?.couriers?.[providerKey]?.['token'] ?? ''}
                                       onChange={(ev) => {
                                         const { name, value } = ev.target;
                                         setsettingsData(prev => ({
@@ -6639,6 +6876,40 @@ const SettingsGlobal = (props) => {
                                     />
                                   </div>
                                 </div>
+                                {/* Optional: RedX's delivery-history lookup for the phone
+                                    fraud check needs the merchant panel login (the API
+                                    token above cannot read it). */}
+                                {[
+                                  { key: 'panel_phone', label: 'Fraud check: panel phone', type: 'tel', hint: 'redx.com.bd login phone (01XXXXXXXXX)' },
+                                  { key: 'panel_password', label: 'Fraud check: panel password', type: 'password', hint: 'redx.com.bd login password' },
+                                ].map((field) => (
+                                  <div key={field.key} className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                    <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{field.label}</div>
+                                    <div className="flex gap-3">
+                                      <input
+                                        type={field.type}
+                                        name={field.key}
+                                        placeholder={field.hint}
+                                        autoComplete={field.type === 'password' ? 'new-password' : 'off'}
+                                        className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
+                                        value={settingsData?.couriers?.[providerKey]?.[field.key] ?? ''}
+                                        onChange={(ev) => {
+                                          const { name, value } = ev.target;
+                                          setsettingsData(prev => ({
+                                            ...prev,
+                                            couriers: {
+                                              ...prev.couriers,
+                                              [providerKey]: {
+                                                ...prev.couriers[providerKey],
+                                                [name]: value
+                                              }
+                                            }
+                                          }));
+                                        }}
+                                      />
+                                    </div>
+                                  </div>
+                                ))}
                               </>
                             )}
 
@@ -6683,6 +6954,38 @@ const SettingsGlobal = (props) => {
                                         placeholder={field.name}
                                         className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
                                         value={settingsData?.couriers?.[providerKey]?.[field.name] || ''}
+                                        onChange={(ev) => {
+                                          const { name, value } = ev.target;
+                                          setsettingsData(prev => ({
+                                            ...prev,
+                                            couriers: {
+                                              ...prev.couriers,
+                                              [providerKey]: {
+                                                ...prev.couriers[providerKey],
+                                                [name]: value
+                                              }
+                                            }
+                                          }));
+                                        }}
+                                      />
+                                    </div>
+                                  </div>
+                                ))}
+                                {/* Optional: Carry Bee's delivery-history lookup for the phone fraud check needs the merchant panel login (the client-id API cannot read it). */}
+                                {[
+                                  { key: 'panel_phone', label: 'Fraud check: panel phone', type: 'tel', hint: 'merchant.carrybee.com login phone (01XXXXXXXXX)' },
+                                  { key: 'panel_password', label: 'Fraud check: panel password', type: 'password', hint: 'merchant.carrybee.com login password' },
+                                ].map((field) => (
+                                  <div key={field.key} className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                    <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{field.label}</div>
+                                    <div className="flex gap-3">
+                                      <input
+                                        type={field.type}
+                                        name={field.key}
+                                        placeholder={field.hint}
+                                        autoComplete={field.type === 'password' ? 'new-password' : 'off'}
+                                        className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
+                                        value={settingsData?.couriers?.[providerKey]?.[field.key] ?? ''}
                                         onChange={(ev) => {
                                           const { name, value } = ev.target;
                                           setsettingsData(prev => ({
@@ -6767,6 +7070,37 @@ const SettingsGlobal = (props) => {
                                     </div>
                                   </div>
                                 ))}
+                                {/* Optional: the phone fraud check uses the merchant panel's Smart Check with the username and password above. It sends the Paperfly key unless this is set. */}
+                                {[
+                                  { key: 'smart_check_key', label: 'Fraud check: smart-check key', type: 'text', hint: 'leave blank to use the Paperfly key' },
+                                ].map((field) => (
+                                  <div key={field.key} className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
+                                    <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{field.label}</div>
+                                    <div className="flex gap-3">
+                                      <input
+                                        type={field.type}
+                                        name={field.key}
+                                        placeholder={field.hint}
+                                        autoComplete={field.type === 'password' ? 'new-password' : 'off'}
+                                        className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
+                                        value={settingsData?.couriers?.[providerKey]?.[field.key] ?? ''}
+                                        onChange={(ev) => {
+                                          const { name, value } = ev.target;
+                                          setsettingsData(prev => ({
+                                            ...prev,
+                                            couriers: {
+                                              ...prev.couriers,
+                                              [providerKey]: {
+                                                ...prev.couriers[providerKey],
+                                                [name]: value
+                                              }
+                                            }
+                                          }));
+                                        }}
+                                      />
+                                    </div>
+                                  </div>
+                                ))}
                               </>
                             )}
 
@@ -6790,7 +7124,7 @@ const SettingsGlobal = (props) => {
                                         name={'webhook_auth_token'}
                                         placeholder={'Webhook auth token'}
                                         className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20"
-                                        value={token}
+                                        value={token ?? ''}
                                         onChange={(ev) => {
                                           const { name, value } = ev.target;
                                           setsettingsData(prev => ({
@@ -6814,7 +7148,7 @@ const SettingsGlobal = (props) => {
                                         type="text"
                                         readOnly
                                         className=" px-2 py-1 rounded-sm w-full !border !border-gray-300 !shadow-none !outline-none bg-gray-50 text-gray-600"
-                                        value={webhookUrl}
+                                        value={webhookUrl ?? ''}
                                         onFocus={(ev) => ev.target.select()}
                                       />
                                       <p className="text-xs text-gray-500">
@@ -6861,6 +7195,12 @@ const SettingsGlobal = (props) => {
 
 
         </Tab>
+        <Tab index={8} id="roles">
+
+          {/* Saves itself (WordPress role capabilities), not with the page's Save. */}
+          <RolePermissionsPanel cardClassName={CARD_CLASSES} />
+
+        </Tab>
         <Tab index={8} id="license">
 
           {/* {JSON.stringify(settingsData)} */}
@@ -6877,7 +7217,7 @@ const SettingsGlobal = (props) => {
               <div className="flex flex-col gap-2 border-b border-gray-100 py-3.5 last:border-b-0 lg:flex-row lg:flex-wrap lg:items-center lg:gap-4 [&>div+div]:min-w-0 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
                 <div className="w-full shrink-0 text-sm font-medium text-gray-700 lg:w-60">{("License Key")}</div>
                 <div className="flex gap-3">
-                  <input type="text" name="enable" id="enable" checked={settingsData?.couriers?.enable} className="lg:w-auto w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20" value={settingsData?.couriers?.enable} onChange={ev => {
+                  <input type="text" name="enable" id="enable" checked={!!(settingsData?.couriers?.enable)} className="lg:w-auto w-full !border !border-gray-300 !shadow-none !outline-none transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20" value={settingsData?.couriers?.enable} onChange={ev => {
                     var value = ev.target.value;
                     setsettingsData({ ...settingsData, couriers: { ...settingsData?.couriers, enable: value } })
                   }} />

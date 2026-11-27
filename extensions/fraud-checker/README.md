@@ -30,7 +30,7 @@ mount.
 | `limitip` | Limit IP Address | `enabled`, `order_count` |
 | `limitPhone` | Limit Phone Number | `enabled`, `order_count` |
 | `countryFilter` | Country filter | `enabled`, `allow_countries` (codes), `block_countries` (codes), `unknown` (`allow`/`block`) |
-| `mobilefraudcheck` | Mobile Fraud Checker | `enabled`, `service`, `score` |
+| `mobilefraudcheck` | Mobile Fraud Checker | `enabled`, `service` (`bdcourier`, `fraudchecker`, `steadfast`), `score` |
 
 `lib/providers.js` is the table. In core each of these was a hand-written
 `providerKey == '...'` branch in the settings markup — 840 lines of
@@ -43,7 +43,7 @@ recorded in `NOT_YET_OFFERED` rather than dropped silently.
 
 ## What is enforced
 
-Three checks run on the server, in `create_order` (combostore-server,
+Four checks run on the server, in `create_order` (combostore-server,
 `ComboStoreRest.php`), before the order is written:
 
 | Check | Rule | Refusal |
@@ -51,6 +51,7 @@ Three checks run on the server, in `create_order` (combostore-server,
 | `loginRequired` | The request must carry a valid customer token. The order is then placed as that customer: the body's `userid` is overwritten, because anyone can write any id into it. | `{ status: "failed", code: "login_required" }` |
 | `countryFilter` | The country of the request (see below) must not be in `block_countries`, and must be in `allow_countries` when that list is not empty. A country in both is blocked. When the country cannot be told, `unknown` decides (default allow, so a lookup outage does not stop sales). | `{ status: "failed", code: "country_blocked" }` |
 | `limitPhone` | At most `order_count` orders per phone number in the last hour. Billing and shipping phones are compared on their last 10 digits, so `+8801711…` and `01711…` are the same number. Incomplete, draft, trashed, failed and cancelled orders do not count. 0 or blank means no limit. | `{ status: "failed", code: "phone_limit" }` |
+| `mobilefraudcheck` | The phone's courier delivery success % must be at least `score` (0-100). `service`: `steadfast` asks Steadfast only (API, then the merchant panel login); `couriers` asks every set-up courier account (Steadfast, Pathao via its merchant panel with the saved username/password, RedX via its merchant panel phone/password, Paperfly via its panel Smart Check with the saved username/password and Paperfly key, Carry Bee via its merchant panel phone/password) and adds their parcels up; `bdcourier` uses the BD Courier all-courier summary and `fraudchecker` the fraudchecker.link totals, both falling back to the courier accounts. A Pathao rating with no counts does not score. Separately, whenever the Pathao login is saved, a number Pathao rates `fraud_customer` is refused whatever the score or service (Pathao is asked even when the score came from another service; its answer is reused when the score check already asked). Fails open: a lookup error or timeout (8s per request, ~20s in all), a number with no delivery history, or a score of 0/blank lets the order through. Steadfast results are cached 30 minutes per number. | `{ status: "failed", code: "phone_fraud_score" }`, or `code: "phone_fraud_rating"` for the Pathao rating |
 
 All are skipped for `incomplete` orders (the checkout's abandoned-cart
 capture) and for `administrator` / `store_manager` tokens, the same as the MOQ

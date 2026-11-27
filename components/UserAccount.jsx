@@ -61,7 +61,12 @@ const UserAccount = ({ userid }) => {
 				if (response.ok && response.status < 400) {
 					response.json().then((res) => {
 
-						addNotification({ type: 'success', title: 'Profile Updated', content: "Your information updated successful." })
+						/* A refusal with a reason (e.g. a phone number another account uses). */
+						if (res?.error) {
+							addNotification({ type: 'error', title: 'Not saved', content: res?.message || "Your information was not saved." })
+						} else {
+							addNotification({ type: 'success', title: 'Profile Updated', content: "Your information updated successful." })
+						}
 
 						setTimeout(() => {
 							setloading(false);

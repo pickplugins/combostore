@@ -36,12 +36,14 @@ export function ProfileCard({ cls, icon: Icon, title, description, children, foo
 	);
 }
 
-export function ProfileField({ cls, label, htmlFor, hint, children }) {
+/* `error`: shown under the field (id `${htmlFor}-error`, which the input names in aria-describedby). */
+export function ProfileField({ cls, label, htmlFor, hint, error, children }) {
 	return (
 		<div className={cls('field')}>
 			<label htmlFor={htmlFor} className={cls('field-label')}>{label}</label>
 			{children}
 			{hint && <p className={cls('field-hint')}>{hint}</p>}
+			{error && <p id={`${htmlFor}-error`} role="alert" className={cls('field-error')}>{error}</p>}
 		</div>
 	);
 }
@@ -70,6 +72,8 @@ const CustomerProfileEditView = (props) => {
 	var [loadError, setloadError] = useState(null);
 	/* Which card is saving: 'details', 'address' or 'location'. */
 	var [saving, setsaving] = useState(null);
+	/* The server's refusal of the phone number (update_user_profile `field: 'phone'`), shown under the field. */
+	var [phoneError, setphoneError] = useState(null);
 
 	useEffect(() => {
 
@@ -108,6 +112,8 @@ const CustomerProfileEditView = (props) => {
 	function setField(ev) {
 		const { name, value } = ev.target;
 		seteditUserData(prev => ({ ...prev, [name]: value }));
+		/* Editing the number clears its error. */
+		if (name === 'phone') setphoneError(null);
 	}
 
 	/* The whole profile is sent each time: the server blanks any field that
@@ -133,7 +139,20 @@ const CustomerProfileEditView = (props) => {
 				if (!response.ok) throw new Error('request failed');
 				return response.json();
 			})
-			.then(() => {
+			.then((res) => {
+				/* A refusal with a reason (e.g. a phone number another account uses) changes nothing. */
+				if (res?.error) {
+					/* A phone refusal goes under the phone field; anything else in a notification. */
+					if (res?.field === 'phone') {
+						setphoneError(res?.message || "This phone number can't be used.");
+						document.getElementById('profile-phone')?.focus();
+					} else {
+						addNotification({ type: 'error', title: 'Could not save', content: res?.message || "Your changes were not saved. Please try again." });
+					}
+					return;
+				}
+
+				setphoneError(null);
 				seteditUserData(userData);
 
 				/* Checkout pre-fills from the store, so keep it in step. */
@@ -205,8 +224,8 @@ const CustomerProfileEditView = (props) => {
 								<ProfileField cls={cls} label="Full name" htmlFor="profile-name">
 									<input id="profile-name" type="text" name="name" autoComplete="name" className={cls('field-input')} value={editUserData?.name ?? ''} onChange={setField} />
 								</ProfileField>
-								<ProfileField cls={cls} label="Phone" htmlFor="profile-phone">
-									<input id="profile-phone" type="tel" name="phone" autoComplete="tel" className={cls('field-input')} value={editUserData?.phone ?? ''} onChange={setField} />
+								<ProfileField cls={cls} label="Phone" htmlFor="profile-phone" error={phoneError}>
+									<input id="profile-phone" type="tel" name="phone" autoComplete="tel" aria-invalid={phoneError ? true : undefined} aria-describedby={phoneError ? 'profile-phone-error' : undefined} className={`${cls('field-input')} ${phoneError ? cls('field-input-invalid') : ''}`} value={editUserData?.phone ?? ''} onChange={setField} />
 								</ProfileField>
 								<ProfileField cls={cls} label="Email" htmlFor="profile-email" hint="Your email is your login and can't be changed here.">
 									<input id="profile-email" type="email" name="email" disabled className={cls('field-input')} value={editUserData?.email ?? ''} readOnly />

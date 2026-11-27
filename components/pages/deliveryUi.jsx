@@ -60,6 +60,11 @@ export const DELIVERY_STATUSES = [
 	"cancelled_approval_pending", "returned", "cancelled",
 ];
 
+/* What a rider may set on a delivery assigned to them (update_delivery_status
+   on the server has the same list). Approvals and cancelling stay with staff
+   and the couriers. */
+export const RIDER_DELIVERY_STATUSES = ["started", "in_transit", "hold", "delivered", "partial_delivered", "returned"];
+
 /* Per-group totals from get_deliveries' status_counts ({status: n}). */
 export function groupCounts(statusCounts) {
 	var out = { in_progress: 0, done: 0, failed: 0 };

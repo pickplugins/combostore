@@ -9,6 +9,7 @@ import Spinner from '../components/Spinner';
 import WidgetWrapper from '../components/WidgetWrapper';
 import DropDown from '../components/DropDown';
 import ShippingMethods from '../components/ShippingMethods';
+import { useCan } from '../lib/useCan';
 
 
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
@@ -55,6 +56,7 @@ const Row = ({ label, hint, children }) => (
 const ShippingZoneEdit = (props) => {
 
   const { token } = useCounterStore()
+  const permit = useCan("shipping_zones"); /* Roles & Permissions */
 
   var zoneId = props?.id
 
@@ -126,6 +128,7 @@ const ShippingZoneEdit = (props) => {
 
 
   function update_shipping_zone() {
+if (!permit.allowed("edit")) return permit.denied();
 
 
     //var postData = currentObject;
@@ -211,14 +214,14 @@ const ShippingZoneEdit = (props) => {
 
 
   return (
-    <div className="mx-auto flex w-full max-w-[860px] flex-col gap-4 px-4 py-6 sm:px-6">
+    <div className="mx-auto flex w-full max-w-[860px] flex-col gap-4 lg:px-4 py-6 sm:px-6">
 
       {/*
         Header. The zone's name was buried in an "Edit:" label beside the
         Update button, and the whole panel sat in a fixed 800px column that
         overflowed anything narrower - a drawer or a phone.
       */}
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-sm bg-white px-5 py-4 shadow-sm">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-sm bg-white lg:px-5 py-4 shadow-sm">
 
         <div className="min-w-0">
 
@@ -251,7 +254,7 @@ const ShippingZoneEdit = (props) => {
           )}
 
           <div className={PRIMARY_BUTTON}
-            onClick={ev => {
+            {...permit.hide("edit")} onClick={ev => {
               update_shipping_zone()
             }}
           >{("Update")}</div>

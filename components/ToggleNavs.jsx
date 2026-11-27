@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 
 import { useCounterStore } from '../store/useCounterStore'
+import { navAllowed } from '../lib/rolePermissions';
 
 
 /* Sidebar nav styling. `[&_svg]:size-*` normalises the icon sizes, including
@@ -38,12 +39,34 @@ const CHILD_IDLE = "text-gray-400 hover:bg-white/5 hover:text-white";
 
 const CHILD_ACTIVE = "bg-brand/20 font-medium text-white";
 
+/*
+	A count Sidebar sets on an entry: `badge` (number) and `badgeTone`
+	("alert" - rose, unread Messages; "waiting" - amber, applications to
+	review). `badgeLabel` is what a screen reader hears ("3 unread").
+*/
+const BADGE_TONES = {
+	alert: "bg-rose-500 text-white",
+	waiting: "bg-amber-400 text-gray-900",
+};
+
+function NavBadge({ nav, count }) {
+	var value = count ?? nav?.badge;
+	if (!value) return null;
+	var tone = BADGE_TONES[nav?.badgeTone] ?? BADGE_TONES.alert;
+	var label = nav?.badgeLabel ?? `${value} unread`;
+	return (
+		<span className={`ml-auto inline-flex min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 text-[11px] font-semibold leading-5 ${tone}`} aria-label={label} title={label}>
+			{value > 99 ? "99+" : value}
+		</span>
+	);
+}
+
 
 const ToggleNavs = (props) => {
 
 
 
-  const { token, appData, notifications, addNotification, cartItems, addCartItems, removeCartItems, resetCartItems, updateCartItems, userDataX, setUserDataX, navToggle, setnavToggle } = useCounterStore()
+  const { token, appData, notifications, addNotification, cartItems, addCartItems, removeCartItems, resetCartItems, updateCartItems, userDataX, setUserDataX, navToggle, setnavToggle, settings } = useCounterStore()
 
 
 
@@ -101,8 +124,16 @@ const ToggleNavs = (props) => {
 
   const navTree = buildNavTree(navs);
 
-  function hasRoleAccessed(navsRoles) {
-    return userDataX?.roles?.some(element => navsRoles.includes(element));
+  /*
+    Capability entries (Roles & Permissions) show when the user holds the
+    entry's view capability; their groups when any child shows. Every other
+    entry keeps its `roles` list.
+  */
+  function hasRoleAccessed(nav) {
+    var children = nav?.children ?? [];
+    var decided = navAllowed(nav, userDataX, children.some(hasRoleAccessed));
+    if (decided !== null) return decided;
+    return !!userDataX?.roles?.some(element => (nav?.roles ?? []).includes(element));
   }
 
   return (
@@ -127,7 +158,7 @@ const ToggleNavs = (props) => {
               href={`/${navSlug}`}
               onClick={onNavigate}
               aria-current={pathname == "/" + navSlug ? "page" : undefined}
-              className={`${hasRoleAccessed(nav?.roles) ? '' : "hidden"} ${NAV_BASE} ${pathname == "/" + navSlug
+              className={`${hasRoleAccessed(nav) ? '' : "hidden"} ${NAV_BASE} ${pathname == "/" + navSlug
                 ? NAV_ACTIVE
                 : NAV_IDLE
                 }`}>
@@ -138,11 +169,7 @@ const ToggleNavs = (props) => {
 
               </span>
               {/* A count set by Sidebar (e.g. unread Messages conversations). */}
-              {nav.badge ? (
-                <span className="ml-auto inline-flex min-w-5 items-center justify-center rounded-full bg-rose-500 px-1.5 text-[11px] font-semibold leading-5 text-white" aria-label={`${nav.badge} unread`}>
-                  {nav.badge > 99 ? "99+" : nav.badge}
-                </span>
-              ) : null}
+              <NavBadge nav={nav} />
             </Link>
           );
         }
@@ -158,12 +185,28 @@ const ToggleNavs = (props) => {
 
           const isActiveGroup = nav.value === children[index]?.parent;
 
+          /*
+            The group header carries the total of its visible children's
+            badges, so a collapsed group still shows there is something to
+            look at (e.g. Users when Riders has applications waiting). It takes
+            the tone of the first badged child.
+          */
+          const badgedChildren = children.filter((c) => c.badge && hasRoleAccessed(c));
+          const groupCount = badgedChildren.reduce((sum, c) => sum + Number(c.badge || 0), 0);
+          const groupBadgeNav = badgedChildren[0]
+            ? { badgeTone: badgedChildren[0].badgeTone, badgeLabel: badgedChildren.map((c) => c.badgeLabel ?? `${c.badge} ${c.label}`).join(", ") }
+            : null;
+
           return (
 
             <div className="" key={nav.value}>
 
-              {hasRoleAccessed(nav?.roles) && (
-                <ToggleContent isOpen={isActiveGroup} labelIcon={nav.icon} iconPosition={`right`} title={nav.label} headerClass={isActiveGroup ? GROUP_HEADER_ACTIVE : GROUP_HEADER} headerTitleClass={`flex w-full items-center`} contentClass={`mb-2`}>
+              {/* A group whose every entry was taken from the role (Roles &
+                  Permissions, per menu item) would open on nothing. */}
+              {hasRoleAccessed(nav) && children.some(hasRoleAccessed) && (
+                <ToggleContent isOpen={isActiveGroup} labelIcon={nav.icon} iconPosition={`right`} title={groupCount > 0 ? (
+                  <span className="flex min-w-0 flex-1 items-center gap-2"><span className="truncate">{nav.label}</span><NavBadge nav={groupBadgeNav} count={groupCount} /></span>
+                ) : nav.label} headerClass={isActiveGroup ? GROUP_HEADER_ACTIVE : GROUP_HEADER} headerTitleClass={`flex w-full items-center`} contentClass={`mb-2`}>
                   <div className="ml-4 border-l border-white/10 pl-2">
 
                     {children.map((nav2, index) => {
@@ -177,7 +220,7 @@ const ToggleNavs = (props) => {
                           href={`/dashboard/${nav2Slug}`}
                           onClick={onNavigate}
                           aria-current={isCurrent ? "page" : undefined}
-                          className={`${hasRoleAccessed(nav2?.roles) ? '' : "hidden"} ${CHILD_BASE} ${isCurrent ? CHILD_ACTIVE : CHILD_IDLE
+                          className={`${hasRoleAccessed(nav2) ? '' : "hidden"} ${CHILD_BASE} ${isCurrent ? CHILD_ACTIVE : CHILD_IDLE
                             }`}>
                           <span className="">{nav2.icon}</span>
                           <span
@@ -186,6 +229,7 @@ const ToggleNavs = (props) => {
                           >
                             {nav2.label}
                           </span>
+                          <NavBadge nav={nav2} />
                         </Link>
                       )
                     })}

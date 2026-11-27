@@ -11,6 +11,7 @@ import PopoverButton from "../../components/PopoverButton";
 
 import { useCounterStore } from "../../store/useCounterStore";
 import { useUtilsStore } from "../../store/useUtilsStore";
+import { useCan } from '../../lib/useCan';
 import {
   AffiliateCell, AffiliateSelect, useAffiliateAccounts, accountLabel,
   ICON_BUTTON, FILTER_CHIP, FILTER_CHIP_X, TOOLBAR_BUTTON, DANGER_BUTTON, DATE_INPUT,
@@ -42,6 +43,7 @@ const AffiliateClicks = () => {
 
   const { formatDate } = useUtilsStore();
   const { token, addNotification, userDataX } = useCounterStore();
+  const permit = useCan("affiliate_clicks"); /* Roles & Permissions */
 
   const manager = isManager(userDataX);
   const accounts = useAffiliateAccounts(token, manager);
@@ -95,6 +97,7 @@ const AffiliateClicks = () => {
 
 
   function delete_clicks(ids) {
+    if (!permit.allowed("delete")) return permit.denied();
     ids = ids ?? selectedRows;
     if (!ids?.length) return;
 
@@ -162,7 +165,7 @@ const AffiliateClicks = () => {
     return (
       <td data-label="Actions" className="text-sm" key={columnIndex}>
         <div className="flex justify-end sm:pr-5">
-          <button type="button" className={`${ICON_BUTTON} hover:!text-red-600`} title={("Delete")} onClick={() => {
+          <button type="button" className={`${ICON_BUTTON} hover:!text-red-600`} title={("Delete")} {...permit.hide("delete")} onClick={() => {
             if (confirm(`Delete click #${entry.id}?`)) delete_clicks([entry.id]);
           }}>
             <IconTrash size={16} />
@@ -231,7 +234,7 @@ const AffiliateClicks = () => {
           <div className="flex flex-wrap items-center gap-2 rounded-lg border border-[#634FE5]/30 bg-[#634FE5]/5 py-1 pl-3 pr-1">
             <span className="text-sm font-medium text-gray-700">{selectedRows.length} {("selected")}</span>
             <button type="button" className="!h-8 rounded-md !border-0 !bg-transparent px-2 text-sm !text-gray-500 !shadow-none hover:!bg-white hover:!text-gray-800" onClick={() => setselectedRows([])}>{("Clear")}</button>
-            <button type="button" className={DANGER_BUTTON} disabled={loading} onClick={() => {
+            <button type="button" className={DANGER_BUTTON} disabled={loading} {...permit.hide("delete")} onClick={() => {
               if (confirm(`Delete ${selectedRows.length} ${selectedRows.length === 1 ? "click" : "clicks"}? This cannot be undone.`)) delete_clicks();
             }}>
               <IconTrash size={15} /> {("Delete")}

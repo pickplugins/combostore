@@ -29,11 +29,13 @@ import Spinner from "../../components/Spinner";
 import HtmlEditor from "../../components/HtmlEditor";
 
 import { IconLockOpen, IconLock, IconCheckbox, IconSquare, IconFidgetSpinner, IconTrash, IconStarFilled, IconStar, IconX, IconExternalLink, IconPlus } from "@tabler/icons-react";
+import { useCan } from '../../lib/useCan';
 
 
 
 const ProductEdit = ({ id }) => {
   const { token, settings, appData, notifications, addNotification, userDataX, setUserDataX } = useCounterStore()
+  const permit = useCan("products"); /* Roles & Permissions */
 
 
   const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
@@ -166,6 +168,7 @@ const ProductEdit = ({ id }) => {
 
 
   function update_product() {
+if (!permit.allowed("edit")) return permit.denied();
 
 
     //var postData = currentObject;
@@ -2435,7 +2438,7 @@ const ProductEdit = ({ id }) => {
                 <button
                   type="button"
                   className="inline-flex flex-1 items-center justify-center gap-2 !rounded-lg !border-0 !bg-[#634FE5] !px-4 !py-2 !text-sm !font-semibold !text-white !shadow-sm transition-colors hover:!bg-[#5540d4]"
-                  onClick={ev => {
+                  {...permit.hide("edit")} onClick={ev => {
                     update_product()
                   }}
                 >{loading && (<span className="animate-spin"><IconFidgetSpinner size={16} /></span>)}Update</button>

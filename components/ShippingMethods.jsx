@@ -15,6 +15,7 @@ import { useCounterStore } from '../store/useCounterStore'
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
 import { useUtilsStore } from '../store/useUtilsStore';
+import { useCan } from '../lib/useCan';
 
 
 /* Status pills, in place of solid `bg-green-400` blocks with white text. */
@@ -51,6 +52,7 @@ const ShippingMethods = (props) => {
   const { wrapCurrency, formatDate } = useUtilsStore()
 
   const { token, appData, notifications, addNotification, userDataX, setUserDataX, paymentGateways, privacyMode } = useCounterStore()
+  const permit = useCan("shipping_zones"); /* Roles & Permissions */
 
 
   var [countriesList, setcountriesList] = useState({});
@@ -109,6 +111,7 @@ const ShippingMethods = (props) => {
 
 
   function delete_shipping_zones(ids) {
+if (!permit.allowed("delete")) return permit.denied();
 
 
     if (!token) {
@@ -167,6 +170,7 @@ const ShippingMethods = (props) => {
       });
   }
   function duplicate_shipping_zone(id) {
+if (!permit.allowed("create")) return permit.denied();
 
 
     if (!token) {
@@ -226,6 +230,7 @@ const ShippingMethods = (props) => {
   }
 
   function create_shipping_method(args) {
+if (!permit.allowed("create")) return permit.denied();
 
     var redirect = args?.redirect;
 
@@ -522,7 +527,7 @@ const ShippingMethods = (props) => {
 
           <PopoverButton buttonLabel={""} buttonClass={ICON_BUTTON} buttonIcon={<IconEdit size={16} />} title={"Edit Shipping Method"} position={""} popoverClass={PANEL}>
 
-            <div className="bg-gray-50 p-5">
+            <div className="bg-gray-50 ">
               <ShippingMethodEdit id={entry.id} zoneId={zoneId} zoneCountries={zoneCountries} onOrderCreated={onOrderCreated} />
             </div>
 
@@ -621,7 +626,7 @@ const ShippingMethods = (props) => {
 
                 <div
                   className={DANGER_BUTTON}
-                  onClick={() => {
+                  {...permit.hide("delete")} onClick={() => {
                     if (confirm("Please confirm?")) {
                       delete_shipping_zones()
                     }

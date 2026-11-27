@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import EntriesTable from "../../components/EntriesTable";
 
 import { useCounterStore } from '../../store/useCounterStore'
+import { useRoleOptions } from '../../lib/useRoleOptions'
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
 import PopoverButton from '../../components/PopoverButton';
@@ -29,13 +30,7 @@ const FORM_INPUT =
 
 const FORM_LABEL = "mb-1 block text-xs font-medium text-gray-600";
 
-const ROLE_OPTIONS = [
-	{ value: "customer", label: "Customer" },
-	{ value: "rider", label: "Rider" },
-	{ value: "seller", label: "Seller" },
-	{ value: "supplier", label: "Supplier" },
-	{ value: "administrator", label: "Administrator" },
-];
+/* Role choices come from useRoleOptions (built-in + Roles & Permissions custom roles). */
 
 /* One colour per role so a mixed page can be scanned by role at a glance. */
 const ROLE_BADGE = {
@@ -50,6 +45,7 @@ const ROLE_BADGE = {
 const Users = () => {
 
 	const { token, addNotification } = useCounterStore()
+	const ROLE_OPTIONS = useRoleOptions({ withAdministrator: true });
 
 	var [productsData, setproductsData] = useState({ posts: [], total: 0, maxPages: 1 });
 	var [queryPrams, setqueryPrams] = useState({ role: "", keyword: "", paged: 1, order: "DESC", number: 10, });

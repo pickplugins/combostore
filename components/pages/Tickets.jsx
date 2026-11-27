@@ -12,6 +12,7 @@ import Image from "next/image";
 
 import { IconDotsVertical, IconEyeShare, IconPlus, IconTrash, IconStarFilled, IconStar } from "@tabler/icons-react";
 import PopoverButton from "../../components/PopoverButton";
+import { useCan } from '../../lib/useCan';
 
 
 const ICON_BUTTON =
@@ -61,6 +62,7 @@ const Tickets = () => {
 
 
 	const { token, appData, notifications, addNotification, userDataX, setUserDataX } = useCounterStore()
+	const permit = useCan("tickets"); /* Roles & Permissions */
 
 
 
@@ -110,6 +112,7 @@ const Tickets = () => {
 	};
 
 	function delete_tickets(ids) {
+if (!permit.allowed("delete")) return permit.denied();
 
 
 		if (!token) {
@@ -164,6 +167,7 @@ const Tickets = () => {
 	}
 
 	function add_ticket() {
+if (!permit.allowed("create")) return permit.denied();
 
 
 		// if (!token) {

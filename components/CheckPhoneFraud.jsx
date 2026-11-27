@@ -113,11 +113,28 @@ const CheckPhoneFraud = ({ order_id, phone }) => {
                   <div>Total Parcels: {APIData?.total_parcels}</div>
                 </div> */}
 
+                {APIData?.message && !APIData?.data && (
+                  <div className="text-sm text-gray-600">{APIData.message}</div>
+                )}
+                {APIData?.fraudchecker_check && !APIData.fraudchecker_check.success && APIData.fraudchecker_check.message && (
+                  <div className="text-sm text-gray-600">{APIData.fraudchecker_check.message}</div>
+                )}
+                {/* The store's own courier lookups (Steadfast, Pathao, RedX) that failed. */}
+                {Object.entries(APIData?.courier_checks ?? {}).filter(([, check]) => !check?.success && check?.message).map(([id, check]) => (
+                  <div key={id} className="text-sm text-gray-600">{check.message}</div>
+                ))}
+
                 {APIData?.data && (
                   <div className="flex flex-col gap-5">
                     {Object.entries(APIData?.data)?.map((item, index) => (
                       <div key={index}>
-                        <div>{item[1].name}: {item[1].success_parcel}/{item[1].total_parcel}</div>
+                        {/* Pathao can answer with a rating tier and no counts. */}
+                        <div>
+                          {item[1].name}: {item[1].total_parcel == null && item[1].rating
+                            ? String(item[1].rating).replace(/_/g, ' ')
+                            : `${item[1].success_parcel}/${item[1].total_parcel}`}
+                          {item[1].total_parcel != null && item[1].rating ? ` (${String(item[1].rating).replace(/_/g, ' ')})` : ''}
+                        </div>
                       </div>
                     ))}
                   </div>

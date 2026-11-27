@@ -14,6 +14,7 @@ import AffiliateSaleEdit from "./AffiliateSaleEdit";
 
 import { useCounterStore } from "../../store/useCounterStore";
 import { useUtilsStore } from "../../store/useUtilsStore";
+import { useCan } from '../../lib/useCan';
 import {
   SALE_STATUS_BADGES, StatusBadge, toOptions, AffiliateCell, AffiliateSelect, useAffiliateAccounts, accountLabel,
   ICON_BUTTON, FILTER_SELECT, FILTER_CHIP, FILTER_CHIP_X, MENU_ITEM, TOOLBAR_BUTTON, PRIMARY_BUTTON, DANGER_BUTTON, DATE_INPUT, FIELD, LABEL,
@@ -27,10 +28,12 @@ const STATUS_OPTIONS = toOptions(SALE_STATUS_BADGES);
    affiliate's own rate, and the order total to the order's. */
 const AddSaleForm = ({ accounts, onCreated }) => {
   const { token, addNotification } = useCounterStore();
+  const permit = useCan("affiliate_sales"); /* Roles & Permissions */
   var [form, setform] = useState({ affiliate_id: "", order_id: "", order_total: "", commission_rate: "", commission_amount: "", status: "pending" });
   var [saving, setsaving] = useState(false);
 
   function save() {
+    if (!permit.allowed("save")) return permit.denied();
     setsaving(true);
     postApi("create_affiliate_sale", token, form)
       .then((res) => {
@@ -84,7 +87,7 @@ const AddSaleForm = ({ accounts, onCreated }) => {
         </div>
       </div>
       <div className="flex justify-end">
-        <button type="button" className={PRIMARY_BUTTON} disabled={saving || !form.affiliate_id || !form.order_id} onClick={save}>
+        <button type="button" className={PRIMARY_BUTTON} disabled={saving || !form.affiliate_id || !form.order_id} {...permit.hide("save")} onClick={save}>
           <IconPlus size={16} /> {saving ? ("Adding...") : ("Add sale")}
         </button>
       </div>
@@ -97,6 +100,7 @@ const AffiliateSales = () => {
 
   const { wrapCurrency, formatDate } = useUtilsStore();
   const { token, addNotification, userDataX } = useCounterStore();
+  const permit = useCan("affiliate_sales"); /* Roles & Permissions */
   const router = useRouter();
 
   const manager = isManager(userDataX);
@@ -152,6 +156,7 @@ const AffiliateSales = () => {
 
 
   function delete_sales(ids) {
+    if (!permit.allowed("delete")) return permit.denied();
     ids = ids ?? selectedRows;
     if (!ids?.length) return;
 
@@ -288,7 +293,7 @@ const AffiliateSales = () => {
                   <div className={MENU_ITEM} onClick={() => set_status([entry.id], "rejected")}><IconBan size={16} /> Reject</div>
                 )}
                 {manager && (
-                  <div className={`${MENU_ITEM} !text-red-600 hover:!bg-red-50 hover:!text-red-700`} onClick={() => {
+                  <div className={`${MENU_ITEM} !text-red-600 hover:!bg-red-50 hover:!text-red-700`} {...permit.hide("delete")} onClick={() => {
                     if (confirm(`Permanently delete affiliate sale #${entry.id}? This cannot be undone.`)) {
                       delete_sales([entry.id]);
                     }
@@ -380,8 +385,8 @@ const AffiliateSales = () => {
             <span className="text-sm font-medium text-gray-700">{selectedRows.length} {("selected")}</span>
             <button type="button" className="!h-8 rounded-md !border-0 !bg-transparent px-2 text-sm !text-gray-500 !shadow-none hover:!bg-white hover:!text-gray-800" onClick={() => setselectedRows([])}>{("Clear")}</button>
             <button type="button" className={TOOLBAR_BUTTON.replace("!h-9", "!h-8")} disabled={loading} onClick={() => set_status(null, "approved")}><IconCheck size={15} /> {("Approve")}</button>
-            <button type="button" className={TOOLBAR_BUTTON.replace("!h-9", "!h-8")} disabled={loading} onClick={() => set_status(null, "paid")}><IconCash size={15} /> {("Mark paid")}</button>
-            <button type="button" className={DANGER_BUTTON} disabled={loading} onClick={() => {
+            <button type="button" className={TOOLBAR_BUTTON.replace("!h-9", "!h-8")} disabled={loading} {...permit.hide("edit")} onClick={() => set_status(null, "paid")}><IconCash size={15} /> {("Mark paid")}</button>
+            <button type="button" className={DANGER_BUTTON} disabled={loading} {...permit.hide("delete")} onClick={() => {
               if (confirm(`Permanently delete ${selectedRows.length} ${selectedRows.length === 1 ? "sale" : "sales"}? This cannot be undone.`)) {
                 delete_sales();
               }

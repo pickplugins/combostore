@@ -5,6 +5,8 @@ import React from "react";
 import BlockRender from '../BlockRender';
 import { useSavedToken } from './useSavedToken';
 import { elementCssClasses } from "../ElementsDefinition";
+import AffiliateApplicationStatus from "../../AffiliateApplicationStatus";
+import RiderApplicationStatus from "../../RiderApplicationStatus";
 
 /*
 	The signed-in half of the account area: its child blocks (usually the
@@ -30,6 +32,9 @@ const CustomerAccountLoggedView = (props) => {
 
 	return (
 		<div id={id} type={type} className={cls('*')}>
+			{/* A pending (or just rejected) rider or affiliate application, above every account tab. */}
+			<RiderApplicationStatus className="mb-4" />
+			<AffiliateApplicationStatus className="mb-4" />
 			{
 				children.map((child, idx) => (
 					<BlockRender

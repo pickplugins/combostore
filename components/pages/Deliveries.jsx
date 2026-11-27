@@ -7,9 +7,11 @@ import EntriesTable from "../../components/EntriesTable";
 import PopoverButton from '../../components/PopoverButton';
 import DeliveryEdit from '../../components/pages/DeliveryEdit';
 import { useCounterStore } from '../../store/useCounterStore'
+import { hasOnlyGrantedAccess } from '../../lib/rolePermissions';
 import { IconTrash, IconRefresh, IconTruckDelivery, IconExternalLink, IconPencil, IconMotorbike, IconUser, IconReceipt, IconCalendar } from "@tabler/icons-react";
 import DateRangeFilter, { dateRangeLabel, matchDateRange } from "../DateRangeFilter";
 import { StatusBadge, CopyValue, courierName, trackingLink, parseDate, timeAgo, hasId, statusBadge, STATUS_GROUPS, DELIVERY_STATUSES, groupCounts } from "./deliveryUi";
+import { useCan } from '../../lib/useCan';
 
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
@@ -24,7 +26,16 @@ const LINK = "font-medium text-gray-800 hover:text-[#634FE5] hover:underline";
 
 const Deliveries = () => {
 
-	const { token, addNotification } = useCounterStore()
+	const { token, addNotification, userDataX, settings } = useCounterStore()
+	const permit = useCan("deliveries"); /* Roles & Permissions */
+
+	/*
+		A rider granted Deliveries (Settings → Roles & Permissions) sees the
+		deliveries assigned to them, read-only: no edit drawer, no delete, no
+		rider filter (the server lists only theirs), and the order and customer
+		as plain text, since those pages hold editors.
+	*/
+	const riderView = hasOnlyGrantedAccess(userDataX, "delivery");
 
 	var [productsData, setproductsData] = useState({ posts: [], total: 0, maxPages: 1 });
 	/* rider_id: "" all, "none" unassigned, or a rider's user id (get_deliveries reads it for staff). */
@@ -41,7 +52,7 @@ const Deliveries = () => {
 	const riderName = (id) => riders.find((r) => String(r.id) === String(id))?.name;
 
 	useEffect(() => {
-		if (!token) return;
+		if (!token || riderView) return;
 		fetch(serverUrl + "wp-json/combo-store/v2/get_users", {
 			method: "POST",
 			headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
@@ -53,7 +64,7 @@ const Deliveries = () => {
 				setriders(list.sort((a, b) => String(a.name).localeCompare(String(b.name))));
 			})
 			.catch(() => { });
-	}, [token]);
+	}, [token, riderView]);
 
 	/* ?rider_id= from the rider page. Read after mount, so the server render matches. */
 	useEffect(() => {
@@ -80,16 +91,18 @@ const Deliveries = () => {
 
 	/* Columns: Notes is gone - deliveries have no notes field, so it was always empty. */
 	var columns = {
-		check: { label: ("Check"), },
+		...(riderView ? {} : { check: { label: ("Check"), } }),
 		delivery_id: { label: ("Delivery"), callback: callbackDelivery, classes: "text-left" },
 		order_id: { label: ("Order"), callback: callbackOrder, classes: "text-left" },
 		courier: { label: ("Courier & tracking"), callback: callbackCourier, classes: "text-left" },
-		rider_id: { label: ("Rider"), callback: callbackRider, classes: "text-left" },
+		/* A rider's list is only their own deliveries. */
+		...(riderView ? {} : { rider_id: { label: ("Rider"), callback: callbackRider, classes: "text-left" } }),
 		status: { label: ("Status"), callback: callbackStatus, classes: "text-left" },
 		datetime: { label: ("Created"), callback: callbackDatetime, classes: "text-left" },
 	};
 
 	function delete_deliveries(ids) {
+if (!permit.allowed("delete")) return permit.denied();
 
 		ids = ids != undefined ? ids : selectedRows;
 		if (!ids?.length) return;
@@ -188,16 +201,16 @@ const Deliveries = () => {
 						<Link className={`${LINK} text-sm`} href={`/dashboard/deliveries/${entry?.id}`}>
 							Delivery #{entry?.id}
 						</Link>
-						<div className="flex items-center gap-3 text-xs">
-							<PopoverButton buttonLabel={"Edit"} buttonIcon={<IconPencil size={13} />} title={`Edit delivery #${entry?.id}`} drawer={"right"} buttonClass={`inline-flex items-center gap-1 text-gray-500 transition-colors hover:text-gray-900 cursor-pointer`}>
+						{!riderView && <div className="flex items-center gap-3 text-xs">
+								<PopoverButton buttonLabel={"Edit"} buttonIcon={<IconPencil size={13} />} title={`Edit delivery #${entry?.id}`} drawer={"right"} buttonClass={`inline-flex items-center gap-1 text-gray-500 transition-colors hover:text-gray-900 cursor-pointer`}>
 								<div className="p-5 bg-gray-50 text-left">
 									<DeliveryEdit id={entry?.id} variant="drawer" />
 								</div>
 							</PopoverButton>
-							<button type="button" className="inline-flex items-center gap-1 text-red-500 transition-colors hover:text-red-700" onClick={() => delete_deliveries([entry?.id])}>
+							<button type="button" className="inline-flex items-center gap-1 text-red-500 transition-colors hover:text-red-700" {...permit.hide("delete")} onClick={() => delete_deliveries([entry?.id])}>
 								<IconTrash size={13} /> Delete
-							</button>
-						</div>
+								</button>
+							</div>}
 					</div>
 				</div>
 			</td>
@@ -210,14 +223,24 @@ const Deliveries = () => {
 			<td data-label="Order" className="!px-5 py-3 text-left text-sm" key={columnIndex}>
 				{hasId(entry?.order_id) ? (
 					<div className="flex flex-col gap-1">
-						<Link className={`${LINK} inline-flex items-center gap-1.5`} href={`/dashboard/orders/${entry.order_id}`}>
-							<IconReceipt size={14} className="text-gray-400" /> Order #{entry.order_id}
-						</Link>
-						{hasId(entry?.customer_id) && (
+						{riderView ? (
+							<span className="inline-flex items-center gap-1.5 font-medium text-gray-800">
+								<IconReceipt size={14} className="text-gray-400" /> Order #{entry.order_id}
+							</span>
+						) : (
+							<Link className={`${LINK} inline-flex items-center gap-1.5`} href={`/dashboard/orders/${entry.order_id}`}>
+								<IconReceipt size={14} className="text-gray-400" /> Order #{entry.order_id}
+							</Link>
+						)}
+						{hasId(entry?.customer_id) && (riderView ? (
+							<span className="inline-flex items-center gap-1.5 text-xs text-gray-500">
+								<IconUser size={13} className="text-gray-400" /> Customer #{entry.customer_id}
+							</span>
+						) : (
 							<Link className="inline-flex items-center gap-1.5 text-xs text-gray-500 hover:text-[#634FE5] hover:underline" href={`/dashboard/customers/${entry.customer_id}`}>
 								<IconUser size={13} className="text-gray-400" /> Customer #{entry.customer_id}
 							</Link>
-						)}
+						))}
 					</div>
 				) : <span className="text-gray-300">—</span>}
 			</td>
@@ -353,7 +376,7 @@ const Deliveries = () => {
 			<div className="flex flex-wrap items-center justify-between gap-3">
 				{/* Rider, status, dates, sorting and page size are what get_deliveries supports; it has no search. */}
 				<div className="flex flex-wrap items-center gap-2">
-					<select aria-label="Rider" className={FILTER_SELECT} value={queryPrams?.rider_id ?? ""} onChange={ev => setqueryPrams({ ...queryPrams, rider_id: ev.target.value, paged: 1 })}>
+					{!riderView && <select aria-label="Rider" className={FILTER_SELECT} value={queryPrams?.rider_id ?? ""} onChange={ev => setqueryPrams({ ...queryPrams, rider_id: ev.target.value, paged: 1 })}>
 						<option value="">{("All riders")}</option>
 						<option value="none">{("Unassigned")}</option>
 						{riders.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
@@ -361,7 +384,7 @@ const Deliveries = () => {
 						{/^\d+$/.test(String(queryPrams?.rider_id)) && !riders.some(r => String(r.id) === String(queryPrams.rider_id)) && (
 							<option value={queryPrams.rider_id}>{`Rider #${queryPrams.rider_id}`}</option>
 						)}
-					</select>
+					</select>}
 					<select aria-label="Status" className={FILTER_SELECT} value={queryPrams?.status ?? ""} onChange={ev => setqueryPrams({ ...queryPrams, status: ev.target.value, paged: 1 })}>
 						<option value="">{("All statuses")}{statusTotal ? ` (${statusTotal})` : ""}</option>
 						<optgroup label={("Groups")}>
@@ -395,7 +418,7 @@ const Deliveries = () => {
 								onClick={() => setqueryPrams({ ...queryPrams, status: "", paged: 1 })}>×</button>
 						</span>
 					)}
-					{queryPrams?.rider_id && (
+					{!riderView && queryPrams?.rider_id && (
 						<span className="flex items-center gap-1 rounded-full border border-indigo-200 bg-indigo-50 py-0.5 pl-2.5 pr-1 text-xs text-indigo-700">
 							<IconMotorbike size={13} />
 							{queryPrams.rider_id === "none" ? ("Unassigned") : (riderName(queryPrams.rider_id) ?? `Rider #${queryPrams.rider_id}`)}
@@ -412,12 +435,12 @@ const Deliveries = () => {
 					</select>
 				</div>
 
-				{selectedRows.length > 0 && (
+				{!riderView && selectedRows.length > 0 && (
 					<div className="flex items-center gap-2 rounded-lg border border-[#634FE5]/30 bg-[#634FE5]/5 py-1 pl-3 pr-1">
 						<span className="text-sm font-medium text-gray-700">{selectedRows.length} {("selected")}</span>
 						<button type="button" className="!h-8 rounded-md px-2 text-sm text-gray-500 hover:bg-white hover:text-gray-800" onClick={() => setselectedRows([])}>{("Clear")}</button>
 						{/* Labelled "Delete Products" before. */}
-						<button type="button" className={`${DANGER_BUTTON} !h-8`} disabled={loading} onClick={() => delete_deliveries()}>
+						<button type="button" className={`${DANGER_BUTTON} !h-8`} disabled={loading} {...permit.hide("delete")} onClick={() => delete_deliveries()}>
 							<IconTrash size={15} /> {("Delete")}
 						</button>
 					</div>
@@ -436,8 +459,10 @@ const Deliveries = () => {
 				<div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-gray-200 bg-white px-6 py-14 text-center">
 					<div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 text-gray-400"><IconTruckDelivery size={24} /></div>
 					<div className="text-sm font-semibold text-gray-800">{("No deliveries yet")}</div>
-					<p className="max-w-sm text-xs text-gray-500">{("A delivery is created when an order is sent to a courier or assigned to a rider, from the order's page.")}</p>
-					<Link href="/dashboard/orders" className={`${TOOLBAR_BUTTON} mt-2`}>{("Go to orders")}</Link>
+					<p className="max-w-sm text-xs text-gray-500">{riderView
+						? ("Deliveries assigned to you will show up here.")
+						: ("A delivery is created when an order is sent to a courier or assigned to a rider, from the order's page.")}</p>
+					{!riderView && <Link href="/dashboard/orders" className={`${TOOLBAR_BUTTON} mt-2`}>{("Go to orders")}</Link>}
 				</div>
 			) : (
 				<EntriesTable

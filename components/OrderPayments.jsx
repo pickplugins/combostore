@@ -13,6 +13,7 @@ import LocationPicker from '../components/LocationPicker';
 import GoogleMapDirections from '../components/GoogleMapDirections';
 import PopoverButton from '../components/PopoverButton';
 import Spinner from '../components/Spinner';
+import { useCan } from '../lib/useCan';
 
 
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
@@ -25,6 +26,7 @@ const OrderPayments = (props) => {
   var order_id = props.order_id
 
   const { token, cartToggle, setcartToggle, notifications, addNotification, cartItems, addCartItems, removeCartItems, resetCartItems, updateCartItems, userDataX, setUserDataX, navToggle, setnavToggle, lang, setlang } = useCounterStore()
+  const permit = useCan(["orders", "incomplete", "refunds"]); /* Roles & Permissions */
 
   var [loading, setloading] = useState(false);
   var [orderData, setorderData] = useState(props?.orderData);
@@ -96,6 +98,7 @@ const OrderPayments = (props) => {
   }
 
   function update_order() {
+if (!permit.allowed("edit")) return permit.denied();
 
     setloading(true)
 
@@ -174,7 +177,7 @@ const OrderPayments = (props) => {
           {hasAccess && (
             <div className='p-2  rounded-sm cursor-pointer px-4 bg-[#1b0e9f] text-white'
 
-              onClick={ev => {
+              {...permit.hide("edit")} onClick={ev => {
                 update_order()
               }}
             >Update</div>

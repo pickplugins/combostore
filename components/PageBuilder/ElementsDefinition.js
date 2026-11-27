@@ -6526,6 +6526,7 @@ const elements = [
 				"Place on registration or account creation pages.",
 				"The form collects full name, email and password; its fields, labels and button text are fixed, so restyle them through the cssSelectors keys.",
 				"Set hideTitle when the page already shows its own heading.",
+				"options.role is who the form signs people up as: 'customer' (default) or 'affiliate'. Visitors are not offered a choice, so use one block per page and role (e.g. a separate affiliate sign-up page with role 'affiliate'). Affiliate sign-ups only succeed while Settings > Affiliates > Affiliate sign-up is on.",
 				"Keep 'relative' on field-control and the absolute positioning on field-icon and password-toggle, or the icons fall out of the fields.",
 				"To lay the fields out in columns, put a grid on 'fields' and span 'password-field' across it.",
 				"Do not use as the primary form for existing-user authentication."
@@ -6533,6 +6534,11 @@ const elements = [
 		},
 		options: {
 			hideTitle: false,
+			/* Who this form signs people up as (see elements/registerRoles.js); the server still decides. */
+			role: 'customer',
+			/* Phone field: showPhone adds it, phoneRequired makes it compulsory (RegisterView). */
+			showPhone: false,
+			phoneRequired: false,
 		},
 		/*
 			The single source of the form's default classes: RegisterView, Register
@@ -6560,6 +6566,11 @@ const elements = [
 			'field-input': { classes: 'w-full rounded-lg border border-gray-300 bg-white py-2.5 pl-10 pr-3 text-sm text-gray-900 placeholder:text-gray-400 shadow-xs transition-colors hover:border-gray-400 focus:border-[#1b0e9f] focus:outline-none focus:ring-2 focus:ring-[#1b0e9f]/15' },
 			'name-input': { classes: '' },
 			'email-input': { classes: '' },
+			'phone-field': { classes: '' },
+			'phone-input': { classes: '' },
+			'field-optional': { classes: 'font-normal text-gray-400' },
+			'field-error': { classes: 'mt-1 text-xs text-red-600' },
+			'field-input-invalid': { classes: '!border-red-400 focus:!border-red-500 focus:!ring-red-500/15' },
 			'password-input': { classes: '!pr-11' },
 			'password-toggle': { classes: 'absolute right-1 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-gray-400 transition-colors hover:text-gray-700' },
 			'field-hint': { classes: 'mt-1 text-xs text-gray-500' },
@@ -6570,7 +6581,7 @@ const elements = [
 			carry them with classes for that markup, which is why the keys above
 			have new names. withElementCssDefaults drops these from the builder's editor.
 		*/
-		deprecatedCssSelectors: ['input-fields-wrap', 'input-wrap', 'input', 'input-username', 'input-email', 'input-phone', 'input-password', 'label', 'label-username', 'label-email', 'label-phone', 'label-password', 'submit', 'have-account'],
+		deprecatedCssSelectors: ['input-fields-wrap', 'input-wrap', 'input', 'input-username', 'input-email', 'input-phone', 'input-password', 'label', 'label-username', 'label-email', 'label-phone', 'label-password', 'submit', 'have-account', 'role-field', 'role-select'],
 		parent: ['customerAccount'],
 		group: ['shop']
 	},
@@ -6669,6 +6680,8 @@ const elements = [
 			'field-label': { classes: 'text-sm font-medium text-gray-700' },
 			'field-input': { classes: 'w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 placeholder:text-gray-400 shadow-xs transition-colors hover:border-gray-400 focus:border-[#1b0e9f] focus:outline-none focus:ring-2 focus:ring-[#1b0e9f]/15 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500' },
 			'field-hint': { classes: 'text-xs text-gray-500' },
+			'field-error': { classes: 'text-xs text-red-600' },
+			'field-input-invalid': { classes: '!border-red-400 focus:!border-red-500 focus:!ring-red-500/15' },
 			'save-button': { classes: 'inline-flex items-center justify-center gap-2 rounded-lg bg-[#1b0e9f] px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#150b7d] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1b0e9f]/40 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60' },
 			'secondary-button': { classes: 'inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-xs transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1b0e9f]/30 disabled:cursor-not-allowed disabled:opacity-50' },
 			'location-body': { classes: 'flex flex-col gap-3' },

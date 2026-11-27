@@ -6,6 +6,7 @@ import { IconArrowLeft, IconArrowUpRight, IconRefresh, IconDeviceFloppy, IconCre
 import Spinner from "../../components/Spinner";
 import { useCounterStore } from "../../store/useCounterStore";
 import { useUtilsStore } from "../../store/useUtilsStore";
+import { useCan } from '../../lib/useCan';
 import {
   PAYOUT_STATUS_BADGES, StatusBadge, RequestedTag, toOptions, AffiliateCell, accountLabel,
   TOOLBAR_BUTTON, PRIMARY_BUTTON, FIELD, LABEL, CARD, postApi, useAffiliateAccountsInfo,
@@ -27,6 +28,7 @@ const Figure = ({ label, value, strong }) => (
 */
 export const PayoutForm = ({ id, initial, accounts = [], minPayout = 0, onSaved }) => {
   const { token, addNotification, paymentGateways } = useCounterStore();
+  const permit = useCan("affiliate_payouts"); /* Roles & Permissions */
   const { wrapCurrency } = useUtilsStore();
   var creating = !id;
 
@@ -48,6 +50,7 @@ export const PayoutForm = ({ id, initial, accounts = [], minPayout = 0, onSaved 
   var set = (key) => (ev) => setform({ ...form, [key]: ev.target.value });
 
   function save() {
+    if (!permit.allowed("edit")) return permit.denied();
     setsaving(true);
     postApi(creating ? "create_affiliate_payout" : "update_affiliate_payout", token, creating ? form : { id, ...form, ...(cancellingRequest ? { cancel_message: cancelMessage } : {}) })
       .then((res) => {
@@ -138,7 +141,7 @@ export const PayoutForm = ({ id, initial, accounts = [], minPayout = 0, onSaved 
         )}
       </div>
       <div className="flex justify-end">
-        <button type="button" className={PRIMARY_BUTTON} disabled={saving || (creating && !form.affiliate_id) || overBalance} onClick={save}>
+        <button type="button" className={PRIMARY_BUTTON} disabled={saving || (creating && !form.affiliate_id) || overBalance} {...permit.hide("edit")} onClick={save}>
           {creating ? <IconPlus size={16} /> : <IconDeviceFloppy size={16} />}
           {saving ? ("Saving...") : creating ? ("Add payout") : ("Save")}
         </button>
@@ -153,6 +156,7 @@ const AffiliatePayoutEdit = ({ id, variant = "page", onSaved }) => {
 
   const { wrapCurrency, formatDate } = useUtilsStore();
   const { token, paymentGateways } = useCounterStore();
+  const permit = useCan("affiliate_payouts"); /* Roles & Permissions */
 
   var [loading, setloading] = useState(false);
   var [payout, setpayout] = useState(null);

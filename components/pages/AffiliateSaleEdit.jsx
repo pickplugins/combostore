@@ -7,6 +7,7 @@ import Spinner from "../../components/Spinner";
 import { useCounterStore } from "../../store/useCounterStore";
 import { useUtilsStore } from "../../store/useUtilsStore";
 import { SALE_STATUS_BADGES, StatusBadge, toOptions, AffiliateCell, TOOLBAR_BUTTON, PRIMARY_BUTTON, FIELD, LABEL, CARD, postApi } from "./affiliateUi";
+import { useCan } from '../../lib/useCan';
 
 const STATUS_OPTIONS = toOptions(SALE_STATUS_BADGES);
 
@@ -25,6 +26,7 @@ const AffiliateSaleEdit = ({ id, variant = "page", onSaved }) => {
 
   const { wrapCurrency, formatDate } = useUtilsStore();
   const { token, addNotification } = useCounterStore();
+  const permit = useCan("affiliate_sales"); /* Roles & Permissions */
 
   var [loading, setloading] = useState(false);
   var [saving, setsaving] = useState(false);
@@ -49,6 +51,7 @@ const AffiliateSaleEdit = ({ id, variant = "page", onSaved }) => {
   useEffect(load, [id, token]);
 
   function save() {
+    if (!permit.allowed("edit")) return permit.denied();
     setsaving(true);
     postApi("update_affiliate_sale", token, { id, ...form })
       .then((res) => {
@@ -163,7 +166,7 @@ const AffiliateSaleEdit = ({ id, variant = "page", onSaved }) => {
             </div>
           </div>
           <div className="mt-5 flex justify-end">
-            <button type="button" className={PRIMARY_BUTTON} disabled={saving} onClick={save}>
+            <button type="button" className={PRIMARY_BUTTON} disabled={saving} {...permit.hide("edit")} onClick={save}>
               <IconDeviceFloppy size={16} /> {saving ? ("Saving...") : ("Save")}
             </button>
           </div>

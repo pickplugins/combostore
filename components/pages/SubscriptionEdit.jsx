@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { IconExternalLink, IconFidgetSpinner, IconRotateRectangle } from "@tabler/icons-react";
 import { useCounterStore } from '../../store/useCounterStore'
 import { useUtilsStore } from '../../store/useUtilsStore';
+import { useCan } from '../../lib/useCan';
 
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
@@ -77,6 +78,7 @@ function toForm(subscription) {
 const SubscriptionEdit = ({ id, onSaved }) => {
 
 	const { token, addNotification, paymentGateways } = useCounterStore()
+	const permit = useCan("subscriptions"); /* Roles & Permissions */
 	const { wrapCurrency } = useUtilsStore()
 
 	var [subscription, setsubscription] = useState(null);
@@ -129,6 +131,7 @@ const SubscriptionEdit = ({ id, onSaved }) => {
 	const changed = EDITABLE.filter((key) => form[key] !== original[key]);
 
 	function save() {
+		if (!permit.allowed("edit")) return permit.denied();
 		if (!changed.length) return;
 
 		/* Only what changed, so nothing else on the row is touched. */
@@ -291,7 +294,7 @@ const SubscriptionEdit = ({ id, onSaved }) => {
 						</label>
 
 						<div className="flex items-center gap-3">
-							<button type="button" className={PRIMARY_BUTTON} disabled={!changed.length || saving} onClick={save}>
+							<button type="button" className={PRIMARY_BUTTON} disabled={!changed.length || saving} {...permit.hide("edit")} onClick={save}>
 								{saving ? "Saving…" : "Save changes"}
 							</button>
 							{changed.length > 0 && !saving && (

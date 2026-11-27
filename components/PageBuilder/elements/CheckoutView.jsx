@@ -92,7 +92,7 @@ function CheckoutSection({ step, title, aside, children }) {
 	);
 }
 
-function Field({ label, htmlFor, required, hint, children }) {
+function Field({ label, htmlFor, required, hint, error, children }) {
 	return (
 		<div className="flex flex-col gap-1.5">
 			{label && (
@@ -102,9 +102,55 @@ function Field({ label, htmlFor, required, hint, children }) {
 				</label>
 			)}
 			{children}
-			{hint && <p className="text-xs text-gray-500">{hint}</p>}
+			{error ? (
+				<p id={htmlFor ? `${htmlFor}-error` : undefined} className="text-xs text-red-600" role="alert">{error}</p>
+			) : (
+				hint && <p className="text-xs text-gray-500">{hint}</p>
+			)}
 		</div>
 	);
+}
+
+/*
+	Phone and email checks for the checkout. Only emptiness used to be
+	checked, so an email address (or any text) went through as the phone
+	number. create_order repeats the phone rule on the server
+	(ComboStoreRest::checkout_phone_error), since a browser check alone is
+	skipped by posting to the API.
+
+	A phone is 7-15 digits with an optional leading +, and only spaces,
+	dashes, dots and brackets between them. A number written the
+	Bangladeshi way (01..., 880..., +880...) must also be a real BD mobile:
+	01, then 3-9, then 8 more digits.
+*/
+export function checkoutPhoneError(value) {
+	var raw = String(value ?? '').trim();
+	if (!raw) return 'Phone number is empty';
+
+	if (!/^\+?[\d\s\-().]+$/.test(raw)) {
+		return 'Enter a phone number using digits only (e.g. 01XXXXXXXXX).';
+	}
+
+	var digits = raw.replace(/\D/g, '');
+	if (digits.length < 7 || digits.length > 15) {
+		return 'Enter a valid phone number (e.g. 01XXXXXXXXX).';
+	}
+
+	var bdLocal = null;
+	if (digits.startsWith('880')) bdLocal = '0' + digits.slice(3);
+	else if (digits.startsWith('01')) bdLocal = digits;
+
+	if (bdLocal !== null && !/^01[3-9]\d{8}$/.test(bdLocal)) {
+		return 'Enter a valid 11-digit mobile number (01XXXXXXXXX).';
+	}
+
+	return '';
+}
+
+export function checkoutEmailError(value) {
+	var raw = String(value ?? '').trim();
+	if (!raw) return 'Email is empty';
+	return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(raw) ? '' : 'Enter a valid email address.';
 }
 
 /* A selectable card that behaves like a radio button for keyboard and
@@ -250,9 +296,10 @@ const CheckoutView = (props) => {
 	})();
 	const signInRequired = loginRequired && !customerToken;
 	const SIGN_IN_MESSAGE = 'Please sign in to place an order.';
-	/* Back to this page after signing in - a checkout page, or whatever page the cart drawer's checkout step is open on. The cart is kept. */
+	/* Back to this page after signing in - a checkout page, or whatever page the cart drawer's checkout step is open on. The cart is kept.
+	   Signs in on the storefront's /account (its LoginView honours ?redirect=), not the dashboard's /login. */
 	const pathname = usePathname();
-	const signInHref = `/login?redirect=${encodeURIComponent(pathname || '/checkout')}`;
+	const signInHref = `/account?redirect=${encodeURIComponent(pathname || '/checkout')}`;
 
 
 
@@ -303,6 +350,10 @@ const CheckoutView = (props) => {
 	const [paddleConfig, setpaddleConfig] = useState(null);
 	const [readyToSubmitOrder, setreadyToSubmitOrder] = useState({ error: null, message: "" });
 	const [contactAdded, setcontactAdded] = useState({ error: null, message: "" });
+
+	/* Field errors appear once a field has been left (or submit was tried),
+	   so a shopper is not told off while still typing. */
+	const [touchedFields, setTouchedFields] = useState({});
 	const [orderData, setorderData] = useState({ order_id: null, status: null, });
 
 	const { wrapCurrency } = useUtilsStore()
@@ -655,11 +706,16 @@ const CheckoutView = (props) => {
 		const phone = checkoutData?.billing_phone?.trim() || "";
 		const email = checkoutData?.billing_email?.trim() || "";
 		const shippingMethod = checkoutData?.shipping_method || "";
+		const phoneProblem = checkoutPhoneError(phone);
+		const emailProblem = checkoutEmailError(email);
+		const shippingPhone = checkoutData?.shipping_phone?.trim() || "";
+		const shippingPhoneProblem = shippingPhone ? checkoutPhoneError(shippingPhone) : "";
 
-		// Contact information required to create incomplete order
+		// Contact information required to create incomplete order. A phone
+		// that is not a phone number is not contact information.
 		const hasContactInfo =
 			!!name &&
-			!!phone &&
+			!phoneProblem &&
 			!!address;
 
 		setcontactAdded({
@@ -686,18 +742,26 @@ const CheckoutView = (props) => {
 			return;
 		}
 
-		if (!phone) {
+		if (phoneProblem) {
 			setreadyToSubmitOrder({
 				error: true,
-				message: "Phone number is empty"
+				message: phoneProblem
 			});
 			return;
 		}
 
-		if (!email) {
+		if (emailProblem) {
 			setreadyToSubmitOrder({
 				error: true,
-				message: "Email is empty"
+				message: emailProblem
+			});
+			return;
+		}
+
+		if (shippingPhoneProblem) {
+			setreadyToSubmitOrder({
+				error: true,
+				message: 'Shipping phone: ' + shippingPhoneProblem
 			});
 			return;
 		}
@@ -732,8 +796,15 @@ const CheckoutView = (props) => {
 		checkoutData?.billing_address,
 		checkoutData?.billing_phone,
 		checkoutData?.billing_email,
+		checkoutData?.shipping_phone,
 		checkoutData?.shipping_method
 	]);
+
+	const billingPhoneError = touchedFields.billing_phone ? checkoutPhoneError(checkoutData?.billing_phone) : '';
+	const billingEmailError = touchedFields.billing_email ? checkoutEmailError(checkoutData?.billing_email) : '';
+	const shippingPhoneError = touchedFields.shipping_phone && String(checkoutData?.shipping_phone ?? '').trim()
+		? checkoutPhoneError(checkoutData?.shipping_phone)
+		: '';
 
 
 	useEffect(() => {
@@ -1138,6 +1209,7 @@ const CheckoutView = (props) => {
 		}
 
 		if (readyToSubmitOrder?.error) {
+			setTouchedFields({ billing_phone: true, billing_email: true, shipping_phone: true });
 			throw new Error(readyToSubmitOrder?.message || 'Please complete your details first.');
 		}
 
@@ -1237,6 +1309,8 @@ const CheckoutView = (props) => {
 
 		if (readyToSubmitOrder?.error) {
 			addNotification({ type: 'error', title: readyToSubmitOrder?.message, content: "" })
+			/* Show every field's error, typed in or not. */
+			setTouchedFields({ billing_phone: true, billing_email: true, shipping_phone: true });
 
 			return;
 
@@ -1660,15 +1734,25 @@ const CheckoutView = (props) => {
 					</Field>
 
 					<div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-						<Field label="Phone" htmlFor="checkout-billing-phone" required>
-							<input id="checkout-billing-phone" type="tel" inputMode="tel" autoComplete="tel" className={inputClass} value={checkoutData?.billing_phone ?? ''} placeholder="01XXXXXXXXX" onChange={ev => {
-								setcheckoutData({ ...checkoutData, billing_phone: ev.target.value })
-							}} />
+						{/* Errors show once something is typed (and the field is left),
+						    not on an empty form. */}
+						<Field label="Phone" htmlFor="checkout-billing-phone" required error={billingPhoneError}>
+							<input id="checkout-billing-phone" type="tel" inputMode="tel" autoComplete="tel" className={inputClass} value={checkoutData?.billing_phone ?? ''} placeholder="01XXXXXXXXX"
+								aria-invalid={billingPhoneError ? true : undefined}
+								aria-describedby={billingPhoneError ? 'checkout-billing-phone-error' : undefined}
+								onBlur={() => setTouchedFields(prev => ({ ...prev, billing_phone: true }))}
+								onChange={ev => {
+									setcheckoutData({ ...checkoutData, billing_phone: ev.target.value })
+								}} />
 						</Field>
-						<Field label="Email" htmlFor="checkout-billing-email" required>
-							<input id="checkout-billing-email" type="email" inputMode="email" autoComplete="email" className={inputClass} value={checkoutData?.billing_email ?? ''} placeholder="you@example.com" onChange={ev => {
-								setcheckoutData({ ...checkoutData, billing_email: ev.target.value })
-							}} />
+						<Field label="Email" htmlFor="checkout-billing-email" required error={billingEmailError}>
+							<input id="checkout-billing-email" type="email" inputMode="email" autoComplete="email" className={inputClass} value={checkoutData?.billing_email ?? ''} placeholder="you@example.com"
+								aria-invalid={billingEmailError ? true : undefined}
+								aria-describedby={billingEmailError ? 'checkout-billing-email-error' : undefined}
+								onBlur={() => setTouchedFields(prev => ({ ...prev, billing_email: true }))}
+								onChange={ev => {
+									setcheckoutData({ ...checkoutData, billing_email: ev.target.value })
+								}} />
 						</Field>
 					</div>
 
@@ -1745,10 +1829,14 @@ const CheckoutView = (props) => {
 											}} />
 										</Field>
 
-										<Field label="Phone" htmlFor="checkout-shipping-phone">
-											<input id="checkout-shipping-phone" type="tel" inputMode="tel" autoComplete="shipping tel" className={inputClass} value={checkoutData?.shipping_phone ?? ''} onChange={ev => {
-												setcheckoutData({ ...checkoutData, shipping_phone: ev.target.value })
-											}} />
+										<Field label="Phone" htmlFor="checkout-shipping-phone" error={shippingPhoneError}>
+											<input id="checkout-shipping-phone" type="tel" inputMode="tel" autoComplete="shipping tel" className={inputClass} value={checkoutData?.shipping_phone ?? ''}
+												aria-invalid={shippingPhoneError ? true : undefined}
+												aria-describedby={shippingPhoneError ? 'checkout-shipping-phone-error' : undefined}
+												onBlur={() => setTouchedFields(prev => ({ ...prev, shipping_phone: true }))}
+												onChange={ev => {
+													setcheckoutData({ ...checkoutData, shipping_phone: ev.target.value })
+												}} />
 										</Field>
 
 										<Field label="Address" htmlFor="checkout-shipping-address">

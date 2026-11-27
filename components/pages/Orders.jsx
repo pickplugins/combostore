@@ -7,7 +7,8 @@ import EntriesTable from "../../components/EntriesTable";
 import { loadOrdersQuery, saveOrdersQuery } from "../../lib/ordersQuery";
 import { useState, useEffect, useRef } from "react";
 import Spinner from "../../components/Spinner";
-import { IconFilter, IconFileDollar, IconEyeShare, IconTrash, IconCopy, IconDotsVertical, IconPackages, IconX, IconEdit, IconPrinter, IconListNumbers, IconMapDollar, IconListDetails, IconNotes, IconPlus, IconRefresh, IconReceipt } from "@tabler/icons-react";
+import { IconFilter, IconFileDollar, IconEyeShare, IconTrash, IconCopy, IconDotsVertical, IconPackages, IconX, IconEdit, IconPrinter, IconListNumbers, IconMapDollar, IconListDetails, IconNotes, IconPlus, IconRefresh, IconReceipt, IconWorld } from "@tabler/icons-react";
+import { customerIpOf, countryName, flagOf, customerIpTitle } from "../../lib/orderCustomerIp";
 
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -34,6 +35,7 @@ import { useCounterStore } from '../../store/useCounterStore'
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
 import { useUtilsStore } from '../../store/useUtilsStore';
+import { useCan } from '../../lib/useCan';
 
 
 /* Status pills, previously 17 hand-written spans with saturated fills and
@@ -56,6 +58,7 @@ const ORDER_STATUS_BADGES = {
   processing: { label: "Processing", classes: "bg-blue-50 text-blue-700 ring-blue-200" },
   hold: { label: "Hold", classes: "bg-orange-50 text-orange-700 ring-orange-200" },
   delivered: { label: "Delivered", classes: "bg-lime-50 text-lime-700 ring-lime-200" },
+  trash: { label: "Trash", classes: "bg-gray-100 text-gray-500 ring-gray-300" },
 };
 
 const PAYMENT_STATUS_BADGES = {
@@ -117,6 +120,7 @@ const Orders = (props) => {
   const { wrapCurrency, formatDate } = useUtilsStore()
 
   const { token, appData, notifications, addNotification, userDataX, setUserDataX, paymentGateways, privacyMode, orderStatusArgs, paymentStatusArgs, settings } = useCounterStore()
+  const permit = useCan("orders"); /* Roles & Permissions */
 
 
   var [newUserPrams, setnewUserPrams] = useState({ role: "customer", name: "", email: "", mobile: "" });
@@ -249,6 +253,7 @@ const Orders = (props) => {
      changed real stock on every click. */
 
   function delete_orders(ids) {
+if (!permit.allowed("delete")) return permit.denied();
 
 
     if (!token) {
@@ -308,6 +313,55 @@ const Orders = (props) => {
       });
   }
 
+  /* Delete outside the Trash view only sets the status to `trash`; the
+     default order list leaves those out. Permanent delete is the Trash
+     view's own action (delete_orders). */
+  function trash_orders(ids) {
+
+    ids = ids ? ids : selectedRows;
+
+    if (ids.length == 0) {
+      addNotification({ type: 'success', title: 'Select rows first', content: "Select rows first" })
+      return;
+    }
+
+    setloading(true);
+    fetch(serverUrl + "wp-json/combo-store/v2/bulk_update_orders", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ ids: ids, status: 'trash' }),
+    })
+      .then((response) => {
+        if (response.status === 403) {
+          throw new Error("You are not allowed to trash orders.");
+        }
+        if (!response.ok) {
+          throw new Error(`Server answered ${response.status}.`);
+        }
+        return response.json();
+      })
+      .then((res) => {
+        setloading(false);
+
+        if (res?.status !== 'success') {
+          addNotification({ type: 'error', title: 'Move to trash failed', content: "The server did not move the order(s) to the trash." })
+          return;
+        }
+
+        addNotification({ type: 'success', title: 'Moved to trash', content: ids.length === 1 ? `Order #${ids[0]} moved to the trash.` : `${ids.length} orders moved to the trash.` })
+        setselectedRows([]);
+        setselectedOrdersData(null);
+        fetchPosts();
+      })
+      .catch((error) => {
+        setloading(false);
+        addNotification({ type: 'error', title: 'Move to trash failed', content: error?.message ?? "Could not move the selected order(s) to the trash." })
+      });
+  }
+
 
 
 
@@ -315,6 +369,7 @@ const Orders = (props) => {
 
 
   function duplicate_order(id) {
+if (!permit.allowed("create")) return permit.denied();
 
 
     if (!token) {
@@ -375,6 +430,7 @@ const Orders = (props) => {
   }
 
   function create_order(args) {
+if (!permit.allowed("create")) return permit.denied();
 
     var redirect = args?.redirect;
 
@@ -662,6 +718,16 @@ const Orders = (props) => {
           </div>
           <div className="text-[11px] text-gray-500">{entry.billing_address}</div>
           <div className="text-[11px] tabular-nums text-gray-500">{entry?.billing_phone}</div>
+          {customerIpOf(entry) && (() => {
+            var ip = customerIpOf(entry);
+            return (
+              <div className="flex items-center gap-1 text-[11px] text-gray-500 lg:justify-start justify-end" title={customerIpTitle(ip)}>
+                <IconWorld size={11} className="shrink-0 text-gray-400" />
+                <span className="font-mono">{ip.ip}</span>
+                {ip.country && <span title={countryName(ip.country)}>{flagOf(ip.country)} {ip.country}</span>}
+              </div>
+            );
+          })()}
           <div className="flex gap-2">
 
 
@@ -749,7 +815,7 @@ const Orders = (props) => {
                 <Link className={MENU_ITEM} href={`/dashboard/orders/${entry.id}`}>
                   <IconEyeShare size={16} /> Open
                 </Link>
-                <div className={MENU_ITEM} onClick={() => {
+                <div className={MENU_ITEM} {...permit.hide("create")} onClick={() => {
 
                   if (confirm(`Duplicate order #${entry.id}?`)) {
                     duplicate_order(entry.id);
@@ -757,15 +823,23 @@ const Orders = (props) => {
                 }}>
                   <IconCopy size={16} /> Duplicate
                 </div>
-                <div className={`${MENU_ITEM} !text-red-600 hover:!bg-red-50 hover:!text-red-700`} onClick={() => {
-                  if (confirm(`Permanently delete order #${entry.id}? There is no trash for orders, so this cannot be undone.`)) {
-                    delete_orders([entry.id]);
-                  }
-
-
-                }}>
-                  <IconTrash size={16} /> Delete
-                </div>
+                {queryPrams?.status === 'trash' ? (
+                  <div className={`${MENU_ITEM} !text-red-600 hover:!bg-red-50 hover:!text-red-700`} {...permit.hide("delete")} onClick={() => {
+                    if (confirm(`Permanently delete order #${entry.id}? This cannot be undone.`)) {
+                      delete_orders([entry.id]);
+                    }
+                  }}>
+                    <IconTrash size={16} /> Delete permanently
+                  </div>
+                ) : (
+                  <div className={`${MENU_ITEM} !text-red-600 hover:!bg-red-50 hover:!text-red-700`} onClick={() => {
+                    if (confirm(`Move order #${entry.id} to the trash?`)) {
+                      trash_orders([entry.id]);
+                    }
+                  }}>
+                    <IconTrash size={16} /> Move to trash
+                  </div>
+                )}
 
 
               </div>
@@ -1003,14 +1077,14 @@ const Orders = (props) => {
             <IconRefresh size={16} className={loading ? "animate-spin" : ""} /> {("Refresh")}
           </button>
 
-          <PopoverButton wrapperClass={``} buttonClass={TOOLBAR_BUTTON} buttonLabel={("Quick Order")} buttonIcon={<IconFileDollar size={16} />} title={"Quick Order"} position={"bottomRight"}>
-            <div className="p-5 bg-gray-50">
+          {permit.canCreate && (<PopoverButton wrapperClass={``} buttonClass={TOOLBAR_BUTTON} buttonLabel={("Quick Order")} buttonIcon={<IconFileDollar size={16} />} title={"Quick Order"} drawer={"right"}>
+            <div className="p-5 bg-gray-50 text-left">
               <OrderCreate onOrderCreated={onOrderCreated} />
             </div>
-          </PopoverButton>
+          </PopoverButton>)}
 
           {/* Creates an empty order and opens it for editing. */}
-          <button type="button" className={PRIMARY_BUTTON} disabled={loading} onClick={ev => {
+          <button type="button" className={PRIMARY_BUTTON} disabled={loading} {...permit.hide("create")} onClick={ev => {
             create_order({ redirect: true })
           }}><IconPlus size={16} /> {("Add Order")}</button>
         </div>
@@ -1135,11 +1209,16 @@ const Orders = (props) => {
               className="inline-flex !h-9 items-center gap-2 !rounded-lg !border-0 !bg-red-600 !px-3 !py-0 !text-sm !font-medium !text-white !shadow-sm transition-colors hover:!bg-red-700 cursor-pointer disabled:opacity-50"
               disabled={loading}
               onClick={() => {
-                if (confirm(`Permanently delete ${selectedRows.length} ${selectedRows.length === 1 ? "order" : "orders"}? There is no trash for orders, so this cannot be undone.`)) {
-                  delete_orders()
+                var noun = selectedRows.length === 1 ? "order" : "orders";
+                if (queryPrams?.status === 'trash') {
+                  if (confirm(`Permanently delete ${selectedRows.length} ${noun}? This cannot be undone.`)) {
+                    delete_orders()
+                  }
+                } else if (confirm(`Move ${selectedRows.length} ${noun} to the trash?`)) {
+                  trash_orders()
                 }
               }}>
-              <IconTrash size={16} /> {("Delete")}
+              <IconTrash size={16} /> {queryPrams?.status === 'trash' ? ("Delete permanently") : ("Move to trash")}
             </button>
           </div>
         )}
@@ -1201,7 +1280,7 @@ const Orders = (props) => {
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 text-gray-400"><IconReceipt size={24} /></div>
           <div className="text-sm font-semibold text-gray-800">{("No orders yet")}</div>
           <p className="max-w-sm text-xs text-gray-500">{("Orders placed on the store show up here. You can also create one with Add Order or Quick Order.")}</p>
-          <button type="button" className={`${PRIMARY_BUTTON} mt-2`} disabled={loading} onClick={() => create_order({ redirect: true })}>
+          <button type="button" className={`${PRIMARY_BUTTON} mt-2`} disabled={loading} {...permit.hide("create")} onClick={() => create_order({ redirect: true })}>
             <IconPlus size={16} /> {("Add Order")}
           </button>
         </div>
@@ -1209,6 +1288,7 @@ const Orders = (props) => {
         <EntriesTable
           queryPrams={queryPrams}
           columns={columns}
+          searchPlaceholder="Search name, phone, email, #id or IP"
           entries={ordersData}
           itemPath={""}
           onChange={onChangeQueryPrams}

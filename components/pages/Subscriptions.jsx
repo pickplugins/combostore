@@ -11,6 +11,7 @@ import SubscriptionEdit from '../../components/pages/SubscriptionEdit';
 
 import { useCounterStore } from '../../store/useCounterStore'
 import { useUtilsStore } from '../../store/useUtilsStore';
+import { useCan } from '../../lib/useCan';
 
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
@@ -71,6 +72,7 @@ const Subscriptions = () => {
 
 	const { wrapCurrency } = useUtilsStore()
 	const { token, addNotification } = useCounterStore()
+	const permit = useCan("subscriptions"); /* Roles & Permissions */
 
 	var [ordersData, setordersData] = useState({ posts: [], total: 0, maxPages: 1 });
 	var [statusCounts, setstatusCounts] = useState({});
@@ -98,6 +100,7 @@ const Subscriptions = () => {
 
 	/* delete_subscriptions takes one `id`, so a bulk delete is one call each. */
 	function delete_subscriptions(ids) {
+if (!permit.allowed("delete")) return permit.denied();
 
 		ids = ids != undefined ? ids : selectedRows;
 		if (!ids?.length) return;

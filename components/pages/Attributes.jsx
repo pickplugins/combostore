@@ -12,6 +12,7 @@ import AttributeEdit from '../../components/pages/AttributeEdit';
 import Image from "next/image";
 
 import { IconDotsVertical, IconEdit, IconPlus, IconTrash, IconTag, IconAdjustmentsHorizontal } from "@tabler/icons-react";
+import { useCan } from '../../lib/useCan';
 
 
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
@@ -40,6 +41,7 @@ const toSlug = (value) => value.toLowerCase().trim().replace(/[^\p{L}\p{N}]+/gu,
 const Attributes = () => {
 
 	const { token, addNotification, settings } = useCounterStore()
+	const permit = useCan("attributes"); /* Roles & Permissions */
 
 
 	var [productsData, setproductsData] = useState({ posts: [], total: 0, maxPages: 1 });
@@ -79,6 +81,7 @@ const Attributes = () => {
 
 
 	function delete_terms(ids) {
+if (!permit.allowed("delete")) return permit.denied();
 
 		ids = ids != undefined ? ids : selectedRows;
 
@@ -117,6 +120,7 @@ const Attributes = () => {
 	}
 
 	function add_term() {
+if (!permit.allowed("create")) return permit.denied();
 
 		if (!queryPrams?.taxonomy) {
 			return;
@@ -338,7 +342,7 @@ const Attributes = () => {
 					</p>
 				</div>
 
-				{currentAttribute && (
+				{currentAttribute && permit.canCreate && (
 					<PopoverButton wrapperClass={`flex justify-end`} buttonLabel={("Add Value")} buttonIcon={<IconPlus size={16} />} title={`Add ${currentAttribute.label} value`} position={"bottomRight"} popoverClass={`absolute z-[999] overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg`} buttonClass={PRIMARY_BUTTON}>
 						{createForm}
 					</PopoverButton>

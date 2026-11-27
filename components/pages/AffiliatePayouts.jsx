@@ -15,6 +15,7 @@ import AffiliatePayoutRequest from "./AffiliatePayoutRequest";
 
 import { useCounterStore } from "../../store/useCounterStore";
 import { useUtilsStore } from "../../store/useUtilsStore";
+import { useCan } from '../../lib/useCan';
 import {
   PAYOUT_STATUS_BADGES, StatusBadge, RequestedTag, toOptions, AffiliateCell, AffiliateSelect, useAffiliateAccountsInfo, accountLabel,
   ICON_BUTTON, FILTER_SELECT, FILTER_CHIP, FILTER_CHIP_X, MENU_ITEM, TOOLBAR_BUTTON, PRIMARY_BUTTON, DANGER_BUTTON, DATE_INPUT,
@@ -31,6 +32,7 @@ const AffiliatePayouts = () => {
 
   const { wrapCurrency, formatDate } = useUtilsStore();
   const { token, addNotification, userDataX, paymentGateways } = useCounterStore();
+  const permit = useCan("affiliate_payouts"); /* Roles & Permissions */
   const router = useRouter();
 
   const manager = isManager(userDataX);
@@ -97,6 +99,7 @@ const AffiliatePayouts = () => {
 
 
   function delete_payouts(ids) {
+    if (!permit.allowed("delete")) return permit.denied();
     ids = ids ?? selectedRows;
     if (!ids?.length) return;
 
@@ -206,10 +209,10 @@ const AffiliatePayouts = () => {
                   <IconEyeShare size={16} /> Open
                 </Link>
                 {manager && entry.status !== "paid" && (
-                  <div className={MENU_ITEM} onClick={() => mark_paid([entry.id])}><IconCash size={16} /> Mark paid</div>
+                  <div className={MENU_ITEM} {...permit.hide("edit")} onClick={() => mark_paid([entry.id])}><IconCash size={16} /> Mark paid</div>
                 )}
                 {manager && (
-                  <div className={`${MENU_ITEM} !text-red-600 hover:!bg-red-50 hover:!text-red-700`} onClick={() => {
+                  <div className={`${MENU_ITEM} !text-red-600 hover:!bg-red-50 hover:!text-red-700`} {...permit.hide("delete")} onClick={() => {
                     if (confirm(`Permanently delete payout #${entry.id}? This cannot be undone.`)) delete_payouts([entry.id]);
                   }}>
                     <IconTrash size={16} /> Delete
@@ -309,8 +312,8 @@ const AffiliatePayouts = () => {
           <div className="flex flex-wrap items-center gap-2 rounded-lg border border-[#634FE5]/30 bg-[#634FE5]/5 py-1 pl-3 pr-1">
             <span className="text-sm font-medium text-gray-700">{selectedRows.length} {("selected")}</span>
             <button type="button" className="!h-8 rounded-md !border-0 !bg-transparent px-2 text-sm !text-gray-500 !shadow-none hover:!bg-white hover:!text-gray-800" onClick={() => setselectedRows([])}>{("Clear")}</button>
-            <button type="button" className={TOOLBAR_BUTTON.replace("!h-9", "!h-8")} disabled={loading} onClick={() => mark_paid()}><IconCash size={15} /> {("Mark paid")}</button>
-            <button type="button" className={DANGER_BUTTON} disabled={loading} onClick={() => {
+            <button type="button" className={TOOLBAR_BUTTON.replace("!h-9", "!h-8")} disabled={loading} {...permit.hide("edit")} onClick={() => mark_paid()}><IconCash size={15} /> {("Mark paid")}</button>
+            <button type="button" className={DANGER_BUTTON} disabled={loading} {...permit.hide("delete")} onClick={() => {
               if (confirm(`Permanently delete ${selectedRows.length} ${selectedRows.length === 1 ? "payout" : "payouts"}? This cannot be undone.`)) delete_payouts();
             }}>
               <IconTrash size={15} /> {("Delete")}

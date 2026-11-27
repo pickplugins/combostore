@@ -33,6 +33,7 @@ import { useCounterStore } from '../../store/useCounterStore'
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
 import { useUtilsStore } from '../../store/useUtilsStore';
+import { useCan } from '../../lib/useCan';
 
 
 
@@ -45,6 +46,7 @@ const ShippingZones = (props) => {
   const { wrapCurrency, formatDate } = useUtilsStore()
 
   const { token, appData, notifications, addNotification, userDataX, setUserDataX, paymentGateways, privacyMode } = useCounterStore()
+  const permit = useCan("shipping_zones"); /* Roles & Permissions */
 
 
   var [countriesList, setcountriesList] = useState({});
@@ -103,6 +105,7 @@ const ShippingZones = (props) => {
 
 
   function delete_shipping_zones(ids) {
+if (!permit.allowed("delete")) return permit.denied();
 
 
     if (!token) {
@@ -161,6 +164,7 @@ const ShippingZones = (props) => {
       });
   }
   function duplicate_shipping_zone(id) {
+if (!permit.allowed("create")) return permit.denied();
 
 
     if (!token) {
@@ -220,6 +224,7 @@ const ShippingZones = (props) => {
   }
 
   function create_shipping_zone(args) {
+if (!permit.allowed("create")) return permit.denied();
 
     var redirect = args?.redirect;
 
@@ -390,9 +395,8 @@ const ShippingZones = (props) => {
 
             <PopoverButton buttonLabel={""} buttonIcon={<IconEdit size={16} />} title={"Edit Shipping Zone"} drawer={"right"} buttonClass={`inline-flex h-8 w-8 items-center justify-center rounded-lg border border-transparent bg-transparent text-gray-400 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:text-gray-900 cursor-pointer`}>
 
-              <div className="p-5 bg-gray-50 text-left">
-                <ShippingZoneEdit id={entry.id} />
-              </div>
+              <ShippingZoneEdit id={entry.id} />
+
 
             </PopoverButton>
           </div>
@@ -611,39 +615,11 @@ const ShippingZones = (props) => {
 
             {selectedRows?.length > 0 && (
               <>
-                <PopoverButton wrapperClass={`bg-gray-200`} buttonLabel={<IconPrinter size={18} />} buttonIcon={``} title={"Print"} position={""}>
-
-                  <div className="p-5 bg-gray-50">
-
-                    <OrdersReceipt ids={selectedRows} ordersData={selectedOrdersData} />
-
-                  </div>
-                </PopoverButton>
-                <PopoverButton wrapperClass={`bg-gray-200`} buttonLabel={<IconListNumbers size={18} />} buttonIcon={``} title={"Print"} position={""}>
-
-                  <div className="p-5 bg-gray-50">
-
-                    <OrdersOverview ids={selectedRows} ordersData={selectedOrdersData} />
-
-                  </div>
-                </PopoverButton>
-
-
-
-                <PopoverButton wrapperClass={`bg-gray-200`} buttonLabel={<IconEdit size={18} />} buttonIcon={``} title={"Bulk Update"} position={""}>
-
-                  <div className="p-5 bg-gray-50">
-
-                    <OrderBulkUpdate onOrderBulkUpdated={onOrderBulkUpdated} ids={selectedRows} />
-
-                  </div>
-                </PopoverButton>
-
 
 
                 <div
                   className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-red-700 cursor-pointer"
-                  onClick={() => {
+                  {...permit.hide("delete")} onClick={() => {
                     if (confirm("Please confirm?")) {
                       delete_shipping_zones()
                     }

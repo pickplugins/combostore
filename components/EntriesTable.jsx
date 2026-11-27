@@ -365,7 +365,7 @@ const EntriesTable = (props) => {
 						<input
 							className={INPUT_CLASSES}
 							type="search"
-							placeholder="Search..."
+							placeholder={props.searchPlaceholder || "Search..."}
 							value={queryPrams?.keyword}
 							name="keyword"
 							onChange={(ev) => {

@@ -7,13 +7,16 @@
  * paste/replace, so the readable ids below are safe.)
  *
  * RegisterView (and the builder's Register.jsx) render a sign-up form: heading,
- * a message box, then a `fields` wrapper holding full name, email and password
- * (with a show-password toggle and a hint), then the submit button. Every part
- * has a cssSelectors key, declared with its default in ElementsDefinition.js:
- * form, header, title, subtitle, message, message-error, message-success,
- * message-list, fields, field, password-field, field-label, field-control,
- * field-icon, field-input, name-input, email-input, password-input,
- * password-toggle, field-hint, submit-button, plus '*' for the wrapper.
+ * a message box, then a `fields` wrapper holding full name, email, phone (only
+ * with options.showPhone; options.phoneRequired makes it compulsory) and
+ * password (with a show-password toggle and a hint), then the submit button.
+ * Every part has a cssSelectors key, declared with its default in
+ * ElementsDefinition.js: form, header, title, subtitle, message,
+ * message-error, message-success, message-list, fields, field, phone-field,
+ * password-field, field-label, field-optional, field-control, field-icon,
+ * field-input, field-input-invalid, field-error, name-input, email-input,
+ * phone-input, password-input, password-toggle, field-hint, submit-button,
+ * plus '*' for the wrapper.
  *
  * Each preset is built with withElementCssDefaults(), so it carries the full
  * key set (the builder's style editor only lists keys a block has) and lists
@@ -101,6 +104,9 @@ var layouts = [
         "field-icon": { "classes": "pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" },
         "password-toggle": { "classes": "absolute right-1 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-gray-500 transition-colors hover:text-gray-200" },
         "field-hint": { "classes": "mt-1 text-xs text-gray-500" },
+        "field-optional": { "classes": "font-normal text-gray-500" },
+        "field-error": { "classes": "mt-1 text-xs text-red-300" },
+        "field-input-invalid": { "classes": "!border-red-400/60 focus:!ring-red-400/15" },
         "message-error": { "classes": "border-red-400/30 bg-red-500/10 text-red-300" },
         "message-success": { "classes": "border-green-400/30 bg-green-500/10 text-green-300" },
         "submit-button": { "classes": "inline-flex w-full items-center justify-center gap-2 rounded-lg bg-amber-400 px-4 py-2.5 text-sm font-semibold text-gray-900 transition-colors hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-70" }

@@ -20,6 +20,7 @@ import { useCounterStore } from '../../store/useCounterStore'
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
 import { useUtilsStore } from '../../store/useUtilsStore';
+import { useCan } from '../../lib/useCan';
 
 
 /* Status pills. Tones match the Orders and Purchases lists. */
@@ -89,6 +90,7 @@ const Expenses = (props) => {
   const { wrapCurrency, formatDate } = useUtilsStore()
 
   const { token, paymentGateways, addNotification } = useCounterStore()
+  const permit = useCan("expenses"); /* Roles & Permissions */
 
   const router = useRouter()
 
@@ -119,6 +121,7 @@ const Expenses = (props) => {
 
   /* Creates an empty expense; it is filled in from the Edit drawer. */
   async function add_expense() {
+if (!permit.allowed("create")) return permit.denied();
 
     setloading(true);
     fetch(serverUrl + "wp-json/combo-store/v2/create_expense", {
@@ -165,6 +168,7 @@ const Expenses = (props) => {
 
 
   function delete_expenses(ids) {
+if (!permit.allowed("delete")) return permit.denied();
 
     ids = ids ? ids : selectedRows;
 
@@ -425,7 +429,7 @@ const Expenses = (props) => {
                 <Link className={MENU_ITEM} href={`/dashboard/expenses/${entry.id}`}>
                   <IconEyeShare size={16} /> Open
                 </Link>
-                <div className={`${MENU_ITEM} !text-red-600 hover:!bg-red-50 hover:!text-red-700`} onClick={() => {
+                <div className={`${MENU_ITEM} !text-red-600 hover:!bg-red-50 hover:!text-red-700`} {...permit.hide("delete")} onClick={() => {
                   if (confirm(`Permanently delete expense #${entry.id}? There is no trash, so this cannot be undone.`)) {
                     delete_expenses([entry.id]);
                   }
@@ -525,7 +529,7 @@ const Expenses = (props) => {
           <button type="button" className={TOOLBAR_BUTTON} disabled={loading} onClick={fetchPosts}>
             <IconRefresh size={16} className={loading ? "animate-spin" : ""} /> {("Refresh")}
           </button>
-          <button type="button" className={PRIMARY_BUTTON} disabled={loading} onClick={() => add_expense()}>
+          <button type="button" className={PRIMARY_BUTTON} disabled={loading} {...permit.hide("create")} onClick={() => add_expense()}>
             <IconPlus size={16} /> {("Add Expense")}
           </button>
         </div>
@@ -607,7 +611,7 @@ const Expenses = (props) => {
             <button type="button"
               className="inline-flex !h-8 items-center gap-2 !rounded-lg !border-0 !bg-red-600 !px-3 !py-0 !text-sm !font-medium !text-white !shadow-sm transition-colors hover:!bg-red-700 cursor-pointer disabled:opacity-50"
               disabled={loading}
-              onClick={() => {
+              {...permit.hide("delete")} onClick={() => {
                 if (confirm(`Permanently delete ${selectedRows.length} ${selectedRows.length === 1 ? "expense" : "expenses"}? There is no trash, so this cannot be undone.`)) {
                   delete_expenses()
                 }
@@ -662,7 +666,7 @@ const Expenses = (props) => {
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 text-gray-400"><IconReportMoney size={24} /></div>
           <div className="text-sm font-semibold text-gray-800">{("No expenses yet")}</div>
           <p className="max-w-sm text-xs text-gray-500">{("Record what the shop spends - rent, delivery, packaging, salaries - so profit reports show the real picture.")}</p>
-          <button type="button" className={`${PRIMARY_BUTTON} mt-2`} disabled={loading} onClick={() => add_expense()}>
+          <button type="button" className={`${PRIMARY_BUTTON} mt-2`} disabled={loading} {...permit.hide("create")} onClick={() => add_expense()}>
             <IconPlus size={16} /> {("Add Expense")}
           </button>
         </div>

@@ -8,6 +8,7 @@ import Spinner from '../components/Spinner';
 import WidgetWrapper from '../components/WidgetWrapper';
 import UsersPicker from '../components/shop-elements/UsersPicker';
 import ExpensesItemsPicker from '../components/shop-elements/ExpensesItemsPicker';
+import { useCan } from '../lib/useCan';
 
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
@@ -53,6 +54,7 @@ const snapshot = (expense, items) => JSON.stringify({
 const EditExpense = (props) => {
   const { wrapCurrency } = useUtilsStore()
   const { token, addNotification, inHousePaymentMethods, privacyMode } = useCounterStore()
+  const permit = useCan("expenses"); /* Roles & Permissions */
 
   var expenseId = props?.id
   var [loading, setloading] = useState(false);
@@ -147,6 +149,7 @@ const EditExpense = (props) => {
 
 
   function update_expense() {
+if (!permit.allowed("edit")) return permit.denied();
 
     if (!expenseData || saving) return;
 
@@ -444,7 +447,7 @@ const EditExpense = (props) => {
         </span>
         <div className="flex items-center gap-2">
           {dirty && <button type="button" className={SECONDARY_BUTTON} disabled={saving} onClick={get_expense}>{("Discard")}</button>}
-          <button type="button" className={PRIMARY_BUTTON} disabled={saving || !dirty} onClick={update_expense}>
+          <button type="button" className={PRIMARY_BUTTON} disabled={saving || !dirty} {...permit.hide("edit")} onClick={update_expense}>
             {saving ? <Spinner /> : <IconDeviceFloppy size={16} />} {("Save expense")}
           </button>
         </div>

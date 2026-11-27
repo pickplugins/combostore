@@ -169,7 +169,8 @@ export const useCounterStore = create((set) => ({
     canceled: { label: "Canceled", value: "canceled" },
     failed: { label: "Failed", value: "failed" },
     refunded: { label: "Refunded", value: "refunded" },
-    returned: { label: "Returned", value: "returned" }
+    returned: { label: "Returned", value: "returned" },
+    trash: { label: "Trash", value: "trash" }
   },
   paymentStatusArgs: {
     paid: { label: 'Paid', value: 'paid' },
@@ -495,6 +496,10 @@ export const useCounterStore = create((set) => ({
 
 
   userDataX: null,
+  /* Why the signed-in user could not be loaded (no stored token, a refused
+     or failed get_user), or null. Lets SectionAccessGuard stop waiting for a
+     user that is not coming. Set by AuthProvider's fetchUser. */
+  userLoadError: null,
   /*
     Two independent pieces of nav state, because the sidebar is two different
     things at two different widths.
@@ -734,6 +739,7 @@ export const useCounterStore = create((set) => ({
 
   // ✅ Add these for userDataX
   setUserDataX: (data) => set(() => ({ userDataX: data })),
+  setUserLoadError: (error) => set(() => ({ userLoadError: error })),
   resetUserDataX: () => set(() => ({ userDataX: null })),
   updateUserDataX: (partialData) =>
     set((state) => ({

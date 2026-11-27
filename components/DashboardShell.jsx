@@ -3,6 +3,7 @@
 import Sidebar from "./Sidebar";
 import GlobalHeader from "./GlobalHeader";
 import GlobalFooter from "./GlobalFooter";
+import SectionAccessGuard from "./SectionAccessGuard";
 
 /*
   The frame shared by /dashboard and /settings.
@@ -32,7 +33,7 @@ export default function DashboardShell({ children }) {
 
         {/* `isolate` keeps page-level sticky toolbars and popovers from
 				    stacking above the header and the nav drawer. */}
-        <main className="isolate min-w-0 flex-1">{children}</main>
+        <main className="isolate min-w-0 flex-1"><SectionAccessGuard>{children}</SectionAccessGuard></main>
         <GlobalFooter />
 
       </div>

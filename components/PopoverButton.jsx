@@ -1,6 +1,7 @@
 import PropTypes from "prop-types";
 import React from "react";
 import { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { IconLibraryPhoto, IconCheckbox, IconSquare, IconFidgetSpinner, IconTrash, IconStarFilled, IconStar, IconX } from "@tabler/icons-react";
 
 
@@ -21,6 +22,8 @@ const PopoverButton = (props) => {
 	var position = props.position;
 	var enableCloseBtn = props.enableCloseBtn ?? true;
 	var popoverClass = props.popoverClass ? props.popoverClass : `max-h-[600px] bg-white overflow-y-auto z-[999] border-2 border-solid border-indigo-600 rounded-sm ${position ? "absolute" : "mx-auto sm:w-3/4 md:w-2/4 fixed inset-x-0 top-10"} `;
+	/* A panel pinned to the window rather than to its button. */
+	var isFixedPanel = /(^|\s)fixed(\s|$)/.test(popoverClass);
 
 	/*
 		`drawer` ("left" or "right") slides the panel in from that edge of the
@@ -62,12 +65,29 @@ const PopoverButton = (props) => {
 		from the panel, and that would read as a click outside.
 	*/
 	const wrapperRef = useRef(null);
+	const panelRef = useRef(null);
+
+	/*
+		Fixed panels (the centered popover and the drawers) render into <body>.
+		The dashboard's <main> is `isolate` (DashboardShell), which keeps
+		page-level stacking below the sticky header - so a fixed panel inside
+		it, whatever its z-index, was painted under the header (z-20), and the
+		header covered the panel's title bar and close button. Outside <main>
+		the panel's own z-index applies. Anchored popovers (topLeft,
+		bottomRight...) stay in place: they must move with their button.
+	*/
+	const [portalTarget, setPortalTarget] = useState(null);
+	useEffect(() => {
+		setPortalTarget(document.body);
+	}, []);
+	const portal = (node) => (portalTarget ? createPortal(node, portalTarget) : node);
 
 	useEffect(() => {
 		if (!props.closeOnOutsideClick || !isOpen) return;
 
 		const onPress = ev => {
-			if (!wrapperRef.current?.contains(ev.target)) {
+			/* The panel may be portalled out of the wrapper, so check both. */
+			if (!wrapperRef.current?.contains(ev.target) && !panelRef.current?.contains(ev.target)) {
 				toggle();
 			}
 		};
@@ -122,25 +142,26 @@ const PopoverButton = (props) => {
 			{buttonIcon}
 			{buttonLabel}</div>
 
-		{drawer ? mounted && (
-			<>
+		{/* Above the header (z-20) and the mobile nav (z-40/50); see portalTarget. */}
+		{drawer ? mounted && portal(
+			<div ref={panelRef}>
 				<div
 					onClick={toggle}
 					aria-hidden="true"
-					className={`fixed inset-0 z-[40] bg-gray-900/60 backdrop-blur-sm transition-opacity duration-300 ${slid ? "opacity-100" : "pointer-events-none opacity-0"}`}
+					className={`fixed inset-0 z-[60] bg-gray-900/60 backdrop-blur-sm transition-opacity duration-300 ${slid ? "opacity-100" : "pointer-events-none opacity-0"}`}
 				/>
 
-				<div className={`fixed inset-y-0 ${drawer == 'right' ? "right-0" : "left-0"} z-[50] flex max-w-full flex-col bg-white shadow-2xl transition-transform duration-300 ease-out ${drawerClass} ${slid ? "translate-x-0" : (drawer == 'right' ? "translate-x-full" : "-translate-x-full")}`}>
+				<div className={`fixed inset-y-0 ${drawer == 'right' ? "right-0" : "left-0"} z-[70] flex max-w-full flex-col bg-white shadow-2xl transition-transform duration-300 ease-out ${drawerClass} ${slid ? "translate-x-0" : (drawer == 'right' ? "translate-x-full" : "-translate-x-full")}`}>
 
 					{panelHead}
 					<div className="flex-1 overflow-y-auto">
 						{children}
 					</div>
 				</div>
-			</>
+			</div>
 
-		) : isOpen && (
-			<div className={` ${popoverClass} ${positionClass} `}>
+		) : isOpen && (isFixedPanel ? portal : (node) => node)(
+			<div ref={panelRef} className={` ${popoverClass} ${positionClass} `}>
 
 				{panelHead}
 				<div>

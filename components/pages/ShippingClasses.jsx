@@ -8,6 +8,7 @@ import ShippingClassForm from '../../components/ShippingClassForm';
 import { shippingClassRequest, shippingClassCostLabel } from '../../lib/shippingClasses';
 
 import { useCounterStore } from '../../store/useCounterStore'
+import { useCan } from '../../lib/useCan';
 
 /*
   Delivery > Shipping Classes, laid out like Delivery > Shipping Zones: a
@@ -24,6 +25,7 @@ const ICON_BUTTON = `inline-flex h-8 w-8 items-center justify-center rounded-lg 
 const ShippingClasses = () => {
 
   const { token, addNotification } = useCounterStore()
+  const permit = useCan("shipping_classes"); /* Roles & Permissions */
 
   var [allClasses, setallClasses] = useState([]);
   var [queryPrams, setqueryPrams] = useState({ keyword: "", paged: 1, order: "ASC", per_page: 20 });
@@ -57,6 +59,7 @@ const ShippingClasses = () => {
   }, [allClasses, queryPrams]);
 
   async function delete_shipping_classes(ids) {
+if (!permit.allowed("delete")) return permit.denied();
 
     ids = ids ? ids : selectedRows;
 
@@ -174,7 +177,7 @@ const ShippingClasses = () => {
 
             <div className="p-3 w-[400px]">
               <div className="flex gap-2 mb-3">
-                <div className=" flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-sm text-red-600 transition-colors hover:bg-red-50 hover:text-red-700 cursor-pointer" onClick={() => {
+                <div className=" flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-sm text-red-600 transition-colors hover:bg-red-50 hover:text-red-700 cursor-pointer" {...permit.hide("delete")} onClick={() => {
                   var note = entry.product_count > 0 ? ` ${entry.product_count} ${entry.product_count == 1 ? 'product goes' : 'products go'} back to no shipping class.` : '';
                   if (confirm(`Delete "${entry.name}"?${note}`)) {
                     delete_shipping_classes([entry.id]);
@@ -223,7 +226,7 @@ const ShippingClasses = () => {
             <div
               className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-red-700 cursor-pointer"
               title="Delete selected"
-              onClick={() => {
+              {...permit.hide("delete")} onClick={() => {
                 if (confirm(`Delete ${selectedRows.length} shipping ${selectedRows.length == 1 ? 'class' : 'classes'}? Products using them go back to no shipping class.`)) {
                   delete_shipping_classes()
                 }

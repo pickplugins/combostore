@@ -433,7 +433,10 @@ const FraudChecker = () => {
 
 			<p className="text-xs text-gray-500">
 				API keys for the scoring services live on <strong>Settings &rarr; API Keys</strong>,
-				with every other integration&rsquo;s credentials.
+				with every other integration&rsquo;s credentials. Steadfast, Pathao, RedX, Paperfly and Carry Bee
+				use your courier logins from <strong>Settings &rarr; Couriers</strong>: Steadfast's API key and secret key (or
+				panel email and password), Pathao's and Paperfly's username and password, and the RedX and Carry Bee
+				panel phone and password.
 			</p>
 		</div>
 	);

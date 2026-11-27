@@ -12,6 +12,7 @@ const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
 import { IconArrowLeft } from "@tabler/icons-react";
 import Spinner from '../../components/Spinner';
+import { useCan } from '../../lib/useCan';
 
 
 const CARD = "form-card rounded-xl border border-gray-200 bg-white shadow-sm";
@@ -64,6 +65,7 @@ function htmlToLines(html) {
 const TicketEdit = ({ id }) => {
 
   const { token, addNotification, userDataX } = useCounterStore()
+  const permit = useCan("tickets"); /* Roles & Permissions */
 
   var [ticket, setticket] = useState(null);
   var [loading, setloading] = useState(false);
@@ -123,6 +125,7 @@ const TicketEdit = ({ id }) => {
 
   /* The change shows straight away and is put back if the server refuses it. */
   function updateTicket(field, value) {
+if (!permit.allowed("edit")) return permit.denied();
 
     var previous = ticket[field];
 

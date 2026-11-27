@@ -2,6 +2,10 @@
 import { create } from "zustand";
 import { useCounterStore } from "./useCounterStore";
 
+/* trackPageVisit used this without it ever being defined here: the
+   ReferenceError was caught below, so no activity was ever sent. */
+const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
+
 export const useUtilsStore = create((set, get) => ({
 
   /*
@@ -63,32 +67,51 @@ export const useUtilsStore = create((set, get) => ({
     return string;
   },
 
+  /*
+    Records a storefront event (add to cart, ...) in the Activity log
+    (combo-store/v2/add_activity). Fire-and-forget: it never throws, and
+    answers the server's reply, or null when it could not be sent.
+
+    The reply used to be read twice - once inside a console.log - which
+    threw, so even a saved event looked like a failure. No `keepalive`: a
+    cross-origin JSON post needs a preflight, which some browsers refuse
+    for keepalive requests.
+  */
   trackPageVisit: async (trackPrams) => {
 
+    if (!serverUrl || !trackPrams?.event) return null;
+
+    /* The server takes the shopper from the sign-in token and ignores any
+       user id in the body, so a guest cannot log events as a customer. */
+    const token = useCounterStore.getState().token;
 
     try {
       const response = await fetch(serverUrl + "wp-json/combo-store/v2/add_activity", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
-          userid: trackPrams?.userid,
           event: trackPrams?.event,
-          source: trackPrams?.source,
-          value: { productId: trackPrams?.productId },
+          source: trackPrams?.source ?? "",
+          value: {
+            productId: trackPrams?.productId,
+            /* How many units the line holds after the event, when the caller knows. */
+            ...(Number.isFinite(trackPrams?.quantity) ? { quantity: trackPrams.quantity } : {}),
+          },
         }),
       });
 
       if (!response.ok) {
-        throw new Error("Failed to track visit");
+        throw new Error(`Server answered ${response.status}.`);
       }
-
-
 
       return await response.json();
     } catch (error) {
-
+      if (process.env.NODE_ENV !== "production") {
+        console.warn("[trackPageVisit] not recorded:", error?.message ?? error);
+      }
       return null;
     }
   },

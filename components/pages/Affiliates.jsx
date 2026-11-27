@@ -6,6 +6,7 @@ import { useState, useEffect, useRef } from "react";
 import EntriesTable from "../../components/EntriesTable";
 import PopoverButton from "../../components/PopoverButton";
 import AffiliateEdit from "../../components/pages/AffiliateEdit";
+import AffiliateApplications from "../../components/pages/AffiliateApplications";
 import { useCounterStore } from '../../store/useCounterStore'
 import Image from "next/image";
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
@@ -125,6 +126,38 @@ const Affiliates = () => {
   var [loading, setloading] = useState(false);
   var [adding, setadding] = useState(false);
   var [selectedRows, setselectedRows] = useState([]);
+
+  /* "affiliates" (the list) or "applications" (sign-ups waiting for approval, AffiliateApplications). */
+  var [view, setview] = useState("affiliates");
+  var [pendingApplications, setpendingApplicationsState] = useState(0);
+
+  /* Every new count also goes to the sidebar's Affiliates badge (Sidebar.jsx listens), so a decision here updates it at once. */
+  function setpendingApplications(count) {
+    setpendingApplicationsState(count);
+    try {
+      window.dispatchEvent(new CustomEvent('cstore-affiliate-applications-changed', { detail: count }));
+    } catch (e) { }
+  }
+
+  /* `?view=applications` opens the Applications tab (e.g. from the new-application email's directions). */
+  useEffect(() => {
+    try {
+      if (new URLSearchParams(window.location.search).get("view") === "applications") setview("applications");
+    } catch (e) { }
+  }, []);
+
+  /* The tab's badge: how many applications wait. The Applications view keeps it current once open. */
+  useEffect(() => {
+    if (!token) return;
+    fetch(serverUrl + "wp-json/combo-store/v2/get_affiliate_applications", {
+      method: "POST",
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ status: "pending", per_page: 1 }),
+    })
+      .then((response) => response.ok ? response.json() : null)
+      .then((res) => { if (res?.status === "success") setpendingApplications(parseInt(res.pending, 10) || 0); })
+      .catch(() => { });
+  }, [token]);
 
   function onSelectRows(rows) {
     setselectedRows(rows);
@@ -616,6 +649,22 @@ const Affiliates = () => {
         </div>
       </div>
 
+      <div className="flex gap-1 border-b border-gray-200" role="tablist">
+        {[["affiliates", "Affiliates"], ["applications", "Applications"]].map(([value, label]) => (
+          <button key={value} type="button" role="tab" aria-selected={view === value} onClick={() => setview(value)}
+            className={`-mb-px inline-flex items-center gap-2 !rounded-none !border-0 !border-b-2 !bg-transparent !px-3 !py-2 !text-sm !font-medium !shadow-none transition-colors cursor-pointer ${view === value ? "!border-[#634FE5] !text-[#634FE5]" : "!border-transparent !text-gray-500 hover:!text-gray-800"}`}>
+            {label}
+            {value === "applications" && pendingApplications > 0 && (
+              <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[11px] font-semibold text-amber-700">{pendingApplications}</span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {view === "applications" ? (
+        <AffiliateApplications onPendingChange={setpendingApplications} />
+      ) : (<>
+
       <div className="flex flex-wrap items-center justify-between gap-3">
 
         <div className="flex flex-wrap gap-2">
@@ -662,6 +711,7 @@ const Affiliates = () => {
           onRefreshRequest={onRefreshRequest}
         />
       )}
+      </>)}
     </div>
   );
 };

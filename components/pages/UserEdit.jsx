@@ -10,6 +10,9 @@ import LocationPicker from '../../components/LocationPicker';
 import countries from '../../lib/Countries';
 import states from '../../lib/States';
 import { BADGE_BASE, titleCase } from "./deliveryUi";
+import { postApi, FIELD_INVALID, FIELD_ERROR } from "./affiliateUi";
+import { useRoleOptions } from "../../lib/useRoleOptions";
+import { isAdmin } from "../../lib/rolePermissions";
 
 import { IconUser, IconRefresh, IconAlertTriangle, IconArrowLeft, IconArrowUpRight, IconMail, IconPhone, IconCopy, IconDeviceFloppy, IconLock, IconMapPin } from "@tabler/icons-react";
 
@@ -119,14 +122,31 @@ const UserEdit = ({ id, variant = "page", role = "user" }) => {
 
   var screen = ROLE_SCREENS[role] ?? ROLE_SCREENS.user;
 
-  const { token, addNotification, privacyMode } = useCounterStore()
+  const { token, addNotification, privacyMode, userDataX } = useCounterStore()
+  const roleOptions = useRoleOptions();
 
   var [userData, setuserData] = useState(null);
+  var [roleSaving, setroleSaving] = useState(false);
+
+  /* An administrator changes the user's role (built-in, or a custom role from
+     Roles & Permissions). An administrator's own role is changed in WordPress. */
+  function changeRole(newRole) {
+    setroleSaving(true);
+    postApi("set_user_role", token, { user_id: id, role: newRole })
+      .then((res) => {
+        setuserData(u => ({ ...u, roles: Array.isArray(res?.roles) ? res.roles : [newRole] }));
+        addNotification({ type: 'success', title: ("Role changed"), content: roleOptions.find(o => o.value === newRole)?.label ?? newRole });
+      })
+      .catch((e) => addNotification({ type: 'error', title: ("Could not change the role"), content: e.message }))
+      .finally(() => setroleSaving(false));
+  }
   var [form, setform] = useState(pick(null));
   /* loading | ready | missing | forbidden | error */
   var [state, setstate] = useState("loading");
   var [errorMessage, seterrorMessage] = useState("");
   var [saving, setsaving] = useState(false);
+  /* A field the server refused ({ [key]: message }, from update_user_profile `field`), shown under it. */
+  var [fieldErrors, setfieldErrors] = useState({});
 
   var countryOptions = useMemo(() => countries.map(country => ({ value: country.code2, label: country.name })).sort((a, b) => a.label.localeCompare(b.label)), []);
   var cityOptions = useMemo(() => Object.entries(states[form.billing_country || "BD"] ?? {}).map(([value, label]) => ({ value, label })), [form.billing_country]);
@@ -221,10 +241,17 @@ const UserEdit = ({ id, variant = "page", role = "user" }) => {
         setsaving(false);
 
         if (res?.error) {
-          addNotification({ type: 'error', title: 'Not saved', content: res?.message ?? '' });
+          /* Refusal of one field (a phone number another account uses): under that field. */
+          if (res?.field && ACCOUNT_FIELDS.some(([key]) => key === res.field)) {
+            setfieldErrors({ [res.field]: res?.message || "This value can't be used." });
+            document.getElementById(`user-${id}-${res.field}`)?.focus();
+          } else {
+            addNotification({ type: 'error', title: 'Not saved', content: res?.message ?? '' });
+          }
           return;
         }
 
+        setfieldErrors({});
         addNotification({ type: 'success', title: 'User saved', content: `${Object.keys(changes).length} ${Object.keys(changes).length === 1 ? "field" : "fields"} updated.` });
         /* Re-read, so what is shown is what was stored (the API trims and
            ignores some values, an empty display name for one). */
@@ -258,9 +285,16 @@ const UserEdit = ({ id, variant = "page", role = "user" }) => {
           {label}
           {key in changes && <span className="ml-1.5 text-[11px] font-medium text-[#634FE5]">{("edited")}</span>}
         </label>
-        <input id={`user-${id}-${key}`} type={type} className={FIELD_CLASSES}
+        <input id={`user-${id}-${key}`} type={type} className={fieldErrors[key] ? FIELD_INVALID : FIELD_CLASSES}
+          aria-invalid={fieldErrors[key] ? true : undefined}
+          aria-describedby={fieldErrors[key] ? `user-${id}-${key}-error` : undefined}
           value={form[key] ?? ""}
-          onChange={ev => setform({ ...form, [key]: ev.target.value })} />
+          onChange={ev => {
+            setform({ ...form, [key]: ev.target.value });
+            /* Editing a refused field clears its error. */
+            if (fieldErrors[key]) setfieldErrors({ ...fieldErrors, [key]: undefined });
+          }} />
+        {fieldErrors[key] && <p id={`user-${id}-${key}-error`} role="alert" className={FIELD_ERROR}>{fieldErrors[key]}</p>}
       </div>
     );
   }
@@ -283,8 +317,16 @@ const UserEdit = ({ id, variant = "page", role = "user" }) => {
             {state === "ready" && roles.length > 0 && (
               <div className="mt-1 flex flex-wrap gap-1.5">
                 {roles.map(role => (
-                  <span key={role} className={`${BADGE_BASE} ${ROLE_TONES[role] ?? "bg-gray-100 text-gray-600 ring-gray-200"}`}>{titleCase(role)}</span>
+                  <span key={role} className={`${BADGE_BASE} ${ROLE_TONES[role] ?? "bg-gray-100 text-gray-600 ring-gray-200"}`}>{roleOptions.find(o => o.value === role)?.label ?? titleCase(role)}</span>
                 ))}
+                {isAdmin(userDataX) && !roles.includes("administrator") && (
+                  <select aria-label={("Change role")} disabled={roleSaving}
+                    className="rounded-md border border-gray-300 bg-white px-2 py-0.5 text-xs text-gray-700 disabled:opacity-50"
+                    value="" onChange={ev => { if (ev.target.value) changeRole(ev.target.value); }}>
+                    <option value="">{roleSaving ? ("Changing…") : ("Change role…")}</option>
+                    {roleOptions.filter(o => !roles.includes(o.value)).map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  </select>
+                )}
               </div>
             )}
           </div>

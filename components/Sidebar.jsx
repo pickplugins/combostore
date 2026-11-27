@@ -57,6 +57,7 @@ import { useExtensionsStore } from '../store/useExtensionsStore'
 import registry from '../extensions'
 
 import VersionUpdateBanner from "./VersionUpdateBanner";
+import { can } from '../lib/rolePermissions';
 
 
 /*
@@ -64,7 +65,7 @@ import VersionUpdateBanner from "./VersionUpdateBanner";
 	element in it re-created - on each render of a component that re-renders on
 	any store change.
 */
-const NAVS = [
+export const NAVS = [
 	{ label: ("Dashboard"), value: "dashboard", icon: <IconDashboard />, roles: ['administrator'] },
 	{ label: ("Store"), value: "store", icon: <IconBuildingStore />, roles: ['administrator', 'store_manager'] },
 	{ label: ("Products"), value: "products", icon: <IconBox />, parent: "store", roles: ['administrator', 'store_manager'] },
@@ -312,6 +313,38 @@ const SidebarContent = ({ token, onNavigate, navs }) => (
 );
 
 
+/*
+	How many applications wait for approval, from `route` (get_rider_applications
+	or get_affiliate_applications; managers only). Checked every 60 seconds, and
+	set at once when the page that reviews them reports a new count with the
+	window event `eventName` (detail = the count; Riders.jsx, Affiliates.jsx).
+	0 while `allowed` is false.
+*/
+function usePendingApplications(token, allowed, route, eventName) {
+	const [count, setcount] = useState(0);
+	useEffect(() => {
+		if (!token || !allowed) { setcount(0); return; }
+		let stop = false;
+		const check = () => postApi(route, token, { status: "pending", per_page: 1 })
+			.then((r) => { if (!stop && r?.status === "success") setcount(Number(r?.pending) || 0); })
+			.catch(() => { });
+		const onChanged = (ev) => {
+			var next = Number(ev?.detail);
+			if (Number.isFinite(next)) setcount(next); else check();
+		};
+		check();
+		const timer = setInterval(check, 60000);
+		window.addEventListener(eventName, onChanged);
+		return () => { stop = true; clearInterval(timer); window.removeEventListener(eventName, onChanged); };
+	}, [token, allowed, route, eventName]);
+	return count;
+}
+
+/* An amber "waiting" badge for a nav entry (ToggleNavs NavBadge). */
+function applicationsBadge(nav, count, noun) {
+	return { ...nav, badge: count, badgeTone: 'waiting', badgeLabel: `${count} ${noun} ${count === 1 ? 'application' : 'applications'} waiting` };
+}
+
 const Sidebar = () => {
 
 
@@ -339,7 +372,7 @@ const Sidebar = () => {
 		changed something (the "cstore-inbox-changed" window event).
 	*/
 	const [inboxUnread, setinboxUnread] = useState(0);
-	const canSeeInbox = !!userDataX?.roles?.some((r) => r === 'administrator' || r === 'support_agent');
+	const canSeeInbox = can(userDataX, 'cstore_view_messages');
 	useEffect(() => {
 		if (!token || !canSeeInbox) return;
 		let stop = false;
@@ -350,9 +383,23 @@ const Sidebar = () => {
 		return () => { stop = true; clearInterval(timer); window.removeEventListener('cstore-inbox-changed', check); };
 	}, [token, canSeeInbox]);
 
+	/*
+		Applications waiting for approval, for the Riders and Affiliates
+		badges (see usePendingApplications above). Only administrators and
+		store managers may list them.
+	*/
+	const canReviewApplications = !!userDataX?.roles?.some((r) => r === 'administrator' || r === 'store_manager');
+	const riderApplications = usePendingApplications(token, canReviewApplications, "get_rider_applications", "cstore-rider-applications-changed");
+	const affiliateApplications = usePendingApplications(token, canReviewApplications, "get_affiliate_applications", "cstore-affiliate-applications-changed");
+
 	const navs = useMemo(
-		() => mergeExtensionNavs(registry.navItems(activeExtensionIds)).map((n) => (n.value === 'messages' && inboxUnread ? { ...n, badge: inboxUnread } : n)),
-		[activeExtensionIds, inboxUnread]
+		() => mergeExtensionNavs(registry.navItems(activeExtensionIds)).map((n) => {
+			if (n.value === 'messages' && inboxUnread) return { ...n, badge: inboxUnread };
+			if (n.value === 'riders' && riderApplications) return applicationsBadge(n, riderApplications, 'rider');
+			if (n.value === 'affiliates' && affiliateApplications) return applicationsBadge(n, affiliateApplications, 'affiliate');
+			return n;
+		}),
+		[activeExtensionIds, inboxUnread, riderApplications, affiliateApplications]
 	);
 
 	const closeMobileNav = () => setmobileNav(false);

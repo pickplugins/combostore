@@ -17,6 +17,7 @@ import PopoverButton from '../components/PopoverButton';
 import UsersPicker from '../components/shop-elements/UsersPicker';
 import Spinner from "../components/Spinner";
 import { sortProviderEntries } from "../lib/sortProviders";
+import { useCan } from '../lib/useCan';
 
 
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
@@ -47,6 +48,7 @@ const OrderDelivery = (props) => {
 
 
   const { token, settings, cartToggle, setcartToggle, notifications, addNotification, cartItems, addCartItems, removeCartItems, resetCartItems, updateCartItems, userDataX, setUserDataX, navToggle, setnavToggle, lang, setlang, couriersPrams } = useCounterStore()
+  const permit = useCan(["orders", "incomplete", "refunds"]); /* Roles & Permissions */
 
   var order_id = props?.order_id
   var [orderData, setorderData] = useState(null);
@@ -336,6 +338,7 @@ const OrderDelivery = (props) => {
 
 
   function update_delivery() {
+if (!permit.allowed(["cstore_edit_deliveries","cstore_edit_orders","cstore_edit_incomplete","cstore_edit_refunds"])) return permit.denied();
 
     setloading(true)
 
@@ -460,7 +463,7 @@ const OrderDelivery = (props) => {
 
             <div className="flex items-center gap-2">
               {loading && <Spinner />}
-              <button type="button" disabled={loading} onClick={() => update_delivery()} className={PRIMARY_BUTTON}>
+              <button type="button" disabled={loading} {...permit.hide(["cstore_edit_deliveries","cstore_edit_orders","cstore_edit_incomplete","cstore_edit_refunds"])} onClick={() => update_delivery()} className={PRIMARY_BUTTON}>
                 {("Update")}
               </button>
             </div>

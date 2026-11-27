@@ -106,6 +106,11 @@ const OrderCourier = ({ order_id, deliveryData }) => {
 
     var postData = { courierData: courierData };
     postData = JSON.stringify(postData);
+
+    console.log(postData);
+
+    return;
+
     setloading(true);
     fetch(
       serverUrl + "wp-json/combo-store/v2/send_to_courier",

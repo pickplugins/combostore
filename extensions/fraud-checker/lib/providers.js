@@ -15,8 +15,8 @@
  * configured this before the move reads back unchanged, which is the point -
  * moving where the screen lives must not orphan what merchants already saved.
  *
- * Only `loginRequired`, `limitPhone` and `countryFilter` are enforced - by create_order on the
- * server, never in the browser. Every other check is `comingSoon: true`:
+ * Only `loginRequired`, `limitPhone`, `countryFilter` and `mobilefraudcheck` are enforced -
+ * by create_order on the server, never in the browser. Every other check is `comingSoon: true`:
  * recorded, but nothing reads it yet, and the screen says so rather than
  * implying an order is being screened when it is not.
  */
@@ -32,9 +32,17 @@ export const FIELD_TYPES = ['toggle', 'number', 'select', 'countries'];
  * the key itself stays there, because that is where every other integration's
  * credentials live and splitting them would leave a merchant hunting.
  */
+/* `steadfast` and `couriers` are the exception: they use the merchant's own
+   courier accounts from Settings → Couriers (Steadfast keys or panel login,
+   Pathao username/password, RedX panel phone/password), so there is no extra
+   key to buy. `couriers` adds up every account that is set up; the paid
+   services fall back to the same accounts when they fail.
+   check_mobile_fraud on the server reads `service` to pick the source. */
 export const SCORE_SERVICES = [
 	{ value: 'bdcourier', label: 'BD Courier (bdcourier.com)' },
 	{ value: 'fraudchecker', label: 'Fraud Checker (fraudchecker.link)' },
+	{ value: 'steadfast', label: 'Steadfast (your Steadfast courier account)' },
+	{ value: 'couriers', label: 'Your courier accounts (Steadfast, Pathao, RedX, Paperfly, Carry Bee)' },
 ];
 
 export const PROVIDERS = [
@@ -124,19 +132,32 @@ export const PROVIDERS = [
 			{ key: 'enabled', type: 'toggle', label: 'Enable', help: 'Check the country of the IP address placing the order' },
 			{ key: 'allow_countries', type: 'countries', label: 'Allowed countries', help: 'Only accept orders from these countries. Leave empty to allow every country not blocked below.' },
 			{ key: 'block_countries', type: 'countries', label: 'Blocked countries', help: 'Refuse orders from these countries. A country in both lists is blocked.' },
-			{ key: 'unknown', type: 'select', label: 'Country unknown', help: 'When the country cannot be found (lookup failed, VPN or private address)', options: [
-				{ value: 'allow', label: 'Accept the order' },
-				{ value: 'block', label: 'Refuse the order' },
-			] },
+			{
+				key: 'unknown', type: 'select', label: 'Country unknown', help: 'When the country cannot be found (lookup failed, VPN or private address)', options: [
+					{ value: 'allow', label: 'Accept the order' },
+					{ value: 'block', label: 'Refuse the order' },
+				]
+			},
 		],
 	},
 	{
 		id: 'mobilefraudcheck',
 		label: 'Mobile Fraud Checker',
+		/* Enforced by create_order (checkout_phone_score in ComboStoreRest.php):
+			 refused when the phone's delivery success % is below `score`. Fails
+			 Service: bdcourier (all-courier summary), fraudchecker
+			 (fraudchecker.link totals), steadfast, or couriers (Steadfast + Pathao
+			 + RedX + Paperfly + Carry Bee accounts added up); the paid two fall back to the courier
+			 accounts when they fail. A Pathao rating with no counts does not score,
+			 but a `fraud_customer` rating refuses the order on its own whenever
+			 the Pathao login is saved (code phone_fraud_rating).
+			 open - a lookup error or timeout (8s per request), a number with no
+			 history, or a score of 0 lets the order through. Staff and
+			 "incomplete" orders are not checked. */
 		comingSoon: false,
 		summary: 'Scores a phone number against a courier delivery-history service.',
 		fields: [
-			{ key: 'enabled', type: 'toggle', label: 'Enable', help: 'Score the customer phone number before accepting an order' },
+			{ key: 'enabled', type: 'toggle', label: 'Enable', help: 'Score the customer phone number before accepting an order. Numbers Pathao rates as a fraud customer are always refused when your Pathao login is saved.' },
 			/*
 				In core this select carried name={'score'} while reading
 				value={...['service']}. Choosing a service therefore wrote the
@@ -148,7 +169,7 @@ export const PROVIDERS = [
 			{ key: 'service', type: 'select', label: 'Service', help: 'Which service to fetch the score from', options: SCORE_SERVICES },
 			/* Core labelled this "Order per hour" with the help "Average score
 				 to allow". It is a score threshold, not a rate. */
-			{ key: 'score', type: 'number', label: 'Minimum score', help: 'Lowest average score an order may have and still be accepted', min: 0, max: 100, placeholder: '0' },
+			{ key: 'score', type: 'number', label: 'Minimum score', help: 'Lowest delivery success % (0-100) a phone number may have and still order. Numbers with no delivery history, and failed lookups, are always accepted.', min: 0, max: 100, placeholder: '0' },
 		],
 	},
 ];

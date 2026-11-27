@@ -89,10 +89,12 @@ export function AuthProvider({ children }) {
   function fetchUser() {
     const token = localStorage.getItem("token");
 
-
-
+    /* SectionAccessGuard waits for the user; this tells it when none is coming. */
+    const { setUserLoadError } = useCounterStore.getState();
+    setUserLoadError(null);
 
     if (!token) {
+      setUserLoadError("signed_out");
       return;
       //throw new Error("No token found");
     }
@@ -150,7 +152,11 @@ export function AuthProvider({ children }) {
         }
 
         if (response.ok && response.status < 400) {
-          response.json().then((res) => {
+          /* Returned, so a bad body reaches the .catch below (and clears the
+             guard's wait) instead of failing unseen. */
+          return response.json().then((res) => {
+
+            if (!res?.user) throw new Error("No user in response");
 
 
             var roles = res.user.roles;
@@ -179,9 +185,9 @@ export function AuthProvider({ children }) {
           });
         }
       })
-      .catch((_error) => {
-        //this.saveAsStatus = 'error';
-        // handle the error
+      .catch((error) => {
+        /* Refused, rate-limited or unreachable: the user is not coming. */
+        setUserLoadError(error?.message || "failed");
       });
   }
   useEffect(() => {
@@ -279,7 +285,14 @@ export function AuthProvider({ children }) {
     }
   }
 
-  const handleLogout = () => {
+  /*
+    Where a sign-out lands: `redirectTo` when given, else the sign-in page of
+    the area it happened in - the dashboard's /login from the dashboard and
+    the builder, the storefront's /account everywhere else. Storefront
+    sign-outs used to go to /login too, the dashboard's "manage your store"
+    page, and signing in again there took customers into /dashboard.
+  */
+  const handleLogout = (redirectTo) => {
     setUser(null)
     localStorage.removeItem("token");
     setToken(null);
@@ -288,7 +301,10 @@ export function AuthProvider({ children }) {
     clearOrdersQuery();
     clearProductsQuery();
     clearPostsQuery();
-    router.push("/login");
+
+    var path = typeof window !== "undefined" ? window.location.pathname : "";
+    var inDashboard = /^\/(dashboard|builder|login|register)(\/|$)/.test(path);
+    router.push(typeof redirectTo === "string" && redirectTo ? redirectTo : (inDashboard ? "/login" : "/account"));
   };
 
   return (

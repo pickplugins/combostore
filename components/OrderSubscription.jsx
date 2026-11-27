@@ -6,6 +6,7 @@ import { IconRepeat, IconCalendarEvent, IconCalendarTime, IconCash, IconReceiptR
 import { useCounterStore } from '../store/useCounterStore'
 import { useUtilsStore } from '../store/useUtilsStore';
 import Spinner from '../components/Spinner';
+import { useCan } from '../lib/useCan';
 
 
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
@@ -78,6 +79,7 @@ function post(route, token, body) {
 function SubscriptionCard({ subscription, canEdit, onChanged }) {
 
 	const { token, addNotification } = useCounterStore()
+	const permit = useCan(["orders", "incomplete", "refunds"]); /* Roles & Permissions */
 	const { wrapCurrency, formatDate } = useUtilsStore()
 
 	var [form, setform] = useState(toForm(subscription));
@@ -100,6 +102,7 @@ function SubscriptionCard({ subscription, canEdit, onChanged }) {
 	};
 
 	function save() {
+		if (!permit.allowed(["cstore_edit_subscriptions","cstore_edit_orders","cstore_edit_incomplete","cstore_edit_refunds"])) return permit.denied();
 		if (!changed.length) return;
 		var payload = { id: subscription.id };
 		for (var key of changed) {
@@ -225,7 +228,7 @@ function SubscriptionCard({ subscription, canEdit, onChanged }) {
 					)}
 
 					<div className="flex items-center gap-3">
-						<button type="button" className={PRIMARY_BUTTON} disabled={!changed.length || saving} onClick={save}>
+						<button type="button" className={PRIMARY_BUTTON} disabled={!changed.length || saving} {...permit.hide(["cstore_edit_subscriptions","cstore_edit_orders","cstore_edit_incomplete","cstore_edit_refunds"])} onClick={save}>
 							{saving ? "Saving…" : "Save changes"}
 						</button>
 						{changed.length > 0 && !saving && (
@@ -279,6 +282,7 @@ function PendingSubscriptionCard({ line }) {
 const OrderSubscription = (props) => {
 
 	const { token, userDataX } = useCounterStore()
+	const permit = useCan(["orders", "incomplete", "refunds"]); /* Roles & Permissions */
 
 	var order_id = props?.order_id
 	var [data, setdata] = useState(null);

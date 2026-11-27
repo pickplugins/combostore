@@ -10,6 +10,7 @@ import PopoverButton from '../../components/PopoverButton';
 import LicenseEdit, { LicenseCreate, LICENSE_STATUSES, formatDay, daysFromToday, copyText } from '../../components/pages/LicenseEdit';
 
 import { useCounterStore } from '../../store/useCounterStore'
+import { useCan } from '../../lib/useCan';
 
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
@@ -47,6 +48,7 @@ function shortKey(key) {
 const Licenses = () => {
 
 	const { token, addNotification } = useCounterStore()
+	const permit = useCan("licenses"); /* Roles & Permissions */
 
 	var [licensesData, setlicensesData] = useState({ posts: [], total: 0, maxPages: 1 });
 	var [statusCounts, setstatusCounts] = useState({});
@@ -73,6 +75,7 @@ const Licenses = () => {
 
 
 	function delete_licenses(ids) {
+if (!permit.allowed("delete")) return permit.denied();
 
 		ids = ids != undefined ? ids : selectedRows;
 		if (!ids?.length) return;
@@ -329,11 +332,11 @@ const Licenses = () => {
 					<button type="button" className={TOOLBAR_BUTTON} disabled={loading} onClick={fetchPosts}>
 						<IconRefresh size={16} className={loading ? "animate-spin" : ""} /> {("Refresh")}
 					</button>
-					<PopoverButton buttonLabel={("Add License")} buttonIcon={<IconPlus size={16} />} title={"Add License"} drawer={"right"} drawerClass={"w-full sm:w-[600px]"} buttonClass={PRIMARY_BUTTON}>
+					{permit.canCreate && (<PopoverButton buttonLabel={("Add License")} buttonIcon={<IconPlus size={16} />} title={"Add License"} drawer={"right"} drawerClass={"w-full sm:w-[600px]"} buttonClass={PRIMARY_BUTTON}>
 						<div className="p-5 bg-gray-50 text-left">
 							<LicenseCreate onCreated={fetchPosts} />
 						</div>
-					</PopoverButton>
+					</PopoverButton>)}
 				</div>
 			</div>
 

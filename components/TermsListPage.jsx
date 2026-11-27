@@ -30,6 +30,7 @@ import Spinner from './Spinner';
 import Image from "next/image";
 
 import { IconDotsVertical, IconEdit, IconEyeShare, IconPlus, IconTrash, IconTag } from "@tabler/icons-react";
+import { useCan } from '../lib/useCan';
 
 
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
@@ -96,6 +97,7 @@ export function termAndDescendants(terms, termId) {
 const TermsListPage = ({ taxonomy, title, singular, EditComponent, dashboardPath, storePath, Icon = IconTag, namePlaceholder = "", hierarchical = false }) => {
 
 	const { token, addNotification } = useCounterStore()
+	const permit = useCan((({ product_cat: "categories", product_tag: "tags", product_brand: "brands", product_badge: "badges" })[taxonomy] ?? "attributes")); /* Roles & Permissions */
 
 	const emptyTerm = { name: '', slug: '', taxonomy, description: '', parent: '' };
 	const Singular = capitalize(singular);
@@ -144,6 +146,7 @@ const TermsListPage = ({ taxonomy, title, singular, EditComponent, dashboardPath
 
 
 	function delete_terms(ids) {
+if (!permit.allowed("delete")) return permit.denied();
 
 		ids = ids != undefined ? ids : selectedRows;
 
@@ -182,6 +185,7 @@ const TermsListPage = ({ taxonomy, title, singular, EditComponent, dashboardPath
 	}
 
 	function add_term() {
+if (!permit.allowed("create")) return permit.denied();
 
 		var postData = JSON.stringify({ ...newPage, taxonomy });
 		setloading(true);
@@ -386,7 +390,7 @@ const TermsListPage = ({ taxonomy, title, singular, EditComponent, dashboardPath
 					</p>
 				</div>
 
-				<PopoverButton wrapperClass={`flex justify-end`} buttonLabel={`Add ${Singular}`} buttonIcon={<IconPlus size={16} />} title={`Add ${Singular}`} position={"bottomRight"} popoverClass={`absolute z-[999] overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg`} buttonClass={PRIMARY_BUTTON}>
+				{permit.canCreate && (<PopoverButton wrapperClass={`flex justify-end`} buttonLabel={`Add ${Singular}`} buttonIcon={<IconPlus size={16} />} title={`Add ${Singular}`} position={"bottomRight"} popoverClass={`absolute z-[999] overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg`} buttonClass={PRIMARY_BUTTON}>
 					<form className="flex w-72 flex-col gap-3 p-4" onSubmit={ev => {
 						ev.preventDefault();
 						if (!newPage.name.trim()) {
@@ -431,7 +435,7 @@ const TermsListPage = ({ taxonomy, title, singular, EditComponent, dashboardPath
 							{loading && <Spinner />}
 						</div>
 					</form>
-				</PopoverButton>
+				</PopoverButton>)}
 			</div>
 
 			{selectedRows?.length > 0 && (

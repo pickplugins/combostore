@@ -22,6 +22,7 @@ import { useCounterStore } from '../../store/useCounterStore'
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
 import { useUtilsStore } from '../../store/useUtilsStore';
+import { useCan } from '../../lib/useCan';
 
 
 /* Status pills. Keys and tones match the Orders list. */
@@ -78,6 +79,7 @@ const Refunds = () => {
   const { wrapCurrency, formatDate } = useUtilsStore()
 
   const { token, paymentGateways, addNotification, privacyMode, paymentStatusArgs } = useCounterStore()
+  const permit = useCan("refunds"); /* Roles & Permissions */
 
   /*
     This page is the orders list pinned to order `status: refunded` - the
@@ -119,6 +121,7 @@ const Refunds = () => {
 
 
   function delete_orders(ids) {
+if (!permit.allowed("delete")) return permit.denied();
 
     ids = ids ? ids : selectedRows;
 
@@ -362,7 +365,7 @@ const Refunds = () => {
                 <Link className={MENU_ITEM} href={`/dashboard/orders/${entry.id}`}>
                   <IconEyeShare size={16} /> Open order
                 </Link>
-                <div className={`${MENU_ITEM} !text-red-600 hover:!bg-red-50 hover:!text-red-700`} onClick={() => {
+                <div className={`${MENU_ITEM} !text-red-600 hover:!bg-red-50 hover:!text-red-700`} {...permit.hide("delete")} onClick={() => {
                   if (confirm(`Permanently delete refunded order #${entry.id}? There is no trash for orders, and the refund record goes with it.`)) {
                     delete_orders([entry.id]);
                   }
@@ -556,7 +559,7 @@ const Refunds = () => {
             <button type="button"
               className="inline-flex !h-8 items-center gap-2 !rounded-lg !border-0 !bg-red-600 !px-3 !py-0 !text-sm !font-medium !text-white !shadow-sm transition-colors hover:!bg-red-700 cursor-pointer disabled:opacity-50"
               disabled={loading}
-              onClick={() => {
+              {...permit.hide("delete")} onClick={() => {
                 if (confirm(`Permanently delete ${selectedRows.length} refunded ${selectedRows.length === 1 ? "order" : "orders"}? There is no trash for orders, and the refund record goes with them.`)) {
                   delete_orders()
                 }

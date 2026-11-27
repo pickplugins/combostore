@@ -3,10 +3,11 @@ import React from 'react'
 import { useState, useEffect } from "react";
 
 import { useCounterStore } from '../../store/useCounterStore'
+import { hasOnlyGrantedAccess } from '../../lib/rolePermissions';
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
 import Link from "next/link";
-import { IconFileDollar, IconReceipt, IconCreditCard, IconPhone, IconMapPin, IconArrowLeft, IconArrowUpRight, IconRefresh } from "@tabler/icons-react";
+import { IconFileDollar, IconReceipt, IconCreditCard, IconPhone, IconMapPin, IconArrowLeft, IconArrowUpRight, IconRefresh, IconEye } from "@tabler/icons-react";
 
 const TOOLBAR_BUTTON =
   "inline-flex !h-9 items-center gap-2 !rounded-lg !border !border-gray-300 !bg-white !px-3 !py-0 !text-sm !font-medium !text-gray-700 !shadow-none transition-colors hover:!border-gray-400 hover:!bg-gray-50 cursor-pointer";
@@ -52,13 +53,79 @@ const Figure = ({ label, value, strong }) => (
   </div>
 );
 
+/*
+  The purchase's items for a supplier, who may look but not change anything
+  (Settings → Roles & Permissions grants suppliers their own purchases,
+  read-only; the server refuses any change from them).
+*/
+const PurchaseItemsReadOnly = ({ lineItems, purchaseData, wrapCurrency }) => {
+  const amount = (value) => parseFloat(value || 0);
+  const rows = Array.isArray(lineItems) ? lineItems : [];
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
+        <table className="w-full min-w-[520px] border-collapse text-sm">
+          <thead>
+            <tr className="bg-gray-50 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+              <th className="px-4 py-3 font-semibold">Item</th>
+              <th className="px-4 py-3 text-right font-semibold">Quantity</th>
+              <th className="px-4 py-3 text-right font-semibold">Unit price</th>
+              <th className="px-4 py-3 text-right font-semibold">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.length === 0 && (
+              <tr><td colSpan={4} className="px-4 py-8 text-center text-xs text-gray-400">No items on this purchase.</td></tr>
+            )}
+            {rows.map((item, index) => {
+              const qty = amount(item.quantity);
+              const price = amount(item.price);
+              return (
+                <tr key={item.id ?? index} className="border-t border-gray-100">
+                  <td className="px-4 py-3 text-gray-900" dangerouslySetInnerHTML={{ __html: item.product_name || item.title || "—" }} />
+                  <td className="px-4 py-3 text-right tabular-nums text-gray-700">{qty}</td>
+                  <td className="px-4 py-3 text-right tabular-nums text-gray-700">{wrapCurrency(price)}</td>
+                  <td className="px-4 py-3 text-right font-medium tabular-nums text-gray-900">{wrapCurrency(qty * price)}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="ml-auto flex w-full max-w-xs flex-col gap-1.5 rounded-xl border border-gray-200 bg-white p-4 text-sm">
+        <div className="flex justify-between text-gray-600"><span>Sub Total</span><span className="tabular-nums">{wrapCurrency(amount(purchaseData?.subtotal_amount))}</span></div>
+        {amount(purchaseData?.shipping_amount) > 0 && (
+          <div className="flex justify-between text-gray-600"><span>Delivery</span><span className="tabular-nums">+{wrapCurrency(amount(purchaseData.shipping_amount))}</span></div>
+        )}
+        {amount(purchaseData?.tax_amount) > 0 && (
+          <div className="flex justify-between text-gray-600"><span>Tax</span><span className="tabular-nums">+{wrapCurrency(amount(purchaseData.tax_amount))}</span></div>
+        )}
+        {amount(purchaseData?.discount_amount) > 0 && (
+          <div className="flex justify-between text-gray-600"><span>Discount</span><span className="tabular-nums text-rose-600">-{wrapCurrency(amount(purchaseData.discount_amount))}</span></div>
+        )}
+        {amount(purchaseData?.advance_payment) > 0 && (
+          <div className="flex justify-between text-gray-600"><span>Advance paid</span><span className="tabular-nums text-rose-600">-{wrapCurrency(amount(purchaseData.advance_payment))}</span></div>
+        )}
+        <div className="mt-1 flex justify-between border-t border-dashed border-gray-200 pt-2 font-semibold text-gray-900">
+          <span>Total</span><span className="tabular-nums">{wrapCurrency(amount(purchaseData?.total_amount))}</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 /* variant="drawer" (the Purchases list's Edit drawer): no page padding. */
 const PurchaseEdit = ({ id, variant = "page" }) => {
 
 
   const { wrapCurrency, formatDate } = useUtilsStore()
 
-  const { token, paymentGateways, appData, notifications, addNotification, userDataX, setUserDataX } = useCounterStore()
+  const { token, paymentGateways, appData, notifications, addNotification, userDataX, setUserDataX, settings } = useCounterStore()
+
+  /* A supplier granted Purchases sees their purchase without the editor. */
+  const readOnly = hasOnlyGrantedAccess(userDataX, "accounts");
 
   var [loading, setloading] = useState(false);
 
@@ -212,8 +279,13 @@ const PurchaseEdit = ({ id, variant = "page" }) => {
         <div className="flex flex-wrap items-start justify-between gap-3">
 
           <div className="min-w-0">
-            <h1 className="text-xl font-semibold text-gray-900">
+            <h1 className="flex flex-wrap items-center gap-2 text-xl font-semibold text-gray-900">
               {("Purchase")} <span className="font-normal text-gray-400">#{id}</span>
+              {readOnly && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1 text-[11px] font-medium text-gray-600 ring-1 ring-inset ring-gray-200">
+                  <IconEye size={13} /> {("View only")}
+                </span>
+              )}
             </h1>
 
             {purchaseData?.billing_name && (
@@ -303,7 +375,7 @@ const PurchaseEdit = ({ id, variant = "page" }) => {
           </div>
         )}
 
-        {purchaseData?.note && (
+        {!readOnly && purchaseData?.note && (
           <p className="mt-4 rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-600">{purchaseData.note}</p>
         )}
 
@@ -329,8 +401,12 @@ const PurchaseEdit = ({ id, variant = "page" }) => {
 
         <Tab index={0} id="purchase">
 
-          {/* Re-reads the summary above after a save. */}
-          <EditPurchase purchase_id={id} onSaved={get_purchase} />
+          {readOnly ? (
+            <PurchaseItemsReadOnly lineItems={lineItems} purchaseData={purchaseData} wrapCurrency={wrapCurrency} />
+          ) : (
+            /* Re-reads the summary above after a save. */
+            <EditPurchase purchase_id={id} onSaved={get_purchase} />
+          )}
 
         </Tab>
         <Tab index={1} id="invoice">

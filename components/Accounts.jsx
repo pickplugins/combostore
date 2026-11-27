@@ -68,7 +68,7 @@ const Accounts = () => {
 								{userDataX?.name}
 							</div>
 							<div className="truncate text-[10px] capitalize text-gray-400">
-								{userDataX?.roles?.[0]?.replace(/_/g, " ")}
+								{userDataX?.role_labels?.[userDataX?.roles?.[0]] ?? userDataX?.roles?.[0]?.replace(/_/g, " ")}
 							</div>
 						</div>
 

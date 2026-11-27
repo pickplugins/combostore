@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { IconEye, IconEyeOff, IconLock, IconMail, IconUser, IconUserPlus } from "@tabler/icons-react";
+import { IconEye, IconEyeOff, IconLock, IconMail, IconPhone, IconUser, IconUserPlus } from "@tabler/icons-react";
 import { elementCssClasses } from "../ElementsDefinition";
+import { blockSignupRole } from "./registerRoles";
 
 /*
 	Builder (canvas) preview of the sign-up block.
@@ -30,8 +31,15 @@ const Register = (props) => {
 	var type = props?.type;
 	var options = props?.options;
 
-	const [form, setForm] = useState({ name: "", email: "", password: "" });
+	const [form, setForm] = useState({ name: "", email: "", phone: "", password: "" });
 	const [showPassword, setShowPassword] = useState(false);
+
+	/* The block's role (options only), same as RegisterView: it sets the subtitle. */
+	var roleInfo = blockSignupRole(options);
+
+	/* Phone field, same options as RegisterView: showPhone adds it, phoneRequired drops the "(optional)" note. */
+	var showPhone = !!options?.showPhone;
+	var phoneRequired = showPhone && !!options?.phoneRequired;
 
 	const handleChange = (ev) => {
 		setForm({ ...form, [ev.target.name]: ev.target.value });
@@ -64,7 +72,7 @@ const Register = (props) => {
 				{!options?.hideTitle && (
 					<div className={cls('header')}>
 						<h3 className={cls('title')}>Create an account</h3>
-						<p className={cls('subtitle')}>Check out faster and keep track of your orders.</p>
+						<p className={cls('subtitle')}>{roleInfo.subtitle}</p>
 					</div>
 				)}
 
@@ -85,6 +93,18 @@ const Register = (props) => {
 							<input id={`${id}-register-email`} type="email" name="email" autoComplete="off" value={form.email} onChange={handleChange} className={`${cls('field-input')} ${cls('email-input')}`} />
 						</div>
 					</div>
+
+					{showPhone && (
+						<div className={`${cls('field')} ${cls('phone-field')}`}>
+							<label htmlFor={`${id}-register-phone`} className={cls('field-label')}>
+								Phone{!phoneRequired && <span className={cls('field-optional')}> (optional)</span>}
+							</label>
+							<div className={cls('field-control')}>
+								<span className={cls('field-icon')}><IconPhone size={16} /></span>
+								<input id={`${id}-register-phone`} type="tel" name="phone" autoComplete="off" inputMode="tel" value={form.phone} onChange={handleChange} className={`${cls('field-input')} ${cls('phone-input')}`} />
+							</div>
+						</div>
+					)}
 
 					<div className={`${cls('field')} ${cls('password-field')}`}>
 						<label htmlFor={`${id}-register-password`} className={cls('field-label')}>Password</label>

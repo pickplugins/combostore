@@ -4,25 +4,38 @@ An extension is a folder in here with a manifest saying what it contributes.
 Core reads the registry built from `extensions/index.js` — **no core file is
 edited to add one.**
 
-`loyalty-points/` is a worked example that uses every contribution point.
-Five real ones, each with its own README: `discount-rules/` (automatic cart
-discounts), `request-quote/` (ask for a price instead of buying),
-`quick-view/` (a product in a modal, straight from the grid),
-`currency-switcher/` (prices shown in the shopper's currency) and
-`countdown-timer/` (sale deadlines and dispatch cutoffs).
+## Installed extensions
+
+| Extension | What it does | Contributes | README |
+| --- | --- | --- | --- |
+| [`discount-rules/`](discount-rules) | Automatic cart discounts: rules with conditions (cart, products, customer, delivery, schedule) priced into the cart with nothing for the shopper to type | `nav`, `routes` (**Dashboard → Store → Discount Rules**), `elements` (Cart Discounts block), `runtime` | [discount-rules/README.md](discount-rules/README.md) |
+| [`fraud-checker/`](fraud-checker) | Order-screening checks (login required, max orders per hour, duplicate orders, reCAPTCHA, email OTP, IP limits, courier phone checks) | `nav`, `routes` (**Dashboard → Store → Fraud Checker**) | [fraud-checker/README.md](fraud-checker/README.md) |
+
+`discount-rules` is the most complete example: it uses every contribution
+point except `settings`, so copy from it when writing a new one.
 
 ## Installing one
 
-Import the manifest in `extensions/index.js` and add it to `MANIFESTS`:
+Import the manifest in [`extensions/index.js`](index.js) and add it to
+`MANIFESTS`:
 
 ```js
+import discountRules from "./discount-rules/extension.config";
+import fraudChecker from "./fraud-checker/extension.config";
 import myExtension from "./my-extension/extension.config";
 
 const MANIFESTS = [
-  loyaltyPoints,
+  discountRules,
+  fraudChecker,
   myExtension,
 ];
 ```
+
+Declaration order decides precedence: when two extensions want the same nav
+value, route slug or element type, the first one keeps it and the clash is
+reported.
+
+To remove one, delete its import and its entry in `MANIFESTS`.
 
 That list is static on purpose: extensions are bundled with the app, so the
 build sees every import and code-splits normally. A dynamic `import()` of a path
@@ -74,9 +87,9 @@ bookkeeping in the manifest.
 ```js
 nav: [
   {
-    label: "Loyalty",
-    value: "loyalty-points",              // unique across core AND all extensions
-    icon: <IconGift />,
+    label: "My Screen",
+    value: "my-extension",                // unique across core AND all extensions
+    icon: <IconPuzzle />,
     parent: "store",                      // an existing group's `value`
     roles: ["administrator", "store_manager"],   // required
   },
@@ -100,7 +113,7 @@ nav: [
 
 ```js
 routes: {
-  "loyalty-points": LoyaltyOverview,
+  "my-extension": MyScreen,
 },
 ```
 
@@ -173,10 +186,10 @@ runtime: MyRuntime,          // a component that renders null
 ```
 
 Some of what an extension does is not a screen and not a block.
-`discount-rules` prices the cart and `request-quote` decides which products
-can be bought at all; both have to be in effect wherever the relevant page
-is, and hanging that off a block the merchant may not have placed would make
-the behaviour depend on page layout.
+`discount-rules` prices the cart
+([`lib/DiscountRulesRuntime.jsx`](discount-rules/lib/DiscountRulesRuntime.jsx)),
+and that has to be in effect wherever the cart is; hanging it off a block the
+merchant may not have placed would make the behaviour depend on page layout.
 
 `components/ExtensionsRuntime.jsx` mounts every active extension's runtime
 once, from `app/layout.jsx`. A runtime usually renders nothing: it subscribes
@@ -185,10 +198,10 @@ to what it needs, works in effects, and publishes into a store.
 - **It is mounted on every page, including the storefront.** Do real work
   only when there is something to do.
 - **A runtime that needs a global overlay renders it through a portal into
-  `document.body`, never inline.** `quick-view` does: there is one modal for
-  the whole site, openable from any card on any page, so it cannot belong to
-  a block — that would mean one modal per placement and none where the
-  merchant forgot. Inline is wrong too, because a parent's `overflow:
+  `document.body`, never inline.** A quick-view modal is the typical case:
+  one modal for the whole site, openable from any card on any page, so it
+  cannot belong to a block — that would mean one modal per placement and
+  none where the merchant forgot. Inline is wrong too, because a parent's `overflow:
   hidden` would clip it and a parent's `transform` would break its fixed
   positioning. Portals need `document`, so track mounting and render `null`
   until then; testing for `document` directly makes the first client render
@@ -229,9 +242,9 @@ Whether a product may be bought here and now. A function, not data, because
 the answer depends on the product and there is no list of every product to
 key on. `AddToCartView` drops its controls when `hideAddToCart` is set, and
 `ProductPriceView` prints `priceText` in place of the price when `hidePrice`
-is. The default is `null`, which gates nothing. Filled by `request-quote`,
-and the same shape would serve pre-orders, trade-only pricing or
-out-of-region items.
+is. The default is `null`, which gates nothing. No installed extension fills
+it yet; it is there for a request-a-quote extension, and the same shape would
+serve pre-orders, trade-only pricing or out-of-region items.
 
 A gate is installed from an effect after mount, so the first paint is always
 the ungated one and a hidden price shows for a frame before it goes. Doing
@@ -245,7 +258,8 @@ formatPrice: (value) => string | null
 
 How a price becomes text. `wrapCurrency` and `priceHtml` offer every amount
 to it and use what comes back; `null` means *not mine* and core formats the
-value exactly as it always has. Filled by `currency-switcher`.
+value exactly as it always has. No installed extension fills it yet; it is
+there for a currency switcher that shows prices in the shopper's currency.
 
 Two things about it are worth copying for the next slot of its kind. It
 lives in `useUtilsStore` rather than beside the cart **because that is the
@@ -288,9 +302,8 @@ agreed with.
   keeps its rules in the store settings blob — so an extension that needs a
   new table or a new route needs the WordPress plugin changed too.
 - **Nothing is enforced on the server.** An extension runs in the browser, and
-  what it decides is posted with the order — a discount `discount-rules`
-  worked out, or `request-quote` saying a product is not for sale at its
-  listed price. Someone calling the API directly is bound by none of it. For
+  what it decides is posted with the order — for example a discount
+  `discount-rules` worked out. Someone calling the API directly is bound by none of it. For
   a store where that matters, the extension's own rule module has to run
   again on the WordPress side against what was submitted, and disagreements
   rejected.

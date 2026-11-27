@@ -15,9 +15,11 @@ import PurchaseEdit from '../../components/pages/PurchaseEdit';
 import DropDown from '../../components/DropDown';
 
 import { useCounterStore } from '../../store/useCounterStore'
+import { hasOnlyGrantedAccess } from '../../lib/rolePermissions';
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
 import { useUtilsStore } from '../../store/useUtilsStore';
+import { useCan } from '../../lib/useCan';
 
 
 /* Status pills. Tones match the Orders list. */
@@ -97,7 +99,15 @@ const Purchases = (props) => {
 
   const { wrapCurrency, formatDate } = useUtilsStore()
 
-  const { token, paymentGateways, addNotification, privacyMode } = useCounterStore()
+  const { token, paymentGateways, addNotification, privacyMode, userDataX, settings } = useCounterStore()
+  const permit = useCan("purchases"); /* Roles & Permissions */
+
+  /*
+    A supplier granted Purchases (Settings → Roles & Permissions) sees the
+    purchases made from them, read-only: the server lists only those and
+    refuses any change, so the editing controls are left out.
+  */
+  const supplierView = hasOnlyGrantedAccess(userDataX, "accounts");
 
   const router = useRouter()
 
@@ -125,7 +135,8 @@ const Purchases = (props) => {
   var [dateResetKey, setdateResetKey] = useState(0);
 
   useEffect(() => {
-    if (!token) return;
+    /* A supplier sees only their own purchases, so has no supplier filter. */
+    if (!token || supplierView) return;
     fetch(serverUrl + "wp-json/combo-store/v2/get_users", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
@@ -137,7 +148,7 @@ const Purchases = (props) => {
         setsuppliers(list.sort((a, b) => String(a.name).localeCompare(String(b.name))));
       })
       .catch(() => { });
-  }, [token]);
+  }, [token, supplierView]);
 
   function onSelectRows(rows) {
     setselectedRows(rows);
@@ -159,6 +170,7 @@ const Purchases = (props) => {
 
   /* Creates an empty purchase; it is filled in from the Edit drawer. */
   async function add_purchase() {
+if (!permit.allowed("create")) return permit.denied();
 
     setloading(true);
     fetch(serverUrl + "wp-json/combo-store/v2/create_purchase", {
@@ -208,6 +220,7 @@ const Purchases = (props) => {
 
 
   function delete_purchases(ids) {
+if (!permit.allowed("delete")) return permit.denied();
 
     ids = ids ? ids : selectedRows;
 
@@ -413,17 +426,26 @@ const Purchases = (props) => {
         key={columnIndex}>
         <div className="py-3 text-sm sm:pr-5 flex flex-col gap-1.5">
           <div className="flex items-center gap-2">
-            <Link className="font-mono text-sm font-semibold text-blue-600 transition-colors hover:text-blue-700 hover:underline" href={`/dashboard/purchases/${entry.id}`}>
-              {"#" + entry.id}
-            </Link>
+            {supplierView ? (
+              /* View-only for a supplier: the page shows no editor. */
+              <Link className="font-mono text-sm font-semibold text-blue-600 transition-colors hover:text-blue-700 hover:underline" href={`/dashboard/purchases/${entry.id}`}>
+                {"#" + entry.id}
+              </Link>
+            ) : (
+              <>
+                <Link className="font-mono text-sm font-semibold text-blue-600 transition-colors hover:text-blue-700 hover:underline" href={`/dashboard/purchases/${entry.id}`}>
+                  {"#" + entry.id}
+                </Link>
 
-            <PopoverButton buttonLabel={""} buttonIcon={<IconEdit size={16} />} title={"Edit Purchase"} drawer={"right"} buttonClass={ICON_BUTTON}>
+                <PopoverButton buttonLabel={""} buttonIcon={<IconEdit size={16} />} title={"Edit Purchase"} drawer={"right"} buttonClass={ICON_BUTTON}>
 
-              <div className="p-5 bg-gray-50 text-left">
-                <PurchaseEdit id={entry.id} variant="drawer" />
-              </div>
+                  <div className="p-5 bg-gray-50 text-left">
+                    <PurchaseEdit id={entry.id} variant="drawer" />
+                  </div>
 
-            </PopoverButton>
+                </PopoverButton>
+              </>
+            )}
           </div>
 
           {/* The dates had a column of their own; they sit under the ID as on Orders. */}
@@ -505,14 +527,14 @@ const Purchases = (props) => {
 
           </PopoverButton>
 
-          <PopoverButton wrapperClass={`flex justify-end`} buttonLabel={" "} buttonIcon={<IconDotsVertical size={18} />} title={"Actions"} position={"bottomRight"} popoverClass={`absolute z-[999] w-52 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg`} buttonClass={ICON_BUTTON}>
+          {!supplierView && <PopoverButton wrapperClass={`flex justify-end`} buttonLabel={" "} buttonIcon={<IconDotsVertical size={18} />} title={"Actions"} position={"bottomRight"} popoverClass={`absolute z-[999] w-52 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg`} buttonClass={ICON_BUTTON}>
 
             <div className="p-1.5">
               <div className="flex flex-col gap-0.5">
                 <Link className={MENU_ITEM} href={`/dashboard/purchases/${entry.id}`}>
                   <IconEyeShare size={16} /> Open
                 </Link>
-                <div className={`${MENU_ITEM} !text-red-600 hover:!bg-red-50 hover:!text-red-700`} onClick={() => {
+                <div className={`${MENU_ITEM} !text-red-600 hover:!bg-red-50 hover:!text-red-700`} {...permit.hide("delete")} onClick={() => {
                   if (confirm(`Permanently delete purchase #${entry.id} and its items? There is no trash, so this cannot be undone.`)) {
                     delete_purchases([entry.id]);
                   }
@@ -522,7 +544,7 @@ const Purchases = (props) => {
               </div>
             </div>
 
-          </PopoverButton>
+          </PopoverButton>}
 
         </div>
       </td>
@@ -666,9 +688,11 @@ const Purchases = (props) => {
           <button type="button" className={TOOLBAR_BUTTON} disabled={loading} onClick={fetchPosts}>
             <IconRefresh size={16} className={loading ? "animate-spin" : ""} /> {("Refresh")}
           </button>
-          <button type="button" className={PRIMARY_BUTTON} disabled={loading} onClick={() => add_purchase()}>
-            <IconPlus size={16} /> {("Add Purchase")}
-          </button>
+          {!supplierView && (
+            <button type="button" className={PRIMARY_BUTTON} disabled={loading} {...permit.hide("create")} onClick={() => add_purchase()}>
+              <IconPlus size={16} /> {("Add Purchase")}
+            </button>
+          )}
         </div>
       </div>
 
@@ -694,7 +718,7 @@ const Purchases = (props) => {
             ))}
           </select>
 
-          <select className={FILTER_SELECT} value={supplierPick} onChange={ev => {
+          {!supplierView && <select className={FILTER_SELECT} value={supplierPick} onChange={ev => {
             var value = ev.target.value;
             var picked = [...supplierOptions.list, ...supplierOptions.others].find((s) => s.id === value);
             setqueryPrams({
@@ -715,7 +739,7 @@ const Purchases = (props) => {
                 {supplierOptions.others.map((s) => <option key={s.id} value={s.id}>{s.name}{countLabel(s.count)}</option>)}
               </optgroup>
             )}
-          </select>
+          </select>}
 
           <select className={FILTER_SELECT} value={productPick} onChange={ev => {
             var value = ev.target.value;
@@ -751,14 +775,14 @@ const Purchases = (props) => {
 
         </div>
 
-        {selectedRows?.length > 0 && (
+        {!supplierView && selectedRows?.length > 0 && (
           <div className="flex flex-wrap items-center gap-2 rounded-lg border border-[#634FE5]/30 bg-[#634FE5]/5 py-1 pl-3 pr-1">
             <span className="text-sm font-medium text-gray-700">{selectedRows.length} {("selected")}</span>
             <button type="button" className="!h-8 rounded-md !border-0 !bg-transparent px-2 text-sm !text-gray-500 !shadow-none hover:!bg-white hover:!text-gray-800" onClick={() => setselectedRows([])}>{("Clear")}</button>
             <button type="button"
               className="inline-flex !h-8 items-center gap-2 !rounded-lg !border-0 !bg-red-600 !px-3 !py-0 !text-sm !font-medium !text-white !shadow-sm transition-colors hover:!bg-red-700 cursor-pointer disabled:opacity-50"
               disabled={loading}
-              onClick={() => {
+              {...permit.hide("delete")} onClick={() => {
                 if (confirm(`Permanently delete ${selectedRows.length} ${selectedRows.length === 1 ? "purchase" : "purchases"} and their items? There is no trash, so this cannot be undone.`)) {
                   delete_purchases()
                 }
@@ -819,10 +843,14 @@ const Purchases = (props) => {
         <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-gray-200 bg-white px-6 py-14 text-center">
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 text-gray-400"><IconTruckLoading size={24} /></div>
           <div className="text-sm font-semibold text-gray-800">{("No purchases yet")}</div>
-          <p className="max-w-sm text-xs text-gray-500">{("Record the stock you buy from suppliers, so what you paid is on record against each supplier and product.")}</p>
-          <button type="button" className={`${PRIMARY_BUTTON} mt-2`} disabled={loading} onClick={() => add_purchase()}>
-            <IconPlus size={16} /> {("Add Purchase")}
-          </button>
+          <p className="max-w-sm text-xs text-gray-500">{supplierView
+            ? ("Purchases the store makes from you will show up here.")
+            : ("Record the stock you buy from suppliers, so what you paid is on record against each supplier and product.")}</p>
+          {!supplierView && (
+            <button type="button" className={`${PRIMARY_BUTTON} mt-2`} disabled={loading} {...permit.hide("create")} onClick={() => add_purchase()}>
+              <IconPlus size={16} /> {("Add Purchase")}
+            </button>
+          )}
         </div>
       ) : (
         <EntriesTable

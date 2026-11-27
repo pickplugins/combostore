@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { IconCopy, IconExternalLink, IconFidgetSpinner, IconKey, IconPlus, IconX } from "@tabler/icons-react";
 import { useCounterStore } from '../../store/useCounterStore'
 import { useUtilsStore } from '../../store/useUtilsStore';
+import { useCan } from '../../lib/useCan';
 
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
@@ -127,6 +128,7 @@ function expiresValue(form) {
 const LicenseEdit = ({ id, onSaved }) => {
 
 	const { token, addNotification, paymentGateways } = useCounterStore()
+	const permit = useCan("licenses"); /* Roles & Permissions */
 	const { wrapCurrency } = useUtilsStore()
 
 	var [license, setlicense] = useState(null);
@@ -185,6 +187,7 @@ const LicenseEdit = ({ id, onSaved }) => {
 	}
 
 	function save() {
+		if (!permit.allowed("edit")) return permit.denied();
 		if (!changed.length) return;
 
 		/* Only what changed, so nothing else on the row is touched. */
@@ -345,7 +348,7 @@ const LicenseEdit = ({ id, onSaved }) => {
 						</label>
 
 						<div className="flex items-center gap-3">
-							<button type="button" className={PRIMARY_BUTTON} disabled={!changed.length || saving} onClick={save}>
+							<button type="button" className={PRIMARY_BUTTON} disabled={!changed.length || saving} {...permit.hide("edit")} onClick={save}>
 								{saving ? "Saving…" : "Save changes"}
 							</button>
 							{changed.length > 0 && !saving && (
@@ -430,6 +433,7 @@ export default LicenseEdit
 export const LicenseCreate = ({ onCreated }) => {
 
 	const { token, addNotification } = useCounterStore()
+	const permit = useCan("licenses"); /* Roles & Permissions */
 
 	const blank = { user_email: "", userid: "", product_id: "", variation_id: "", order_id: "", license_key: "", status: "active", activation_limit: "1", lifetime: true, expires_at: "" };
 	var [form, setform] = useState(blank);
@@ -439,6 +443,7 @@ export const LicenseCreate = ({ onCreated }) => {
 	const set = (key) => (ev) => setform({ ...form, [key]: ev.target.type === "checkbox" ? ev.target.checked : ev.target.value });
 
 	function create() {
+		if (!permit.allowed("create")) return permit.denied();
 		const payload = {
 			status: form.status,
 			activation_limit: Math.max(0, parseInt(form.activation_limit) || 0),
@@ -536,7 +541,7 @@ export const LicenseCreate = ({ onCreated }) => {
 					)}
 
 					<div>
-						<button type="button" className={PRIMARY_BUTTON} disabled={saving || (!form.lifetime && !form.expires_at)} onClick={create}>
+						<button type="button" className={PRIMARY_BUTTON} disabled={saving || (!form.lifetime && !form.expires_at)} {...permit.hide("create")} onClick={create}>
 							<IconKey size={16} /> {saving ? "Creating…" : "Create license"}
 						</button>
 					</div>

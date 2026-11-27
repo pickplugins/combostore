@@ -7,6 +7,7 @@ import { useCounterStore } from '../store/useCounterStore'
 import Spinner from '../components/Spinner';
 import WidgetWrapper from '../components/WidgetWrapper';
 import { shippingClassRequest, shippingClassCostLabel } from '../lib/shippingClasses';
+import { useCan } from '../lib/useCan';
 
 /*
   New / edit form for one shipping class (cstore_shipping_classes, saved
@@ -51,6 +52,7 @@ const ShippingClassForm = (props) => {
   var isEdit = !!entry?.id
 
   const { token, addNotification } = useCounterStore()
+  const permit = useCan("shipping_classes"); /* Roles & Permissions */
 
   var [loading, setloading] = useState(false);
   var [classData, setclassData] = useState({
@@ -64,6 +66,7 @@ const ShippingClassForm = (props) => {
   });
 
   function save_shipping_class() {
+    if (!permit.allowed("save")) return permit.denied();
     if (!classData.name.trim()) {
       addNotification({ type: 'error', title: 'Give the shipping class a name', content: '' })
       return;
@@ -141,7 +144,7 @@ const ShippingClassForm = (props) => {
 
         <div className="flex flex-wrap items-center gap-3">
 
-          <div className={PRIMARY_BUTTON} onClick={ev => {
+          <div className={PRIMARY_BUTTON} {...permit.hide("save")} onClick={ev => {
             save_shipping_class()
           }}><IconPlus size={16} /> {("Create Class")}</div>
 
@@ -192,7 +195,7 @@ const ShippingClassForm = (props) => {
             </span>
           )}
 
-          <div className={PRIMARY_BUTTON} onClick={ev => {
+          <div className={PRIMARY_BUTTON} {...permit.hide("save")} onClick={ev => {
             save_shipping_class()
           }}>{("Update")}</div>
 

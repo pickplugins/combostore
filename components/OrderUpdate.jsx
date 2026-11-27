@@ -21,6 +21,7 @@ import UsersPicker from '../components/shop-elements/UsersPicker';
 import ProductsPicker from '../components/shop-elements/ProductsPicker';
 import countries from '../lib/Countries'
 import states from '../lib/States'
+import { useCan } from '../lib/useCan';
 
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
@@ -41,6 +42,7 @@ const OrderUpdate = (props) => {
 
 
   const { token, paymentGateways, notifications, addNotification, cartItems, addCartItems, resetCartItems, userDataX, setUserDataX, navToggle, setnavToggle, lang, setlang, orderStatusArgs, paymentStatusArgs, privacyMode } = useCounterStore()
+  const permit = useCan(["orders", "incomplete", "refunds"]); /* Roles & Permissions */
 
   var orderId = props?.order_id
   var [loading, setloading] = useState(false);
@@ -458,6 +460,7 @@ const OrderUpdate = (props) => {
   }
 
   function update_order() {
+if (!permit.allowed("edit")) return permit.denied();
 
     setloading(true)
 
@@ -518,6 +521,7 @@ const OrderUpdate = (props) => {
 
   }
   function update_order_items() {
+if (!permit.allowed("edit")) return permit.denied();
 
     setloading(true)
 
@@ -809,7 +813,7 @@ const OrderUpdate = (props) => {
 
           <div className="inline-flex items-center gap-2 rounded-lg bg-[#634FE5] px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#5540d4] cursor-pointer"
 
-            onClick={ev => {
+            {...permit.hide("edit")} onClick={ev => {
               update_order()
             }}
           >Update</div>
@@ -1031,7 +1035,7 @@ const OrderUpdate = (props) => {
 
                             <div className="flex flex-col gap-4">
 
-                              <input className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 rounded-lg px-3 py-2 text-sm !w-full" type="text" step="0.01" value={item.product_name} onChange={ev => {
+                              <input className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 rounded-lg px-3 py-2 text-sm !w-full" type="text" step="0.01" value={item.product_name ?? ''} onChange={ev => {
 
                                 var lineItemsX = [...lineItems]
                                 lineItemsX[index].product_name = (ev.target.value);
@@ -1047,7 +1051,7 @@ const OrderUpdate = (props) => {
 
                                 <div className="flex gap-2 items-center ">
                                   <div>Price: </div>
-                                  <div><input className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 rounded-lg px-3 py-2 text-sm w-20 !px-2 !py-1 text-right tabular-nums" type="number" step="0.01" value={item.price} onChange={ev => {
+                                  <div><input className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 rounded-lg px-3 py-2 text-sm w-20 !px-2 !py-1 text-right tabular-nums" type="number" step="0.01" value={item.price ?? ''} onChange={ev => {
 
                                     var lineItemsX = [...lineItems]
                                     var price = parseFloat(ev.target.value);
@@ -1086,7 +1090,7 @@ const OrderUpdate = (props) => {
                                 </div>
                                 <div className="flex gap-2 items-center">
                                   <div>Trade Price: </div>
-                                  <div><input className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 rounded-lg px-3 py-2 text-sm w-20 !px-2 !py-1 text-right tabular-nums" type="number" step="0.01" value={item.trade_price} onChange={ev => {
+                                  <div><input className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 rounded-lg px-3 py-2 text-sm w-20 !px-2 !py-1 text-right tabular-nums" type="number" step="0.01" value={item.trade_price ?? ''} onChange={ev => {
 
                                     var lineItemsX = [...lineItems]
 
@@ -1105,7 +1109,7 @@ const OrderUpdate = (props) => {
 
                                 <div className="flex gap-2 items-center">
                                   <div>Quantity: </div>
-                                  <div><input className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 rounded-lg px-3 py-2 text-sm w-20 !px-2 !py-1 text-right tabular-nums" type="number" step="1" value={item.quantity} onChange={ev => {
+                                  <div><input className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 rounded-lg px-3 py-2 text-sm w-20 !px-2 !py-1 text-right tabular-nums" type="number" step="1" value={item.quantity ?? ''} onChange={ev => {
 
                                     var lineItemsX = [...lineItems]
                                     var quantity = parseFloat(ev.target.value);
@@ -1141,7 +1145,7 @@ const OrderUpdate = (props) => {
                               <div className="flex gap-2 items-center">
 
                                 <div className="flex gap-2 items-center">
-                                  <div><select className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 rounded-lg px-3 py-2 text-sm w-24 !px-2 !py-1" type="number" step="0.01" value={item.discount_type} onChange={ev => {
+                                  <div><select className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 rounded-lg px-3 py-2 text-sm w-24 !px-2 !py-1" type="number" step="0.01" value={item.discount_type ?? ''} onChange={ev => {
 
                                     var lineItemsX = [...lineItems]
                                     var discountType = (ev.target.value);
@@ -1183,7 +1187,7 @@ const OrderUpdate = (props) => {
 
                                 <div className="flex gap-2 items-center">
                                   <div>Discount amount: </div>
-                                  <div><input className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 rounded-lg px-3 py-2 text-sm w-20 !px-2 !py-1 text-right tabular-nums" type="number" step="1" value={item.discount_amount} onChange={ev => {
+                                  <div><input className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 rounded-lg px-3 py-2 text-sm w-20 !px-2 !py-1 text-right tabular-nums" type="number" step="1" value={item.discount_amount ?? ''} onChange={ev => {
 
 
 
@@ -1223,7 +1227,7 @@ const OrderUpdate = (props) => {
                                 </div>
                                 <div className="flex gap-2 items-center">
                                   <div>Tax: </div>
-                                  <div><input className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 rounded-lg px-3 py-2 text-sm w-20 !px-2 !py-1 text-right tabular-nums" type="number" step="1" value={item.tax} onChange={ev => {
+                                  <div><input className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 rounded-lg px-3 py-2 text-sm w-20 !px-2 !py-1 text-right tabular-nums" type="number" step="1" value={item.tax ?? ''} onChange={ev => {
 
 
 
@@ -1632,7 +1636,7 @@ const OrderUpdate = (props) => {
 
 
             <div className="">
-              <input type="text" className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 rounded-lg px-3 py-2 text-sm w-full" value={orderData?.advance_payment} onChange={ev => {
+              <input type="text" className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 rounded-lg px-3 py-2 text-sm w-full" value={orderData?.advance_payment ?? ''} onChange={ev => {
                 var value = ev.target.value;
                 setorderData({ ...orderData, advance_payment: value })
 
@@ -1646,7 +1650,7 @@ const OrderUpdate = (props) => {
 
 
             <div className="">
-              <textarea type="text" className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 rounded-lg px-3 py-2 text-sm w-full" value={orderData?.advance_payment_note} onChange={ev => {
+              <textarea type="text" className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 rounded-lg px-3 py-2 text-sm w-full" value={orderData?.advance_payment_note ?? ''} onChange={ev => {
                 var value = ev.target.value;
                 setorderData({ ...orderData, advance_payment_note: value })
 
@@ -1673,7 +1677,7 @@ const OrderUpdate = (props) => {
         <div className="flex flex-col gap-1.5 border-b border-gray-100 py-3 last:border-0 lg:flex-row lg:items-center lg:gap-4 lg:[&>div+div]:max-w-md lg:[&>div+div]:flex-1">
           <div className="block py-1 text-sm font-medium text-gray-700 lg:w-56 lg:shrink-0">{("Discount Amount")}</div>
           <div className="">
-            <input type="text" className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 rounded-lg px-3 py-2 text-sm !w-full" value={orderData?.discount_amount} onChange={ev => {
+            <input type="text" className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 rounded-lg px-3 py-2 text-sm !w-full" value={orderData?.discount_amount ?? ''} onChange={ev => {
               var value = ev.target.value;
               //setorderData({ ...orderData, discount_amount: value })
               var couponsX = { ...coupons }
@@ -1695,7 +1699,7 @@ const OrderUpdate = (props) => {
 
               <div className="flex flex-wrap items-center gap-2">
                 <div>
-                  <input type="text" name="" className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 rounded-lg px-3 py-2 text-sm w-32 uppercase tracking-wide" value={coupons?.couponCode} onChange={ev => {
+                  <input type="text" name="" className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 rounded-lg px-3 py-2 text-sm w-32 uppercase tracking-wide" value={coupons?.couponCode ?? ''} onChange={ev => {
 
                     var value = ev.target.value;
                     var couponsX = { ...coupons }
@@ -1880,7 +1884,7 @@ const OrderUpdate = (props) => {
             <div className="block py-1 text-sm font-medium text-gray-700 lg:w-56 lg:shrink-0">{('Shipping Method')}</div>
 
 
-            {/* <select name="shipping_method" className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 rounded-lg px-3 py-2 text-sm w-full" value={orderData?.shipping_method} id="" onChange={ev => {
+            {/* <select name="shipping_method" className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 rounded-lg px-3 py-2 text-sm w-full" value={orderData?.shipping_method ?? ''} id="" onChange={ev => {
               var value = ev.target.value;
               setorderData({ ...orderData, shipping_method: value })
             }}>
@@ -1932,7 +1936,7 @@ const OrderUpdate = (props) => {
 
 
             <div className="">
-              <input type="text" className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 rounded-lg px-3 py-2 text-sm w-full" value={orderData?.shipping_amount} onChange={ev => {
+              <input type="text" className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 rounded-lg px-3 py-2 text-sm w-full" value={orderData?.shipping_amount ?? ''} onChange={ev => {
                 var value = ev.target.value;
                 setorderData({ ...orderData, shipping_amount: value })
 
@@ -1971,7 +1975,7 @@ const OrderUpdate = (props) => {
               <div className="flex flex-col gap-1.5">
                 <div className="block py-1 text-sm font-medium text-gray-700 lg:w-56 lg:shrink-0">{("Billing Name")}</div>
                 <div className="">
-                  <input type="text" className={`!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 rounded-lg px-3 py-2 text-sm !w-full ${privacyMode ? 'blur-[3px]' : ''}`} value={orderData?.billing_name} onChange={ev => {
+                  <input type="text" className={`!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 rounded-lg px-3 py-2 text-sm !w-full ${privacyMode ? 'blur-[3px]' : ''}`} value={orderData?.billing_name ?? ''} onChange={ev => {
                     var value = ev.target.value;
                     setorderData({ ...orderData, billing_name: value })
                   }} />
@@ -1980,7 +1984,7 @@ const OrderUpdate = (props) => {
               <div className="flex flex-col gap-1.5">
                 <div className="block py-1 text-sm font-medium text-gray-700 lg:w-56 lg:shrink-0">{("Billing Email")}</div>
                 <div className="">
-                  <input type="text" className={`!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 rounded-lg px-3 py-2 text-sm !w-full ${privacyMode ? 'blur-[3px]' : ''}`} value={orderData?.billing_email} onChange={ev => {
+                  <input type="text" className={`!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 rounded-lg px-3 py-2 text-sm !w-full ${privacyMode ? 'blur-[3px]' : ''}`} value={orderData?.billing_email ?? ''} onChange={ev => {
                     var value = ev.target.value;
                     setorderData({ ...orderData, billing_email: value })
                   }} />
@@ -1989,7 +1993,7 @@ const OrderUpdate = (props) => {
               <div className="flex flex-col gap-1.5">
                 <div className="block py-1 text-sm font-medium text-gray-700 lg:w-56 lg:shrink-0">{("Billing Phone")}</div>
                 <div className="">
-                  <input type="text" className={`!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 rounded-lg px-3 py-2 text-sm !w-full ${privacyMode ? 'blur-[3px]' : ''}`} value={orderData?.billing_phone} onChange={ev => {
+                  <input type="text" className={`!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 rounded-lg px-3 py-2 text-sm !w-full ${privacyMode ? 'blur-[3px]' : ''}`} value={orderData?.billing_phone ?? ''} onChange={ev => {
                     var value = ev.target.value;
                     setorderData({ ...orderData, billing_phone: value })
                   }} />
@@ -2035,7 +2039,7 @@ const OrderUpdate = (props) => {
               <div className="flex flex-col gap-1.5">
                 <div className="block py-1 text-sm font-medium text-gray-700 lg:w-56 lg:shrink-0">{("Billing Address")}</div>
                 <div className="">
-                  <textarea className={`!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 rounded-lg px-3 py-2 text-sm !w-full ${privacyMode ? 'blur-[3px]' : ''}`} value={orderData?.billing_address} onChange={ev => {
+                  <textarea className={`!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 rounded-lg px-3 py-2 text-sm !w-full ${privacyMode ? 'blur-[3px]' : ''}`} value={orderData?.billing_address ?? ''} onChange={ev => {
                     var value = ev.target.value;
                     setorderData({ ...orderData, billing_address: value })
                   }} />
@@ -2068,7 +2072,7 @@ const OrderUpdate = (props) => {
               <div className="flex flex-col gap-1.5">
                 <div className="block py-1 text-sm font-medium text-gray-700 lg:w-56 lg:shrink-0">{("Shipping Name")}</div>
                 <div className="">
-                  <input type="text" className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 rounded-lg px-3 py-2 text-sm !w-full" value={orderData?.shipping_name} onChange={ev => {
+                  <input type="text" className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 rounded-lg px-3 py-2 text-sm !w-full" value={orderData?.shipping_name ?? ''} onChange={ev => {
                     var value = ev.target.value;
                     setorderData({ ...orderData, shipping_name: value })
                   }} />
@@ -2078,7 +2082,7 @@ const OrderUpdate = (props) => {
               <div className="flex flex-col gap-1.5">
                 <div className="block py-1 text-sm font-medium text-gray-700 lg:w-56 lg:shrink-0">{("Shipping Phone")}</div>
                 <div className="">
-                  <input type="text" className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 rounded-lg px-3 py-2 text-sm !w-full" value={orderData?.shipping_phone} onChange={ev => {
+                  <input type="text" className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 rounded-lg px-3 py-2 text-sm !w-full" value={orderData?.shipping_phone ?? ''} onChange={ev => {
                     var value = ev.target.value;
                     setorderData({ ...orderData, shipping_phone: value })
                   }} />
@@ -2087,7 +2091,7 @@ const OrderUpdate = (props) => {
               <div className="flex flex-col gap-1.5">
                 <div className="block py-1 text-sm font-medium text-gray-700 lg:w-56 lg:shrink-0">{("Shipping Address")}</div>
                 <div className="">
-                  <textarea name="" id="" className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 rounded-lg px-3 py-2 text-sm !w-full" value={orderData?.shipping_address} onChange={ev => {
+                  <textarea name="" id="" className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 rounded-lg px-3 py-2 text-sm !w-full" value={orderData?.shipping_address ?? ''} onChange={ev => {
                     var value = ev.target.value;
                     setorderData({ ...orderData, shipping_address: value })
                   }}></textarea>
@@ -2114,7 +2118,7 @@ const OrderUpdate = (props) => {
 
 
           <div className="">
-            <input type="text" className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 rounded-lg px-3 py-2 text-sm w-full" value={orderData?.transaction_id} onChange={ev => {
+            <input type="text" className="!shadow-none !border !border-gray-300 transition-colors focus:!border-[#634FE5] focus:!ring-2 focus:!ring-[#634FE5]/20 rounded-lg px-3 py-2 text-sm w-full" value={orderData?.transaction_id ?? ''} onChange={ev => {
               var value = ev.target.value;
               setorderData({ ...orderData, transaction_id: value })
             }} />

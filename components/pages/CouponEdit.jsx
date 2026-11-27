@@ -17,6 +17,7 @@ import TermsPicker from "../../components/shop-elements/TermsPicker";
 import UsersPicker from "../../components/shop-elements/UsersPicker";
 import HtmlEditor from "../../components/HtmlEditor";
 import DatePicker from "react-datepicker";
+import { useCan } from '../../lib/useCan';
 import "react-datepicker/dist/react-datepicker.css";
 
 
@@ -56,6 +57,7 @@ const CouponEdit = ({ id }) => {
 
 
   const { token, appData, notifications, addNotification, userDataX, setUserDataX } = useCounterStore()
+  const permit = useCan("coupons"); /* Roles & Permissions */
 
   var [currentObject, setcurrentObject] = useState(null);
 
@@ -214,6 +216,7 @@ const CouponEdit = ({ id }) => {
       });
   }
   function update_product() {
+if (!permit.allowed("edit")) return permit.denied();
 
 
     // if (!token) {
@@ -619,7 +622,7 @@ const CouponEdit = ({ id }) => {
               <div className="form-card flex flex-wrap items-center justify-end gap-3 rounded-xl border border-gray-200 bg-white px-5 py-3 shadow-sm">
 
                 <div className="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-gray-800 cursor-pointer"
-                  onClick={ev => {
+                  {...permit.hide("edit")} onClick={ev => {
                     update_product()
                   }}
                 >Update</div>

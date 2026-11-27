@@ -16,6 +16,7 @@ import { IconEyeShare, IconDotsVertical, IconTrash, IconUserPlus, IconMail, Icon
 import { AvailabilityBadge, AVAILABILITY, VEHICLES } from './RiderEdit';
 import { parseDate, timeAgo } from './deliveryUi';
 import { postApi } from './affiliateUi';
+import AffiliateApplications from './AffiliateApplications';
 
 
 const ICON_BUTTON =
@@ -97,6 +98,38 @@ const Riders = ({ role = "rider" }) => {
 	/* Riders only: availability, vehicle, zone and delivery counts, by user id. */
 	var isRiders = role === "rider";
 	var [riderStats, setriderStats] = useState({});
+
+	/* Riders only: "riders" (the list) or "applications" (rider sign-ups waiting for approval). */
+	var [view, setview] = useState("riders");
+	var [pendingApplications, setpendingApplicationsState] = useState(0);
+
+	/* Every new count also goes to the sidebar's Riders badge (Sidebar.jsx listens), so approving here updates it at once. */
+	function setpendingApplications(count) {
+		setpendingApplicationsState(count);
+		try {
+			window.dispatchEvent(new CustomEvent('cstore-rider-applications-changed', { detail: count }));
+		} catch (e) { }
+	}
+
+	/* `?view=applications` opens the Applications tab; the badge counts waiting applications. */
+	useEffect(() => {
+		if (!isRiders) return;
+		try {
+			if (new URLSearchParams(window.location.search).get("view") === "applications") setview("applications");
+		} catch (e) { }
+	}, [isRiders]);
+
+	useEffect(() => {
+		if (!isRiders || !token) return;
+		fetch(serverUrl + "wp-json/combo-store/v2/get_rider_applications", {
+			method: "POST",
+			headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+			body: JSON.stringify({ status: "pending", per_page: 1 }),
+		})
+			.then((response) => response.ok ? response.json() : null)
+			.then((res) => { if (res?.status === "success") setpendingApplications(parseInt(res.pending, 10) || 0); })
+			.catch(() => { });
+	}, [isRiders, token]);
 
 	function fetchRiderStats(posts) {
 		var ids = posts.map(riderId).filter(Boolean);
@@ -569,6 +602,24 @@ const Riders = ({ role = "rider" }) => {
 				</PopoverButton>
 			</div>
 
+			{isRiders && (
+				<div className="flex gap-1 border-b border-gray-200" role="tablist">
+					{[["riders", "Riders"], ["applications", "Applications"]].map(([value, label]) => (
+						<button key={value} type="button" role="tab" aria-selected={view === value} onClick={() => setview(value)}
+							className={`-mb-px inline-flex items-center gap-2 !rounded-none !border-0 !border-b-2 !bg-transparent !px-3 !py-2 !text-sm !font-medium !shadow-none transition-colors cursor-pointer ${view === value ? "!border-[#634FE5] !text-[#634FE5]" : "!border-transparent !text-gray-500 hover:!text-gray-800"}`}>
+							{label}
+							{value === "applications" && pendingApplications > 0 && (
+								<span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[11px] font-semibold text-amber-700">{pendingApplications}</span>
+							)}
+						</button>
+					))}
+				</div>
+			)}
+
+			{isRiders && view === "applications" ? (
+				<AffiliateApplications kind="rider" onPendingChange={setpendingApplications} />
+			) : (<>
+
 			<div className="flex flex-wrap justify-between gap-3">
 
 				<div className="flex flex-wrap gap-2">
@@ -607,6 +658,7 @@ const Riders = ({ role = "rider" }) => {
 				onSelectRows={onSelectRows}
 				onRefreshRequest={onRefreshRequest}
 			/>
+			</>)}
 		</div>
 	);
 };

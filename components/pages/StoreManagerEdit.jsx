@@ -11,7 +11,7 @@ import Spinner from '../../components/Spinner';
 import { useCounterStore } from '../../store/useCounterStore'
 import { useUtilsStore } from '../../store/useUtilsStore'
 import { timeAgo, parseDate } from "./deliveryUi";
-import { BADGE_BASE, FALLBACK_BADGE_CLASSES, titleCase, TOOLBAR_BUTTON, PRIMARY_BUTTON, FIELD, LABEL, CARD, FILTER_SELECT, postApi } from "./affiliateUi";
+import { BADGE_BASE, FALLBACK_BADGE_CLASSES, titleCase, TOOLBAR_BUTTON, PRIMARY_BUTTON, FIELD, FIELD_INVALID, FIELD_ERROR, LABEL, CARD, FILTER_SELECT, postApi } from "./affiliateUi";
 import { PasswordCard } from "./AffiliateEdit";
 import { duration } from "./SupportAgentEdit";
 
@@ -156,6 +156,8 @@ const StoreManagerEdit = ({ id, variant = "page" }) => {
   var [profile, setprofile] = useState(null);
   var [profileForm, setprofileForm] = useState(null);
   var [savingProfile, setsavingProfile] = useState(false);
+  /* The server's refusal of the phone number (update_user_profile field: "phone"), shown under the field. */
+  var [phoneError, setphoneError] = useState(null);
 
   function load() {
     if (!token || !id) return;
@@ -239,9 +241,11 @@ const StoreManagerEdit = ({ id, variant = "page" }) => {
       .then((res) => {
         setsavingProfile(false);
         if (res?.error) {
-          addNotification({ type: "error", title: "Not saved", content: res?.message ?? "The contact details could not be saved." });
+          if (res?.field === "phone") setphoneError(res?.message || "This phone number can't be used.");
+          else addNotification({ type: "error", title: "Not saved", content: res?.message ?? "The contact details could not be saved." });
           return;
         }
+        setphoneError(null);
         addNotification({ type: "success", title: "Saved", content: "Contact details updated." });
         loadProfile();
         load();
@@ -525,7 +529,8 @@ const StoreManagerEdit = ({ id, variant = "page" }) => {
                 </div>
                 <div>
                   <label className={LABEL}>{("Phone")}</label>
-                  <input type="tel" className={FIELD} value={profileForm.phone} onChange={setP("phone")} />
+                  <input type="tel" className={phoneError ? FIELD_INVALID : FIELD} aria-invalid={phoneError ? true : undefined} aria-describedby={phoneError ? "profile-phone-error" : undefined} value={profileForm.phone} onChange={(e) => { setphoneError(null); setP("phone")(e); }} />
+                  {phoneError && <p id="profile-phone-error" role="alert" className={FIELD_ERROR}>{phoneError}</p>}
                 </div>
                 <div className="flex justify-end">
                   <button type="button" className={PRIMARY_BUTTON} disabled={savingProfile || !profileDirty} onClick={saveProfile}>

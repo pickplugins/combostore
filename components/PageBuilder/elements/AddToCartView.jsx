@@ -1,6 +1,6 @@
 
 "use client"
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { IconSquareRoundedPlusFilled, IconSquareRoundedMinusFilled, IconStarFilled, IconStar, IconIdBadge2 } from "@tabler/icons-react";
 import { tablerIcon } from "@/components/icons/TablerIcon";
 
@@ -118,6 +118,9 @@ const AddToCart = (props) => {
 	const IconX = tablerIcon(icon);
 
 	const trackPageVisit = useUtilsStore((state) => state.trackPageVisit);
+
+	/* The quantity in the box when it got focus, so leaving it unchanged logs nothing. */
+	const quantityOnFocus = useRef(null);
 	const wrapCurrency = useUtilsStore((state) => state.wrapCurrency);
 
 	const { cartToggle, setcartToggle, notifications, addNotification, setcartStep, cartItems, addCartItems, removeCartItems, resetCartItems, updateCartItems, userDataX, setUserDataX, navToggle, setnavToggle, lang, coupons, setCoupons, cartTotalPay, setcartTotalPay, cartTotal, setcartTotal, shippingCost, setshippingCost } = useCounterStore()
@@ -216,7 +219,6 @@ const AddToCart = (props) => {
 
 		var cartProduct = {}
 
-		console.log("productData", productData)
 
 
 		if (addons?.includes('variations')) {
@@ -256,7 +258,7 @@ const AddToCart = (props) => {
 
 
 			/* A product saved without a price type (""), as the product editor
-			   allows, is simple: `??` kept "" and the line got no title or price. */
+				 allows, is simple: `??` kept "" and the line got no title or price. */
 			var price_type = productData?.price_type || 'simple'
 			var license = productData?.license ?? null
 
@@ -303,7 +305,6 @@ const AddToCart = (props) => {
 				cartProduct.license = productData?.license
 			}
 
-			console.log("cartProduct", cartProduct)
 
 			if (!cartProduct) {
 
@@ -359,19 +360,18 @@ const AddToCart = (props) => {
 			categories: productData?.categories,
 			tags: productData?.tags,
 			/* For showing "includes a license" in the cart. The server issues the
-			   key from the product / variation's own license settings, not this. */
+				 key from the product / variation's own license settings, not this. */
 			license: cartProduct?.license ?? null
 		})
 
 
 		setcartToggle(true)
 
-		var trackPrams = { productId: productId, userid: userDataX?.id, event: "addToCart", source: "cartButton" }
+		var trackPrams = { productId: productId, quantity: quantity, event: "addToCart", source: "cartButton" }
+
 
 		trackPageVisit(trackPrams);
 		sendTikTokEvent()
-
-
 
 
 		/*
@@ -470,7 +470,7 @@ const AddToCart = (props) => {
 
 
 	/* The quantity of the line this button adds to: the picked variation and
-	   purchase type, so a one-time line and a subscription show their own. */
+		 purchase type, so a one-time line and a subscription show their own. */
 	function getQuantityById(id) {
 		const item = cartItems?.find(obj => cartLineKey(obj) === currentLineKey);
 		return item ? item.quantity : 0;
@@ -650,6 +650,9 @@ const AddToCart = (props) => {
 
 									setcartToggle(true)
 
+									/* The - button takes a unit out of the cart; logged with the quantity left. */
+									trackPageVisit({ productId: productId, quantity: quantityX, event: "removeFromCart", source: "quantityMinus" });
+
 
 
 
@@ -673,13 +676,23 @@ const AddToCart = (props) => {
 
 								}
 
+							}} onFocus={() => {
+								quantityOnFocus.current = quantity;
 							}} onBlur={() => {
 								/* Typed below the MOQ: raise it on leaving the box (not while typing, so "12" can pass through "1"). */
+								var finalQuantity = quantity;
 								if (quantity > 0 && quantity < moq) {
 									notifyMoq();
 									setquantity(moq);
 									if (onChangeCartBtn) onChangeCartBtn({ quantity: moq });
+									finalQuantity = moq;
 								}
+
+								/* One activity per edit of the box, logged on leaving it - not per keystroke. */
+								if (quantityOnFocus.current !== null && finalQuantity !== quantityOnFocus.current) {
+									trackPageVisit({ productId: productId, quantity: finalQuantity, event: "quantityChange", source: "quantityInput" });
+								}
+								quantityOnFocus.current = null;
 							}} />
 							<button type="button" aria-label="Increase quantity" className={cls('quantity-increase')}
 
@@ -757,6 +770,9 @@ const AddToCart = (props) => {
 
 
 									setcartToggle(true)
+
+									/* The + button adds to the cart too, so it is logged like the cart button. */
+									trackPageVisit({ productId: productId, quantity: quantityX, event: "addToCart", source: "quantityPlus" });
 
 
 

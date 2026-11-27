@@ -13,6 +13,7 @@ const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 import { IconSettings, IconCheckbox, IconSquare, IconFidgetSpinner, IconTrash, IconStarFilled, IconStar, IconExternalLink } from "@tabler/icons-react";
 import GalleryPicker from "../../components/shop-elements/GalleryPicker";
 import { termsInTreeOrder, termAndDescendants } from "../../components/TermsListPage";
+import { useCan } from '../../lib/useCan';
 
 
 const CategoryEdit = ({ id }) => {
@@ -21,6 +22,7 @@ const CategoryEdit = ({ id }) => {
 
 
   const { token, appData, notifications, addNotification, userDataX, setUserDataX } = useCounterStore()
+  const permit = useCan("categories"); /* Roles & Permissions */
 
   var [currentObject, setcurrentObject] = useState(null);
 
@@ -102,6 +104,7 @@ const CategoryEdit = ({ id }) => {
       });
   }
   function update_term() {
+if (!permit.allowed("edit")) return permit.denied();
 
 
     // if (!token) {
@@ -381,7 +384,7 @@ const CategoryEdit = ({ id }) => {
               <div className="form-card flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white px-5 py-3 shadow-sm">
 
                 <div className="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-gray-800 cursor-pointer"
-                  onClick={ev => {
+                  {...permit.hide("edit")} onClick={ev => {
                     update_term()
                   }}
                 >Update</div>

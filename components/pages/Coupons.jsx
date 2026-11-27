@@ -12,6 +12,7 @@ import { useUtilsStore } from '../../store/useUtilsStore';
 import { BADGE_BASE, StatusBadge, parseDate } from "./deliveryUi";
 
 import { IconTrash, IconRefresh, IconPencil, IconPlus, IconCopy, IconTicket, IconExternalLink } from "@tabler/icons-react";
+import { useCan } from '../../lib/useCan';
 
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
@@ -47,6 +48,7 @@ const shortDate = (date) => date.toLocaleDateString(undefined, { day: "numeric",
 const Coupons = () => {
 
 	const { token, addNotification } = useCounterStore()
+	const permit = useCan("coupons"); /* Roles & Permissions */
 	const { wrapCurrency } = useUtilsStore()
 	const router = useRouter()
 
@@ -109,6 +111,7 @@ const Coupons = () => {
 	/* Coupons are posts, so delete_products (wp_delete_post) is the right
 	   endpoint here: they go to the trash. */
 	function delete_coupons(ids) {
+if (!permit.allowed("delete")) return permit.denied();
 
 		ids = ids != undefined ? ids : selectedRows;
 		if (!ids?.length) return;
@@ -152,6 +155,7 @@ const Coupons = () => {
 	   ID, the list goes back to its newest-first first page instead, where the
 	   new draft is the top row. */
 	function add_coupon() {
+if (!permit.allowed("create")) return permit.denied();
 
 		setloading(true);
 		fetch(serverUrl + "wp-json/combo-store/v2/add_coupon", {
@@ -242,7 +246,7 @@ const Coupons = () => {
 								<IconExternalLink size={13} /> {("Open")}
 							</Link>
 
-							<button type="button" className="inline-flex items-center gap-1 text-red-500 transition-colors hover:text-red-700" onClick={() => delete_coupons([entry?.id])}>
+							<button type="button" className="inline-flex items-center gap-1 text-red-500 transition-colors hover:text-red-700" {...permit.hide("delete")} onClick={() => delete_coupons([entry?.id])}>
 								<IconTrash size={13} /> {("Delete")}
 							</button>
 						</div>
@@ -360,7 +364,7 @@ const Coupons = () => {
 					<button type="button" className={TOOLBAR_BUTTON} disabled={loading} onClick={fetchPosts}>
 						<IconRefresh size={16} className={loading ? "animate-spin" : ""} /> {("Refresh")}
 					</button>
-					<button type="button" className={PRIMARY_BUTTON} disabled={loading} onClick={add_coupon}>
+					<button type="button" className={PRIMARY_BUTTON} disabled={loading} {...permit.hide("create")} onClick={add_coupon}>
 						<IconPlus size={16} /> {("Add Coupon")}
 					</button>
 				</div>
@@ -379,7 +383,7 @@ const Coupons = () => {
 						<span className="text-sm font-medium text-gray-700">{selectedRows.length} {("selected")}</span>
 						<button type="button" className="!h-8 rounded-md px-2 text-sm text-gray-500 hover:bg-white hover:text-gray-800" onClick={() => setselectedRows([])}>{("Clear")}</button>
 						{/* Labelled "Delete Products" before. */}
-						<button type="button" className={`${DANGER_BUTTON} !h-8`} disabled={loading} onClick={() => delete_coupons()}>
+						<button type="button" className={`${DANGER_BUTTON} !h-8`} disabled={loading} {...permit.hide("delete")} onClick={() => delete_coupons()}>
 							<IconTrash size={15} /> {("Delete")}
 						</button>
 					</div>
@@ -391,7 +395,7 @@ const Coupons = () => {
 					<div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 text-gray-400"><IconTicket size={24} /></div>
 					<div className="text-sm font-semibold text-gray-800">{("No coupons yet")}</div>
 					<p className="max-w-sm text-xs text-gray-500">{("Create a coupon to give customers a percentage or fixed discount with a code at checkout.")}</p>
-					<button type="button" className={`${PRIMARY_BUTTON} mt-2`} disabled={loading} onClick={add_coupon}>
+					<button type="button" className={`${PRIMARY_BUTTON} mt-2`} disabled={loading} {...permit.hide("create")} onClick={add_coupon}>
 						<IconPlus size={16} /> {("Add Coupon")}
 					</button>
 				</div>

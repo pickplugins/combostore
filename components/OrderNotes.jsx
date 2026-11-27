@@ -6,6 +6,7 @@ import { useCounterStore } from '../store/useCounterStore'
 import { useUtilsStore } from '../store/useUtilsStore';
 import Spinner from '../components/Spinner';
 import WidgetWrapper from '../components/WidgetWrapper';
+import { useCan } from '../lib/useCan';
 
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
@@ -48,6 +49,7 @@ const OrderNotes = (props) => {
   const { formatDate } = useUtilsStore()
 
   const { token, addNotification, userDataX } = useCounterStore()
+  const permit = useCan(["orders", "incomplete", "refunds"]); /* Roles & Permissions */
 
   /* Same rule as OrderTrackings: only admins and riders may delete. */
   const canDelete = ["administrator", "rider"].some(role => userDataX?.roles?.includes(role));
@@ -116,6 +118,7 @@ const OrderNotes = (props) => {
 
 
   function add_order_note() {
+if (!permit.allowed("edit")) return permit.denied();
 
     if (!newNoteData.content?.trim()) {
       addNotification({ type: 'error', title: 'Notes missing', content: 'Please enter notes' })
@@ -162,6 +165,7 @@ const OrderNotes = (props) => {
 
 
   function delete_order_note(id) {
+if (!permit.allowed("edit")) return permit.denied();
 
     if (!canDelete) return;
 
@@ -255,7 +259,7 @@ const OrderNotes = (props) => {
 
             <div className="flex items-center gap-2">
               <span className="hidden text-xs text-gray-400 sm:inline">{("Ctrl + Enter to add")}</span>
-              <button type="button" className={PRIMARY_BUTTON} disabled={loading || !newNoteData?.content?.trim()} onClick={() => add_order_note()}>
+              <button type="button" className={PRIMARY_BUTTON} disabled={loading || !newNoteData?.content?.trim()} {...permit.hide("edit")} onClick={() => add_order_note()}>
                 {loading ? <Spinner /> : <IconMessagePlus size={16} />}
                 {("Add Note")}
               </button>
@@ -301,7 +305,7 @@ const OrderNotes = (props) => {
                         {canDelete && (
                           <button type="button" title={("Delete note")} aria-label={("Delete note")}
                             className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600 cursor-pointer"
-                            onClick={() => delete_order_note(comment?.comment_ID)}>
+                            {...permit.hide("edit")} onClick={() => delete_order_note(comment?.comment_ID)}>
                             <IconTrash size={16} />
                           </button>
                         )}

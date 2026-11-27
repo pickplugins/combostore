@@ -7,6 +7,7 @@ import { IconAlertCircle, IconEye, IconEyeOff, IconLock, IconUser, IconLogin2 } 
 import Spinner from "../../../components/Spinner";
 import { useAuth } from "../../../components/auth-context";
 import ResendVerificationButton from "../../../components/ResendVerificationButton";
+import { redirectFromLocation } from "../../../lib/authRedirect";
 
 import { elementCssClasses } from "../ElementsDefinition";
 
@@ -17,9 +18,22 @@ import { elementCssClasses } from "../ElementsDefinition";
 	check on its return value showed "Invalid username or password" on every
 	attempt, the successful ones included. The form now shows the provider's
 	own error and progress. It also submitted only on a click of a div; Enter
-	now works, and the customer stays on this page once signed in rather than
-	being sent to the dashboard.
+	now works.
+
+	Once signed in, a customer goes to the storefront account page (/account),
+	never the dashboard: to `?redirect=` when the page has one (checked by
+	lib/authRedirect.js), else /account. On /account itself the page just
+	swaps to the signed-in view. The dashboard has its own sign-in at /login
+	(components/Login.jsx), which goes to /dashboard.
 */
+const ACCOUNT_PATH = "/account";
+
+function afterLoginPath() {
+	var target = redirectFromLocation() ?? ACCOUNT_PATH;
+	var here = typeof window !== "undefined" ? window.location.pathname.replace(/\/+$/, "") || "/" : "";
+	/* Already there: no navigation, the account blocks re-render signed in. */
+	return target === here ? null : target;
+}
 const LoginView = (props) => {
 
 	var cssSelectors = props?.cssSelectors ?? {};
@@ -57,7 +71,7 @@ const LoginView = (props) => {
 			return;
 		}
 
-		const signedIn = await handleLogin(username.trim(), password, null, headers);
+		const signedIn = await handleLogin(username.trim(), password, afterLoginPath(), headers);
 		if (!signedIn) captcha.reset();
 	};
 

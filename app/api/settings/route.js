@@ -44,7 +44,40 @@ const SERVER_ONLY_API_KEYS = {
   facebookPixel: ["access_token"],
   tikTokPixel: ["access_token"],
   tiktokPixel: ["access_token"],
+  /* Paid phone fraud-check keys, read only by check_mobile_fraud and the
+     checkout score check on WordPress. */
+  bdcourier: null,
+  fraudchecker: null,
 };
+
+/**
+ * Courier entries cut down to what the browser uses: `enabled` (which
+ * couriers OrderCourier / OrderDelivery offer) and `sort` (their order).
+ * Everything else - Steadfast api_key / secret_key / panel_password /
+ * webhook_auth_token, Pathao client secret and password, RedX and Carrybee
+ * tokens, Paperfly login - is server-only and used to be sent whole.
+ */
+const BROWSER_COURIER_FIELDS = ["enabled", "sort"];
+
+function redactCouriers(settings) {
+  const couriers = settings?.couriers;
+
+  if (!couriers || typeof couriers !== "object") {
+    return settings;
+  }
+
+  const safe = {};
+
+  for (const [id, entry] of Object.entries(couriers)) {
+    if (!entry || typeof entry !== "object") continue;
+    safe[id] = {};
+    for (const field of BROWSER_COURIER_FIELDS) {
+      if (field in entry) safe[id][field] = entry[field];
+    }
+  }
+
+  return { ...settings, couriers: safe };
+}
 
 function redactApiKeys(settings) {
   const apiKeys = settings?.apiKeys;
@@ -104,7 +137,7 @@ export async function GET() {
 
   /* Some installs answer with the blob wrapped in `settings`, some bare. */
   const strip = (settings) =>
-    redactApiKeys(redactPortWalletSettings(redactUddoktaPaySettings(redactPaystationSettings(redactSslcommerzSettings(redactShurjoPaySettings(redactPaddleSettings(redactNagadSettings(redactBkashSettings(redactAamarPaySettings(redactEpsSettings(redactStripeSettings(settings))))))))))));
+    redactCouriers(redactApiKeys(redactPortWalletSettings(redactUddoktaPaySettings(redactPaystationSettings(redactSslcommerzSettings(redactShurjoPaySettings(redactPaddleSettings(redactNagadSettings(redactBkashSettings(redactAamarPaySettings(redactEpsSettings(redactStripeSettings(settings)))))))))))));
 
   const redacted = data?.settings
     ? { ...data, settings: strip(data.settings) }

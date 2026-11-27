@@ -8,6 +8,7 @@ import { useCounterStore } from '../store/useCounterStore'
 import Spinner from '../components/Spinner';
 import WidgetWrapper from '../components/WidgetWrapper';
 import states from '../lib/States';
+import { useCan } from '../lib/useCan';
 
 
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
@@ -53,6 +54,7 @@ const ShippingMethodCreate = (props) => {
   var onOrderCreated = props?.onOrderCreated
 
   const { token, addNotification } = useCounterStore()
+  const permit = useCan("shipping_zones"); /* Roles & Permissions */
 
   var [loading, setloading] = useState(false);
 
@@ -62,6 +64,7 @@ const ShippingMethodCreate = (props) => {
 
 
   function create_shipping_method() {
+if (!permit.allowed("create")) return permit.denied();
 
     setloading(true)
 
@@ -265,7 +268,7 @@ const ShippingMethodCreate = (props) => {
 
         <div className={PRIMARY_BUTTON}
 
-          onClick={ev => {
+          {...permit.hide("create")} onClick={ev => {
             create_shipping_method()
           }}
         ><IconPlus size={16} /> {("Add Shipping Method")}</div>

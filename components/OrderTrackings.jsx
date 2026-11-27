@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { IconTrash, IconTrolley, IconMessage2, IconMessages, IconChevronLeft, IconChevronRight, IconRouteSquare, IconX, IconMapPin } from "@tabler/icons-react";
+import { IconTrash, IconTrolley, IconMessage2, IconMessages, IconChevronLeft, IconChevronRight, IconRouteSquare, IconX, IconMapPin, IconTruckDelivery } from "@tabler/icons-react";
 
 import { useCounterStore } from '../store/useCounterStore'
 import { useUtilsStore } from '../store/useUtilsStore';
@@ -8,6 +8,8 @@ import LocationPicker from "../components/LocationPicker";
 import Spinner from '../components/Spinner';
 import WidgetWrapper from '../components/WidgetWrapper';
 import GoogleMapDirections from '../components/GoogleMapDirections';
+import { courierName, titleCase } from './pages/deliveryUi';
+import { useCan } from '../lib/useCan';
 
 
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
@@ -58,12 +60,24 @@ const TRACKING_STATUSES = [
 
 const STATUS_LABELS = Object.fromEntries(TRACKING_STATUSES.flatMap(g => g.items));
 
+/* A courier's own status, as it sent it: "order.out-for-delivery" -> "out_for_delivery". */
+function courierStatusKey(status) {
+  return String(status ?? "").trim().toLowerCase().replace(/^order\./, "").replace(/[\s-]+/g, "_");
+}
+
 function statusTone(status) {
   if (!status) return "bg-gray-100 text-gray-600 ring-gray-200";
-  if (status.startsWith("delivered")) return "bg-emerald-50 text-emerald-700 ring-emerald-200";
-  if (["delivery_attempted", "returned_to_seller", "held_at_customs"].includes(status)) return "bg-rose-50 text-rose-700 ring-rose-200";
-  if (["wait_for_customer", "call_to_customer", "call_to_seller"].includes(status)) return "bg-amber-50 text-amber-700 ring-amber-200";
+  var key = courierStatusKey(status);
+  if (key.startsWith("delivered") || key.startsWith("partial_deliver")) return "bg-emerald-50 text-emerald-700 ring-emerald-200";
+  if (["delivery_attempted", "returned_to_seller", "held_at_customs"].includes(key) || /return|cancel|fail/.test(key)) return "bg-rose-50 text-rose-700 ring-rose-200";
+  if (["wait_for_customer", "call_to_customer", "call_to_seller"].includes(key) || /hold|review|pending/.test(key)) return "bg-amber-50 text-amber-700 ring-amber-200";
   return "bg-blue-50 text-blue-700 ring-blue-200";
+}
+
+/* Our own statuses by their label; a courier's in words ("Out For Delivery"). */
+function statusLabel(status) {
+  if (!status) return "No status";
+  return STATUS_LABELS[status] ?? STATUS_LABELS[courierStatusKey(status)] ?? titleCase(courierStatusKey(status));
 }
 
 /* latlng is stored as a JSON string, but may already be an object. */
@@ -112,6 +126,7 @@ const OrderTrackings = (props) => {
   const { formatDate } = useUtilsStore()
 
   const { token, addNotification, userDataX } = useCounterStore()
+  const permit = useCan(["orders", "incomplete", "refunds"]); /* Roles & Permissions */
 
   var order_id = props?.order_id
 
@@ -227,6 +242,7 @@ const OrderTrackings = (props) => {
   }
 
   function add_tracking() {
+if (!permit.allowed("edit")) return permit.denied();
 
     if (!newTrackingData.latlng) {
       addNotification({ type: 'error', title: 'Location missing', content: 'Please set location' })
@@ -271,6 +287,7 @@ const OrderTrackings = (props) => {
   }
 
   function delete_trackings(ids) {
+if (!permit.allowed("edit")) return permit.denied();
 
     setloading(true);
     fetch(serverUrl + "wp-json/combo-store/v2/delete_trackings", {
@@ -410,7 +427,7 @@ const OrderTrackings = (props) => {
 
             <div className="flex items-center justify-end gap-2 border-t border-gray-100 pt-4">
               <button type="button" className={SECONDARY_BUTTON} onClick={() => setisOpen(false)}>{("Cancel")}</button>
-              <button type="button" className={PRIMARY_BUTTON} disabled={loading} onClick={() => add_tracking()}>
+              <button type="button" className={PRIMARY_BUTTON} disabled={loading} {...permit.hide("edit")} onClick={() => add_tracking()}>
                 {loading && <Spinner />}
                 {("Add Tracking")}
               </button>
@@ -437,7 +454,7 @@ const OrderTrackings = (props) => {
           {posts.length == 0 && (
             <div className="flex flex-col items-center gap-2 py-6 text-center">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-400"><IconRouteSquare size={20} /></div>
-              <div className="text-sm text-gray-500">{("No trackings yet. Please wait for the rider's update.")}</div>
+              <div className="text-sm text-gray-500">{("No trackings yet. Updates from the rider or the courier will show here.")}</div>
             </div>
           )}
 
@@ -456,21 +473,31 @@ const OrderTrackings = (props) => {
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <div className="flex flex-wrap items-center gap-2">
                           <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ring-1 ring-inset ${statusTone(tracking.status)}`}>
-                            {STATUS_LABELS[tracking.status] ?? tracking.status ?? ("No status")}
+                            {statusLabel(tracking.status)}
                           </span>
+                          {/* Sent by the courier's webhook (get_trackings marks it). */}
+                          {tracking.source === "courier" && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-gray-50 px-2 py-0.5 text-[11px] font-medium text-gray-600 ring-1 ring-inset ring-gray-200"
+                              title={tracking.consignment_id ? `Consignment ${tracking.consignment_id}` : undefined}>
+                              <IconTruckDelivery size={12} /> {courierName({ courier: tracking.courier }) || ("Courier")}
+                            </span>
+                          )}
                           {time && <span className="text-xs text-gray-500">{time}</span>}
                         </div>
 
                         {hasAccess && (
                           <button type="button" title={("Delete tracking")} aria-label={("Delete tracking")}
                             className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600 cursor-pointer"
-                            onClick={() => delete_trackings([tracking.id])}>
+                            {...permit.hide("edit")} onClick={() => delete_trackings([tracking.id])}>
                             <IconTrash size={16} />
                           </button>
                         )}
                       </div>
 
                       {tracking.notes && <div className="text-sm text-gray-700">{tracking.notes}</div>}
+                      {tracking.source === "courier" && tracking.consignment_id && (
+                        <div className="text-xs text-gray-400">{("Consignment")} <span className="font-mono">{tracking.consignment_id}</span></div>
+                      )}
                     </div>
                   </li>
                 )

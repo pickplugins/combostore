@@ -5,7 +5,8 @@ import Link from "next/link";
 
 import { useCounterStore } from '../../store/useCounterStore'
 import { useUtilsStore } from '../../store/useUtilsStore';
-import { IconClipboardText, IconRouteSquare, IconTruckDelivery, IconRepeat, IconFileInvoice, IconReceipt, IconShoppingBag, IconRefresh, IconAlertTriangle, IconArrowLeft, IconArrowUpRight, IconCalendarTime, IconUser, IconCash, IconCreditCard, IconKey } from "@tabler/icons-react";
+import { IconWorld, IconClipboardText, IconRouteSquare, IconTruckDelivery, IconRepeat, IconFileInvoice, IconReceipt, IconShoppingBag, IconRefresh, IconAlertTriangle, IconArrowLeft, IconArrowUpRight, IconCalendarTime, IconUser, IconCash, IconCreditCard, IconKey } from "@tabler/icons-react";
+import { customerIpOf, countryName, flagOf, customerIpTitle } from "../../lib/orderCustomerIp";
 import { BADGE_BASE, titleCase, parseDate, timeAgo, hasId } from "./deliveryUi";
 
 import Tabs from '../../components/Tabs';
@@ -36,6 +37,7 @@ const ORDER_STATUS_TONES = {
   incomplete: "bg-rose-50 text-rose-700 ring-rose-200",
   delivered: "bg-emerald-50 text-emerald-700 ring-emerald-200",
   completed: "bg-emerald-50 text-emerald-700 ring-emerald-200",
+  trash: "bg-gray-100 text-gray-500 ring-gray-300",
 };
 
 const PAYMENT_STATUS_TONES = {
@@ -146,6 +148,7 @@ const OrderEdit = ({ id, variant = "page" }) => {
 
   var created = parseDate(orderData?.created_at);
   var blur = privacyMode ? "blur-[3px]" : "";
+  var customerIp = customerIpOf(orderData);
 
 
   return (
@@ -238,6 +241,16 @@ const OrderEdit = ({ id, variant = "page" }) => {
                   {orderData?.billing_phone && <span className={`text-xs text-gray-500 ${blur}`}>{orderData.billing_phone}</span>}
                 </div>
               ) : <span className="text-gray-400">{("Guest")}</span>}
+              {customerIp && (
+                <div className="mt-1 flex items-center gap-1 text-xs text-gray-500"
+                  title={customerIpTitle(customerIp)}>
+                  <IconWorld size={12} className="shrink-0 text-gray-400" />
+                  <span className={`font-mono ${blur}`}>{customerIp.ip}</span>
+                  {customerIp.country && (
+                    <span>· {flagOf(customerIp.country)} {countryName(customerIp.country)}</span>
+                  )}
+                </div>
+              )}
             </Fact>
 
             <Fact icon={<IconCash size={13} />} label="Total">

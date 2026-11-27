@@ -6,8 +6,9 @@ import { useState, useEffect } from "react";
 import Tabs from "../../components/Tabs";
 import Tab from "../../components/Tab";
 import { useCounterStore } from '../../store/useCounterStore'
-import { IconRouteSquare, IconTruckDelivery, IconRefresh, IconExternalLink, IconReceipt, IconUser, IconMotorbike, IconAlertTriangle, IconArrowUpRight, IconCalendarTime, IconPackage } from "@tabler/icons-react";
-import { StatusBadge, CopyValue, courierName, trackingLink, parseDate, timeAgo, hasId } from "./deliveryUi";
+import { hasOnlyGrantedAccess } from '../../lib/rolePermissions';
+import { IconRouteSquare, IconTruckDelivery, IconRefresh, IconExternalLink, IconReceipt, IconUser, IconMotorbike, IconAlertTriangle, IconArrowUpRight, IconCalendarTime, IconPackage, IconEye } from "@tabler/icons-react";
+import { StatusBadge, CopyValue, courierName, trackingLink, parseDate, timeAgo, hasId, statusBadge, RIDER_DELIVERY_STATUSES } from "./deliveryUi";
 
 import OrderTrackings from '../../components/OrderTrackings';
 import OrderDelivery from '../../components/OrderDelivery';
@@ -32,6 +33,84 @@ function Fact({ icon, label, children }) {
 const Dash = () => <span className="text-gray-300">—</span>;
 
 /*
+  The one thing a rider may change on their own delivery: its status, from
+  their round's short list (update_delivery_status on the server checks the
+  same list and that the delivery is theirs). Everything else stays with
+  staff, so this saves the status alone rather than the whole delivery.
+*/
+function RiderStatusCard({ delivery, token, addNotification, onSaved }) {
+	const current = delivery?.status ?? "";
+	const [status, setstatus] = useState(RIDER_DELIVERY_STATUSES.includes(current) ? current : "");
+	const [saving, setsaving] = useState(false);
+
+	useEffect(() => {
+		setstatus(RIDER_DELIVERY_STATUSES.includes(current) ? current : "");
+	}, [current]);
+
+	function save() {
+		if (!status || status === current) return;
+		setsaving(true);
+		fetch(serverUrl + "wp-json/combo-store/v2/update_delivery_status", {
+			method: "POST",
+			headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+			body: JSON.stringify({ id: delivery.id, status }),
+		})
+			.then(async (response) => {
+				const res = await response.json().catch(() => null);
+				if (!response.ok || res?.status !== "success") {
+					throw new Error(res?.message || `Server answered ${response.status}.`);
+				}
+				return res;
+			})
+			.then((res) => {
+				addNotification?.({ type: "success", title: "Status updated", content: `Delivery #${delivery.id} is now ${statusBadge(status)?.label ?? status}.` });
+				onSaved?.(res?.delivery);
+			})
+			.catch((error) => {
+				addNotification?.({ type: "error", title: "Status not updated", content: error?.message ?? "" });
+			})
+			.finally(() => setsaving(false));
+	}
+
+	const changed = status && status !== current;
+
+	return (
+		<div className={`${CARD} flex flex-col gap-4 p-5`}>
+			<div>
+				<div className="text-sm font-semibold text-gray-900">{("Update status")}</div>
+				<p className="mt-0.5 text-xs text-gray-500">{("Let the store know how this delivery is going.")}</p>
+			</div>
+
+			<div role="radiogroup" aria-label="Delivery status" className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+				{RIDER_DELIVERY_STATUSES.map(value => {
+					const selected = status === value;
+					return (
+						<button key={value} type="button" role="radio" aria-checked={selected} disabled={saving}
+							onClick={() => setstatus(value)}
+							className={`flex items-center gap-2 rounded-lg border px-3 py-2.5 text-left text-sm transition-colors disabled:opacity-60 ${selected ? "border-[#634FE5] bg-[#634FE5]/5 font-medium text-gray-900 ring-1 ring-[#634FE5]" : "border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50"}`}>
+							<span className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 ${selected ? "border-[#634FE5]" : "border-gray-300"}`}>
+								{selected && <span className="h-2 w-2 rounded-full bg-[#634FE5]" />}
+							</span>
+							{statusBadge(value)?.label ?? value}
+						</button>
+					);
+				})}
+			</div>
+
+			<div className="flex flex-wrap items-center justify-between gap-3">
+				<span className="text-xs text-gray-500">
+					{("Current")}: <StatusBadge status={current} />
+				</span>
+				<button type="button" onClick={save} disabled={!changed || saving}
+					className="inline-flex items-center gap-2 rounded-lg bg-[#634FE5] px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#5540d4] disabled:cursor-not-allowed disabled:opacity-50">
+					{saving ? ("Saving…") : ("Save status")}
+				</button>
+			</div>
+		</div>
+	);
+}
+
+/*
 	A delivery: a summary of it (status, courier and tracking, order, customer,
 	rider, when it was created), then its two editors - Delivery (OrderDelivery:
 	rider and courier, start/update) and Trackings (OrderTrackings). Used as a
@@ -45,7 +124,11 @@ const Dash = () => <span className="text-gray-300">—</span>;
 */
 const DeliveryEdit = ({ id, variant = "page" }) => {
 
-	const { token, addNotification } = useCounterStore()
+	const { token, addNotification, userDataX, settings } = useCounterStore()
+
+	/* A rider granted Deliveries sees the summary and may change the status
+	   only: no editors, and no links into the order, customer or rider pages. */
+	const readOnly = hasOnlyGrantedAccess(userDataX, "delivery");
 
 	var [deliveryData, setdeliveryData] = useState(null);
 	/* loading | ready | missing | error */
@@ -53,9 +136,12 @@ const DeliveryEdit = ({ id, variant = "page" }) => {
 	var [errorMessage, seterrorMessage] = useState("");
 	var [refreshing, setrefreshing] = useState(false);
 
+	/* Waits for the login token: asking before it is restored from storage
+	   sent "Bearer null" and showed an error. */
 	useEffect(() => {
+		if (!token) return;
 		get_delivery();
-	}, [id]);
+	}, [id, token]);
 
 	function get_delivery({ quiet = false } = {}) {
 
@@ -125,6 +211,11 @@ const DeliveryEdit = ({ id, variant = "page" }) => {
 						<h1 className="flex flex-wrap items-center gap-2 text-xl font-semibold text-gray-900">
 							{("Delivery")} <span className="font-normal text-gray-400">#{id}</span>
 							{state === "ready" && <StatusBadge status={deliveryData?.status} />}
+							{readOnly && (
+								<span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1 text-[11px] font-medium text-gray-600 ring-1 ring-inset ring-gray-200">
+									<IconEye size={13} /> {("Rider view")}
+								</span>
+							)}
 						</h1>
 						{state === "ready" && created && (
 							<p className="mt-0.5 text-xs text-gray-500" title={created.toLocaleString()}>
@@ -209,19 +300,25 @@ const DeliveryEdit = ({ id, variant = "page" }) => {
 
 						<Fact icon={<IconReceipt size={13} />} label="Order">
 							{hasId(deliveryData?.order_id)
-								? <Link className={LINK} href={`/dashboard/orders/${deliveryData.order_id}`}>Order #{deliveryData.order_id}</Link>
+								? (readOnly
+									? <span className="font-medium">Order #{deliveryData.order_id}</span>
+									: <Link className={LINK} href={`/dashboard/orders/${deliveryData.order_id}`}>Order #{deliveryData.order_id}</Link>)
 								: <Dash />}
 						</Fact>
 
 						<Fact icon={<IconUser size={13} />} label="Customer">
 							{hasId(deliveryData?.customer_id)
-								? <Link className={LINK} href={`/dashboard/customers/${deliveryData.customer_id}`}>Customer #{deliveryData.customer_id}</Link>
+								? (readOnly
+									? <span className="font-medium">Customer #{deliveryData.customer_id}</span>
+									: <Link className={LINK} href={`/dashboard/customers/${deliveryData.customer_id}`}>Customer #{deliveryData.customer_id}</Link>)
 								: <Dash />}
 						</Fact>
 
 						<Fact icon={<IconMotorbike size={13} />} label="Rider">
 							{hasId(deliveryData?.rider_id)
-								? <Link className={LINK} href={`/dashboard/riders/${deliveryData.rider_id}`}>Rider #{deliveryData.rider_id}</Link>
+								? (readOnly
+									? <span className="font-medium">{String(deliveryData.rider_id) === String(userDataX?.id) ? ("You") : `Rider #${deliveryData.rider_id}`}</span>
+									: <Link className={LINK} href={`/dashboard/riders/${deliveryData.rider_id}`}>Rider #{deliveryData.rider_id}</Link>)
 								: <span className="text-gray-400">{("Not assigned")}</span>}
 						</Fact>
 
@@ -230,7 +327,14 @@ const DeliveryEdit = ({ id, variant = "page" }) => {
 						)}
 					</div>
 
-					{hasId(deliveryData?.order_id) ? (
+					{readOnly ? (
+						<RiderStatusCard
+							delivery={deliveryData}
+							token={token}
+							addNotification={addNotification}
+							onSaved={(next) => next ? setdeliveryData({ ...deliveryData, ...next }) : get_delivery({ quiet: true })}
+						/>
+					) : hasId(deliveryData?.order_id) ? (
 						<Tabs activeTab={0}
 							orientation="horizontal"
 							activeClass="active-tab "

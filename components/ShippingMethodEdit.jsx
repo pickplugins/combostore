@@ -10,6 +10,7 @@ import WidgetWrapper from '../components/WidgetWrapper';
 import states from '../lib/States';
 import ShippingMethodClassCosts from '../components/ShippingMethodClassCosts';
 import { shippingClassRequest } from '../lib/shippingClasses';
+import { useCan } from '../lib/useCan';
 
 
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
@@ -70,6 +71,7 @@ const ShippingMethodEdit = (props) => {
   var onOrderCreated = props?.onOrderCreated
 
   const { token, addNotification } = useCounterStore()
+  const permit = useCan("shipping_zones"); /* Roles & Permissions */
 
   var [loading, setloading] = useState(false);
 
@@ -100,6 +102,7 @@ const ShippingMethodEdit = (props) => {
   }, [token, id]);
 
   function save_class_rates() {
+    if (!permit.allowed(["cstore_edit_shipping_zones","cstore_edit_shipping_classes"])) return permit.denied();
     if (classRatesLoading || !shippingClasses.length) return;
     var rates = Object.entries(classRates)
       .filter(([, rate]) => rate?.cost !== '' && rate?.cost != null)
@@ -111,6 +114,7 @@ const ShippingMethodEdit = (props) => {
 
 
   function update_shipping_method() {
+if (!permit.allowed("edit")) return permit.denied();
 
     setloading(true)
 
@@ -315,7 +319,7 @@ const ShippingMethodEdit = (props) => {
 
           <div className={PRIMARY_BUTTON}
 
-            onClick={ev => {
+            {...permit.hide("edit")} onClick={ev => {
               update_shipping_method()
               /* Their own route, so they save even when the method itself is unchanged. */
               save_class_rates()

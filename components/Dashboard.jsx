@@ -42,6 +42,8 @@ import PopoverButton from '../components/PopoverButton';
 import { useCounterStore } from '../store/useCounterStore'
 import { useUtilsStore } from '../store/useUtilsStore';
 import OrderStats from "../components/OrderStats";
+import AffiliateApplicationStatus from "../components/AffiliateApplicationStatus";
+import RiderApplicationStatus from "../components/RiderApplicationStatus";
 import UsersPicker from '../components/shop-elements/UsersPicker';
 import ProductsPicker from '../components/shop-elements/ProductsPicker';
 
@@ -1272,6 +1274,10 @@ const Dashboard = (props) => {
 
       {token && (
         <div className="page-shell gap-0">
+
+          {/* An applicant's rider / affiliate application status (renders nothing for everyone else). */}
+          <RiderApplicationStatus className="mb-6" />
+          <AffiliateApplicationStatus className="mb-6" />
 
           {/* Page header */}
           <div className="mb-6 flex flex-wrap items-center justify-between gap-4">

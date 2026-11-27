@@ -294,7 +294,7 @@ const GlobalHeader = () => {
 								{userDataX?.name}
 							</div>
 							<div className="truncate text-[10px] capitalize text-gray-500">
-								{userDataX?.roles?.[0]?.replace(/_/g, " ")}
+								{userDataX?.role_labels?.[userDataX?.roles?.[0]] ?? userDataX?.roles?.[0]?.replace(/_/g, " ")}
 							</div>
 						</div>
 					</div>

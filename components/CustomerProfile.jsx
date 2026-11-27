@@ -91,12 +91,11 @@ const CustomerProfile = ({ userid }) => {
 			.then((response) => {
 				if (!response.ok) throw new Error("Token validation failed");
 				if (response.status < 400) {
-					response.json().then(() => {
-						addNotification({
-							type: "success",
-							title: "Profile Updated",
-							content: "Your information was updated successfully.",
-						});
+					response.json().then((res) => {
+						/* A refusal with a reason (e.g. a phone number another account uses). */
+						addNotification(res?.error
+							? { type: "error", title: "Not saved", content: res?.message || "Your information was not saved." }
+							: { type: "success", title: "Profile Updated", content: "Your information was updated successfully." });
 						setTimeout(() => setloading(false), 500);
 					});
 				}

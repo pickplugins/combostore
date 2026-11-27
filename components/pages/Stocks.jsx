@@ -15,6 +15,7 @@ import ProductEdit from "../../components/pages/ProductEdit";
 import ProductBulkUpdate from "../../components/shop-elements/ProductBulkUpdate";
 
 import Image from "next/image";
+import { useCan } from '../../lib/useCan';
 
 
 /* Same toolbar, menu and chip styles as the Orders and Products screens. */
@@ -89,6 +90,7 @@ function stockLevel(entry) {
   A product that does not track stock can only be set - that starts tracking.
 */
 function StockAdjust({ entry, token, onDone, addNotification }) {
+  const permit = useCan("stocks"); /* Roles & Permissions */
 
   var tracked = isTracked(entry);
   var current = Number(entry?.stock_count ?? 0) || 0;
@@ -103,6 +105,7 @@ function StockAdjust({ entry, token, onDone, addNotification }) {
   var after = !Number.isInteger(q) ? null : mode === "increase" ? current + q : mode === "decrease" ? current - q : q;
 
   function save() {
+    if (!permit.allowed("edit")) return permit.denied();
     if (!valid || saving) return;
     setsaving(true);
 
@@ -174,7 +177,7 @@ function StockAdjust({ entry, token, onDone, addNotification }) {
       <input type="text" aria-label={("Reason")} className={FIELD} placeholder={("Reason, e.g. damaged, recount, gift")}
         value={note} onChange={ev => setnote(ev.target.value)} onKeyDown={ev => { if (ev.key === "Enter") save(); }} />
 
-      <button type="button" className={PRIMARY_BUTTON} disabled={!valid || saving} onClick={save}>
+      <button type="button" className={PRIMARY_BUTTON} disabled={!valid || saving} {...permit.hide("edit")} onClick={save}>
         {saving ? <Spinner /> : null} {("Save")}
       </button>
     </div>
@@ -195,6 +198,7 @@ function StockAdjust({ entry, token, onDone, addNotification }) {
 const Stocks = (props) => {
 
   const { token, addNotification } = useCounterStore()
+  const permit = useCan("stocks"); /* Roles & Permissions */
 
   var [queryPrams, setqueryPrams] = useState({ is_admin: true, min_stock: "", category: "", brand: "", tag: null, keyword: "", paged: 1, orderby: "date", order: "DESC", per_page: 20, price: "" });
 
@@ -290,6 +294,7 @@ const Stocks = (props) => {
 
   /* Products go to the trash (delete_products is wp_delete_post). */
   function delete_products(ids) {
+if (!permit.allowed(["cstore_delete_products"])) return permit.denied();
 
     ids = ids != undefined ? ids : selectedRows;
     if (!ids?.length) return;
@@ -327,6 +332,7 @@ const Stocks = (props) => {
   }
 
   function duplicate_product(id) {
+if (!permit.allowed(["cstore_create_products"])) return permit.denied();
 
     setloading(true);
     fetch(serverUrl + "wp-json/combo-store/v2/duplicate_product", {
@@ -463,14 +469,14 @@ const Stocks = (props) => {
                     <IconEyeShare size={16} /> {("View in shop")}
                   </Link>
                 )}
-                <div className={MENU_ITEM} onClick={() => {
+                <div className={MENU_ITEM} {...permit.hide(["cstore_create_products"])} onClick={() => {
                   if (confirm(`Duplicate "${entry?.title}"? The copy is added as a draft.`)) {
                     duplicate_product(entry.id);
                   }
                 }}>
                   <IconCopy size={16} /> {("Duplicate")}
                 </div>
-                <div className={`${MENU_ITEM} !text-red-600 hover:!bg-red-50 hover:!text-red-700`} onClick={() => {
+                <div className={`${MENU_ITEM} !text-red-600 hover:!bg-red-50 hover:!text-red-700`} {...permit.hide(["cstore_delete_products"])} onClick={() => {
                   if (confirm(`Move "${entry?.title}" to the trash? It disappears from the shop.`)) {
                     delete_products([entry.id]);
                   }
@@ -729,7 +735,7 @@ const Stocks = (props) => {
             <button type="button"
               className="inline-flex !h-8 items-center gap-2 !rounded-lg !border-0 !bg-red-600 !px-3 !py-0 !text-sm !font-medium !text-white !shadow-sm transition-colors hover:!bg-red-700 cursor-pointer disabled:opacity-50"
               disabled={loading}
-              onClick={() => {
+              {...permit.hide(["cstore_delete_products"])} onClick={() => {
                 if (confirm(`Move ${selectedRows.length} ${selectedRows.length === 1 ? "product" : "products"} to the trash? They disappear from the shop.`)) {
                   delete_products();
                 }

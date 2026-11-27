@@ -18,6 +18,7 @@ import ProductEdit from "../../components/pages/ProductEdit";
 import ProductBulkUpdate from "../../components/shop-elements/ProductBulkUpdate";
 
 import Image from "next/image";
+import { useCan } from '../../lib/useCan';
 
 
 /* Same toolbar, menu and chip styles as the Stocks and Orders screens. */
@@ -84,6 +85,7 @@ const Products = () => {
 	const router = useRouter()
 
 	const { token, addNotification } = useCounterStore()
+	const permit = useCan("products"); /* Roles & Permissions */
 	const { wrapCurrency } = useUtilsStore()
 
 	var [queryPrams, setqueryPrams] = useState({ is_admin: true, category: "", brand: "", tag: null, keyword: "", paged: 1, orderby: "date", order: "DESC", per_page: 20, price: "" });
@@ -176,6 +178,7 @@ const Products = () => {
 
 	/* Products go to the trash (delete_products is wp_delete_post). */
 	function delete_products(ids) {
+if (!permit.allowed("delete")) return permit.denied();
 
 		ids = ids != undefined ? ids : selectedRows;
 		if (!ids?.length) return;
@@ -210,6 +213,7 @@ const Products = () => {
 
 
 	function duplicate_product(entry) {
+if (!permit.allowed("create")) return permit.denied();
 
 		setloading(true);
 		fetch(serverUrl + "wp-json/combo-store/v2/duplicate_product", {
@@ -242,6 +246,7 @@ const Products = () => {
 
 	/* Creates a draft and opens it, instead of leaving it somewhere in the list. */
 	function add_product() {
+if (!permit.allowed("create")) return permit.denied();
 
 		if (adding) return;
 		setadding(true);
@@ -382,14 +387,14 @@ const Products = () => {
 								<Link className={MENU_ITEM} href={`/dashboard/stocks-history?product_id=${entry.id}&product_name=${encodeURIComponent(entry?.title ?? "")}`}>
 									<IconHistory size={16} /> {("Stock history")}
 								</Link>
-								<div className={MENU_ITEM} onClick={() => {
+								<div className={MENU_ITEM} {...permit.hide("create")} onClick={() => {
 									if (confirm(`Duplicate "${entry?.title}"? The copy is a draft with the same prices, stock at 0 and no SKU.`)) {
 										duplicate_product(entry);
 									}
 								}}>
 									<IconCopy size={16} /> {("Duplicate")}
 								</div>
-								<div className={`${MENU_ITEM} !text-red-600 hover:!bg-red-50 hover:!text-red-700`} onClick={() => {
+								<div className={`${MENU_ITEM} !text-red-600 hover:!bg-red-50 hover:!text-red-700`} {...permit.hide("delete")} onClick={() => {
 									if (confirm(`Move "${entry?.title}" to the trash? It disappears from the shop.`)) {
 										delete_products([entry.id]);
 									}
@@ -654,7 +659,7 @@ const Products = () => {
 					<button type="button" className={TOOLBAR_BUTTON} disabled={loading} onClick={fetchPosts}>
 						<IconRefresh size={16} className={loading ? "animate-spin" : ""} /> {("Refresh")}
 					</button>
-					<button type="button" className={PRIMARY_BUTTON} disabled={adding} onClick={add_product}>
+					<button type="button" className={PRIMARY_BUTTON} disabled={adding} {...permit.hide("create")} onClick={add_product}>
 						{adding ? <Spinner /> : <IconPlus size={16} />} {("Add Product")}
 					</button>
 				</div>
@@ -723,7 +728,7 @@ const Products = () => {
 						<button type="button"
 							className="inline-flex !h-8 items-center gap-2 !rounded-lg !border-0 !bg-red-600 !px-3 !py-0 !text-sm !font-medium !text-white !shadow-sm transition-colors hover:!bg-red-700 cursor-pointer disabled:opacity-50"
 							disabled={loading}
-							onClick={() => {
+							{...permit.hide("delete")} onClick={() => {
 								if (confirm(`Move ${selectedRows.length} ${selectedRows.length === 1 ? "product" : "products"} to the trash? They disappear from the shop.`)) {
 									delete_products();
 								}

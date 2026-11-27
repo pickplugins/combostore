@@ -54,7 +54,8 @@ const CustomerAccountView = (props) => {
 					<button
 						type="button"
 						className={cls('logout-button')}
-						onClick={() => handleLogout()}
+						/* Back to the storefront's sign-in, never the dashboard's /login. */
+						onClick={() => handleLogout("/account")}
 					>
 						<IconLogout size={16} />
 						Log out
