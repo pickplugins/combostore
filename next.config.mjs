@@ -1,6 +1,16 @@
 import { storeImagePatterns } from './lib/imageOptimization.mjs';
 
 /*
+  The code builds `${NEXT_PUBLIC_SERVER_URL}wp-json/...` everywhere, so the
+  URL has to end in "/". A host's settings often leave it off
+  ("https://server.example.com"), which baked "https://server.example.comwp-json/..."
+  into every request. Added here once, before anything reads it; `env` below
+  makes sure the bundles get this value.
+*/
+const rawServerUrl = String(process.env.NEXT_PUBLIC_SERVER_URL ?? '').trim();
+if (rawServerUrl) process.env.NEXT_PUBLIC_SERVER_URL = rawServerUrl.replace(/\/*$/, '/');
+
+/*
   The store's WordPress server (NEXT_PUBLIC_SERVER_URL in .env), whose images
   next/image resizes - http and https both (lib/imageOptimization.mjs).
 */
@@ -19,6 +29,8 @@ const nextConfig = {
   ...(process.env.NEXT_DIST_DIR ? { distDir: process.env.NEXT_DIST_DIR } : {}),
 
   // basePath: '/dashboard',
+
+  ...(rawServerUrl ? { env: { NEXT_PUBLIC_SERVER_URL: process.env.NEXT_PUBLIC_SERVER_URL } } : {}),
 
   publicRuntimeConfig: {
     APP_VERSION: process.env.npm_package_version,
