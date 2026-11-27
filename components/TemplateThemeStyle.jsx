@@ -1,5 +1,4 @@
 import { templateThemeCss, templateFontStylesheets } from "@/lib/templateTheme";
-import { DEMO_WITHOUT_SERVER } from "@/lib/demo/config";
 
 /*
 	The active site template's fonts and colors, for <head> (app/layout.jsx):
@@ -10,22 +9,15 @@ import { DEMO_WITHOUT_SERVER } from "@/lib/demo/config";
 
 	Fetched from combo-store/v2/get_template_settings and kept for a minute,
 	so a change in Template Settings shows within about that long. Renders
-	nothing when the request fails or nothing is set. A demo store with no
-	server reads the demo template's settings instead (lib/demo/server.js).
+	nothing when the request fails or nothing is set.
 */
 async function getTemplateSettings() {
-	if (DEMO_WITHOUT_SERVER) {
-		const { demoTemplateSettings } = await import("@/lib/demo/server");
-		return demoTemplateSettings();
-	}
 	const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 	if (!serverUrl) return null;
 	try {
 		const res = await fetch(`${serverUrl}wp-json/combo-store/v2/get_template_settings`, {
 			method: "GET",
 			next: { revalidate: 60, tags: ["template-settings"] },
-			/* Demo mode may run with no server: give up quickly instead of holding every page. */
-			...(process.env.NEXT_PUBLIC_DEMO_MODE === "true" ? { signal: AbortSignal.timeout(4000) } : {}),
 		});
 		if (!res.ok) return null;
 		return await res.json();

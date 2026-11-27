@@ -9,8 +9,6 @@ import { redactSslcommerzSettings } from "@/lib/sslcommerz-server";
 import { redactPaystationSettings } from "@/lib/paystation-server";
 import { redactUddoktaPaySettings } from "@/lib/uddoktapay-server";
 import { redactPortWalletSettings } from "@/lib/portwallet-server";
-import { DEMO_MODE } from "@/lib/demo/config";
-import { settings as demoSettings } from "@/lib/demo/data";
 
 /**
  * The store's settings, for the storefront.
@@ -123,14 +121,11 @@ export async function GET() {
           "X-API-KEY": API_TOKEN, // ✅ works here
         },
         body: JSON.stringify({}),
-        ...(DEMO_MODE ? { signal: AbortSignal.timeout(4000) } : {}),
       }
     );
     data = await res.json();
   } catch (e) {
-    /* Demo mode can run with no server: hand back the demo store's settings
-       (no secrets in them). Outside demo mode a dead server is still an error. */
-    if (DEMO_MODE) return Response.json(demoSettings);
+    /* An unreachable server is still an error. */
     throw e;
   }
   // console.log("API data:", data); // 👈 add this

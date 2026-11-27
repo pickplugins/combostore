@@ -15,7 +15,7 @@
 
 # next.js
 /.next/
-# extra build folders (NEXT_DIST_DIR, e.g. a demo beside the dev server) - Tailwind skips what is ignored here
+# extra build folders (NEXT_DIST_DIR, e.g. a second instance beside the dev server) - Tailwind skips what is ignored here
 /.next-*/
 /out/
 
