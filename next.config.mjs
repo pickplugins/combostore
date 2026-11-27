@@ -1,7 +1,10 @@
-import { storeImageHost } from './lib/imageOptimization.mjs';
+import { storeImagePatterns } from './lib/imageOptimization.mjs';
 
-/* The store's WordPress server, whose images next/image now resizes (lib/imageOptimization.mjs). */
-const storeHost = storeImageHost();
+/*
+  The store's WordPress server (NEXT_PUBLIC_SERVER_URL in .env), whose images
+  next/image resizes - http and https both (lib/imageOptimization.mjs).
+*/
+const storePatterns = storeImagePatterns();
 
 /*
   Set by scripts/cloudflare.mjs (npm run cf:build / cf:preview / cf:deploy)
@@ -79,7 +82,7 @@ const nextConfig = {
     */
     minimumCacheTTL: 2678400,
     remotePatterns: [
-      ...(storeHost ? [{ ...storeHost, pathname: '/**' }] : []),
+      ...storePatterns,
 
       {
         protocol: 'http',
@@ -98,10 +101,6 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: 'secure.gravatar.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'server.kidobazar.com',
       },
 
     ],
