@@ -6,7 +6,7 @@
     "predev": "node scripts/build-tabler-icons.mjs && node scripts/build-tailwind-sources.mjs",
     "dev": "next dev",
     "prebuild": "node scripts/build-tabler-icons.mjs && node scripts/build-tailwind-sources.mjs",
-    "build": "next build",
+    "build": "node scripts/build.mjs",
     "start": "next start",
     "lint": "next lint",
     "cf:build": "node scripts/cloudflare.mjs build",
