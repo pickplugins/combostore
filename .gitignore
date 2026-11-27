@@ -33,7 +33,9 @@ yarn-error.log*
 .pnpm-debug.log*
 
 # env files (can opt-in for committing if needed)
-# .env*
+# .env stays committed (app version, beta flag, commented URLs) - no secrets in it.
+# Secrets and local URLs go in .env.local, which is ignored.
+.env*.local
 
 # vercel
 .vercel
