@@ -52,5 +52,10 @@
     "postcss": "^8",
     "tailwindcss": "^4.3.3",
     "wrangler": "^4.166.0"
+  },
+  "overrides": {
+    "@opennextjs/aws": {
+      "cookie": "0.7.2"
+    }
   }
 }
